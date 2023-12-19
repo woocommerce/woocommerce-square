@@ -1620,7 +1620,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function get_order( $order ) {
 		if ( is_numeric( $order ) ) {
-			$order = WC_Order_Square::wc_get_order( $order );
+			$order = new WC_Order_Square( 0 );
+			$order = $this->get_order( $order );
 		}
 
 		// set payment total here so it can be modified for later by add-ons like subscriptions which may need to charge an amount different than the get_total()
