@@ -98,6 +98,7 @@ class Order {
 		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'render_admin_missing_billing_details_notice' ) );
 		add_action( 'before_woocommerce_pay_form', array( $this, 'render_missing_billing_details_notice' ), 10, 1 );
 		add_filter( 'woocommerce_order_email_verification_required', array( $this, 'no_verification_on_guest_save' ) );
+		add_filter( 'woocommerce_order_class', array( $this, 'load_custom_order_class' ), 999 );
 	}
 
 	/**
@@ -1051,5 +1052,23 @@ class Order {
 		}
 
 		return $email_verification_required;
+	}
+
+	/**
+	 * Loads the class `WC_Order_Square` to handle deprecated
+	 * dynamic properties notice for PHP 8.2+.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $classname Order classname.
+	 *
+	 * @return string
+	 */
+	public function load_custom_order_class( $classname ) {
+		if ( '\Automattic\WooCommerce\Admin\Overrides\Order' === $classname ) {
+			return '\WooCommerce\Square\WC_Order_Square';
+		} else {
+			return $classname;
+		}
 	}
 }

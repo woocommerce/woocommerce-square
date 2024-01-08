@@ -1616,11 +1616,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 *
 	 * @since 3.0.0
 	 * @param int|WC_Order_Square $order the order or order ID being processed
-	 * @return \WC_Order object with payment and transaction information attached
+	 * @return WC_Order_Square object with payment and transaction information attached
 	 */
 	public function get_order( $order ) {
 		if ( is_numeric( $order ) ) {
-			$order = new WC_Order_Square( $order );
+			/** @var WC_Order_Square $order */
+			$order = wc_get_order( $order );
 		}
 
 		// set payment total here so it can be modified for later by add-ons like subscriptions which may need to charge an amount different than the get_total()
@@ -1748,7 +1749,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function get_order_for_capture( $order, $amount = null ) {
 		if ( is_numeric( $order ) ) {
-			$order = new WC_Order_Square( $order );
+			/** @var WC_Order_Square $order */
+			$order = wc_get_order( $order );
 		}
 
 		// add capture info
@@ -1998,11 +2000,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Square_Order|int $order order being processed
 	 * @param float $amount refund amount
 	 * @param string $reason optional refund reason text
-	 * @return \WC_Order|\WP_Error object with refund information attached
+	 * @return WC_Order_Square|\WP_Error object with refund information attached
 	 */
 	protected function get_order_for_refund( $order, $amount, $reason ) {
 		if ( is_numeric( $order ) ) {
-			$order = new WC_Order_Square( $order );
+			/** @var WC_Order_Square $order */
+			$order = wc_get_order( $order );
 		}
 
 		// add refund info

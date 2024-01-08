@@ -8,7 +8,9 @@
 
 namespace WooCommerce\Square;
 
-class WC_Order_Square extends \WC_Order {
+use Automattic\WooCommerce\Admin\Overrides\Order;
+
+class WC_Order_Square extends Order {
 	/**
 	 * Holds the Square customer ID.
 	 *
@@ -79,17 +81,4 @@ class WC_Order_Square extends \WC_Order {
 	 * @var object
 	 */
 	public $refund;
-
-	/**
-	 * Wrapper around wc_get_order().
-	 *
-	 * @since 4.3.1
-	 *
-	 * @param mixed $the_order Post object or post ID of the order.
-	 *
-	 * @return bool|WC_Order|WC_Order_Refund|WC_Order_Square
-	 */
-	public static function wc_get_order( $the_order ) {
-		return \wc_get_order( $the_order );
-	}
 }
