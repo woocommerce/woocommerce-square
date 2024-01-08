@@ -1,0 +1,12 @@
+*.min.js
+!.eslintrc.js
+js
+build
+docker
+bin
+docs
+includes
+i18n
+templates
+vendor
+tests

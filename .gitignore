@@ -1,0 +1,22 @@
+/.idea
+/i18n
+/vendor
+/node_modules
+/build
+*.iml
+.vscode
+*.zip
+
+# Compiled assets
+/assets/css/**/*.min.css
+/assets/js/**/*.min.js
+/assets/**/*.map
+
+# Volumes mounted by Docker containers
+docker/data
+docker/wordpress
+docker/logs
+/test-results/
+/playwright-report/
+/playwright/.cache/
+tests/e2e/test-results

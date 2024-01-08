@@ -1,0 +1,73 @@
+<?php
+/**
+ * WooCommerce Payment Gateway Framework
+ *
+ * This source file is subject to the GNU General Public License v3.0
+ * that is bundled with this package in the file license.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@skyverge.com so we can send you a copy immediately.
+ *
+ * @since     3.0.0
+ * @author    WooCommerce / SkyVerge
+ * @copyright Copyright (c) 2013-2019, SkyVerge, Inc.
+ * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
+ *
+ * Modified by WooCommerce on 15 December 2021.
+ */
+
+namespace WooCommerce\Square\Framework\PaymentGateway\Api;
+
+defined( 'ABSPATH' ) or exit;
+
+/**
+ * WooCommerce Direct Payment Gateway API Authorization Response
+ *
+ * Represents a Payment Gateway Credit Card Authorization response.  This should
+ * also be used as the parent class for credit card charge (authorization +
+ * capture) responses.
+ */
+interface Payment_Gateway_API_Authorization_Response extends Payment_Gateway_API_Response {
+
+	/**
+	 * The authorization code is returned from the credit card processor to
+	 * indicate that the charge will be paid by the card issuer.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return string credit card authorization code
+	 */
+	public function get_authorization_code();
+
+
+	/**
+	 * Returns the result of the AVS check.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return string result of the AVS check, if any
+	 */
+	public function get_avs_result();
+
+
+	/**
+	 * Returns the result of the CSC check.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return string result of CSC check
+	 */
+	public function get_csc_result();
+
+
+	/**
+	 * Returns true if the CSC check was successful.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return boolean true if the CSC check was successful
+	 */
+	public function csc_match();
+}

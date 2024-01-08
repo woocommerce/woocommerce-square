@@ -1,0 +1,100 @@
+import { test, expect } from '@playwright/test';
+import { chromium } from 'playwright';
+
+import {
+	fillAddressFields,
+	fillCreditCardFields,
+	visitCheckout,
+	doesProductExist,
+	createProduct,
+	placeOrder,
+	deleteAllPaymentMethods,
+} from '../utils/helper';
+
+test.beforeAll( 'Setup', async ( { baseURL } ) => {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+
+	if ( ! ( await doesProductExist( baseURL, 'simple-product' ) ) ) {
+		await createProduct( page, {
+			name: 'Simple Product',
+			regularPrice: '14.99',
+			sku: 'simple-product',
+		} );
+
+		await expect( await page.getByText( 'Product published' ) ).toBeVisible();
+	}
+
+	await page.goto(
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+	);
+	await page
+		.locator( '#woocommerce_square_credit_card_tokenization' )
+		.check();
+	await page.locator( '.woocommerce-save-button' ).click();
+	await browser.close();
+} );
+
+const isBlockCheckout = [ true, false ];
+
+for ( const isBlock of isBlockCheckout ) {
+	const title = isBlock ? '[Block]:' : '[non-Block]:';
+
+	test( title + 'Payment Gateway - Customer Profiles', async ( { page } ) => {
+		await page.goto( '/product/simple-product' );
+		await page.locator( '.single_add_to_cart_button' ).click();
+		await visitCheckout( page, isBlock );
+
+		await fillAddressFields( page, isBlock );
+		await fillCreditCardFields( page, null, isBlock );
+
+		if ( isBlock ) {
+			await page
+				.locator( '.wc-block-components-payment-methods__save-card-info label' )
+				.click();
+		} else {
+			await page
+				.locator( '#wc-square-credit-card-tokenize-payment-method' )
+				.check();
+			await page.waitForTimeout( 2000 );
+		}
+
+		await placeOrder( page, isBlock );
+		await expect(
+			await page.locator( '.entry-title' )
+		).toHaveText( 'Order received' );
+
+		await page.goto( '/my-account/payment-methods' );
+		await expect( await page.locator( 'tr.payment-method' ) ).toHaveCount( 1 );
+		await expect(
+			await page.locator(
+				'tr.payment-method td.woocommerce-PaymentMethod span'
+			)
+		).toHaveText( '• • •1111' );
+	} );
+
+	test( title + 'Checkout using saved card', async ( { page } ) => {
+		await page.goto( '/product/simple-product' );
+		await page.locator( '.single_add_to_cart_button' ).click();
+		await visitCheckout( page, isBlock );
+
+		if ( isBlock ) {
+			await page
+				.locator( '.wc-block-checkout__payment-method .wc-block-components-radio-control' )
+				.first()
+				.locator( 'label' )
+				.click();
+		} else {
+			await page
+				.locator( 'input[id^="wc-square-credit-card-payment-token-"]' )
+				.check();
+		}
+		await placeOrder( page, isBlock );
+		await expect(
+			await page.locator( '.woocommerce-thankyou-order-received' )
+		).toHaveText( 'Thank you. Your order has been received.' );
+
+		await deleteAllPaymentMethods( page );
+	} );
+}
+

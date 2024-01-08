@@ -1,0 +1,103 @@
+$image_path: '../../../vendor/skyverge/wc-plugin-framework/woocommerce/payment-gateway/assets/images';
+
+// checkout, Order > Pay, and Add Payment Method pages
+.woocommerce #payment div.payment_method_square_credit_card {
+
+	iframe {
+
+	}
+
+	div.form-row {
+		padding: 3px;
+	}
+
+	.wc-square-hosted-field-parent {
+
+	}
+
+	// general input styling
+	.wc-square-credit-card-hosted-field {
+		height: 3em;
+		padding: 5px;
+		border: 1px solid #ccc;
+		border-radius: 3px;
+		transition: border-color 160ms;
+		-webkit-transition: border-color 160ms;
+		background-color: white;
+	}
+
+	.wc-square-credit-card-hosted-field-card-number {
+	  	padding-right: 55px;
+		background-image: url('#{$image_path}/card-cc-plain.svg');
+		background-repeat: no-repeat;
+		background-position: 99%;
+		background-size: 50px 31px;
+
+		&.card-type-visa {
+			background-image: url('#{$image_path}/card-visa.svg');
+		}
+
+		&.card-type-mastercard {
+			background-image: url('#{$image_path}/card-mastercard.svg');
+		}
+
+		&.card-type-amex {
+			background-image: url('#{$image_path}/card-amex.svg');
+		}
+
+		&.card-type-diners-club {
+			background-image: url('#{$image_path}/card-dinersclub.svg');
+		}
+
+		&.card-type-maestro {
+			background-image: url('#{$image_path}/card-maestro.svg');
+		}
+
+		&.card-type-jcb {
+			background-image: url('#{$image_path}/card-jcb.svg');
+		}
+
+		&.card-type-discover {
+			background-image: url('#{$image_path}/card-discover.svg');
+		}
+
+		&.card-type-invalid {
+			background-image: url('#{$image_path}/card-cc-invalid.svg');
+		}
+
+		@media only screen and (max-width : 320px) {
+			background-image: none;
+		}
+	}
+
+	.wc-square-credit-card-payment-field--error {
+		border-color: #a00;
+	}
+}
+
+#order_data {
+	display: flex;
+	flex-flow: row wrap;
+	margin-bottom: 2rem;
+
+	.form-field {
+		width: 50%;
+		margin-bottom: 1.5rem;
+
+		&:nth-child(odd) {
+			padding-right: 0.75rem;
+		}
+
+		&:nth-child(even) {
+			padding-left: 0.75rem;
+		}
+
+		label {
+			display: block;
+		}
+
+		input, select {
+			width: 100%;
+		}
+	}
+}

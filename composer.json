@@ -1,0 +1,41 @@
+{
+	"name": "woocommerce/woocommerce-square",
+	"description": "WooCommerce Square",
+	"homepage": "https://woocommerce.com/products/woocommerce-square/",
+	"license": "GPL-3.0-or-later",
+	"minimum-stability": "dev",
+	"require": {
+		"square/square": "29.0.0.20230720"
+	},
+	"require-dev": {
+		"woocommerce/woocommerce-sniffs": "1.0.0",
+		"sirbrillig/phpcs-changed": "^2.11.1"
+	},
+	"scripts": {
+		"phpcs": [
+			"vendor/bin/phpcs"
+		]
+	},
+	"archive": {
+		"exclude": [
+			"/assets/blocks",
+			"/assets/css/**/*.scss",
+			"/assets/js/**/*.js",
+			"/node_modules",
+			"!/build",
+			"!/i18n",
+			"!/vendor",
+			"!/assets/js/**/*.min.js",
+			"!/assets/css/**/*.min.css",
+			"*.zip"
+		]
+	},
+	"extra": {
+		"installer-disable": true
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}

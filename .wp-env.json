@@ -1,0 +1,23 @@
+{
+	"core": null,
+	"plugins": [
+		".",
+		"https://downloads.wordpress.org/plugin/woocommerce.zip",
+		"https://downloads.wordpress.org/plugin/email-log.zip"
+	],
+	"themes": [ "https://downloads.wordpress.org/theme/storefront.zip" ],
+	"env": {
+		"tests": {
+			"mappings": {
+				"wp-cli.yml": "./tests/e2e/config/wp-cli.yml"
+			}
+		}
+	},
+	"config": {
+		"WP_ALLOW_MULTISITE": true,
+		"ALTERNATE_WP_CRON": true
+	},
+	"lifecycleScripts": {
+		"afterStart": "bash ./tests/e2e/config/env-post-setup.sh"
+	}
+}

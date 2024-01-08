@@ -1,0 +1,74 @@
+{
+  "name": "woocommerce-square",
+  "description": "Square for WooCommerce.",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/woocommerce/woocommerce-square.git"
+  },
+  "title": "WooCommerce Square",
+  "version": "4.4.0",
+  "homepage": "https://woocommerce.com/products/woocommerce-square/",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "build": "composer install --no-dev && NODE_ENV=production grunt && NODE_ENV=production npm run build:webpack && npm run archive",
+    "build:dev": "composer install && grunt && npm run build:webpack",
+    "build:webpack": "rimraf build/* && wp-scripts build assets/blocks/index.js",
+    "build-watch:grunt": "grunt watch",
+    "build-watch:webpack": "rimraf build/* && wp-scripts start assets/blocks/index.js",
+    "lint:js": "wp-scripts lint-js assets --ext js --format table",
+    "lint:js:fix": "wp-scripts lint-js assets --ext js --fix",
+    "phpcompat": "./vendor/bin/phpcs --standard=phpcs-compat.xml.dist -p .",
+    "update-deps": "npm install -g rimraf && rimraf node_modules && rimraf npm-shrinkwrap.json && npm install && npm shrinkwrap --dev",
+    "archive": "composer archive --file=$npm_package_name --format=zip",
+    "woorelease": "npm run build",
+    "test:env:start": "wp-env start",
+    "test:env:stop": "wp-env stop",
+    "test:env:clean": "wp-env clean",
+    "test:env:destroy": "wp-env destroy",
+    "test:e2e-run": "npx playwright test --config=tests/e2e/config/playwright.config.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@playwright/test": "^1.39.0",
+    "@woocommerce/dependency-extraction-webpack-plugin": "^1.4.0",
+    "@woocommerce/eslint-plugin": "^1.1.0",
+    "@wordpress/env": "^8.1.0",
+    "@wordpress/scripts": "^13.0.2",
+    "config": "^1.24.0",
+    "cross-env": "^3.0.0",
+    "dotenv": "^16.0.3",
+    "eslint": "^7.17.0",
+    "grunt": "~1.0.1",
+    "grunt-babel": "^8.0.0",
+    "grunt-checktextdomain": "~1.0.1",
+    "grunt-contrib-clean": "~1.1.0",
+    "grunt-contrib-concat": "~1.0.1",
+    "grunt-contrib-cssmin": "~2.2.1",
+    "grunt-contrib-jshint": "~1.1.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-phpcs": "~0.4.0",
+    "grunt-postcss": "~0.9.0",
+    "grunt-rtlcss": "^2.0.2",
+    "grunt-sass": "^3.1.0",
+    "grunt-shell": "~2.1.0",
+    "grunt-stylelint": "~0.9.0",
+    "grunt-wp-i18n": "~1.0.1",
+    "postcss": "^8.2.3",
+    "shortid": "^2.2.8",
+    "stylelint": "^8.4.0",
+    "typescript": "^4.1.3"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "config": {
+    "wp_org_slug": "woocommerce-square"
+  },
+  "dependencies": {
+    "@wordpress/data": "^8.1.0",
+    "uuid": "^9.0.1"
+  }
+}
