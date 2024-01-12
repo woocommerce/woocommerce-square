@@ -1,6 +1,6 @@
 *** WooCommerce Square Changelog ***
 
-= 4.4.1 - 2024-01-10 =
+= 4.4.1 - 2024-01-16 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
 * Dev - Bump WooCommerce "tested up to" version 8.4.
 * Dev - Bump WooCommerce minimum supported version to 8.2.
