@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Square
  * Version: 4.4.0
  * Plugin URI: https://woocommerce.com/products/square/
- * Requires at least: 6.2
+ * Requires at least: 6.3
  * Tested up to: 6.4
  * Requires PHP: 7.4
  *
@@ -20,8 +20,8 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 8.2
- * WC tested up to: 8.4
+ * WC requires at least: 8.3
+ * WC tested up to: 8.5
  */
 
 defined( 'ABSPATH' ) || exit;
