@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.1
 Tested up to: 6.4.0
 Requires PHP: 7.4
-Stable tag: 4.4.0
+Stable tag: 4.4.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,15 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.4.1 - 2024-01-16 =
+* Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
+* Dev - Bump WooCommerce "tested up to" version 8.4.
+* Dev - Bump WooCommerce minimum supported version to 8.2.
+* Dev - Update WordPress "tested up to" version to 6.4.0.
+* Dev - Ensure that all end-to-end tests pass.
+* Tweak - Updated placement of Express payment buttons (e.g., Apple Pay, Google Pay) on cart and product pages to align with WooCommerce Express payment button standards.
+* Remove - Action Scheduler dependency removed as it now comes bundled as part of WooCommerce core.
 
 = 4.4.0 - 2023-11-30 =
 * Fix - Fatal error caused by Digital Wallets when multiple shipping packages exist in a cart.

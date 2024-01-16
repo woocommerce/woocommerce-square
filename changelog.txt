@@ -1,5 +1,14 @@
 *** WooCommerce Square Changelog ***
 
+= 4.4.1 - 2024-01-16 =
+* Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
+* Dev - Bump WooCommerce "tested up to" version 8.4.
+* Dev - Bump WooCommerce minimum supported version to 8.2.
+* Dev - Update WordPress "tested up to" version to 6.4.0.
+* Dev - Ensure that all end-to-end tests pass.
+* Tweak - Updated placement of Express payment buttons (e.g., Apple Pay, Google Pay) on cart and product pages to align with WooCommerce Express payment button standards.
+* Remove - Action Scheduler dependency removed as it now comes bundled as part of WooCommerce core.
+
 = 4.4.0 - 2023-11-30 =
 * Fix - Fatal error caused by Digital Wallets when multiple shipping packages exist in a cart.
 * Fix - Digital Wallets not rendering on Single Product and Cart pages.
