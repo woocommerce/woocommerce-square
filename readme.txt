@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.4.1 - xxxx-xx-xx =
+= 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
 * Dev - Bump WooCommerce "tested up to" version 8.4.
 * Dev - Bump WooCommerce minimum supported version to 8.2.
