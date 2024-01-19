@@ -1616,7 +1616,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 *
 	 * @since 3.0.0
 	 * @param int|WC_Order_Square $order the order or order ID being processed
-	 * @return \WC_Order object with payment and transaction information attached
+	 * @return WC_Order_Square object with payment and transaction information attached
 	 */
 	public function get_order( $order ) {
 		if ( is_numeric( $order ) ) {

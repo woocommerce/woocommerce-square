@@ -71,13 +71,23 @@ class Payments extends \WooCommerce\Square\API\Request {
 	 * @param \WC_Order $order
 	 * @param bool $capture whether to immediately capture the charge
 	 */
-	public function set_charge_data( \WC_Order $order, $capture = true ) {
-		$payment_total           = isset( $order->payment->partial_total ) ? $order->payment->partial_total->credit_card : $order->payment_total;
+	public function set_charge_data( \WC_Order $order, $capture = true, $is_cash_app_pay = false ) {
 		$this->square_api_method = 'createPayment';
-		$this->square_request    = new \Square\Models\CreatePaymentRequest(
-			! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
-			wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
-		);
+
+		// Cash App Pay payment.
+		if ( $is_cash_app_pay ) {
+			$payment_total        = $order->payment_total;
+			$this->square_request = new \Square\Models\CreatePaymentRequest(
+				$order->payment->nonce->cash_app_pay,
+				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
+			);
+		} else {
+			$payment_total        = isset( $order->payment->partial_total ) ? $order->payment->partial_total->credit_card : $order->payment_total;
+			$this->square_request = new \Square\Models\CreatePaymentRequest(
+				! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
+				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
+			);
+		}
 
 		$this->square_request->setReferenceId( $order->get_order_number() );
 		$this->square_request->setAmountMoney(
@@ -96,22 +106,30 @@ class Payments extends \WooCommerce\Square\API\Request {
 
 		$this->square_request->setNote( Square_Helper::str_truncate( $description, 500 ) );
 
-		if ( isset( $order->payment->partial_total ) ) {
-			$this->square_request->setAutocomplete( false );
-		} else {
-			$this->square_request->setAutocomplete( $capture );
-		}
-
 		if ( ! empty( $order->square_customer_id ) ) {
 			$this->square_request->setCustomerId( $order->square_customer_id );
 		}
 
-		// payment token (card ID) or card nonce (from JS)
-		$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+		// Cash App Pay payment.
+		if ( $is_cash_app_pay ) {
+			$this->square_request->setAutocomplete( $capture );
 
-		// 3DS / SCA verification token (from JS)
-		if ( ! empty( $order->payment->verification_token ) ) {
-			$this->square_request->setVerificationToken( $order->payment->verification_token );
+			// Payment nonce (from JS)
+			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
+		} else {
+			if ( isset( $order->payment->partial_total ) ) {
+				$this->square_request->setAutocomplete( false );
+			} else {
+				$this->square_request->setAutocomplete( $capture );
+			}
+
+			// payment token (card ID) or card nonce (from JS)
+			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+
+			// 3DS / SCA verification token (from JS)
+			if ( ! empty( $order->payment->verification_token ) ) {
+				$this->square_request->setVerificationToken( $order->payment->verification_token );
+			}
 		}
 
 		if ( ! empty( $this->location_id ) ) {
