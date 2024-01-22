@@ -32,7 +32,6 @@ jQuery( document ).ready( ( $ ) => {
 			this.buttonStyles  = args.button_styles;
 			this.referenceId = this.reference_id;
 			this.cashAppButton = '#wc-square-cash-app';
-			this.checkoutForm = $( 'form.checkout, #wc-square-cash-app-pay-cash_app_pay-form' );
 			this.settingUp = false;
 
 			if ( $( this.cashAppButton ).length === 0 ) {
@@ -158,47 +157,49 @@ jQuery( document ).ready( ( $ ) => {
 		 * @returns void
 		 */
 		handleCashAppPaymentResponse( event ) {
-			this.blockedForm = this.blockForms( this.checkoutForm );
+			this.blockedForm = this.blockForms();
 
 			const { tokenResult, error } = event.detail;
 			if ( error ) {
 				this.render_errors( [error.message] );
+				// unblock UI
+				if ( this.blockedForm ) {
+					this.blockedForm.unblock();
+				}
 			} else if ( tokenResult.status === 'OK' ) {
 				const nonce = tokenResult.token;
 				if ( ! nonce ) {
-					this.render_errors( this.args.general_error );
-				} else {
-					$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
-	
-					// Submit the form.
-					if ( ! $( 'input#payment_method_square_cash_app_pay' ).is( ':checked' ) ) {
-						$('input#payment_method_square_cash_app_pay').attr('checked', true);
-						$( 'input#payment_method_square_cash_app_pay' ).trigger('click');
+					// unblock UI
+					if ( this.blockedForm ) {
+						this.blockedForm.unblock();
 					}
-	
-					this.toggle_order_button();
-					if ( this.isPayForOrderPage ) {
-						$( 'form#order_review' ).trigger('submit');
-					} else {
-						$( 'form.checkout' ).trigger('submit');
-					}
+					return this.render_errors( this.args.general_error );
 				}
-			}
+				$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
 
-			// unblock UI
-			if ( this.blockedForm ) {
-				this.blockedForm.unblock();
+				// Submit the form.
+				if ( ! $( 'input#payment_method_square_cash_app_pay' ).is( ':checked' ) ) {
+					$('input#payment_method_square_cash_app_pay').attr('checked', true);
+					$( 'input#payment_method_square_cash_app_pay' ).trigger('click');
+				}
+
+				this.toggle_order_button();
+				if ( this.isPayForOrderPage ) {
+					$( 'form#order_review' ).trigger('submit');
+				} else {
+					$( 'form.checkout' ).trigger('submit');
+				}
 			}
 		}
 
 		/**
 		 * Blocks a form when a payment is under process.
 		 *
-		 * @param {Object} jQueryFormEl The form jQuery object.
 		 * @returns {Object} Returns the input jQuery object.
 		 */
-		blockForms( jQueryFormEl ) {
-			jQueryFormEl.block( {
+		blockForms() {
+			const checkoutForm = $( 'form.checkout, form#order_review' );
+			checkoutForm.block( {
 				message: null,
 				overlayCSS: {
 					background: '#fff',
@@ -206,7 +207,7 @@ jQuery( document ).ready( ( $ ) => {
 				},
 			} );
 
-			return jQueryFormEl;
+			return checkoutForm;
 		}
 
 		/**
