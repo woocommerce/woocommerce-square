@@ -1,7 +1,7 @@
 === WooCommerce Square ===
 Contributors: woocommerce, automattic, royho, woothemes, bor0, mattdallan, menakas, chickenn00dle, jorgeatorres, jamesgallan, achyuthajoy
 Tags: credit card, square, woocommerce, inventory sync
-Requires at least: 6.1
+Requires at least: 6.3
 Tested up to: 6.4.0
 Requires PHP: 7.4
 Stable tag: 4.4.1
@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.4.1 - 2024-01-16 =
+= 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
 * Dev - Bump WooCommerce "tested up to" version 8.4.
 * Dev - Bump WooCommerce minimum supported version to 8.2.
