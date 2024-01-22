@@ -5,6 +5,7 @@ docker                  export-ignore
 docs                    export-ignore
 mode_modules            export-ignore
 wordpress-org-assets    export-ignore
+tests                   export-ignore
 
 # Files
 .distignore             export-ignore
@@ -17,6 +18,7 @@ wordpress-org-assets    export-ignore
 .stylelintrc.json       export-ignore
 .travis.yml             export-ignore
 .tx                     export-ignore
+.wp-env.json            export-ignore
 composer.json           export-ignore
 composer.lock           export-ignore
 default.env             export-ignore

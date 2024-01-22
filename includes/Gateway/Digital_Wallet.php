@@ -310,7 +310,7 @@ class Digital_Wallet {
 			 * and the checkout. This is useful for plugins adding their own express pay/wallet buttons following
 			 * the Square buttons.
 			 *
-			 * @since x.x.x
+			 * @since 4.4.1
 			 *
 			 * @param bool $show_divider Whether to show the divider. Default true.
 			 */
