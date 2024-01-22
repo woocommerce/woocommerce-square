@@ -103,16 +103,6 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		async load_cash_app_form() {
-			if ( this.cashAppPay ) {
-				await this.cashAppPay.destroy();
-				this.cashAppLoaded = false;
-			}
-
-			if ( this.cashAppLoaded ) {
-				return;
-			}
-
-			this.cashAppLoaded = true;
 			this.log( '[Square Cash App Pay] Building Cash App Pay' );
 			const { applicationId, locationId } = this.get_form_params();
 			this.payments = window.Square.payments( applicationId, locationId );
@@ -136,12 +126,17 @@ jQuery( document ).ready( ( $ ) => {
 			 */
 			const paymentRequest = this.payments.paymentRequest( this.create_payment_request() );
 
+			// Destroy the existing Cash App Pay instance.
+			if ( this.cashAppPay ) {
+				await this.cashAppPay.destroy();
+			}
+
 			this.cashAppPay = await this.payments.cashAppPay( paymentRequest, {
 				redirectURL: window.location.href,
 				referenceId: this.referenceId,
 			});
 
-			await this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles);
+			await this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles );
 			
 			this.cashAppPay.addEventListener('ontokenization', (event) => this.handleCashAppPaymentResponse( event ) );
 

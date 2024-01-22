@@ -113,21 +113,21 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		// common top form fields
 		$this->form_fields = array(
-			'enabled'     => array(
+			'enabled'      => array(
 				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
 				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
 				'type'    => 'checkbox',
 				'default' => 'no',
 			),
 
-			'title'       => array(
+			'title'        => array(
 				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
 				'type'     => 'text',
 				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_title(),
 			),
 
-			'description' => array(
+			'description'  => array(
 				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
 				'type'     => 'textarea',
 				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
@@ -316,7 +316,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	public function get_order( $order_id ) {
 		$order = parent::get_order( $order_id );
 
-		$order->payment->nonce = new \stdClass();
+		$order->payment->nonce               = new \stdClass();
 		$order->payment->nonce->cash_app_pay = Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' );
 
 		$order->square_customer_id = $order->customer_id;
@@ -436,7 +436,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		// generate a unique retry count
 		if ( is_numeric( $this->get_order_meta( $order_id, 'retry_count' ) ) ) {
 			$retry_count = $this->get_order_meta( $order_id, 'retry_count' );
-			$retry_count++;
+			++$retry_count;
 		} else {
 			$retry_count = 0;
 		}
@@ -589,6 +589,13 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 			$data['lineItems'] = $this->build_payment_request_line_items( $order_data );
 		}
 
+		/**
+		 * Filters the payment request Total Label Suffix.
+		 *
+		 * @since x.x.x
+		 * @param string $total_label_suffix
+		 * @return string
+		 */
 		$total_label_suffix = apply_filters( 'woocommerce_square_payment_request_total_label_suffix', __( 'via WooCommerce', 'woocommerce-square' ) );
 		$total_label_suffix = $total_label_suffix ? " ($total_label_suffix)" : '';
 
@@ -935,7 +942,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		}
 
 		if ( $response->transaction_approved() || $response->transaction_held() ) {
-			
+
 			// add the standard transaction data
 			$this->add_transaction_data( $order, $response );
 
@@ -945,9 +952,9 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 			// // if the transaction was held (ie fraud validation failure) mark it as such
 			// // TODO: consider checking whether the response *was* an authorization, rather than blanket-assuming it was because of the settings.  There are times when an auth will be used rather than charge, ie when performing in-plugin AVS handling (moneris)
 			// if ( $response->transaction_held() || ( $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ) ) {
-			// 	// TODO: need to make this more flexible, and not force the message to 'Authorization only transaction' for auth transactions (re moneris efraud handling)
-			// 	/* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
-			// 	$this->mark_order_as_held( $order, $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
+			// // TODO: need to make this more flexible, and not force the message to 'Authorization only transaction' for auth transactions (re moneris efraud handling)
+			// /* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
+			// $this->mark_order_as_held( $order, $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
 			// }
 
 			return true;
