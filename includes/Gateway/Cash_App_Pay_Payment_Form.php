@@ -103,6 +103,7 @@ class Cash_App_Pay_Payment_Form extends Payment_Gateway_Payment_Form {
 			'is_pay_for_order_page' => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'order_id'              => absint( get_query_var( 'order-pay' ) ),
 			'button_styles'         => $this->get_gateway()->get_button_styles(),
+			'reference_id'          => WC()->cart ? WC()->cart->get_cart_hash() : '',
 		);
 
 		/**
@@ -117,7 +118,7 @@ class Cash_App_Pay_Payment_Form extends Payment_Gateway_Payment_Form {
 		 */
 		$args = apply_filters( 'wc_' . $this->get_gateway()->get_id() . '_payment_form_js_args', $args, $this );
 
-		wc_enqueue_js( sprintf( 'window.wc_%s_payment_form_handler = new WC_Square_Cash_App_Handler( %s );', esc_js( $this->get_gateway()->get_id() ), json_encode( $args ) ) );
+		wc_enqueue_js( sprintf( 'window.wc_%s_payment_form_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_gateway()->get_id() ), json_encode( $args ) ) );
 	}
 
 }

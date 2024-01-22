@@ -11,7 +11,7 @@ jQuery( document ).ready( ( $ ) => {
 	 *
 	 * @since x.x.x
 	 */
-	class WC_Square_Cash_App_Handler {
+	class WC_Square_Cash_App_Pay_Handler {
 		/**
 		 * Setup handler
 		 *
@@ -30,8 +30,9 @@ jQuery( document ).ready( ( $ ) => {
 			this.orderId = args.order_id;
 			this.id_dasherized = args.gateway_id_dasherized;
 			this.buttonStyles  = args.button_styles;
+			this.referenceId = this.reference_id;
 			this.cashAppButton = '#wc-square-cash-app';
-			this.checkoutForm = $( 'form.checkout, #wc-cash-app-payment-form' );
+			this.checkoutForm = $( 'form.checkout, #wc-square-cash-app-pay-cash_app_pay-form' );
 			this.settingUp = false;
 
 			if ( $( this.cashAppButton ).length === 0 ) {
@@ -48,21 +49,36 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		build_cash_app() {
-
+			// if we are already setting up, bail.
 			if ( this.settingUp ) {
 				return;
 			}
-			
+
 			this.settingUp = true;
 			this.block_ui();
-			this.get_payment_request().then(
+			return this.get_payment_request().then(
 				( response ) => {
+					const oldPaymentRequest = JSON.stringify( this.payment_request );
 					this.payment_request = JSON.parse( response );
 					this.total_amount = this.payment_request.total.amount;
-					this.load_cash_app_form();
+
+					// If we have a nonce, loaded button and no updated payment request, bail.
+					if (
+						this.has_payment_nonce() &&
+						$( '#wc-square-cash-app #cash_app_pay_v1_element' ).length &&
+						JSON.stringify( this.payment_request ) === oldPaymentRequest
+					) {
+						this.settingUp = false;
+						this.unblock_ui();
+						return;
+					}
+					$( this.cashAppButton ).hide();
+					// Clear the nonce.
+					$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( '' );
+					return this.load_cash_app_form();
 				},
 				( message ) => {
-					this.log( '[Square Cash App] Could not build payment request. ' + message, 'error' );
+					this.log( '[Square Cash App Pay] Could not build payment request. ' + message, 'error' );
 					$( this.cashAppButton ).hide();
 					this.settingUp = false;
 				}
@@ -76,14 +92,9 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		attach_page_events() {
 			$( document.body ).on( 'updated_checkout', () => this.build_cash_app() );
-
-			// $( document ).on( 'payment_method_selected', () => {
-			// 	if ( ! this.isPayForOrderPage ) {
-			// 		return;
-			// 	}
-
-			// 	 $( '#payment_method_override' ).remove();
-			// } );
+			$( document.body ).on( 'click', 'input[name="payment_method"]', () => this.toggle_order_button() );
+			// WC 3.4.3+ trigger
+			$( document.body ).on( 'payment_method_selected', () => this.toggle_order_button() );
 		}
 
 		/**
@@ -91,9 +102,9 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @since x.x.x
 		 */
-		load_cash_app_form() {
+		async load_cash_app_form() {
 			if ( this.cashAppPay ) {
-				this.cashAppPay.destroy();
+				await this.cashAppPay.destroy();
 				this.cashAppLoaded = false;
 			}
 
@@ -102,11 +113,11 @@ jQuery( document ).ready( ( $ ) => {
 			}
 
 			this.cashAppLoaded = true;
-
-			this.log( '[Square] Building Cash App Pay' );
+			this.log( '[Square Cash App Pay] Building Cash App Pay' );
 			const { applicationId, locationId } = this.get_form_params();
 			this.payments = window.Square.payments( applicationId, locationId );
-			this.initializeCashAppPay();
+			await this.initializeCashAppPay();
+			this.unblock_ui();
 			this.settingUp = false;
 		}
 
@@ -127,14 +138,15 @@ jQuery( document ).ready( ( $ ) => {
 
 			this.cashAppPay = await this.payments.cashAppPay( paymentRequest, {
 				redirectURL: window.location.href,
-				referenceId: '123' // TODO: Add a reference ID.
+				referenceId: this.referenceId,
 			});
 
-			this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles);
+			await this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles);
+			
+			this.cashAppPay.addEventListener('ontokenization', (event) => this.handleCashAppPaymentResponse( event ) );
 
-			this.cashAppPay.addEventListener('ontokenization', (event) => {
-				this.handleCashAppPaymentResponse( event );
-			});
+			// Toggle the place order button.
+			this.toggle_order_button();
 
 			/**
 			 * Display the button after successful initialize of Cash App Pay.
@@ -144,7 +156,13 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		}
 
-		async handleCashAppPaymentResponse( event ) {
+		/**
+		 * Handles the Cash App payment response.
+		 * 
+		 * @param {Object} event The event object.
+		 * @returns void
+		 */
+		handleCashAppPaymentResponse( event ) {
 			this.blockedForm = this.blockForms( this.checkoutForm );
 
 			const { tokenResult, error } = event.detail;
@@ -153,15 +171,23 @@ jQuery( document ).ready( ( $ ) => {
 			} else if ( tokenResult.status === 'OK' ) {
 				const nonce = tokenResult.token;
 				if ( ! nonce ) {
-					return this.render_errors( this.args.general_error );
+					this.render_errors( this.args.general_error );
+				} else {
+					$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
+	
+					// Submit the form.
+					if ( ! $( 'input#payment_method_square_cash_app_pay' ).is( ':checked' ) ) {
+						$('input#payment_method_square_cash_app_pay').attr('checked', true);
+						$( 'input#payment_method_square_cash_app_pay' ).trigger('click');
+					}
+	
+					this.toggle_order_button();
+					if ( this.isPayForOrderPage ) {
+						$( 'form#order_review' ).trigger('submit');
+					} else {
+						$( 'form.checkout' ).trigger('submit');
+					}
 				}
-				$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
-				$( '#payment_method_override' ).remove();
-				$( '#payment' ).after( `<input id="payment_method_override" type="hidden" name="payment_method" value="${this.args.gateway_id}" />` );
-
-				// Submit the form.
-				const checkoutForm = $( 'form.checkout' );
-				checkoutForm.submit();
 			}
 
 			// unblock UI
@@ -280,18 +306,27 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/*
-		 * Block the Apple Pay and Google Pay buttons from being clicked which processing certain actions
+		 * Block the payment buttons being clicked which processing certain actions
 		 *
 		 * @since x.x.x
 		 */
 		block_ui() {
-			$( this.buttons ).block( {
+			$( '.woocommerce-checkout-payment, #payment' ).block( {
 				message: null,
 				overlayCSS: {
 					background: '#fff',
 					opacity: 0.6,
 				},
 			} );
+		}
+
+		/*
+		 * Unblocks the payment buttons
+		 *
+		 * @since x.x.x
+		 */
+		unblock_ui() {
+			$( '.woocommerce-checkout-payment, #payment' ).unblock();
 		}
 
 		/*
@@ -311,7 +346,38 @@ jQuery( document ).ready( ( $ ) => {
 
 			return console.log( message );
 		}
+
+		/*
+		 * Returns the payment nonce
+		 *
+		 * @since x.x.x
+		 */
+		has_payment_nonce() {
+			return $( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val();
+		}
+
+		/*
+		 * Returns the selected payment gateway id
+		 *
+		 * @since x.x.x
+		 */
+		get_selected_gateway_id() {
+			return $( 'form.checkout, form#order_review' ).find( 'input[name=payment_method]:checked' ).val();
+		}
+
+		/*
+		 * Toggles the order button
+		 *
+		 * @since x.x.x
+		 */
+		toggle_order_button() {
+			if ( this.get_selected_gateway_id() === this.args.gateway_id && ! this.has_payment_nonce() ) {
+				$( '#place_order' ).hide();
+			} else {
+				$( '#place_order' ).show();
+			}
+		}
 	}
 
-	window.WC_Square_Cash_App_Handler = WC_Square_Cash_App_Handler;
+	window.WC_Square_Cash_App_Pay_Handler = WC_Square_Cash_App_Pay_Handler;
 } );
