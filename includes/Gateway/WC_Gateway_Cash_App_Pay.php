@@ -55,7 +55,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 				'payment_type'       => 'cash_app_pay',
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
-					self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES,
 					self::FEATURE_REFUNDS,
 				),
 				'countries'          => array( 'US' ),
@@ -92,6 +91,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	public function payment_fields() {
 		parent::payment_fields();
 		?>
+		<br />
 		<div id="square-cash-app-pay-hidden-fields">
 			<input name="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" id="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" type="hidden" />
 		</div>
@@ -219,16 +219,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 				),
 			),
 		);
-
-		// add "detailed customer decline messages" option if the feature is supported
-		if ( $this->supports( self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES ) ) {
-			$this->form_fields['enable_customer_decline_messages'] = array(
-				'title'   => esc_html__( 'Detailed Decline Messages', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'label'   => esc_html__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
-				'default' => 'no',
-			);
-		}
 
 		// debug mode
 		$this->form_fields['debug_mode'] = array(
@@ -415,6 +405,61 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	}
 
 	/**
+	 * Gets an order with refund data attached.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param int|\WC_Order $order order object
+	 * @param float $amount amount to refund
+	 * @param string $reason response for the refund
+	 *
+	 * @return \WC_Order|\WP_Error
+	 */
+	protected function get_order_for_refund( $order, $amount, $reason ) {
+
+		$order                 = parent::get_order_for_refund( $order, $amount, $reason );
+		$order->square_version = $this->get_order_meta( $order, 'square_version' );
+		$transaction_date      = $this->get_order_meta( $order, 'trans_date' );
+
+		if ( $transaction_date ) {
+			// refunds with the Refunds API can be made up to 1 year after payment and up to 120 days with the Transactions API
+			$max_refund_time = version_compare( $order->square_version, '2.2', '>=' ) ? '+1 year' : '+120 days';
+
+			// throw an error if the payment cannot be refunded
+			if ( current_time( 'timestamp' ) >= strtotime( $max_refund_time, strtotime( $transaction_date ) ) ) {
+				/* translators: %s maximum refund date. */
+				return new \WP_Error( 'wc_square_refund_age_exceeded', sprintf( __( 'Refunds must be made within %s of the original payment date.', 'woocommerce-square' ), '+1 year' === $max_refund_time ? 'a year' : '120 days' ) );
+			}
+		}
+
+		$order->refund->location_id = $this->get_order_meta( $order, 'square_location_id' );
+		$order->refund->tender_id   = $this->get_order_meta( $order, 'authorization_code' );
+
+		if ( ! $order->refund->tender_id ) {
+
+			try {
+				$response = version_compare( $order->square_version, '2.2', '>=' ) ? $this->get_api()->get_payment( $order->refund->trans_id ) : $this->get_api()->get_transaction( $order->refund->trans_id, $order->refund->location_id );
+
+				if ( ! $response->get_authorization_code() ) {
+					throw new \Exception( 'Tender missing' );
+				}
+
+				$this->update_order_meta( $order, 'authorization_code', $response->get_authorization_code() );
+				$this->update_order_meta( $order, 'square_location_id', $response->get_location_id() );
+
+				$order->refund->location_id = $response->get_location_id();
+				$order->refund->tender_id   = $response->get_authorization_code();
+
+			} catch ( \Exception $exception ) {
+
+				return new \WP_Error( 'wc_square_refund_tender_missing', __( 'Could not find original transaction tender. Please refund this transaction from your Square dashboard.', 'woocommerce-square' ) );
+			}
+		}
+
+		return $order;
+	}
+
+	/**
 	 * Gets the configured environment ID.
 	 *
 	 * Square doesn't really support a sandbox, so we don't show a setting for this.
@@ -449,33 +494,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		 * @param string $application_id application ID
 		 */
 		return apply_filters( 'wc_square_application_id', $square_application_id );
-	}
-
-	/**
-	 * Validate WooCommerce checkout data on Square JS AJAX call
-	 *
-	 * Returns validation errors (or success) as JSON and exits to prevent checkout
-	 *
-	 * @since x.x.x
-	 *
-	 * @param array    $data WooCommerce checkout POST data.
-	 * @param WP_Error $errors WooCommerce checkout errors.
-	 */
-	public function wc_ajax_square_checkout_validate( $data, $errors = null ) {
-		$error_messages = null;
-		if ( ! is_null( $errors ) ) {
-			$error_messages = $errors->get_error_messages();
-		}
-
-		// Clear all existing notices.
-		wc_clear_notices();
-
-		if ( empty( $error_messages ) ) {
-			wp_send_json_success( 'validation_successful' );
-		} else {
-			wp_send_json_error( array( 'messages' => $error_messages ) );
-		}
-		exit;
 	}
 
 	/**
@@ -949,7 +967,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		$response = $this->get_api()->cash_app_pay_charge( $order );
 
 		// success! update order record
-		if ( $response->transaction_approved() ) {
+		if ( $response->transaction_approved() && $response->is_cash_app_payment_completed() ) {
 
 			$payment_response = $response->get_data();
 			$payment          = $payment_response->getPayment();
@@ -987,26 +1005,13 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 			$order->add_order_note( $message );
 
-		}
-
-		if ( $response->transaction_approved() || $response->transaction_held() ) {
-
 			// add the standard transaction data
 			$this->add_transaction_data( $order, $response );
 
 			// allow the concrete class to add any gateway-specific transaction data to the order
 			$this->add_payment_gateway_transaction_data( $order, $response );
 
-			// // if the transaction was held (ie fraud validation failure) mark it as such
-			// // TODO: consider checking whether the response *was* an authorization, rather than blanket-assuming it was because of the settings.  There are times when an auth will be used rather than charge, ie when performing in-plugin AVS handling (moneris)
-			// if ( $response->transaction_held() || ( $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ) ) {
-			// // TODO: need to make this more flexible, and not force the message to 'Authorization only transaction' for auth transactions (re moneris efraud handling)
-			// /* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
-			// $this->mark_order_as_held( $order, $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
-			// }
-
 			return true;
-
 		} else {
 			return $this->do_transaction_failed_result( $order, $response );
 		}
@@ -1058,7 +1063,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 			'general_error'         => __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
 			'ajax_url'              => \WC_AJAX::get_endpoint( '%%endpoint%%' ),
 			'payment_request_nonce' => wp_create_nonce( 'wc-cash-app-get-payment-request' ),
-			'logging_enabled'       => $this->debug_log(),
+			'logging_enabled'       => $this->debug_checkout(),
 			'is_pay_for_order_page' => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'order_id'              => absint( get_query_var( 'order-pay' ) ),
 			'button_styles'         => $this->get_button_styles(),

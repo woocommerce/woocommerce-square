@@ -161,7 +161,7 @@ class API extends \WooCommerce\Square\API {
 
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
-		$request->set_charge_data( $order, false, true );
+		$request->set_charge_data( $order, true, true );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 

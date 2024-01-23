@@ -39,7 +39,6 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		build_cash_app() {
-			console.log( '[Square Cash App Pay] Building Cash App Pay' );
 			// if we are already setting up or no cash app button, bail.
 			if ( this.settingUp || $( document ).find( this.cashAppButton ).length === 0  ) {
 				return;
@@ -71,6 +70,7 @@ jQuery( document ).ready( ( $ ) => {
 				( message ) => {
 					this.log( '[Square Cash App Pay] Could not build payment request. ' + message, 'error' );
 					$( this.cashAppButton ).hide();
+					this.unblock_ui();
 					this.settingUp = false;
 				}
 			);
@@ -126,7 +126,6 @@ jQuery( document ).ready( ( $ ) => {
 				redirectURL: window.location.href,
 				referenceId: this.referenceId,
 			});
-
 			await this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles );
 			
 			this.cashAppPay.addEventListener('ontokenization', (event) => this.handleCashAppPaymentResponse( event ) );
@@ -149,7 +148,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * @returns void
 		 */
 		handleCashAppPaymentResponse( event ) {
-			this.blockedForm = this.blockForms();
+			this.blockedForm = this.blockForm();
 
 			const { tokenResult, error } = event.detail;
 			if ( error ) {
@@ -171,13 +170,13 @@ jQuery( document ).ready( ( $ ) => {
 
 				// Submit the form.
 				if ( ! $( 'input#payment_method_square_cash_app_pay' ).is( ':checked' ) ) {
-					$('input#payment_method_square_cash_app_pay').attr('checked', true);
-					$( 'input#payment_method_square_cash_app_pay' ).trigger('click');
+					$( 'input#payment_method_square_cash_app_pay' ).trigger( 'click' );
+					$( 'input#payment_method_square_cash_app_pay' ).attr( 'checked', true );
 				}
 
 				this.toggle_order_button();
-				if ( this.isPayForOrderPage ) {
-					$( 'form#order_review' ).trigger('submit');
+				if ( $( '#order_review' ).length ) {
+					$( '#order_review' ).trigger('submit');
 				} else {
 					$( 'form.checkout' ).trigger('submit');
 				}
@@ -189,7 +188,7 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @returns {Object} Returns the input jQuery object.
 		 */
-		blockForms() {
+		blockForm() {
 			const checkoutForm = $( 'form.checkout, form#order_review' );
 			checkoutForm.block( {
 				message: null,
