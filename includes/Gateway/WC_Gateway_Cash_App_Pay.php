@@ -24,7 +24,6 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Gateway\Customer_Helper;
-use WooCommerce\Square\Gateway\Payment_Form;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
@@ -40,12 +39,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 	/** @var API API base instance */
 	private $api;
-
-	/**
-	 * Square Payment Form instance
-	 * Null by default.
-	 */
-	private $payment_form = null;
 
 	/**
 	 * Constructs the class.
@@ -64,7 +57,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES,
 					self::FEATURE_REFUNDS,
-					self::FEATURE_PAYMENT_FORM,
 				),
 				'countries'          => array( 'US' ),
 				'currencies'         => array( 'USD' ),
@@ -76,6 +68,75 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		// Ajax hooks
 		add_action( 'wc_ajax_square_cash_app_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
+	}
+
+	/**
+	 * Enqueue the necessary scripts & styles for the gateway.
+	 *
+	 * @since x.x.x
+	 */
+	public function enqueue_scripts() {
+		if ( ! $this->is_configured() ) {
+			return;
+		}
+
+		// Enqueue payment gateway assets.
+		$this->enqueue_gateway_assets();
+	}
+
+	/**
+	 * Payment form on checkout page.
+	 *
+	 * @since x.x.x
+	 */
+	public function payment_fields() {
+		parent::payment_fields();
+		?>
+		<div id="square-cash-app-pay-hidden-fields">
+			<input name="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" id="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" type="hidden" />
+		</div>
+		<form id="wc-cash-app-payment-form">
+			<div id="wc-square-cash-app"></div>
+		</form>
+		<?php
+	}
+
+	/**
+	 * Return the gateway-specifics JS script handle.
+	 *
+	 * @since x.x.x
+	 * @return string
+	 */
+	protected function get_gateway_js_handle() {
+		return 'wc-' . $this->get_id_dasherized();
+	}
+
+	/**
+	 * Enqueue the gateway-specific assets if present, including JS, CSS, and
+	 * localized script params
+	 *
+	 * @since x.x.x
+	 */
+	protected function enqueue_gateway_assets() {
+		$is_checkout = is_checkout() || ( function_exists( 'has_block' ) && has_block( 'woocommerce/checkout' ) );
+
+		// bail if not a checkout page or cash app pay is not enabled
+		if ( ! ( $is_checkout || $this->is_configured() ) ) {
+			return;
+		}
+
+		if ( $this->get_plugin()->get_settings_handler()->is_sandbox() ) {
+			$url = 'https://sandbox.web.squarecdn.com/v1/square.js';
+		} else {
+			$url = 'https://web.squarecdn.com/v1/square.js';
+		}
+
+		wp_enqueue_script( 'wc-' . $this->get_plugin()->get_id_dasherized() . '-payment-form', $url, array(), Plugin::VERSION );
+
+		parent::enqueue_gateway_assets();
+
+		// Render Payment JS
+		$this->render_js();
 	}
 
 	/** Admin methods *************************************************************************************************/
@@ -217,23 +278,17 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		return parent::is_available() && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
-	/** Getter methods ************************************************************************************************/
-
 	/**
-	 * Gets the payment form handler instance.
+	 * Returns true if the gateway is properly configured to perform transactions
 	 *
 	 * @since x.x.x
-	 *
-	 * @return Payment_Form
+	 * @return boolean true if the gateway is properly configured
 	 */
-	public function get_payment_form_instance() {
-
-		if ( empty( $this->payment_form ) ) {
-			$this->payment_form = new Cash_App_Pay_Payment_Form( $this );
-		}
-
-		return $this->payment_form;
+	protected function is_configured() {
+		return $this->is_enabled() && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
+
+	/** Getter methods ************************************************************************************************/
 
 	/**
 	 * Gets the API instance.
@@ -479,6 +534,30 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	}
 
 	/**
+	 * Get the Cash App Pay button styles.
+	 *
+	 * @return array Button styles.
+	 */
+	public function get_button_styles() {
+		$button_styles = array(
+			'theme' => $this->settings['button_theme'] ?? 'dark',
+			'shape' => $this->settings['button_shape'] ?? 'semiround',
+			'size'  => 'medium',
+			'width' => 'full',
+		);
+
+		/**
+		 * Filters the Cash App Pay button styles.
+		 *
+		 * @since x.x.x
+		 * @param array $button_styles Button styles.
+		 * @return array Button styles.
+		 */
+		return apply_filters( 'wc_' . $this->get_id() . '_button_styles', $button_styles );
+	}
+
+
+	/**
 	 * Mark an order as refunded. This should only be used when the full order
 	 * amount has been refunded.
 	 *
@@ -493,28 +572,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		// Add order note and continue with WC refund process.
 		$order->add_order_note( $order_note );
-	}
-
-	/**
-	 * Enqueue the payment form JS, CSS, and localized
-	 * JS params
-	 *
-	 * @since x.x.x
-	 */
-	protected function enqueue_payment_form_assets() {
-
-		// bail if on my account page and *not* on add payment method page
-		if ( is_account_page() && ! is_add_payment_method_page() ) {
-			return;
-		}
-
-		$handle = 'wc-square-cash-app';
-
-		// Frontend JS
-		wp_enqueue_script( $handle, $this->get_plugin()->get_plugin_url() . '/assets/js/frontend/' . $handle . '.min.js', array( 'jquery-payment' ), Plugin::VERSION, true );
-
-		// Frontend CSS
-		// wp_enqueue_style( $handle, $this->get_plugin()->get_plugin_url() . '/assets/css/frontend/' . $handle . '.min.css', array(), Plugin::VERSION );
 	}
 
 	/**
@@ -727,15 +784,6 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		);
 	}
 
-
-	/**
-	 * Enqueue the gateway-specific assets if present, including JS, CSS, and
-	 * localized script params
-	 *
-	 * @since x.x.x
-	 */
-	protected function enqueue_gateway_assets() {}
-
 	/**
 	 * Returns true if a transaction should be forced (meaning payment
 	 * processed even if the order amount is 0).  This is useful mostly for
@@ -826,7 +874,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 				 *
 				 * @since x.x.x
 				 * @param \WC_Order $order order object
-				 * @param Payment_Gateway_Direct $this instance
+				 * @param Payment_Gateway $this instance
 				 */
 				do_action( 'wc_payment_gateway_' . $this->get_id() . '_payment_processed', $order, $this );
 
@@ -989,16 +1037,46 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	}
 
 	/**
-	 * Get the Cash App Pay button styles.
+	 * Renders the payment form JS.
 	 *
-	 * @return array Button styles.
+	 * @since x.x.x
 	 */
-	public function get_button_styles() {
-		return array(
-			'theme' => $this->settings['button_theme'] ?? 'dark',
-			'shape' => $this->settings['button_shape'] ?? 'semiround',
-			'size'  => 'medium',
-			'width' => 'full',
+	public function render_js() {
+
+		try {
+			$payment_request = $this->get_payment_request();
+		} catch ( \Exception $e ) {
+			$this->get_plugin()->log( 'Error: ' . $e->getMessage() );
+		}
+
+		$args = array(
+			'application_id'        => $this->get_application_id(),
+			'location_id'           => wc_square()->get_settings_handler()->get_location_id(),
+			'gateway_id'            => $this->get_id(),
+			'gateway_id_dasherized' => $this->get_id_dasherized(),
+			'payment_request'       => $payment_request,
+			'general_error'         => __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
+			'ajax_url'              => \WC_AJAX::get_endpoint( '%%endpoint%%' ),
+			'payment_request_nonce' => wp_create_nonce( 'wc-cash-app-get-payment-request' ),
+			'logging_enabled'       => $this->debug_log(),
+			'is_pay_for_order_page' => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
+			'order_id'              => absint( get_query_var( 'order-pay' ) ),
+			'button_styles'         => $this->get_button_styles(),
+			'reference_id'          => WC()->cart ? WC()->cart->get_cart_hash() : '',
 		);
+
+		/**
+		 * Payment Gateway Payment JS Arguments Filter.
+		 *
+		 * Filter the arguments passed to the Payment handler JS class
+		 *
+		 * @since x.x.x
+		 *
+		 * @param array           $args arguments passed to the Payment Gateway handler JS class
+		 * @param Payment_Gateway $this payment gateway instance
+		 */
+		$args = apply_filters( 'wc_' . $this->get_id() . '_payment_js_args', $args, $this );
+
+		wc_enqueue_js( sprintf( 'window.wc_%s_payment_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_id() ), json_encode( $args ) ) );
 	}
 }

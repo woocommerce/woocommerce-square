@@ -19,13 +19,8 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		constructor( args ) {
-			if ( false === args.payment_request ) {
-				return;
-			}
-
 			this.args = args;
-			this.payment_request = args.payment_request;
-			this.total_amount = args.payment_request.total.amount;
+			this.payment_request = args.payment_request || {};
 			this.isPayForOrderPage = args.is_pay_for_order_page;
 			this.orderId = args.order_id;
 			this.id_dasherized = args.gateway_id_dasherized;
@@ -33,10 +28,6 @@ jQuery( document ).ready( ( $ ) => {
 			this.referenceId = this.reference_id;
 			this.cashAppButton = '#wc-square-cash-app';
 			this.settingUp = false;
-
-			if ( $( this.cashAppButton ).length === 0 ) {
-				return;
-			}
 
 			this.build_cash_app();
 			this.attach_page_events();
@@ -48,8 +39,9 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		build_cash_app() {
-			// if we are already setting up, bail.
-			if ( this.settingUp ) {
+			console.log( '[Square Cash App Pay] Building Cash App Pay' );
+			// if we are already setting up or no cash app button, bail.
+			if ( this.settingUp || $( document ).find( this.cashAppButton ).length === 0  ) {
 				return;
 			}
 
