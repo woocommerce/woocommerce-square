@@ -62,8 +62,11 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 			)
 		);
 
-		// payment method image
+		// Payment method image.
 		$this->icon = $this->get_payment_method_image_url();
+
+		// Transaction URL format.
+		$this->view_transaction_url = $this->get_transaction_url_format();
 
 		// Ajax hooks
 		add_action( 'wc_ajax_square_cash_app_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
@@ -139,6 +142,32 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		$this->render_js();
 	}
 
+	/**
+	 * Validates the entered payment fields.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return bool
+	 */
+	public function validate_fields() {
+		$is_valid = true;
+
+		try {
+			if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
+				throw new \Exception( 'Payment nonce is missing.' );
+			}
+		} catch ( \Exception $exception ) {
+
+			$is_valid = false;
+
+			Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+
+			$this->add_debug_message( $exception->getMessage(), 'error' );
+		}
+
+		return $is_valid;
+	}
+
 	/** Admin methods *************************************************************************************************/
 
 	/**
@@ -162,6 +191,17 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	 */
 	protected function get_default_description() {
 		return esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
+	}
+
+	/**
+	 * Get transaction URL format.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string URL format
+	 */
+	public function get_transaction_url_format() {
+		return $this->get_plugin()->get_settings_handler()->is_sandbox() ? 'https://squareupsandbox.com/dashboard/sales/transactions/%s' : 'https://squareup.com/dashboard/sales/transactions/%s';
 	}
 
 	/**
@@ -218,6 +258,11 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 					'round'     => esc_html__( 'Round', 'woocommerce-square' ),
 				),
 			),
+		);
+
+		$this->form_fields['advanced_settings_title'] = array(
+			'title' => esc_html__( 'Advanced Settings', 'woocommerce-square' ),
+			'type'  => 'title',
 		);
 
 		// debug mode
