@@ -153,7 +153,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 				'default'  => 'semiround',
 				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
 				'options'  => array(
-					'semiround' => esc_html__( 'Semi round', 'woocommerce-square' ),
+					'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
 					'round'     => esc_html__( 'Round', 'woocommerce-square' ),
 				),
 			),
