@@ -4142,4 +4142,68 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->get_id() );
 	}
 
+	/**
+	 * Restores refunded Square inventory.
+	 *
+	 * @internal
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param int $order_id order ID
+	 * @param int $refund_id refund ID
+	 */
+	public function restore_refunded_inventory( $order_id, $refund_id ) {
+		$inventory_adjustments = array();
+
+		// no handling if inventory sync is disabled
+		if ( ! $this->get_plugin()->get_settings_handler()->is_inventory_sync_enabled() ) {
+			return;
+		}
+
+		$order = wc_get_order( $order_id );
+
+		// check that the order was paid using our gateway
+		if ( ! $order instanceof \WC_Order || $order->get_payment_method() !== $this->get_id() ) {
+			return;
+		}
+
+		// don't refund items if the "Restock refunded items" option is unchecked - maintains backwards compatibility if this function is called outside of the `woocommerce_order_refunded` do_action
+		if ( isset( $_POST['restock_refunded_items'] ) ) {
+			// Validate the user has permissions to process this request.
+			if ( ! check_ajax_referer( 'order-item', 'security', false ) || ! current_user_can( 'edit_shop_orders' ) ) {
+				return;
+			}
+
+			if ( 'false' === $_POST['restock_refunded_items'] ) {
+				return;
+			}
+		}
+
+		$refund = wc_get_order( $refund_id );
+
+		if ( $refund instanceof \WC_Order_Refund ) {
+
+			foreach ( $refund->get_items() as $item ) {
+				if ( $item->is_type( 'line_item' ) ) {
+					$product = $item->get_product();
+
+					if ( $product ) {
+						$inventory_adjustment = Product::get_inventory_change_adjustment_type( $product, absint( $item->get_quantity() ) );
+
+						if ( ! empty( $inventory_adjustment ) ) {
+							$inventory_adjustments[] = $inventory_adjustment;
+						}
+					}
+				}
+			}
+		}
+
+		if ( ! empty( $inventory_adjustments ) ) {
+			wc_square()->get_api()->batch_change_inventory(
+				wc_square()->get_idempotency_key( $refund_id . '_' . time() . '_change_inventory' ),
+				$inventory_adjustments
+			);
+		}
+	}
+
 }

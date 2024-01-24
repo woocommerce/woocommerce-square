@@ -70,6 +70,9 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		// Ajax hooks
 		add_action( 'wc_ajax_square_cash_app_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
+
+		// restore refunded Square inventory
+		add_action( 'woocommerce_order_refunded', array( $this, 'restore_refunded_inventory' ), 10, 2 );
 	}
 
 	/**
