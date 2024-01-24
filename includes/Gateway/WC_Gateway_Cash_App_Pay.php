@@ -70,6 +70,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		// Ajax hooks
 		add_action( 'wc_ajax_square_cash_app_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
+		add_action( 'wc_ajax_square_cash_app_log_js_data', array( $this, 'log_js_data' ) );
 
 		// restore refunded Square inventory
 		add_action( 'woocommerce_order_refunded', array( $this, 'restore_refunded_inventory' ), 10, 2 );
@@ -340,6 +341,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		if ( ! $this->api ) {
 			$settings  = $this->get_plugin()->get_settings_handler();
 			$this->api = new Gateway\API( $settings->get_access_token(), $settings->get_location_id(), $settings->is_sandbox() );
+			$this->api->set_api_id( $this->get_id() );
 		}
 
 		return $this->api;
@@ -1104,6 +1106,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 
 		$args = array(
 			'application_id'        => $this->get_application_id(),
+			'ajax_log_nonce'        => wp_create_nonce( 'wc_' . $this->get_id() . '_log_js_data' ),
 			'location_id'           => wc_square()->get_settings_handler()->get_location_id(),
 			'gateway_id'            => $this->get_id(),
 			'gateway_id_dasherized' => $this->get_id_dasherized(),
@@ -1111,7 +1114,8 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 			'general_error'         => __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
 			'ajax_url'              => \WC_AJAX::get_endpoint( '%%endpoint%%' ),
 			'payment_request_nonce' => wp_create_nonce( 'wc-cash-app-get-payment-request' ),
-			'logging_enabled'       => $this->debug_checkout(),
+			'checkout_logging'      => $this->debug_checkout(),
+			'logging_enabled'       => $this->debug_log(),
 			'is_pay_for_order_page' => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'order_id'              => absint( get_query_var( 'order-pay' ) ),
 			'button_styles'         => $this->get_button_styles(),
@@ -1131,5 +1135,23 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		$args = apply_filters( 'wc_' . $this->get_id() . '_payment_js_args', $args, $this );
 
 		wc_enqueue_js( sprintf( 'window.wc_%s_payment_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_id() ), json_encode( $args ) ) );
+	}
+
+	/**
+	 * Logs any data sent by the payment form JS via AJAX.
+	 *
+	 * @since 2.0.0
+	 */
+	public function log_js_data() {
+		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );
+
+		$message = sprintf( "wc-square-cash-app-pay.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( wp_unslash( $_REQUEST['type'] ) ) ) : 'Request' );
+
+		// add the data
+		if ( ! empty( $_REQUEST['data'] ) ) {
+			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true );
+		}
+
+		$this->get_plugin()->log( $message, $this->get_id() );
 	}
 }

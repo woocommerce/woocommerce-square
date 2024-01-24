@@ -42,6 +42,8 @@ class API extends \WooCommerce\Square\API {
 	/** @var \WC_Order order object associated with a request, if any */
 	protected $order;
 
+	/** @var string API ID */
+	protected $api_id;
 
 	/**
 	 * Constructs the class.
@@ -768,7 +770,7 @@ class API extends \WooCommerce\Square\API {
 	 */
 	protected function get_api_id() {
 
-		return $this->get_plugin()->get_gateway()->get_id();
+		return $this->api_id ? $this->api_id : $this->get_plugin()->get_gateway()->get_id();
 	}
 
 
@@ -797,5 +799,13 @@ class API extends \WooCommerce\Square\API {
 	 */
 	public function update_tokenized_payment_method( \WC_Order $order ) {}
 
-
+	/**
+	 * Set API ID to used for logging.
+	 *
+	 * @param string $api_id
+	 * @return void
+	 */
+	public function set_api_id( $api_id ) {
+		$this->api_id = $api_id;
+	}
 }

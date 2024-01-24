@@ -151,6 +151,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.blockedForm = this.blockForm();
 
 			const { tokenResult, error } = event.detail;
+			this.log_data(event.detail, 'response');
 			if ( error ) {
 				this.render_errors( [error.message] );
 				// unblock UI
@@ -316,6 +317,32 @@ jQuery( document ).ready( ( $ ) => {
 			$( '.woocommerce-checkout-payment, #payment' ).unblock();
 		}
 
+		/**
+		 * Logs data to the debug log via AJAX.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param {Object} data Request data.
+		 * @param {string} type Data type.
+		 */
+		log_data( data, type ) {
+			// if logging is disabled, bail.
+			if ( ! this.args.logging_enabled ) {
+				return;
+			}
+
+			const ajax_data = {
+				security: this.args.ajax_log_nonce,
+				type,
+				data,
+			};
+
+			$.ajax( {
+				url: this.get_ajax_url( 'log_js_data' ),
+				data: ajax_data,
+			} );
+		}
+
 		/*
 		 * Logs messages to the console when logging is turned on in the settings
 		 *
@@ -323,7 +350,7 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		log( message, type = 'notice' ) {
 			// if logging is disabled, bail.
-			if ( ! this.args.logging_enabled ) {
+			if ( ! this.args.checkout_logging ) {
 				return;
 			}
 
