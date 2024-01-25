@@ -13,9 +13,9 @@
   "scripts": {
     "build": "composer install --no-dev && NODE_ENV=production grunt && NODE_ENV=production npm run build:webpack && npm run archive",
     "build:dev": "composer install && grunt && npm run build:webpack",
-    "build:webpack": "rimraf build/* && wp-scripts build assets/blocks/index.js",
+    "build:webpack": "rimraf build/* && wp-scripts build",
     "build-watch:grunt": "grunt watch",
-    "build-watch:webpack": "rimraf build/* && wp-scripts start assets/blocks/index.js",
+    "build-watch:webpack": "rimraf build/* && wp-scripts start",
     "lint:js": "wp-scripts lint-js assets --ext js --format table",
     "lint:js:fix": "wp-scripts lint-js assets --ext js --fix",
     "phpcompat": "./vendor/bin/phpcs --standard=phpcs-compat.xml.dist -p .",

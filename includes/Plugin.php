@@ -27,7 +27,7 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
 use WooCommerce\Square\Framework\Square_Helper;
-use WooCommerce\Square\Gateway\WC_Gateway_Cash_App_Pay;
+use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
 use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
@@ -103,7 +103,7 @@ class Plugin extends Payment_Gateway_Plugin {
 				'text_domain'  => 'woocommerce-square',
 				'gateways'     => array(
 					self::GATEWAY_ID              => Gateway::class,
-					self::CASH_APP_PAY_GATEWAY_ID => WC_Gateway_Cash_App_Pay::class,
+					self::CASH_APP_PAY_GATEWAY_ID => Cash_App_Pay_Gateway::class,
 				),
 				'require_ssl'  => true,
 				'supports'     => array(

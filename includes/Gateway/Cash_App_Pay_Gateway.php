@@ -35,7 +35,7 @@ use WooCommerce\Square\WC_Order_Square;
  *
  * @since x.x.x
  */
-class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
+class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 	/** @var API API base instance */
 	private $api;
@@ -69,7 +69,8 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		$this->view_transaction_url = $this->get_transaction_url_format();
 
 		// Ajax hooks
-		add_action( 'wc_ajax_square_cash_app_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
+		add_action( 'wc_ajax_square_cash_app_pay_get_payment_request', array( $this, 'ajax_get_payment_request' ) );
+		add_action( 'wc_ajax_square_cash_app_pay_set_continuation_session', array( $this, 'ajax_set_continuation_session' ) );
 		add_action( 'wc_ajax_square_cash_app_log_js_data', array( $this, 'log_js_data' ) );
 
 		// restore refunded Square inventory
@@ -149,7 +150,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	/**
 	 * Validates the entered payment fields.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @return bool
 	 */
@@ -323,7 +324,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	 * @since x.x.x
 	 * @return boolean true if the gateway is properly configured
 	 */
-	protected function is_configured() {
+	public function is_configured() {
 		return $this->is_enabled() && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
@@ -457,7 +458,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	/**
 	 * Gets an order with refund data attached.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @param int|\WC_Order $order order object
 	 * @param float $amount amount to refund
@@ -832,6 +833,38 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 	}
 
 	/**
+	 * Set continuation session to select the cash app payment method after the redirect back from the cash app
+	 *
+	 * @since x.x.x
+	 * @return void
+	 */
+	public function ajax_set_continuation_session() {
+		check_ajax_referer( 'wc-cash-app-set-continuation-session', 'security' );
+		$clear_session = ( isset( $_POST['clear'] ) && 'true' === sanitize_text_field( wp_unslash( $_POST['clear'] ) ) );
+
+		try {
+			if ( $clear_session ) {
+				WC()->session->set( 'wc_square_cash_app_pay_continuation', null );
+			} else {
+				WC()->session->set( 'wc_square_cash_app_pay_continuation', 'yes' );
+			}
+		} catch ( \Exception $e ) {
+			wp_send_json_error( $e->getMessage() );
+		}
+
+		wp_send_json_success( wp_json_encode( array( 'success' => true ) ) );
+	}
+
+	/**
+	 * Determines if the current request is a continuation of a cash app pay payment.
+	 *
+	 * @return boolean
+	 */
+	public function is_cash_app_pay_continuation() {
+		return WC()->session && 'yes' === WC()->session->get( 'wc_square_cash_app_pay_continuation' );
+	}
+
+	/**
 	 * Returns cart totals in an array format
 	 *
 	 * @since x.x.x
@@ -888,7 +921,7 @@ class WC_Gateway_Cash_App_Pay extends Payment_Gateway {
 		 * @since x.x.x
 		 * @param bool $result default true
 		 * @param int|string $order_id order ID for the payment
-		 * @param WC_Gateway_Cash_App_Pay $this instance
+		 * @param Cash_App_Pay_Gateway $this instance
 		 */
 		$result = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_process_payment', true, $order_id, $this );
 

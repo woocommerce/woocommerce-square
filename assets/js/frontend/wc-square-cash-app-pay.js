@@ -101,7 +101,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.unblock_ui();
 			this.settingUp = false;
 		}
-
+		
 		/**
 		 * Initializes the Cash App Pay payment methods.
 		 *
@@ -255,7 +255,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since x.x.x
 		 */
 		get_ajax_url( request ) {
-			return this.args.ajax_url.replace( '%%endpoint%%', 'square_cash_app_' + request );
+			return this.args.ajax_url.replace( '%%endpoint%%', 'square_cash_app_pay_' + request );
 		}
 
 		/*
