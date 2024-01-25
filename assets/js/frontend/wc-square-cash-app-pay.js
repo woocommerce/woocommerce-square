@@ -99,6 +99,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.payments = window.Square.payments( applicationId, locationId );
 			await this.initializeCashAppPay();
 			this.unblock_ui();
+			this.log('[Square Cash App Pay] Square Cash App Pay Button Loaded');
 			this.settingUp = false;
 		}
 		

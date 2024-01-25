@@ -139,7 +139,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$url = 'https://web.squarecdn.com/v1/square.js';
 		}
 
-		wp_enqueue_script( 'wc-' . $this->get_plugin()->get_id_dasherized() . '-payment-form', $url, array(), Plugin::VERSION );
+		wp_enqueue_script( 'wc-' . $this->get_plugin()->get_id_dasherized() . '-payment-form', $url, array(), Plugin::VERSION, true );
 
 		parent::enqueue_gateway_assets();
 
@@ -477,7 +477,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$max_refund_time = version_compare( $order->square_version, '2.2', '>=' ) ? '+1 year' : '+120 days';
 
 			// throw an error if the payment cannot be refunded
-			if ( current_time( 'timestamp' ) >= strtotime( $max_refund_time, strtotime( $transaction_date ) ) ) {
+			if ( time() >= strtotime( $max_refund_time, strtotime( $transaction_date ) ) ) {
 				/* translators: %s maximum refund date. */
 				return new \WP_Error( 'wc_square_refund_age_exceeded', sprintf( __( 'Refunds must be made within %s of the original payment date.', 'woocommerce-square' ), '+1 year' === $max_refund_time ? 'a year' : '120 days' ) );
 			}
@@ -1167,7 +1167,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 */
 		$args = apply_filters( 'wc_' . $this->get_id() . '_payment_js_args', $args, $this );
 
-		wc_enqueue_js( sprintf( 'window.wc_%s_payment_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_id() ), json_encode( $args ) ) );
+		wc_enqueue_js( sprintf( 'window.wc_%s_payment_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_id() ), wp_json_encode( $args ) ) );
 	}
 
 	/**
@@ -1182,6 +1182,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true );
 		}
 

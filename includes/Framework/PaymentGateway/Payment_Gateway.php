@@ -4170,7 +4170,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		// don't refund items if the "Restock refunded items" option is unchecked - maintains backwards compatibility if this function is called outside of the `woocommerce_order_refunded` do_action
 		if ( isset( $_POST['restock_refunded_items'] ) ) {
 			// Validate the user has permissions to process this request.
-			if ( ! check_ajax_referer( 'order-item', 'security', false ) || ! current_user_can( 'edit_shop_orders' ) ) {
+			if ( ! check_ajax_referer( 'order-item', 'security', false ) || ! current_user_can( 'edit_shop_orders' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 				return;
 			}
 
