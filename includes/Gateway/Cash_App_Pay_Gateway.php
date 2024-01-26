@@ -51,7 +51,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			wc_square(),
 			array(
 				'method_title'       => __( 'Cash App Pay (Square)', 'woocommerce-square' ),
-				'method_description' => __( 'Allow customers to use Cash App Pay to securely pay with their Cash App', 'woocommerce-square' ),
+				'method_description' => __( 'Allow customers to use Cash App Pay to securely pay with Cash App', 'woocommerce-square' ),
 				'payment_type'       => 'cash_app_pay',
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
@@ -404,7 +404,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the order object with payment information added.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @param int|\WC_Order $order_id order ID or object
 	 * @return \WC_Order
@@ -513,8 +513,6 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the configured environment ID.
 	 *
-	 * Square doesn't really support a sandbox, so we don't show a setting for this.
-	 *
 	 * @since x.x.x
 	 *
 	 * @return string
@@ -551,8 +549,8 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Returns the $order object with a unique transaction ref member added
 	 *
 	 * @since x.x.x
-	 * @param WC_Order $order the order object
-	 * @return WC_Order order object with member named unique_transaction_ref
+	 * @param WC_Order_Square $order the order object
+	 * @return WC_Order_Square order object with member named unique_transaction_ref
 	 */
 	protected function get_order_with_unique_transaction_ref( $order ) {
 		$order_id = $order->get_id();
@@ -886,18 +884,6 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	}
 
 	/**
-	 * Returns true if a transaction should be forced (meaning payment
-	 * processed even if the order amount is 0).  This is useful mostly for
-	 * testing situations
-	 *
-	 * @since x.x.x
-	 * @return boolean true if the transaction request should be forced
-	 */
-	public function transaction_forced() {
-		return false;
-	}
-
-	/**
 	 * Handles payment processing.
 	 *
 	 * @see WC_Payment_Gateway::process_payment()
@@ -945,7 +931,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				 *
 				 * @param string $status held order status
 				 * @param \WC_Order $order order object
-				 * @param Payment_Gateway_API_Response_Interface|null $response API response object, if any
+				 * @param \WooCommerce\Square\Gateway\API\Response|null $response API response object, if any
 				 */
 				$held_order_status = apply_filters( 'wc_' . $this->get_id() . '_held_order_status', 'on-hold', $order, null );
 
@@ -1081,8 +1067,8 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 *
 			 * @param string $message order note
 			 * @param \WC_Order $order order object
-			 * @param Payment_Gateway_API_Response_Interface $response transaction response
-			 * @param Payment_Gateway_Direct $this instance
+			 * @param \WooCommerce\Square\Gateway\API\Response $response transaction response
+			 * @param Cash_App_Pay_Gateway $this instance
 			 */
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
@@ -1106,7 +1092,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order order object
-	 * @param \WooCommerce\Square\Gateway\API\Responses\Charge $response API response object
+	 * @param \WooCommerce\Square\Gateway\API\Responses\Create_Payment $response API response object
 	 */
 	public function add_payment_gateway_transaction_data( $order, $response ) {
 
@@ -1173,7 +1159,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Logs any data sent by the payment form JS via AJAX.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 */
 	public function log_js_data() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );

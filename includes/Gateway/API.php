@@ -156,7 +156,7 @@ class API extends \WooCommerce\Square\API {
 	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order order object
-	 * @return \WooCommerce\Square\API\Response
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
 	 * @throws \Exception
 	 */
 	public function cash_app_pay_charge( \WC_Order $order ) {

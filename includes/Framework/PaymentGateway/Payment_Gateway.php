@@ -3626,7 +3626,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @return Payment_Gateway_Plugin the parent plugin object
+	 * @return Plugin the parent plugin object
 	 */
 	public function get_plugin() {
 

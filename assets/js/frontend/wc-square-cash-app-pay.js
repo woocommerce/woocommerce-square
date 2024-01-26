@@ -1,5 +1,3 @@
-/* global wc_add_to_cart_variation_params */
-
 /**
  * Square Cash App Pay Handler class.
  *
