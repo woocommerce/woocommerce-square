@@ -186,9 +186,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$base_location      = wc_get_base_location();
 		$is_plugin_settings = $this->get_plugin()->is_payment_gateway_configuration_page( $this->get_id() );
 		$is_connected       = $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+		$is_enabled         = $this->is_enabled() && $is_connected;
 
 		// Add a notice for cash app pay if the base location is not the US.
-		if ( ( $this->is_configured() || $is_plugin_settings ) && isset( $base_location['country'] ) && 'US' !== $base_location['country'] ) {
+		if ( ( $is_enabled || $is_plugin_settings ) && isset( $base_location['country'] ) && 'US' !== $base_location['country'] ) {
 
 			$this->get_plugin()->get_admin_notice_handler()->add_admin_notice(
 				sprintf(
@@ -369,7 +370,11 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @return boolean true if the gateway is properly configured
 	 */
 	public function is_configured() {
-		return $this->is_enabled() && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+		// Only available in the US
+		$base_location = wc_get_base_location();
+		$us_only       = isset( $base_location['country'] ) && 'US' === $base_location['country'];
+
+		return $this->is_enabled() && $us_only && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
 	/** Getter methods ************************************************************************************************/
