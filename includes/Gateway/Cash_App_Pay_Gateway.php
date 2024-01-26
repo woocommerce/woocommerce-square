@@ -75,6 +75,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 		// restore refunded Square inventory
 		add_action( 'woocommerce_order_refunded', array( $this, 'restore_refunded_inventory' ), 10, 2 );
+
+		// Admin hooks.
+		add_action( 'admin_notices', array( $this, 'add_admin_notices' ) );
 	}
 
 	/**
@@ -100,10 +103,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		parent::payment_fields();
 		?>
 		<br />
-		<div id="square-cash-app-pay-hidden-fields">
+		<div id="wc-square-cash-app-pay-hidden-fields">
 			<input name="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" id="<?php echo 'wc-' . esc_attr( $this->get_id_dasherized() ) . '-payment-nonce'; ?>" type="hidden" />
 		</div>
-		<form id="wc-cash-app-payment-form">
+		<form id="wc-square-cash-app-payment-form">
 			<div id="wc-square-cash-app"></div>
 		</form>
 		<?php
@@ -174,6 +177,47 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	}
 
 	/** Admin methods *************************************************************************************************/
+	/**
+	 * Adds admin notices.
+	 *
+	 * @since x.x.x
+	 */
+	public function add_admin_notices() {
+		$base_location      = wc_get_base_location();
+		$is_plugin_settings = $this->get_plugin()->is_payment_gateway_configuration_page( $this->get_id() );
+		$is_connected       = $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+
+		// Add a notice for cash app pay if the base location is not the US.
+		if ( ( $this->is_configured() || $is_plugin_settings ) && isset( $base_location['country'] ) && 'US' !== $base_location['country'] ) {
+
+			$this->get_plugin()->get_admin_notice_handler()->add_admin_notice(
+				sprintf(
+					/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag, %3$s - 2-character country code, %4$s - comma separated list of 2-character country codes */
+					__( '%1$sCash App Pay (Square):%2$s Your base country is %3$s, but Cash App Pay (Square) can’t accept transactions from merchants outside of US.', 'woocommerce-square' ),
+					'<strong>',
+					'</strong>',
+					esc_html( $base_location['country'] )
+				),
+				'wc-square-cash-app-pay-base-location',
+				array(
+					'notice_class' => 'notice-error',
+				)
+			);
+		}
+
+		// Add a notice to enable cash app pay and start accept payments using cash app pay.
+		if ( $is_connected && ! $this->is_enabled() && ! $is_plugin_settings && isset( $base_location['country'] ) && 'US' === $base_location['country'] ) {
+			$this->get_plugin()->get_admin_notice_handler()->add_admin_notice(
+				sprintf(
+					/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
+					__( 'You are ready to accept payments using Cash App Pay (Square)! %1$sEnable it%2$s now to start accepting payments.', 'woocommerce-square' ),
+					'<a href="' . esc_url( $this->get_plugin()->get_payment_gateway_configuration_url( $this->get_id() ) ) . '">',
+					'</a>'
+				),
+				'wc-square-enable-cash-app-pay',
+			);
+		}
+	}
 
 	/**
 	 * Get the default payment method title, which is configurable within the
