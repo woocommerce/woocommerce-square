@@ -81,8 +81,6 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		attach_page_events() {
 			$( document.body ).on( 'updated_checkout', () => this.build_cash_app() );
-			$( document.body ).on( 'click', 'input[name="payment_method"]', () => this.toggle_order_button() );
-			// WC 3.4.3+ trigger
 			$( document.body ).on( 'payment_method_selected', () => this.toggle_order_button() );
 		}
 
