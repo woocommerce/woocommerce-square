@@ -194,7 +194,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$this->get_plugin()->get_admin_notice_handler()->add_admin_notice(
 				sprintf(
 					/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag, %3$s - 2-character country code, %4$s - comma separated list of 2-character country codes */
-					__( '%1$sCash App Pay (Square):%2$s Your base country is %3$s, but Cash App Pay (Square) can’t accept transactions from merchants outside of US.', 'woocommerce-square' ),
+					__( '%1$sCash App Pay (Square):%2$s Your base country is %3$s, but Cash App Pay can’t accept transactions from merchants outside of US.', 'woocommerce-square' ),
 					'<strong>',
 					'</strong>',
 					esc_html( $base_location['country'] )
