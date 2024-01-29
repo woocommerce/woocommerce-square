@@ -51,7 +51,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			wc_square(),
 			array(
 				'method_title'       => __( 'Cash App Pay (Square)', 'woocommerce-square' ),
-				'method_description' => __( 'Allow customers to use Cash App Pay to securely pay with Cash App', 'woocommerce-square' ),
+				'method_description' => __( 'Allow customers to securely pay with Cash App', 'woocommerce-square' ),
 				'payment_type'       => 'cash_app_pay',
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
@@ -321,7 +321,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			'type'    => 'select',
 			'class'   => 'wc-enhanced-select',
 			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-			'desc'    => sprintf( esc_html__( 'Show Detailed Error Messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
+			'desc'    => sprintf( esc_html__( 'Show detailed error messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
 			'default' => self::DEBUG_MODE_OFF,
 			'options' => array(
 				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
