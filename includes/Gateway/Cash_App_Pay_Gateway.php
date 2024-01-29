@@ -40,6 +40,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/** @var API API base instance */
 	private $api;
 
+	/** @var string configuration option: button theme for the Cash App Pay button. */
+	public $button_theme;
+
+	/** @var string configuration option: button shape for the Cash App Pay button. */
+	public $button_shape;
+
 	/**
 	 * Constructs the class.
 	 *
