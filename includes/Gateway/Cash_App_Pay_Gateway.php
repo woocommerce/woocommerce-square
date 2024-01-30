@@ -378,11 +378,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	public function is_configured() {
 		// Only available in the US and USD currency.
 		$base_location = wc_get_base_location();
-		$base_currency = get_woocommerce_currency();
 		$us_only       = isset( $base_location['country'] ) && 'US' === $base_location['country'];
-		$usd_only      = 'USD' === $base_currency;
 
-		return $this->is_enabled() && $us_only && $usd_only && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+		return $this->is_enabled() && $us_only && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
 	/** Getter methods ************************************************************************************************/
@@ -759,6 +757,11 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				'fees'     => $order->get_total_fees(),
 				'taxes'    => $order->get_total_tax(),
 			);
+
+			// Set currency of order if order-pay page.
+			if ( $order && $order->get_currency() ) {
+				$data['currencyCode'] = $order->get_currency();
+			}
 
 			unset( $data['is_pay_for_order_page'], $data['order_id'] );
 		}
