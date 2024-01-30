@@ -178,6 +178,12 @@ jQuery( document ).ready( ( $ ) => {
 				} else {
 					$( 'form.checkout' ).trigger('submit');
 				}
+			} else {
+				// Declined transaction. Unblock UI and re-build Cash App Pay.
+				if ( this.blockedForm ) {
+					this.blockedForm.unblock();
+				}
+				this.build_cash_app();
 			}
 		}
 

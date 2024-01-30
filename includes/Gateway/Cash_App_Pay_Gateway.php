@@ -138,7 +138,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$is_checkout = is_checkout() || ( function_exists( 'has_block' ) && has_block( 'woocommerce/checkout' ) );
 
 		// bail if not a checkout page or cash app pay is not enabled
-		if ( ! ( $is_checkout || $this->is_configured() ) ) {
+		if ( ! $is_checkout || ! $this->is_configured() ) {
 			return;
 		}
 
@@ -376,11 +376,13 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @return boolean true if the gateway is properly configured
 	 */
 	public function is_configured() {
-		// Only available in the US
+		// Only available in the US and USD currency.
 		$base_location = wc_get_base_location();
+		$base_currency = get_woocommerce_currency();
 		$us_only       = isset( $base_location['country'] ) && 'US' === $base_location['country'];
+		$usd_only      = 'USD' === $base_currency;
 
-		return $this->is_enabled() && $us_only && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+		return $this->is_enabled() && $us_only && $usd_only && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
 	/** Getter methods ************************************************************************************************/
@@ -626,13 +628,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	}
 
 	/**
-	 * Returns the payment method image URL (if any) for the given $type, ie
-	 * if $type is 'amex' a URL to the american express card icon will be
-	 * returned.  If $type is 'echeck', a URL to the echeck icon will be
-	 * returned.
+	 * Returns the payment method image URL.
 	 *
 	 * @since x.x.x
-	 * @param string $type the payment method cc type or name
+	 * @param string $type the payment method type or name
 	 * @return string the image URL or null
 	 */
 	public function get_payment_method_image_url( $type = '' ) {
@@ -646,7 +645,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 */
 		$image_extension = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_use_svg', true ) ? '.svg' : '.png';
 
-		// first, is the card image available within the plugin?
+		// first, is the image available within the plugin?
 		if ( is_readable( $this->get_plugin()->get_plugin_path() . '/assets/images/cash-app' . $image_extension ) ) {
 			return \WC_HTTPS::force_https_url( $this->get_plugin()->get_plugin_url() . '/assets/images/cash-app' . $image_extension );
 		}
