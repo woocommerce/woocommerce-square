@@ -87,7 +87,8 @@ export const ComponentCashAppPay = (props) => {
 			return;
 		}
 
-		(async () => {
+		async function setupIntegration(){
+			setIsLoaded(false);
 			try {
 				const paymentRequest = await createPaymentRequest(payments);
 				if (window.wcSquareCashAppPay) {
@@ -119,6 +120,10 @@ export const ComponentCashAppPay = (props) => {
 
 						// Place an Order.
 						onSubmit();
+					} else {
+						// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
+						setPaymentNonce(null);
+						setupIntegration();
 					}
 				});
 
@@ -136,7 +141,8 @@ export const ComponentCashAppPay = (props) => {
 				console.error(e);
 			}
 			setIsLoaded(true);
-		})();
+		}
+		setupIntegration();
 
 		return () =>
 			(async () => {
