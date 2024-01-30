@@ -259,6 +259,38 @@ test.describe('Cash App Pay Tests', () => {
 		await expect(blockPayMethod).toBeVisible();
 	});
 
+	test('Cash App Pay should be only available for USD currency - @foundational', async ({
+		page,
+	}) => {
+		await page.goto('/wp-admin/admin.php?page=wc-settings&tab=general');
+		await page
+			.locator('select[name="woocommerce_currency"]')
+			.selectOption('INR');
+		await page.locator('.woocommerce-save-button').click();
+		
+		// Confirm that the Cash App Pay is not visible on checkout page.
+		await visitCheckout(page, false);
+		await fillAddressFields(page, false);
+		await expect(
+			await page.locator(
+				'ul.wc_payment_methods li.payment_method_square_cash_app_pay'
+			)
+		).not.toBeVisible();
+		// Confirm that the Cash App Pay is not visible on block-checkout page.
+		await visitCheckout(page, true);
+		await expect(
+			await page.locator(
+				'label[for="radio-control-wc-payment-method-options-square_cash_app_pay"]'
+			)
+		).not.toBeVisible();
+
+		await page.goto('/wp-admin/admin.php?page=wc-settings&tab=general');
+		await page
+			.locator('select[name="woocommerce_currency"]')
+			.selectOption('USD');
+		await page.locator('.woocommerce-save-button').click();
+	});
+
 	const isBlockCheckout = [true, false];
 
 	for (const isBlock of isBlockCheckout) {
@@ -290,6 +322,35 @@ test.describe('Cash App Pay Tests', () => {
 			}
 		);
 	}
+
+	test( '[Block]: Customers can pay using Cash App Pay after decline transcation once - @foundational',
+		async ({ browser }) => {
+			test.slow();
+			const context = await browser.newContext({
+				...iPhone,
+			});
+			const page = await context.newPage();
+			await page.goto('/product/simple-product');
+			await page.locator('.single_add_to_cart_button').click();
+			await visitCheckout(page, true);
+			await fillAddressFields(page, true);
+			await selectPaymentMethod(page, 'square_cash_app_pay', true);
+			// Decline transcation once.
+			await placeCashAppPayOrder(page, true, true);
+			await page.waitForLoadState('networkidle');
+			const orderId = await placeCashAppPayOrder(page, true);
+
+			await gotoOrderEditPage(page, orderId);
+			await expect(page.locator('#order_status')).toHaveValue(
+				'wc-processing'
+			);
+			await expect(
+				page.getByText(
+					'Cash App Pay (Square) Test Charge Approved for an amount of'
+				)
+			).toBeVisible();
+		}
+	);
 
 	test('Store owners can fully refund Cash App Pay orders - @foundational', async ({
 		browser,

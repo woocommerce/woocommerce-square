@@ -437,8 +437,9 @@ export async function selectPaymentMethod(
  *
  * @param {Object}  page    Playwright page object.
  * @param {Boolean} isBlock Indicates if is block checkout.
+ * @param {Boolean} decline Indicates if payment should be declined.
  */
-export async function placeCashAppPayOrder( page, isBlock = true ) {
+export async function placeCashAppPayOrder( page, isBlock = true, decline = false ) {
 	// Wait for overlay to disappear
 	await waitForUnBlock(page);
 	if ( isBlock ) {
@@ -447,9 +448,18 @@ export async function placeCashAppPayOrder( page, isBlock = true ) {
 		await page.locator('#wc-square-cash-app').getByTestId('cap-btn').click();
 	}	
 	await page.waitForLoadState('networkidle');
-	await page.getByRole('button', { name: 'Approve' }).click();
+	if ( decline ) {
+		await page.getByRole('button', { name: 'Decline' }).click();
+	} else {
+		await page.getByRole('button', { name: 'Approve' }).click();
+	}
 	await page.waitForLoadState('networkidle');
 	await page.getByRole('button', { name: 'Done' }).click();
+	// Early return if declined.
+	if ( decline ) {
+		return;
+	}
+
 	await page.waitForLoadState('networkidle');
 	await expect(
 		await page.locator( '.entry-title' )
