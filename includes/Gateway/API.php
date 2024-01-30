@@ -42,6 +42,8 @@ class API extends \WooCommerce\Square\API {
 	/** @var \WC_Order order object associated with a request, if any */
 	protected $order;
 
+	/** @var string API ID */
+	protected $api_id;
 
 	/**
 	 * Constructs the class.
@@ -142,6 +144,26 @@ class API extends \WooCommerce\Square\API {
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
 		$request->set_gift_card_charge_data( $order );
+
+		$this->set_response_handler( API\Responses\Create_Payment::class );
+
+		return $this->perform_request( $request );
+	}
+
+	/**
+	 * Performs a Cash App Pay charge for the given order.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order order object
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cash_app_pay_charge( \WC_Order $order ) {
+
+		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
+
+		$request->set_charge_data( $order, true, true );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 
@@ -748,7 +770,7 @@ class API extends \WooCommerce\Square\API {
 	 */
 	protected function get_api_id() {
 
-		return $this->get_plugin()->get_gateway()->get_id();
+		return $this->api_id ? $this->api_id : $this->get_plugin()->get_gateway()->get_id();
 	}
 
 
@@ -777,5 +799,13 @@ class API extends \WooCommerce\Square\API {
 	 */
 	public function update_tokenized_payment_method( \WC_Order $order ) {}
 
-
+	/**
+	 * Set API ID to used for logging.
+	 *
+	 * @param string $api_id
+	 * @return void
+	 */
+	public function set_api_id( $api_id ) {
+		$this->api_id = $api_id;
+	}
 }

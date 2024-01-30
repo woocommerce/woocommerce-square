@@ -249,7 +249,7 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 	private function get_gateway() {
 		if ( empty( $this->gateway ) ) {
 			$gateways      = $this->plugin->get_gateways();
-			$this->gateway = ! empty( $gateways ) ? array_pop( $gateways ) : null;
+			$this->gateway = ! empty( $gateways ) ? $gateways[0] : null;
 		}
 
 		return $this->gateway;

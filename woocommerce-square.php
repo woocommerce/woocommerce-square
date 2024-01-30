@@ -426,6 +426,7 @@ class WooCommerce_Square_Loader {
 	public function register_payment_method_block_integrations( $payment_method_registry ) {
 		if ( class_exists( '\Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
 			$payment_method_registry->register( new WooCommerce\Square\Gateway\Blocks_Handler() );
+			$payment_method_registry->register( new WooCommerce\Square\Gateway\Cash_App_Pay_Blocks_Handler() );
 		}
 	}
 

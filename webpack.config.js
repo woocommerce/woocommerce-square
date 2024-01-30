@@ -1,5 +1,6 @@
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const DependencyExtractionWebpackPlugin = require( '@woocommerce/dependency-extraction-webpack-plugin' );
+const path = require('path');
 
 module.exports = {
 	...defaultConfig,
@@ -10,4 +11,8 @@ module.exports = {
 		),
 		new DependencyExtractionWebpackPlugin(),
 	],
+	entry: {
+		'index': path.resolve(process.cwd(), 'assets/blocks', 'index.js'),
+		'cash-app-pay': path.resolve(process.cwd(), 'assets/blocks/cash-app-pay', 'index.js'),
+	}
 };
