@@ -304,7 +304,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			),
 
 			'button_shape' => array(
-				'title'    => esc_html__( 'Cash App Pay Button shape', 'woocommerce-square' ),
+				'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
 				'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
 				'type'     => 'select',
 				'default'  => 'semiround',
