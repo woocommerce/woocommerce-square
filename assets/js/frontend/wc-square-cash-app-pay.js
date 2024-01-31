@@ -1,20 +1,20 @@
 /**
  * Square Cash App Pay Handler class.
  *
- * @since x.x.x
+ * @since 4.5.0
  */
 jQuery( document ).ready( ( $ ) => {
 	/**
 	 * Square Cash App Pay Handler class.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	class WC_Square_Cash_App_Pay_Handler {
 		/**
 		 * Setup handler
 		 *
 		 * @param {Array} args
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		constructor( args ) {
 			this.args = args;
@@ -34,7 +34,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Fetch a new payment request object and reload the Square Payments
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		build_cash_app() {
 			// if we are already setting up or no cash app button, bail.
@@ -77,7 +77,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Add page event listeners
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		attach_page_events() {
 			$( document.body ).on( 'updated_checkout', () => this.build_cash_app() );
@@ -87,7 +87,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Load the Cash App payment form
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		async load_cash_app_form() {
 			this.log( '[Square Cash App Pay] Building Cash App Pay' );
@@ -98,7 +98,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.log('[Square Cash App Pay] Square Cash App Pay Button Loaded');
 			this.settingUp = false;
 		}
-		
+
 		/**
 		 * Initializes the Cash App Pay payment methods.
 		 *
@@ -124,7 +124,7 @@ jQuery( document ).ready( ( $ ) => {
 				referenceId: this.referenceId,
 			});
 			await this.cashAppPay.attach( '#wc-square-cash-app', this.buttonStyles );
-			
+
 			this.cashAppPay.addEventListener('ontokenization', (event) => this.handleCashAppPaymentResponse( event ) );
 
 			// Toggle the place order button.
@@ -140,7 +140,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		/**
 		 * Handles the Cash App payment response.
-		 * 
+		 *
 		 * @param {Object} event The event object.
 		 * @returns void
 		 */
@@ -208,7 +208,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Gets the Square payment form params.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		get_form_params() {
 			const params = {
@@ -222,7 +222,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Sets the a payment request object for the Square Payment Form
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		create_payment_request() {
 			return this.payment_request;
@@ -231,7 +231,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Get the payment request on a product page
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		get_payment_request() {
 			return new Promise( ( resolve, reject ) => {
@@ -255,7 +255,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Helper function to return the ajax URL for the given request/action
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		get_ajax_url( request ) {
 			return this.args.ajax_url.replace( '%%endpoint%%', 'square_cash_app_pay_' + request );
@@ -264,7 +264,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Renders errors given the error message HTML
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		render_errors_html( errors_html ) {
 			// hide and remove any previous errors.
@@ -289,7 +289,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Renders errors
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		render_errors( errors ) {
 			const error_message_html = '<ul class="woocommerce-error"><li>' + errors.join( '</li><li>' ) + '</li></ul>';
@@ -299,7 +299,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Block the payment buttons being clicked which processing certain actions
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		block_ui() {
 			$( '.woocommerce-checkout-payment, #payment' ).block( {
@@ -314,7 +314,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Unblocks the payment buttons
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		unblock_ui() {
 			$( '.woocommerce-checkout-payment, #payment' ).unblock();
@@ -323,7 +323,7 @@ jQuery( document ).ready( ( $ ) => {
 		/**
 		 * Logs data to the debug log via AJAX.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 *
 		 * @param {Object} data Request data.
 		 * @param {string} type Data type.
@@ -349,7 +349,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Logs messages to the console when logging is turned on in the settings
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		log( message, type = 'notice' ) {
 			// if logging is disabled, bail.
@@ -367,7 +367,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Returns the payment nonce
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		has_payment_nonce() {
 			return $( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val();
@@ -376,7 +376,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Returns the selected payment gateway id
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		get_selected_gateway_id() {
 			return $( 'form.checkout, form#order_review' ).find( 'input[name=payment_method]:checked' ).val();
@@ -385,7 +385,7 @@ jQuery( document ).ready( ( $ ) => {
 		/*
 		 * Toggles the order button
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 */
 		toggle_order_button() {
 			if ( this.get_selected_gateway_id() === this.args.gateway_id && ! this.has_payment_nonce() ) {

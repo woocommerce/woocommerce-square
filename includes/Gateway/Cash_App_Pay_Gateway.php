@@ -33,7 +33,7 @@ use WooCommerce\Square\WC_Order_Square;
 /**
  * The Cash App Pay payment gateway class.
  *
- * @since x.x.x
+ * @since 4.5.0
  */
 class Cash_App_Pay_Gateway extends Payment_Gateway {
 
@@ -49,7 +49,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Constructs the class.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function __construct() {
 		parent::__construct(
@@ -89,7 +89,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Enqueue the necessary scripts & styles for the gateway.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function enqueue_scripts() {
 		if ( ! $this->is_configured() ) {
@@ -103,7 +103,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Payment form on checkout page.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function payment_fields() {
 		parent::payment_fields();
@@ -121,7 +121,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Return the gateway-specifics JS script handle.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return string
 	 */
 	protected function get_gateway_js_handle() {
@@ -132,7 +132,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Enqueue the gateway-specific assets if present, including JS, CSS, and
 	 * localized script params
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	protected function enqueue_gateway_assets() {
 		$is_checkout = is_checkout() || ( function_exists( 'has_block' ) && has_block( 'woocommerce/checkout' ) );
@@ -159,7 +159,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Validates the entered payment fields.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return bool
 	 */
@@ -186,7 +186,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Adds admin notices.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function add_admin_notices() {
 		$base_location      = wc_get_base_location();
@@ -230,7 +230,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Get the default payment method title, which is configurable within the
 	 * admin and displayed on checkout
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return string payment method title to show on checkout
 	 */
 	protected function get_default_title() {
@@ -242,7 +242,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Get the default payment method description, which is configurable
 	 * within the admin and displayed on checkout
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return string payment method description to show on checkout
 	 */
 	protected function get_default_description() {
@@ -252,7 +252,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Get transaction URL format.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return string URL format
 	 */
@@ -263,7 +263,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Initialize payment gateway settings fields
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
@@ -348,7 +348,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 *
 		 * Actors can use this to add, remove, or tweak gateway form fields
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 * @param array $form_fields array of form fields in format required by WC_Settings_API
 		 * @param Payment_Gateway $this gateway instance
 		 */
@@ -360,7 +360,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Determines if the gateway is available.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return bool
 	 */
@@ -372,7 +372,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Returns true if the gateway is properly configured to perform transactions
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return boolean true if the gateway is properly configured
 	 */
 	public function is_configured() {
@@ -388,7 +388,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the API instance.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return Gateway\API
 	 */
@@ -407,7 +407,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the gateway settings fields.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return array
 	 */
@@ -421,7 +421,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 *
 	 * Overridden to avoid auto-creating customer IDs, as Square generates them.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param int $user_id user ID
 	 * @param array $args arguments
@@ -439,7 +439,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets a guest's customer ID.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return string|bool
@@ -459,7 +459,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the order object with payment information added.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param int|\WC_Order $order_id order ID or object
 	 * @return \WC_Order
@@ -513,7 +513,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets an order with refund data attached.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param int|\WC_Order $order order object
 	 * @param float $amount amount to refund
@@ -568,7 +568,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the configured environment ID.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return string
 	 */
@@ -579,7 +579,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets the configured application ID.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @return string
 	 */
@@ -593,7 +593,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		/**
 		 * Filters the configured application ID.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 *
 		 * @param string $application_id application ID
 		 */
@@ -603,7 +603,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Returns the $order object with a unique transaction ref member added
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @param WC_Order_Square $order the order object
 	 * @return WC_Order_Square order object with member named unique_transaction_ref
 	 */
@@ -628,7 +628,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Returns the payment method image URL.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @param string $type the payment method type or name
 	 * @return string the image URL or null
 	 */
@@ -638,7 +638,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 *
 		 * Allow actors to enable the use of PNGs over SVGs for payment icon images.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 * @param bool $use_svg true by default, false to use PNGs
 		 */
 		$image_extension = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_use_svg', true ) ? '.svg' : '.png';
@@ -668,7 +668,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		/**
 		 * Filters the Cash App Pay button styles.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 * @param array $button_styles Button styles.
 		 * @return array Button styles.
 		 */
@@ -680,7 +680,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Mark an order as refunded. This should only be used when the full order
 	 * amount has been refunded.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param \WC_Order $order order object
 	 */
@@ -699,7 +699,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Payment request objects are used by the Payments and need to be in a specific format.
 	 * Reference: https://developer.squareup.com/docs/api/paymentform#paymentform-paymentrequestobjects
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return array
 	 */
 	public function get_payment_request() {
@@ -730,7 +730,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 *
 	 * Documentation: https://developer.squareup.com/docs/api/paymentform#paymentform-paymentrequestobjects
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @param string $amount - format '100.00'
 	 * @param array $data
 	 * @return array
@@ -773,7 +773,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		/**
 		 * Filters the payment request Total Label Suffix.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 * @param string $total_label_suffix
 		 * @return string
 		 */
@@ -792,7 +792,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Builds an array of line items/totals to be sent back to Square in the lineItems array.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @param array $totals
 	 * @return array
 	 */
@@ -865,7 +865,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Get the payment request object in an ajax request
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return void
 	 */
 	public function ajax_get_payment_request() {
@@ -890,7 +890,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Set continuation session to select the cash app payment method after the redirect back from the cash app
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return void
 	 */
 	public function ajax_set_continuation_session() {
@@ -922,7 +922,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Returns cart totals in an array format
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @throws \Exception if no cart is found
 	 * @return array
 	 */
@@ -945,7 +945,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 *
 	 * @see WC_Payment_Gateway::process_payment()
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param int|string $order_id
 	 * @return array associative array with members 'result' and 'redirect'
@@ -961,7 +961,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 * this transaction. Return an array value from this filter will return it
 		 * directly to the checkout processing code and skip this method entirely.
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 * @param bool $result default true
 		 * @param int|string $order_id order ID for the payment
 		 * @param Cash_App_Pay_Gateway $this instance
@@ -984,7 +984,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				/**
 				 * Filters the order status that's considered to be "held".
 				 *
-				 * @since x.x.x
+				 * @since 4.5.0
 				 *
 				 * @param string $status held order status
 				 * @param \WC_Order $order order object
@@ -1016,7 +1016,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				 *
 				 * Fired when a payment is processed for an order.
 				 *
-				 * @since x.x.x
+				 * @since 4.5.0
 				 * @param \WC_Order $order order object
 				 * @param Payment_Gateway $this instance
 				 */
@@ -1044,7 +1044,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Do the transaction.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param WC_Order_Square $order
 	 * @return bool
@@ -1120,7 +1120,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 * Allow actors to modify the order note added when a Credit Card transaction
 			 * is approved.
 			 *
-			 * @since x.x.x
+			 * @since 4.5.0
 			 *
 			 * @param string $message order note
 			 * @param \WC_Order $order order object
@@ -1146,7 +1146,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Adds transaction data to the order.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @param \WooCommerce\Square\Gateway\API\Responses\Create_Payment $response API response object
@@ -1170,7 +1170,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Renders the payment form JS.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function render_js() {
 
@@ -1203,7 +1203,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 *
 		 * Filter the arguments passed to the Payment handler JS class
 		 *
-		 * @since x.x.x
+		 * @since 4.5.0
 		 *
 		 * @param array           $args arguments passed to the Payment Gateway handler JS class
 		 * @param Payment_Gateway $this payment gateway instance
@@ -1216,7 +1216,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Logs any data sent by the payment form JS via AJAX.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function log_js_data() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );

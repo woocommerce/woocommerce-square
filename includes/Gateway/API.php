@@ -153,7 +153,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Performs a Cash App Pay charge for the given order.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
