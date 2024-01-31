@@ -41,16 +41,14 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	 */
 	protected $gateway = null;
 
-
 	/**
 	 * Init Square Cash App Pay Cart and Checkout Blocks handler class
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 */
 	public function __construct() {
 		$this->plugin = wc_square();
 	}
-
 
 	/**
 	 * Initializes the payment method type.
@@ -100,7 +98,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	/**
 	 * Returns an array of key=>value pairs of data made available to the payment methods script.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return array
 	 */
 	public function get_payment_method_data() {
@@ -134,7 +132,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	/**
 	 * Get a list of features supported by Square
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return array
 	 */
 	public function get_supported_features() {
@@ -145,7 +143,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	/**
 	 * Helper function to get and store an instance of the Square gateway
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return Cash_App_Pay_Gateway|null
 	 */
 	private function get_gateway() {
