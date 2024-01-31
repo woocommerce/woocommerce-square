@@ -322,6 +322,9 @@ export async function doSquareRefund( page, amount = '' ) {
  */
 export async function deleteAllProducts( page, permanent = true ) {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
+	if ( ! await page.locator( '#cb-select-all-1' ).isVisible() ) {
+		return;
+	}
 	await page.locator( '#cb-select-all-1' ).check();
 	await page.locator( '#bulk-action-selector-top' ).selectOption( { value: 'trash' } );
 	await page.locator( '#doaction' ).click();
@@ -330,4 +333,142 @@ export async function deleteAllProducts( page, permanent = true ) {
 		await page.goto( '/wp-admin/edit.php?post_status=trash&post_type=product' );
 		await page.locator( '#delete_all' ).first().click();
 	}
+}
+
+
+/**
+ * Save Cash App Pay payment settings
+ *
+ * @param {Page}    page     Playwright page object
+ * @param {Object}  options  Cash App Pay payment settings
+ */
+export async function saveCashAppPaySettings(page, options) {
+	const settings = {
+		enabled: true,
+		title: 'Cash App Pay',
+		description: 'Pay securely using Cash App Pay.',
+		debugMode: 'off',
+		buttonTheme: 'dark',
+		buttonShape: 'semiround',
+		...options,
+	};
+
+	await page.goto(
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_cash_app_pay'
+	);
+
+	// Enable/Disable
+	if (!settings.enabled) {
+		await page.locator('#woocommerce_square_cash_app_pay_enabled').uncheck();
+	} else {
+		await page.locator('#woocommerce_square_cash_app_pay_enabled').check();
+	}
+
+	// Title and Description
+	await page
+		.locator('#woocommerce_square_cash_app_pay_title')
+		.fill(settings.title);
+	await page
+		.locator('#woocommerce_square_cash_app_pay_description')
+		.fill(settings.description);
+
+	// Debug Mode and Environment
+	await page
+		.locator('#woocommerce_square_cash_app_pay_debug_mode')
+		.selectOption(settings.debugMode);
+	
+	// Button customization
+	await page
+		.locator('#woocommerce_square_cash_app_pay_button_theme')
+		.selectOption(settings.buttonTheme);
+	await page
+		.locator('#woocommerce_square_cash_app_pay_button_shape')
+		.selectOption(settings.buttonShape);
+
+	await page.getByRole('button', { name: 'Save changes' }).click();
+	await expect(page.locator('#message.updated.inline').last()).toContainText(
+		'Your settings have been saved.'
+	);
+}
+
+/**
+ * Select payment method
+ *
+ * @param {Page}    page            Playwright page object
+ * @param {string}  paymentMethod   Payment method name
+ * @param {boolean} isBlockCheckout Is block checkout?
+ */
+export async function selectPaymentMethod(
+	page,
+	paymentMethod,
+	isBlockCheckout
+) {
+	if (isBlockCheckout) {
+		await page
+			.locator(
+				`label[for="radio-control-wc-payment-method-options-${paymentMethod}"]`
+			)
+			.click();
+		await expect(
+			page.locator('.wc-block-components-loading-mask')
+		).not.toBeVisible();
+		return;
+	}
+	// Wait for overlay to disappear
+	await page
+		.locator('.blockUI.blockOverlay')
+		.last()
+		.waitFor({ state: 'detached' });
+
+	// Wait for payment method to appear
+	const payMethod = await page
+		.locator(
+			`ul.wc_payment_methods li.payment_method_${paymentMethod} label`
+		)
+		.first();
+	await expect(payMethod).toBeVisible();
+
+	// Select payment method
+	await page
+		.locator(`label[for="payment_method_${paymentMethod}"]`)
+		.waitFor();
+	await payMethod.click();
+}
+
+/**
+ * Pay using Cash App Pay
+ *
+ * @param {Object}  page    Playwright page object.
+ * @param {Boolean} isBlock Indicates if is block checkout.
+ * @param {Boolean} decline Indicates if payment should be declined.
+ */
+export async function placeCashAppPayOrder( page, isBlock = true, decline = false ) {
+	// Wait for overlay to disappear
+	await waitForUnBlock(page);
+	if ( isBlock ) {
+		await page.locator('#wc-square-cash-app-pay').getByTestId('cap-btn').click();
+	} else {
+		await page.locator('#wc-square-cash-app').getByTestId('cap-btn').click();
+	}	
+	await page.waitForLoadState('networkidle');
+	if ( decline ) {
+		await page.getByRole('button', { name: 'Decline' }).click();
+	} else {
+		await page.getByRole('button', { name: 'Approve' }).click();
+	}
+	await page.waitForLoadState('networkidle');
+	await page.getByRole('button', { name: 'Done' }).click();
+	// Early return if declined.
+	if ( decline ) {
+		return;
+	}
+
+	await page.waitForLoadState('networkidle');
+	await expect(
+		await page.locator( '.entry-title' )
+	).toHaveText( 'Order received' );
+	const orderId = await page
+		.locator( '.woocommerce-order-overview__order strong' )
+		.innerText();
+	return orderId;
 }
