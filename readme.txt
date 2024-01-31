@@ -72,6 +72,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.5.0 - 2024-01-31 =
+* Add - Support for the Cash App Pay payment method.
+* Dev - Added end-to-end (E2E) tests for the Cash App Pay payment method.
+* Dev - Bump WooCommerce "tested up to" version 8.5.
+* Dev - Bump WooCommerce minimum supported version to 8.3.
+* Dev - Bump WordPress minimum supported version to 6.3.
+* Fix - Issue with syncing products that have a description more than 4096 characters.
+
 = 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
 * Dev - Bump WooCommerce "tested up to" version 8.4.
