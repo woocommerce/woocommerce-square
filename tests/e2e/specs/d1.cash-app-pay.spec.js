@@ -1,5 +1,6 @@
 import { test, expect, devices, chromium } from '@playwright/test';
 import {
+	clearCart,
 	createProduct,
 	doSquareRefund,
 	doesProductExist,
@@ -360,6 +361,7 @@ test.describe('Cash App Pay Tests', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
+		await clearCart( page );
 		await page.goto('/product/simple-product');
 		page.on('dialog', dialog => dialog.accept());
 		await page.locator('.single_add_to_cart_button').click();
