@@ -389,6 +389,8 @@ class WooCommerce_Square_Loader {
 	public function declare_hpos_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+
+			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
 
