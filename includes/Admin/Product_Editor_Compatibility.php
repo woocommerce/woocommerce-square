@@ -3,6 +3,7 @@
 namespace WooCommerce\Square\Admin;
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use Automattic\WooCommerce\Internal\Admin\Features\ProductBlockEditor\ProductTemplates\ProductBlock;
 use Automattic\WooCommerce\Internal\Admin\Features\ProductBlockEditor\ProductTemplates\Section;
 use WooCommerce\Square\Handlers\Product;
 
@@ -29,6 +30,16 @@ class Product_Editor_Compatibility {
 		add_action(
 			'woocommerce_block_template_area_product-form_after_add_block_basic-details',
 			array( $this, 'add_sync_with_square_control' )
+		);
+
+		add_action(
+			'woocommerce_block_template_area_product-form_after_add_block_product-sku-field',
+			array( $this, 'add_inventory_control' )
+		);
+
+		add_action(
+			'woocommerce_block_template_after_add_block',
+			array( $this, 'remove_core_blocks' )
 		);
 	}
 
@@ -72,10 +83,10 @@ class Product_Editor_Compatibility {
 	/**
 	 * Adds the sync with Square control to the product editor.
 	 *
-	 * @param Section $basic_details The basic details block.
+	 * @param Section $basic_details_field The basic details block.
 	 */
-	public function add_sync_with_square_control( Section $basic_details ) {
-		$basic_details->add_block(
+	public function add_sync_with_square_control( Section $basic_details_field ) {
+		$basic_details_field->add_block(
 			array(
 				'id'             => '_wc_square_synced',
 				'blockName'      => 'woocommerce-square/sync-with-square-field',
@@ -89,5 +100,49 @@ class Product_Editor_Compatibility {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Adds the inventory control to the product editor.
+	 *
+	 * @param Section $sku_field The SKU field block.
+	 */
+	public function add_inventory_control( $sku_field ) {
+		/**
+		 * Inventory section block.
+		 *
+		 * @var Section $parent
+		 */
+		$parent = $sku_field->get_parent();
+
+		$parent->add_block(
+			array(
+				'id'        => '_wc_square_stock_management_field',
+				'blockName' => 'woocommerce-square/stock-management-field',
+			)
+		);
+
+		$parent->add_block(
+			array(
+				'id'        => '_wc_square_stock_quantity_field',
+				'blockName' => 'woocommerce-square/stock-quantity-field',
+			)
+		);
+	}
+
+	/**
+	 * Removes the manage stock and stock quantity blocks from the product editor.
+	 *
+	 * @param ProductBlock $block Core product blocks.
+	 */
+	public function remove_core_blocks( $block ) {
+		$blocks_to_remove = array(
+			'product-inventory-quantity',
+			'product-track-stock',
+		);
+
+		if ( in_array( $block->get_id(), $blocks_to_remove, true ) ) {
+			$block->remove();
+		}
 	}
 }
