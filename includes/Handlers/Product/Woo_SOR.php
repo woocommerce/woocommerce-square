@@ -57,7 +57,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		$item_data = $catalog_object->getItemData();
 
 		$item_data->setName( $product->get_name() );
-		$item_data->setDescription( $product->get_description() );
+		$item_data->setDescriptionHtml( $product->get_description() );
 
 		$square_category_id = 0;
 

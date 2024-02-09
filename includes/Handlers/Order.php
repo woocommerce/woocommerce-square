@@ -52,6 +52,16 @@ class Order {
 	private $products_to_sync = array();
 
 	/**
+	 * Array of payment gateways that are Square payment gateways.
+	 *
+	 * @var array
+	 */
+	private $square_payment_gateways = array(
+		Plugin::GATEWAY_ID,
+		Plugin::CASH_APP_PAY_GATEWAY_ID,
+	);
+
+	/**
 	 * Sets up Square order handler.
 	 *
 	 * @since 2.0.0
@@ -159,7 +169,7 @@ class Order {
 	public function maybe_sync_stock_for_order_via_other_gateway( $order_id, $posted_data, $order ) {
 
 		// Confirm we are not processing the order through the Square gateway.
-		if ( ! $order instanceof \WC_Order || Plugin::GATEWAY_ID === $order->get_payment_method() ) {
+		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
 		}
 
@@ -179,7 +189,7 @@ class Order {
 	public function maybe_sync_stock_for_store_api_order_via_other_gateway( $order ) {
 
 		// Confirm we are not processing the order through the Square gateway.
-		if ( ! $order instanceof \WC_Order || Plugin::GATEWAY_ID === $order->get_payment_method() ) {
+		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
 		}
 
@@ -287,7 +297,7 @@ class Order {
 		 */
 		if (
 			! $order instanceof \WC_Order ||
-			Plugin::GATEWAY_ID === $order->get_payment_method() ||
+			in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ||
 			! wc_square()->get_settings_handler()->is_inventory_sync_enabled() ||
 			defined( 'DOING_SQUARE_SYNC' ) ||
 			! $product ||
@@ -325,7 +335,7 @@ class Order {
 
 		// Confirm we are not processing the order through the Square gateway.
 		$order = wc_get_order( $order_id );
-		if ( ! $order instanceof \WC_Order || Plugin::GATEWAY_ID === $order->get_payment_method() ) {
+		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
 		}
 
@@ -414,7 +424,7 @@ class Order {
 
 		// Confirm we are not processing the order through the Square gateway.
 		$order = wc_get_order( $order_id );
-		if ( ! $order instanceof \WC_Order || Plugin::GATEWAY_ID === $order->get_payment_method() ) {
+		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
 		}
 
