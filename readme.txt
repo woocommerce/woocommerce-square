@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
 Tested up to: 6.4.0
 Requires PHP: 7.4
-Stable tag: 4.4.1
+Stable tag: 4.5.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.5.0 - 2024-01-31 =
+* Add - Support for the Cash App Pay payment method.
+* Dev - Added end-to-end (E2E) tests for the Cash App Pay payment method.
+* Dev - Bump WooCommerce "tested up to" version 8.5.
+* Dev - Bump WooCommerce minimum supported version to 8.3.
+* Dev - Bump WordPress minimum supported version to 6.3.
+* Fix - Issue with syncing products that have a description more than 4096 characters.
 
 = 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.

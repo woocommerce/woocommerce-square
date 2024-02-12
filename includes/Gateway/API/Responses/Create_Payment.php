@@ -134,15 +134,22 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 		return 'SQUARE_GIFT_CARD' === $card->getCardBrand();
 	}
 
+	/**
+	 * Returns true if the payment status is completed.
+	 *
+	 * @since 4.5.0
+	 * @return boolean
+	 */
+	public function is_cash_app_payment_completed() {
+		return $this->get_payment() && 'COMPLETED' === $this->get_payment()->getStatus();
+	}
 
 	/** No-op methods *************************************************************************************************/
-
 
 	public function get_avs_result() { }
 
 	public function get_csc_result() { }
 
 	public function csc_match() { }
-
 
 }
