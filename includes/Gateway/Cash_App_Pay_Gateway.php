@@ -222,6 +222,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 					'</a>'
 				),
 				'wc-square-enable-cash-app-pay',
+				array(
+					'always_show_on_settings' => false,
+				)
 			);
 		}
 	}
