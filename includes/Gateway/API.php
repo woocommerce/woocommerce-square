@@ -107,16 +107,15 @@ class API extends \WooCommerce\Square\API {
 
 
 	/**
-	 * Performs a credit card capture for a given authorized order.
+	 * Performs a capture for a given authorized order.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\API\Response
 	 * @throws \Exception
 	 */
-	public function credit_card_capture( \WC_Order $order ) {
-
+	public function capture_payment( \WC_Order $order ) {
 		$location_id = ! empty( $order->capture->location_id ) ? $order->capture->location_id : $this->get_location_id();
 
 		// use the Payments API to capture orders that were processed with Square v2.2+
@@ -131,6 +130,20 @@ class API extends \WooCommerce\Square\API {
 		$this->set_response_handler( API\Response::class );
 
 		return $this->perform_request( $request );
+	}
+
+
+	/**
+	 * Performs a credit card capture for a given authorized order.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param \WC_Order $order order object
+	 * @return \WooCommerce\Square\API\Response
+	 * @throws \Exception
+	 */
+	public function credit_card_capture( \WC_Order $order ) {
+		return $this->capture_payment( $order );
 	}
 
 	/**
