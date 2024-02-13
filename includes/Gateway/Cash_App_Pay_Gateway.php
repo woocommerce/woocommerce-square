@@ -277,21 +277,21 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 		// common top form fields
 		$this->form_fields = array(
-			'enabled'      => array(
+			'enabled'     => array(
 				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
 				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
 				'type'    => 'checkbox',
 				'default' => 'no',
 			),
 
-			'title'        => array(
+			'title'       => array(
 				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
 				'type'     => 'text',
 				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_title(),
 			),
 
-			'description'  => array(
+			'description' => array(
 				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
 				'type'     => 'textarea',
 				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
