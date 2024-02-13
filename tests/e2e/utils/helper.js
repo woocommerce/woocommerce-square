@@ -350,6 +350,9 @@ export async function saveCashAppPaySettings(page, options) {
 		debugMode: 'off',
 		buttonTheme: 'dark',
 		buttonShape: 'semiround',
+		transactionType: 'charge',
+		chargeVirtualOrders: false,
+		capturePaidOrders: false,
 		...options,
 	};
 
@@ -371,6 +374,26 @@ export async function saveCashAppPaySettings(page, options) {
 	await page
 		.locator('#woocommerce_square_cash_app_pay_description')
 		.fill(settings.description);
+
+	// Transaction Type
+	await page
+		.locator('#woocommerce_square_cash_app_pay_transaction_type')
+		.selectOption(settings.transactionType);
+	if ( settings.transactionType === 'authorization' ) {
+		const chargeVirtualOrders = await page.locator('#woocommerce_square_cash_app_pay_charge_virtual_orders');
+		const capturePaidOrders = await page.locator('#woocommerce_square_cash_app_pay_enable_paid_capture');
+		if ( settings.chargeVirtualOrders ) {
+			await chargeVirtualOrders.check();
+		} else {
+			await chargeVirtualOrders.uncheck();
+		}
+
+		if ( settings.capturePaidOrders ) {
+			await capturePaidOrders.check();
+		} else {
+			await capturePaidOrders.uncheck();
+		}
+	}
 
 	// Debug Mode and Environment
 	await page
