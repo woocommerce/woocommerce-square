@@ -151,19 +151,33 @@ class API extends \WooCommerce\Square\API {
 	}
 
 	/**
-	 * Performs a Cash App Pay charge for the given order.
+	 * Performs a cash app pay authorization for the given order.
 	 *
-	 * @since 4.5.0
+	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
 	 * @throws \Exception
 	 */
-	public function cash_app_pay_charge( \WC_Order $order ) {
+	public function cash_app_pay_authorization( \WC_Order $order ) {
+		return $this->cash_app_pay_charge( $order, false );
+	}
+
+	/**
+	 * Performs a Cash App Pay charge for the given order.
+	 *
+	 * @since 4.5.0
+	 *
+	 * @param \WC_Order $order   Order object
+	 * @param bool      $capture Whether to capture the charge or not.
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cash_app_pay_charge( \WC_Order $order, $capture = true ) {
 
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
-		$request->set_charge_data( $order, true, true );
+		$request->set_charge_data( $order, $capture, true );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 

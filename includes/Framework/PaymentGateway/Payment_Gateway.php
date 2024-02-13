@@ -2702,7 +2702,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			$user_message = $response->get_user_message();
 		}
 
-		if ( ! $user_message || ( $this->supports_credit_card_authorization() && $this->perform_credit_card_authorization( $order ) ) ) {
+		if ( ! $user_message || ( $this->supports_authorization() && $this->perform_authorization( $order ) ) ) {
 			$user_message = esc_html__( 'Your order has been received and is being reviewed. Thank you for your business.', 'woocommerce-square' );
 		}
 
@@ -3178,6 +3178,62 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return apply_filters( 'wc_' . $this->get_id() . '_perform_credit_card_authorization', $perform, $order, $this );
 	}
 
+	/**
+	 * Determines if a gateway transaction should result in a charge.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order Optional. The order being charged
+	 * @return bool
+	 */
+	public function perform_charge( \WC_Order $order = null ) {
+
+		assert( $this->supports_charge() );
+
+		$perform = self::TRANSACTION_TYPE_CHARGE === $this->transaction_type;
+
+		if ( ! $perform && $order && $this->supports_charge_virtual() && 'yes' === $this->charge_virtual_orders ) {
+			$perform = Square_Helper::is_order_virtual( $order );
+		}
+
+		/**
+		 * Filters whether a gateway transaction should result in a charge.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $perform whether the transaction should result in a charge
+		 * @param \WC_Order|null $order the order being charged
+		 * @param Payment_Gateway $gateway the gateway object
+		 */
+		return apply_filters( 'wc_' . $this->get_id() . '_perform_charge', $perform, $order, $this );
+	}
+
+
+	/**
+	 * Determines if a gateway transaction should result in an authorization.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order Optional. The order being authorized
+	 * @return bool
+	 */
+	public function perform_authorization( \WC_Order $order = null ) {
+
+		assert( $this->supports_authorization() );
+
+		$perform = self::TRANSACTION_TYPE_AUTHORIZATION === $this->transaction_type && ! $this->perform_charge( $order );
+
+		/**
+		 * Filters whether a gateway transaction should result in an authorization.
+		 *
+		 * @since 3.0.0
+		 * @param bool $perform whether the transaction should result in an authorization
+		 * @param \WC_Order|null $order the order being authorized
+		 * @param Payment_Gateway $gateway the gateway object
+		 */
+		return apply_filters( 'wc_' . $this->get_id() . '_perform_authorization', $perform, $order, $this );
+	}
+
 
 	/**
 	 * Determines if partial capture is enabled.
@@ -3188,7 +3244,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function is_partial_capture_enabled() {
 
-		assert( $this->supports_credit_card_partial_capture() );
+		assert( $this->supports_partial_capture() );
 
 		/**
 		 * Filters whether partial capture is enabled.
