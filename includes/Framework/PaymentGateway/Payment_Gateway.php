@@ -97,6 +97,21 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Credit Card partial capture transaction feature */
 	const FEATURE_CREDIT_CARD_PARTIAL_CAPTURE = 'partial_capture';
 
+	/** Gateway charge transaction feature */
+	const FEATURE_CHARGE = 'charge';
+
+	/** Gateway authorization transaction feature */
+	const FEATURE_AUTHORIZATION = 'authorization';
+
+	/** Gateway charge virtual-only orders feature */
+	const FEATURE_CHARGE_VIRTUAL = 'charge-virtual';
+
+	/** Gateway capture charge transaction feature */
+	const FEATURE_CAPTURE = 'capture_charge';
+
+	/** Gateway partial capture transaction feature */
+	const FEATURE_PARTIAL_CAPTURE = 'partial_capture';
+
 	/** Display detailed customer decline messages on checkout */
 	const FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES = 'customer_decline_messages';
 
@@ -2970,6 +2985,61 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return $this->supports_credit_card_capture() && $this->supports( self::FEATURE_CREDIT_CARD_PARTIAL_CAPTURE );
 	}
 
+	/**
+	 * Returns true if gateway supports authorization transactions
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports authorization
+	 */
+	public function supports_authorization() {
+		return $this->supports( self::FEATURE_AUTHORIZATION );
+	}
+
+
+	/**
+	 * Returns true if gateway supports charge transactions
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports charges
+	 */
+	public function supports_charge() {
+		return $this->supports( self::FEATURE_CHARGE );
+	}
+
+
+	/**
+	 * Determines if gateway supports charging virtual-only orders.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	public function supports_charge_virtual() {
+		return $this->supports( self::FEATURE_CHARGE_VIRTUAL );
+	}
+
+
+	/**
+	 * Returns true if the gateway supports capturing a charge
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports capturing a charge
+	 */
+	public function supports_capture() {
+		return $this->supports( self::FEATURE_CAPTURE );
+	}
+
+
+	/**
+	 * Determines if the gateway supports capturing a partial charge.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public function supports_partial_capture() {
+		return $this->supports( self::FEATURE_PARTIAL_CAPTURE );
+	}
+
 
 	/**
 	 * Adds any credit card authorization/charge admin fields, allowing the
@@ -2981,7 +3051,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	protected function add_authorization_charge_form_fields( $form_fields ) {
 
-		assert( $this->supports_credit_card_authorization() && $this->supports_credit_card_charge() );
+		assert( $this->supports_authorization() && $this->supports_charge() );
 
 		$form_fields['transaction_type'] = array(
 			'title'    => esc_html__( 'Transaction Type', 'woocommerce-square' ),
@@ -2995,7 +3065,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			),
 		);
 
-		if ( $this->supports_credit_card_charge_virtual() ) {
+		if ( $this->supports_charge_virtual() ) {
 
 			$form_fields['charge_virtual_orders'] = array(
 				'label'       => esc_html__( 'Charge Virtual-Only Orders', 'woocommerce-square' ),
@@ -3005,7 +3075,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			);
 		}
 
-		if ( $this->supports_credit_card_partial_capture() ) {
+		if ( $this->supports_partial_capture() ) {
 
 			$form_fields['enable_partial_capture'] = array(
 				'label'       => esc_html__( 'Enable Partial Capture', 'woocommerce-square' ),
@@ -3015,7 +3085,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			);
 		}
 
-		if ( $this->supports_credit_card_capture() ) {
+		if ( $this->supports_capture() ) {
 
 			// get a list of the "paid" status names
 			$paid_statuses = array_map( 'wc_get_order_status_name', (array) wc_get_is_paid_statuses() );

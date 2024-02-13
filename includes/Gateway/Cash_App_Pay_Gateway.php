@@ -62,6 +62,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_REFUNDS,
+					self::FEATURE_AUTHORIZATION,
+					self::FEATURE_CHARGE,
+					self::FEATURE_CHARGE_VIRTUAL,
+					self::FEATURE_CAPTURE,
 				),
 				'countries'          => array( 'US' ),
 				'currencies'         => array( 'USD' ),
@@ -293,29 +297,35 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_description(),
 			),
+		);
 
-			'button_theme' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'dark',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
-					'light' => esc_html__( 'Light', 'woocommerce-square' ),
-				),
+		// Both authorization & charge supported.
+		if ( $this->supports_authorization() && $this->supports_charge() ) {
+			$this->form_fields = $this->add_authorization_charge_form_fields( $this->form_fields );
+		}
+
+		// Cash App Pay button theme and shape
+		$this->form_fields['button_theme'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'dark',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
+				'light' => esc_html__( 'Light', 'woocommerce-square' ),
 			),
+		);
 
-			'button_shape' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'semiround',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
-					'round'     => esc_html__( 'Round', 'woocommerce-square' ),
-				),
+		$this->form_fields['button_shape'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'semiround',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
+				'round'     => esc_html__( 'Round', 'woocommerce-square' ),
 			),
 		);
 
