@@ -79,19 +79,26 @@ class Payment_Gateway_Admin_Order {
 	 * @param string $hook_suffix page hook suffix
 	 */
 	public function enqueue_scripts( $hook_suffix ) {
-		global $post;
-
-		if ( ! $post ) {
+		global $post, $theorder;
+		if ( ! $post && ! $theorder ) {
 			return;
 		}
 
+		// get the order ID
+		$order_id = null;
+		if ( $theorder instanceof \WC_Order ) {
+			$order_id = $theorder->get_id();
+		} elseif ( is_a( $post, 'WP_Post' ) && 'shop_order' === get_post_type( $post ) ) {
+			$order_id = absint( $post->ID );
+		}
+
 		// Order screen assets
-		if ( 'shop_order' === get_post_type() ) {
+		if ( ! empty( $order_id ) ) {
 
 			// Edit Order screen assets
-			if ( 'post.php' === $hook_suffix || 'post-new.php' === $hook_suffix ) {
+			if ( 'post.php' === $hook_suffix || 'post-new.php' === $hook_suffix || 'woocommerce_page_wc-orders' === $hook_suffix ) {
 
-				$order = wc_get_order( $post->ID );
+				$order = wc_get_order( $order_id );
 
 				$this->enqueue_edit_order_assets( $order );
 			}
@@ -152,7 +159,7 @@ class Payment_Gateway_Admin_Order {
 			foreach ( $this->get_plugin()->get_gateways() as $gateway ) {
 
 				// ensure that it supports captures
-				if ( $gateway->supports_credit_card_capture() ) {
+				if ( $gateway->supports_capture() ) {
 
 					$can_capture_charge = true;
 					break;
@@ -270,7 +277,7 @@ class Payment_Gateway_Admin_Order {
 		);
 
 		// indicate if the partial-capture UI can be shown
-		if ( $gateway->supports_credit_card_partial_capture() && $gateway->is_partial_capture_enabled() ) {
+		if ( $gateway->supports_partial_capture() && $gateway->is_partial_capture_enabled() ) {
 			$classes[] = 'partial-capture';
 		} elseif ( $gateway->get_capture_handler()->order_can_be_captured( $order ) ) {
 			$classes[] = 'button-primary';
@@ -298,7 +305,7 @@ class Payment_Gateway_Admin_Order {
 		<?php
 
 		// add the partial capture UI HTML
-		if ( $gateway->supports_credit_card_partial_capture() && $gateway->is_partial_capture_enabled() ) {
+		if ( $gateway->supports_partial_capture() && $gateway->is_partial_capture_enabled() ) {
 			$this->output_partial_capture_html( $order, $gateway );
 		}
 	}
@@ -426,7 +433,7 @@ class Payment_Gateway_Admin_Order {
 			$gateway = $this->get_plugin()->get_gateway( $payment_method );
 
 			// ensure that it supports captures
-			if ( $gateway->supports_credit_card_capture() ) {
+			if ( $gateway->supports_capture() ) {
 				$capture_gateway = $gateway;
 			}
 		}
