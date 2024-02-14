@@ -199,6 +199,7 @@ class Payment_Gateway_Admin_Order {
 		$can_capture_charge = false;
 		$status             = sanitize_text_field( wp_unslash( $_REQUEST['status'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown
 		if ( ! current_user_can( 'edit_shop_orders' ) || 'trash' === $status ) {
 			return $bulk_actions;
 		}
@@ -225,6 +226,7 @@ class Payment_Gateway_Admin_Order {
 	 */
 	public function hpos_process_capture_charge_bulk_order_action( $redirect_to, $action, $ids ) {
 		// bail if not processing a capture or if the user doesn't have the capability
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown
 		if ( 'wc_capture_charge' !== $action || empty( $ids ) || ! current_user_can( 'edit_shop_orders' ) ) {
 			return;
 		}
