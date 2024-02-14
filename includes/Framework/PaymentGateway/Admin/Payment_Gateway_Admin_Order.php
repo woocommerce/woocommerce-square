@@ -65,6 +65,10 @@ class Payment_Gateway_Admin_Order {
 			// bulk capture order action
 			add_action( 'admin_footer-edit.php', array( $this, 'maybe_add_capture_charge_bulk_order_action' ) );
 			add_action( 'load-edit.php', array( $this, 'process_capture_charge_bulk_order_action' ) );
+
+			// bulk capture order action - for HPOS
+			add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'maybe_add_capture_charge_bulk_actions' ) );
+			add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'hpos_process_capture_charge_bulk_order_action' ), 10, 3 );
 		}
 	}
 
@@ -179,6 +183,63 @@ class Payment_Gateway_Admin_Order {
 						});
 					</script>
 				<?php
+			}
+		}
+	}
+
+	/**
+	 * Adds 'Capture charge' to the Orders screen bulk action select (HPOS).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $bulk_actions bulk actions
+	 * @return array
+	 */
+	public function maybe_add_capture_charge_bulk_actions( $bulk_actions ) {
+		$can_capture_charge = false;
+		$status             = sanitize_text_field( wp_unslash( $_REQUEST['status'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! current_user_can( 'edit_shop_orders' ) || 'trash' === $status ) {
+			return $bulk_actions;
+		}
+
+		// ensure at least one gateway supports capturing charge
+		foreach ( $this->get_plugin()->get_gateways() as $gateway ) {
+			// ensure that it supports captures
+			if ( $gateway->supports_capture() ) {
+				$can_capture_charge = true;
+				break;
+			}
+		}
+
+		if ( $can_capture_charge ) {
+			return array_merge( $bulk_actions, array( 'wc_capture_charge' => __( 'Capture Charge', 'woocommerce-square' ) ) );
+		}
+		return $bulk_actions;
+	}
+
+	/**
+	 * Processes the 'Capture Charge' custom bulk action in HPOS.
+	 *
+	 * @since x.x.x
+	 */
+	public function hpos_process_capture_charge_bulk_order_action( $redirect_to, $action, $ids ) {
+		// bail if not processing a capture or if the user doesn't have the capability
+		if ( 'wc_capture_charge' !== $action || empty( $ids ) || ! current_user_can( 'edit_shop_orders' ) ) {
+			return;
+		}
+
+		// give ourselves an unlimited timeout if possible
+		@set_time_limit( 0 ); // phpcs:ignore
+
+		foreach ( $ids as $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				continue;
+			}
+			$gateway = $this->get_order_gateway( $order );
+			if ( $gateway ) {
+				$gateway->get_capture_handler()->maybe_perform_capture( $order );
 			}
 		}
 	}
