@@ -309,7 +309,10 @@ export async function gotoOrderEditPage( page, orderId ) {
 export async function doSquareRefund( page, amount = '' ) {
 	await page.locator( '.refund-items' ).click();
 	await page.locator( '.refund_order_item_qty' ).fill( '1' );
-	await page.locator( '#refund_amount' ).fill( '' );
+	if ( await page.locator( '#refund_amount' ).isEditable() ) {
+		await page.locator( '#refund_amount' ).fill( '' );
+	}
+	await page.locator( '.refund_line_total' ).fill('');
 	await page.locator( '.refund_line_total' ).fill( amount );
 	await page.locator( '.do-api-refund' ).click();
 }
