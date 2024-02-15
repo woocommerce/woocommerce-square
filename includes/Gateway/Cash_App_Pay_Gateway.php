@@ -62,6 +62,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_REFUNDS,
+					self::FEATURE_AUTHORIZATION,
+					self::FEATURE_CHARGE,
+					self::FEATURE_CHARGE_VIRTUAL,
+					self::FEATURE_CAPTURE,
 				),
 				'countries'          => array( 'US' ),
 				'currencies'         => array( 'USD' ),
@@ -222,6 +226,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 					'</a>'
 				),
 				'wc-square-enable-cash-app-pay',
+				array(
+					'always_show_on_settings' => false,
+				)
 			);
 		}
 	}
@@ -270,49 +277,55 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 		// common top form fields
 		$this->form_fields = array(
-			'enabled'      => array(
+			'enabled'     => array(
 				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
 				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
 				'type'    => 'checkbox',
 				'default' => 'no',
 			),
 
-			'title'        => array(
+			'title'       => array(
 				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
 				'type'     => 'text',
 				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_title(),
 			),
 
-			'description'  => array(
+			'description' => array(
 				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
 				'type'     => 'textarea',
 				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_description(),
 			),
+		);
 
-			'button_theme' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'dark',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
-					'light' => esc_html__( 'Light', 'woocommerce-square' ),
-				),
+		// Both authorization & charge supported.
+		if ( $this->supports_authorization() && $this->supports_charge() ) {
+			$this->form_fields = $this->add_authorization_charge_form_fields( $this->form_fields );
+		}
+
+		// Cash App Pay button theme and shape
+		$this->form_fields['button_theme'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'dark',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
+				'light' => esc_html__( 'Light', 'woocommerce-square' ),
 			),
+		);
 
-			'button_shape' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'semiround',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
-					'round'     => esc_html__( 'Round', 'woocommerce-square' ),
-				),
+		$this->form_fields['button_shape'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'semiround',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
+				'round'     => esc_html__( 'Round', 'woocommerce-square' ),
 			),
 		);
 
@@ -506,6 +519,25 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				}
 			}
 		}
+
+		return $order;
+	}
+
+	/**
+	 * Gets an order with capture data attached.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int|\WC_Order $order order object
+	 * @param null|float    $amount amount to capture
+	 * @return \WC_Order
+	 */
+	public function get_order_for_capture( $order, $amount = null ) {
+
+		$order = parent::get_order_for_capture( $order, $amount );
+
+		$order->capture->location_id = $this->get_order_meta( $order, 'square_location_id' );
+		$order->square_version       = $this->get_order_meta( $order, 'square_version' );
 
 		return $order;
 	}
@@ -1089,11 +1121,15 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			}
 		}
 
-		// Charge the order.
-		$response = $this->get_api()->cash_app_pay_charge( $order );
+		// Charge/Authorization the order.
+		if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
+			$response = $this->get_api()->cash_app_pay_charge( $order );
+		} else {
+			$response = $this->get_api()->cash_app_pay_authorization( $order );
+		}
 
 		// success! update order record
-		if ( $response->transaction_approved() && $response->is_cash_app_payment_completed() ) {
+		if ( $response->transaction_approved() ) {
 
 			$payment_response = $response->get_data();
 			$payment          = $payment_response->getPayment();
@@ -1130,12 +1166,22 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
 			$order->add_order_note( $message );
+		}
+
+		if ( $response->transaction_approved() || $response->transaction_held() ) {
 
 			// add the standard transaction data
 			$this->add_transaction_data( $order, $response );
 
 			// allow the concrete class to add any gateway-specific transaction data to the order
 			$this->add_payment_gateway_transaction_data( $order, $response );
+
+			// if the transaction was held (ie fraud validation failure) mark it as such
+			$is_authorization = $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) && $response->is_cash_app_payment_approved();
+			if ( $response->transaction_held() || $is_authorization ) {
+				/* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
+				$this->mark_order_as_held( $order, $is_authorization ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
+			}
 
 			return true;
 		} else {

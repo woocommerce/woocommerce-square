@@ -53,7 +53,7 @@ class Capture {
 		$this->gateway = $gateway;
 
 		// auto-capture on order status change if enabled
-		if ( $gateway->supports_credit_card_capture() && $gateway->is_paid_capture_enabled() ) {
+		if ( $gateway->supports_capture() && $gateway->is_paid_capture_enabled() ) {
 			add_action( 'woocommerce_order_status_changed', array( $this, 'maybe_capture_paid_order' ), 10, 3 );
 		}
 	}
@@ -142,7 +142,7 @@ class Capture {
 		try {
 
 			// notify if the gateway doesn't support captures when this is called directly
-			if ( ! $this->get_gateway()->supports_credit_card_capture() ) {
+			if ( ! $this->get_gateway()->supports_capture() ) {
 
 				$message = "{$this->get_gateway()->get_method_title()} does not support payment captures";
 
@@ -186,7 +186,7 @@ class Capture {
 				);
 			} else {
 				// attempt the capture
-				$response = $this->get_gateway()->get_api()->credit_card_capture( $order );
+				$response = $this->get_gateway()->get_api()->capture_payment( $order );
 			}
 
 			$gift_card_purchase_type = \WooCommerce\Square\Handlers\Order::get_gift_card_purchase_type( $order );
@@ -283,7 +283,7 @@ class Capture {
 		$total_captured = (float) $this->get_gateway()->get_order_meta( $order, 'capture_total' ) + (float) $order->capture->amount;
 
 		$this->get_gateway()->update_order_meta( $order, 'capture_total', Square_Helper::number_format( $total_captured ) );
-		$this->get_gateway()->update_order_meta( $order, 'charge_captured', $this->get_gateway()->supports_credit_card_partial_capture() && $this->get_gateway()->is_partial_capture_enabled() && $total_captured < (float) $this->get_order_capture_maximum( $order ) ? 'partial' : 'yes' );
+		$this->get_gateway()->update_order_meta( $order, 'charge_captured', $this->get_gateway()->supports_partial_capture() && $this->get_gateway()->is_partial_capture_enabled() && $total_captured < (float) $this->get_order_capture_maximum( $order ) ? 'partial' : 'yes' );
 
 		// add capture transaction ID
 		if ( $response && $response->get_transaction_id() ) {
@@ -359,7 +359,7 @@ class Capture {
 
 		$captured = 'yes' === $this->get_gateway()->get_order_meta( $order, 'charge_captured' );
 
-		if ( ! $captured && $this->get_gateway()->supports_credit_card_partial_capture() && $this->get_gateway()->is_partial_capture_enabled() ) {
+		if ( ! $captured && $this->get_gateway()->supports_partial_capture() && $this->get_gateway()->is_partial_capture_enabled() ) {
 			$captured = (float) $this->get_gateway()->get_order_meta( $order, 'capture_total' ) >= (float) $this->get_order_capture_maximum( $order );
 		}
 

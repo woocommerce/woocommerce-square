@@ -28,7 +28,14 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 
 		// ensure the tender is CAPTURED
 		if ( $this->get_payment() ) {
-			$held = 'AUTHORIZED' === $this->get_payment()->getCardDetails()->getStatus();
+			// Check if the card or wallet is AUTHORIZED (WALLET is for Cash App payments).
+			$card_details   = $this->get_payment()->getCardDetails();
+			$wallet_details = $this->get_payment()->getWalletDetails();
+			if ( ! empty( $card_details ) ) {
+				$held = 'AUTHORIZED' === $card_details->getStatus();
+			} elseif ( ! empty( $wallet_details ) ) {
+				$held = 'AUTHORIZED' === $wallet_details->getStatus();
+			}
 		}
 
 		return $held;
@@ -142,6 +149,16 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 	 */
 	public function is_cash_app_payment_completed() {
 		return $this->get_payment() && 'COMPLETED' === $this->get_payment()->getStatus();
+	}
+
+	/**
+	 * Returns true if the payment status is approved.
+	 *
+	 * @since x.x.x
+	 * @return boolean
+	 */
+	public function is_cash_app_payment_approved() {
+		return $this->get_payment() && 'APPROVED' === $this->get_payment()->getStatus();
 	}
 
 	/** No-op methods *************************************************************************************************/

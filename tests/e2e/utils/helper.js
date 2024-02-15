@@ -309,7 +309,10 @@ export async function gotoOrderEditPage( page, orderId ) {
 export async function doSquareRefund( page, amount = '' ) {
 	await page.locator( '.refund-items' ).click();
 	await page.locator( '.refund_order_item_qty' ).fill( '1' );
-	await page.locator( '#refund_amount' ).fill( '' );
+	if ( await page.locator( '#refund_amount' ).isEditable() ) {
+		await page.locator( '#refund_amount' ).fill( '' );
+	}
+	await page.locator( '.refund_line_total' ).fill('');
 	await page.locator( '.refund_line_total' ).fill( amount );
 	await page.locator( '.do-api-refund' ).click();
 }
@@ -350,6 +353,9 @@ export async function saveCashAppPaySettings(page, options) {
 		debugMode: 'off',
 		buttonTheme: 'dark',
 		buttonShape: 'semiround',
+		transactionType: 'charge',
+		chargeVirtualOrders: false,
+		capturePaidOrders: false,
 		...options,
 	};
 
@@ -371,6 +377,26 @@ export async function saveCashAppPaySettings(page, options) {
 	await page
 		.locator('#woocommerce_square_cash_app_pay_description')
 		.fill(settings.description);
+
+	// Transaction Type
+	await page
+		.locator('#woocommerce_square_cash_app_pay_transaction_type')
+		.selectOption(settings.transactionType);
+	if ( settings.transactionType === 'authorization' ) {
+		const chargeVirtualOrders = await page.locator('#woocommerce_square_cash_app_pay_charge_virtual_orders');
+		const capturePaidOrders = await page.locator('#woocommerce_square_cash_app_pay_enable_paid_capture');
+		if ( settings.chargeVirtualOrders ) {
+			await chargeVirtualOrders.check();
+		} else {
+			await chargeVirtualOrders.uncheck();
+		}
+
+		if ( settings.capturePaidOrders ) {
+			await capturePaidOrders.check();
+		} else {
+			await capturePaidOrders.uncheck();
+		}
+	}
 
 	// Debug Mode and Environment
 	await page
