@@ -30,8 +30,9 @@ if ( ! wp_doing_ajax() ) {
 		<ul class="wc_payment_methods payment_methods methods">
 			<?php
 			if ( ! empty( $available_gateways ) ) {
+				$plugin_gateways = wc_square()->get_gateway_ids();
 				foreach ( $available_gateways as $gateway ) {
-					if ( ! $has_balance && Plugin::GATEWAY_ID !== $gateway->id ) {
+					if ( ! $has_balance && ! in_array( Plugin::GATEWAY_ID, $plugin_gateways, true ) ) {
 						continue;
 					}
 					wc_get_template( 'checkout/payment-method.php', array( 'gateway' => $gateway ) );
