@@ -74,15 +74,14 @@ class Payments extends \WooCommerce\Square\API\Request {
 	public function set_charge_data( \WC_Order $order, $capture = true, $is_cash_app_pay = false ) {
 		$this->square_api_method = 'createPayment';
 
+		$payment_total = isset( $order->payment->partial_total ) ? $order->payment->partial_total->other_gateway : $order->payment_total;
 		// Cash App Pay payment.
 		if ( $is_cash_app_pay ) {
-			$payment_total        = $order->payment_total;
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
 				$order->payment->nonce->cash_app_pay,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
-			$payment_total        = isset( $order->payment->partial_total ) ? $order->payment->partial_total->credit_card : $order->payment_total;
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
 				! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )

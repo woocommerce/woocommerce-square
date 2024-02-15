@@ -608,6 +608,104 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 		return apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_get_order', $order, $this );
 	}
 
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param WC_Order_Square $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_credit_card_transaction( $order, $response = null ) {
+		// Generate a new transaction ref if the order payment is split using multiple payment methods.
+		if ( isset( $order->payment->partial_total ) ) {
+			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
+		}
+
+		if ( is_null( $response ) ) {
+			// As per Square's docs, orders paid using multiple payment methods should always be authorised.
+			// Once all payment methods are used, we use the payment IDs of all authorised transactions to charge.
+			if ( $this->perform_credit_card_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
+				$response = $this->get_api()->credit_card_charge( $order );
+			} else {
+				$response = $this->get_api()->credit_card_authorization( $order );
+			}
+		}
+
+		// success! update order record
+		if ( $response->transaction_approved() ) {
+
+			$last_four        = substr( $order->payment->account_number, -4 );
+			$first_four       = substr( $order->payment->account_number, 0, 4 );
+			$payment_response = $response->get_data();
+			$payment          = $payment_response->getPayment();
+
+			// use direct card type if set, or try to guess it from card number
+			if ( ! empty( $order->payment->card_type ) ) {
+				$card_type = $order->payment->card_type;
+			} elseif ( $first_four ) {
+				$card_type = Payment_Gateway_Helper::card_type_from_account_number( $first_four );
+			} else {
+				$card_type = 'card';
+			}
+
+			$what = Payment_Gateway_Helper::payment_type_to_name( $card_type );
+
+			// credit card order note
+			$message = sprintf(
+				/* translators: Placeholders: %1$s - payment method title, %2$s - environment ("Test"), %3$s - transaction type (authorization/charge), %4$s - card type (mastercard, visa, ...), %5$s - last four digits of the card */
+				esc_html__( '%1$s %2$s %3$s Approved for an amount of %4$s: %5$s ending in %6$s', 'woocommerce-square' ),
+				$this->get_method_title(),
+				wc_square()->get_settings_handler()->is_sandbox() ? esc_html_x( 'Test', 'noun, software environment', 'woocommerce-square' ) : '',
+				'APPROVED' === $response->get_payment()->getStatus() ? esc_html_x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ) : esc_html_x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ),
+				wc_price( Money_Utility::cents_to_float( $payment->getTotalMoney()->getAmount(), $order->get_currency() ) ),
+				Payment_Gateway_Helper::payment_type_to_name( $card_type ),
+				$last_four
+			);
+
+			// add the expiry date if it is available
+			if ( ! empty( $order->payment->exp_month ) && ! empty( $order->payment->exp_year ) ) {
+
+				$message .= ' ' . sprintf(
+					/* translators: Placeholders: %s - credit card expiry date */
+					__( '(expires %s)', 'woocommerce-square' ),
+					esc_html( $order->payment->exp_month . '/' . substr( $order->payment->exp_year, -2 ) )
+				);
+			}
+
+			// adds the transaction id (if any) to the order note
+			if ( $response->get_transaction_id() ) {
+				/* translators: Placeholders: %s - transaction ID */
+				$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
+			}
+
+			/**
+			 * Direct Gateway Credit Card Transaction Approved Order Note Filter.
+			 *
+			 * Allow actors to modify the order note added when a Credit Card transaction
+			 * is approved.
+			 *
+			 * @since 3.0.0
+			 *
+			 * @param string $message order note
+			 * @param \WC_Order $order order object
+			 * @param Payment_Gateway_API_Response_Interface $response transaction response
+			 * @param Payment_Gateway_Direct $this instance
+			 */
+			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_credit_card_transaction_approved_order_note', $message, $order, $response, $this );
+
+			$this->update_order_meta( $order, 'is_tender_type_card', true );
+
+			$order->add_order_note( $message );
+
+		}
+
+		return $response;
+
+	}
+
 	/** Add Payment Method feature ********************************************/
 
 

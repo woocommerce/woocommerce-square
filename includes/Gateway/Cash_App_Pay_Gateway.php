@@ -28,6 +28,7 @@ use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -58,7 +59,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			array(
 				'method_title'       => __( 'Cash App Pay (Square)', 'woocommerce-square' ),
 				'method_description' => __( 'Allow customers to securely pay with Cash App', 'woocommerce-square' ),
-				'payment_type'       => 'cash_app_pay',
+				'payment_type'       => self::PAYMENT_TYPE_CASH_APP_PAY,
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_REFUNDS,
@@ -481,6 +482,11 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$order = parent::get_order( $order_id );
 
 		$order->payment->nonce               = new \stdClass();
+
+		if ( $this->is_gift_card_applied() ) {
+			$order->payment->nonce->gift_card = Square_Helper::get_post( 'square-gift-card-payment-nonce' );
+		}
+
 		$order->payment->nonce->cash_app_pay = Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' );
 
 		$order->square_customer_id = $order->customer_id;
@@ -1090,6 +1096,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
+				// TODO: save gift card order details
+				// $this->maybe_save_gift_card_order_details( $response, $order );
+
 				$order->square_order_id = $response->getId();
 
 				// adjust order by difference between WooCommerce and Square order totals
@@ -1119,6 +1128,25 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 					$this->get_plugin()->log( $exception->getMessage(), $this->get_id() );
 				}
 			}
+		}
+
+		return parent::do_transaction( $order );
+	}
+
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		// Generate a new transaction ref if the order payment is split using multiple payment methods.
+		if ( isset( $order->payment->partial_total ) ) {
+			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
 		}
 
 		// Charge/Authorization the order.
@@ -1165,28 +1193,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 */
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
+			// $this->update_order_meta( $order, 'is_tender_type_wallet', true );
+
 			$order->add_order_note( $message );
 		}
 
-		if ( $response->transaction_approved() || $response->transaction_held() ) {
-
-			// add the standard transaction data
-			$this->add_transaction_data( $order, $response );
-
-			// allow the concrete class to add any gateway-specific transaction data to the order
-			$this->add_payment_gateway_transaction_data( $order, $response );
-
-			// if the transaction was held (ie fraud validation failure) mark it as such
-			$is_authorization = $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) && $response->is_cash_app_payment_approved();
-			if ( $response->transaction_held() || $is_authorization ) {
-				/* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
-				$this->mark_order_as_held( $order, $is_authorization ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
-			}
-
-			return true;
-		} else {
-			return $this->do_transaction_failed_result( $order, $response );
-		}
+		return $response;
 	}
 
 	/**
