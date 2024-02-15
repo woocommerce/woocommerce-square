@@ -73,6 +73,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Credit card payment type */
 	const PAYMENT_TYPE_CREDIT_CARD = 'credit-card';
 
+	/** Credit card payment type */
+	const PAYMENT_TYPE_CASH_APP_PAY = 'cash_app_pay';
+
 	/** Products feature */
 	const FEATURE_PRODUCTS = 'products';
 
@@ -2481,7 +2484,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			$this->update_order_meta( $order, 'account_four', substr( $order->payment->account_number, -4 ) );
 		}
 
-		if ( $this->is_credit_card_gateway() ) {
+		if ( $this->is_credit_card_gateway() || $this->is_cash_app_pay_gateway() ) {
 
 			// credit card gateway data
 			if ( ! $is_partial && $response && $response instanceof Payment_Gateway_API_Authorization_Response ) {
@@ -2495,7 +2498,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				if ( $order->payment_total > 0 ) {
 
 					// mark as captured
-					if ( $this->perform_credit_card_charge( $order ) ) {
+					if ( $this->perform_charge( $order ) ) {
 						$captured = 'yes';
 					} else {
 						$captured = 'no';
@@ -4098,6 +4101,16 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function is_credit_card_gateway() {
 		return self::PAYMENT_TYPE_CREDIT_CARD == $this->get_payment_type();
+	}
+
+	/**
+	 * Returns true if this is a Cash App Pay gateway
+	 *
+	 * @since x.x.x
+	 * @return boolean true if this is a Cash App Pay gateway
+	 */
+	public function is_cash_app_pay_gateway() {
+		return self::PAYMENT_TYPE_CASH_APP_PAY === $this->get_payment_type();
 	}
 
 	/**

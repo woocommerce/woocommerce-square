@@ -58,7 +58,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			array(
 				'method_title'       => __( 'Cash App Pay (Square)', 'woocommerce-square' ),
 				'method_description' => __( 'Allow customers to securely pay with Cash App', 'woocommerce-square' ),
-				'payment_type'       => 'cash_app_pay',
+				'payment_type'       => self::PAYMENT_TYPE_CASH_APP_PAY,
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_REFUNDS,
