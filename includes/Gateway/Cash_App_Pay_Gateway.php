@@ -1193,7 +1193,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 */
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
-			// $this->update_order_meta( $order, 'is_tender_type_wallet', true );
+			$this->update_order_meta( $order, 'is_tender_type_cash_app_wallet', true );
 
 			$order->add_order_note( $message );
 		}
