@@ -415,6 +415,15 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		return array();
 	}
 
+	/**
+	 * Initialize payment tokens handler.
+	 *
+	 * @since x.x.x
+	 */
+	protected function init_payment_tokens_handler() {
+		// No payment tokens for Cash App Pay, do nothing.
+	}
+
 
 	/**
 	 * Gets a user's stored customer ID.

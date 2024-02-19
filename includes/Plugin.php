@@ -983,6 +983,11 @@ class Plugin extends Payment_Gateway_Plugin {
 			}
 
 			foreach ( $user_payment_tokens as $token => $user_payment_token_data ) {
+				// Check if token already exists in WC_Payment_Token_CC.
+				if ( $payment_tokens_handler->user_has_token( $user->id, $token ) ) {
+					continue;
+				}
+
 				$payment_token = new Square_Credit_Card_Payment_Token();
 				$payment_token->set_token( $token );
 				$payment_token->set_card_type( $user_payment_token_data['card_type'] );
