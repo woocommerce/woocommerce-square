@@ -133,7 +133,8 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_filter( 'woocommerce_locate_core_template', array( $this, 'locate_template' ), 20, 3 );
 
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
-		add_action( 'wc_square_init_payment_token_migration', array( $this, 'register_payment_tokens_migration_scheduler' ) );
+		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
+		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
 	}
 
 
@@ -928,8 +929,14 @@ class Plugin extends Payment_Gateway_Plugin {
 			return;
 		}
 
-		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration' ) ) {
-			as_enqueue_async_action( 'wc_square_init_payment_token_migration', array( 'page' => 1 ) );
+		// Remove all OLD scheduled actions to cleanup DB.
+		// TODO: Remove this in next release. 
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = 'wc_square_init_payment_token_migration'" );
+
+
+		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration_v2' ) ) {
+			as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => 1 ) );
 		}
 	}
 
@@ -940,17 +947,25 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @since 3.8.0
 	 */
 	public function register_payment_tokens_migration_scheduler( $page ) {
+		$payment_tokens_handler = wc_square()->get_gateway()->get_payment_tokens_handler();
+		$meta_key               = $payment_tokens_handler->get_user_meta_name();
+
 		// Get 5 users in a batch.
 		$users = get_users(
 			array(
 				'fields' => array( 'ID' ),
 				'number' => 5,
 				'paged'  => $page,
+				'meta_query' => array(
+					array(
+						'key'     => $meta_key,
+						'compare' => 'EXISTS',
+					),
+				)
 			)
 		);
 
 		// If users array is empty, then set status in options to indicate migration is complete.
-		$payment_tokens_handler = wc_square()->get_gateway()->get_payment_tokens_handler();
 		if ( empty( $users ) ) {
 			$payment_tokens_handler->clear_all_transients();
 			update_option( 'wc_square_payment_token_migration_complete', true );
@@ -958,10 +973,10 @@ class Plugin extends Payment_Gateway_Plugin {
 		}
 
 		// Re-run scheduler for the next page of users.
-		as_enqueue_async_action( 'wc_square_init_payment_token_migration', array( 'page' => $page + 1 ) );
+		as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => $page + 1 ) );
 
 		foreach ( $users as $user ) {
-			$user_payment_tokens = get_user_meta( $user->id, $payment_tokens_handler->get_user_meta_name(), true );
+			$user_payment_tokens = get_user_meta( $user->id, $meta_key, true );
 
 			if ( ! is_array( $user_payment_tokens ) || empty( $user_payment_tokens ) ) {
 				continue;
