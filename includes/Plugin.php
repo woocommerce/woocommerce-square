@@ -26,6 +26,7 @@ namespace WooCommerce\Square;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
+use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Square_Credit_Card_Payment_Token;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
 use WooCommerce\Square\Handlers\Background_Job;
@@ -130,6 +131,9 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'admin_notices', array( $this, 'add_admin_notices' ) );
 		add_filter( 'woocommerce_locate_template', array( $this, 'locate_template' ), 20, 3 );
 		add_filter( 'woocommerce_locate_core_template', array( $this, 'locate_template' ), 20, 3 );
+
+		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
+		add_action( 'wc_square_init_payment_token_migration', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 	}
 
 
@@ -914,5 +918,71 @@ class Plugin extends Payment_Gateway_Plugin {
 		return self::$instance;
 	}
 
+	/**
+	 * Schedules the migration of payment tokens.
+	 *
+	 * @since 3.8.0
+	 */
+	public function schedule_token_migration_job() {
+		if ( false !== get_option( 'wc_square_payment_token_migration_complete' ) ) {
+			return;
+		}
 
+		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration' ) ) {
+			as_enqueue_async_action( 'wc_square_init_payment_token_migration', array( 'page' => 1 ) );
+		}
+	}
+
+	/**
+	 * Migrates payment token from user_meta to WC_Payment_Token_CC.
+	 *
+	 * @param integer $page Pagination number.
+	 * @since 3.8.0
+	 */
+	public function register_payment_tokens_migration_scheduler( $page ) {
+		// Get 5 users in a batch.
+		$users = get_users(
+			array(
+				'fields' => array( 'ID' ),
+				'number' => 5,
+				'paged'  => $page,
+			)
+		);
+
+		// If users array is empty, then set status in options to indicate migration is complete.
+		$payment_tokens_handler = wc_square()->get_gateway()->get_payment_tokens_handler();
+		if ( empty( $users ) ) {
+			$payment_tokens_handler->clear_all_transients();
+			update_option( 'wc_square_payment_token_migration_complete', true );
+			return;
+		}
+
+		// Re-run scheduler for the next page of users.
+		as_enqueue_async_action( 'wc_square_init_payment_token_migration', array( 'page' => $page + 1 ) );
+
+		foreach ( $users as $user ) {
+			$user_payment_tokens = get_user_meta( $user->id, $payment_tokens_handler->get_user_meta_name(), true );
+
+			if ( ! is_array( $user_payment_tokens ) || empty( $user_payment_tokens ) ) {
+				continue;
+			}
+
+			foreach ( $user_payment_tokens as $token => $user_payment_token_data ) {
+				$payment_token = new Square_Credit_Card_Payment_Token();
+				$payment_token->set_token( $token );
+				$payment_token->set_card_type( $user_payment_token_data['card_type'] );
+				$payment_token->set_last4( $user_payment_token_data['last_four'] );
+				$payment_token->set_expiry_month( $user_payment_token_data['exp_month'] );
+				$payment_token->set_expiry_year( $user_payment_token_data['exp_year'] );
+				$payment_token->set_user_id( $user->id );
+				$payment_token->set_gateway_id( wc_square()->get_gateway()->get_id() );
+
+				if ( isset( $user_payment_token_data['nickname'] ) ) {
+					$payment_token->set_nickname( $user_payment_token_data['nickname'] );
+				}
+
+				$payment_token->save();
+			}
+		}
+	}
 }
