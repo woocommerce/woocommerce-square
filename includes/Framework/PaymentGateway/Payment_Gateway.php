@@ -4429,7 +4429,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return self::PAYMENT_TYPE_CASH_APP_PAY === $this->get_payment_type();
 	}
 
-
 	/**
 	 * Returns true if a gift card is applied during checkout.
 	 *

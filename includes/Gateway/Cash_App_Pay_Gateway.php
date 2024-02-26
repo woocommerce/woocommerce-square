@@ -1149,7 +1149,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
 		}
 
-		// Charge/Authorization the order.
+		// Charge/Authorize the order.
 		if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
 			$response = $this->get_api()->cash_app_pay_charge( $order );
 		} else {
