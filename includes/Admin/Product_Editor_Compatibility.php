@@ -52,11 +52,14 @@ class Product_Editor_Compatibility {
 	 * @return WP_REST_Response
 	 */
 	public function add_data_to_product_response( $response, $product ) {
-		$data                     = $response->get_data();
-		$data['is_sync_enabled']  = wc_square()->get_settings_handler()->is_product_sync_enabled();
-		$data['is_square_synced'] = Product::is_synced_with_square( $product );
-		$data['edit_link']        = Product::get_product_edit_link( $product );
-		$data['sor']              = wc_square()->get_settings_handler()->get_system_of_record();
+		$data                              = $response->get_data();
+		$data['is_sync_enabled']           = wc_square()->get_settings_handler()->is_product_sync_enabled();
+		$data['is_inventory_sync_enabled'] = wc_square()->get_settings_handler()->is_inventory_sync_enabled();
+		$data['is_square_synced']          = Product::is_synced_with_square( $product );
+		$data['edit_link']                 = Product::get_product_edit_link( $product );
+		$data['sor']                       = wc_square()->get_settings_handler()->get_system_of_record();
+		$data['fetch_stock_nonce']         = wp_create_nonce( 'fetch-product-stock-with-square' );
+		$data['stock_quantity']            = $product->get_stock_quantity();
 		$response->set_data( $data );
 
 		return $response;
@@ -70,6 +73,7 @@ class Product_Editor_Compatibility {
 	 */
 	public function process_data_before_save( $product, $request ) {
 		$is_square_synced = $request->get_param( 'is_square_synced' );
+		$stock_quantity   = $request->get_param( 'stock_quantity' );
 
 		if ( ! is_null( $is_square_synced ) ) {
 			if ( $is_square_synced ) {
@@ -77,6 +81,10 @@ class Product_Editor_Compatibility {
 			} else {
 				Product::set_synced_with_square( $product, 'no' );
 			}
+		}
+
+		if ( ! is_null( $stock_quantity ) && ! empty( $stock_quantity ) ) {
+			$product->set_stock_quantity( $stock_quantity );
 		}
 	}
 
@@ -117,8 +125,17 @@ class Product_Editor_Compatibility {
 
 		$parent->add_block(
 			array(
-				'id'        => '_wc_square_stock_management_field',
-				'blockName' => 'woocommerce-square/stock-management-field',
+				'id'         => '_wc_square_stock_management_field',
+				'blockName'  => 'woocommerce-square/stock-management-field',
+				'attributes' => array(
+					'disabled'     => 'yes' !== get_option( 'woocommerce_manage_stock' ),
+					'disabledCopy' => sprintf(
+						/* translators: %1$s: Learn more link opening tag. %2$s: Learn more link closing tag.*/
+						__( 'Per your %1$sstore settings%2$s, inventory management is <strong>disabled</strong>.', 'woocommerce-square' ),
+						'<a href="' . admin_url( 'admin.php?page=wc-settings&tab=products&section=inventory' ) . '" target="_blank" rel="noreferrer">',
+						'</a>'
+					),
+				)
 			)
 		);
 
@@ -142,7 +159,7 @@ class Product_Editor_Compatibility {
 		);
 
 		if ( in_array( $block->get_id(), $blocks_to_remove, true ) ) {
-			$block->remove();
+			$block->remove(); // This is a workaround and is not recommended by Woo.
 		}
 	}
 }

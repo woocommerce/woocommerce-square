@@ -31,6 +31,7 @@ use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Sync\Records;
 use WooCommerce\Square;
 use WooCommerce\Square\Gateway\Gift_Card;
+use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 /**
  * Products admin handler.
