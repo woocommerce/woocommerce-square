@@ -30,6 +30,20 @@ use WooCommerce\Square\Gateway;
 
 class Response extends \WooCommerce\Square\API\Response implements Payment_Gateway_API_Response {
 
+	/**
+	 * The transaction has been approved.
+	 */
+	const STATUS_COMPLETED = 'COMPLETED';
+
+	/**
+	 * The transaction has been approved.
+	 */
+	const STATUS_APPROVED = 'APPROVED';
+
+	/**
+	 * The transaction has been authorized but not yet captured.
+	 */
+	const STATUS_AUTHORIZED = 'AUTHORIZED';
 
 	/**
 	 * Determines if the transaction was approved.
