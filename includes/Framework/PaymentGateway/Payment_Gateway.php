@@ -1723,13 +1723,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 			// Gift card order note.
 			$message = sprintf(
-				/* translators: Placeholders: %1$s - payment method title, %2$s - environment ("Test"), %3$s - transaction type (authorization/charge), %4$s - last four digits of the card */
-				esc_html__( '%1$s %2$s %3$s Approved for an amount of %4$s: %5$s ending in %6$s', 'woocommerce-square' ),
-				$this->get_method_title(),
+				/* translators: Placeholders: %1$s - environment ("Test"), %2$s - transaction type (authorization/charge), %3$s - amount, %4$s - last four digits of the card */
+				esc_html__( 'Square Gift Card %1$s %2$s Approved for an amount of %3$s: Gift Card ending in %4$s', 'woocommerce-square' ),
 				wc_square()->get_settings_handler()->is_sandbox() ? esc_html_x( 'Test', 'noun, software environment', 'woocommerce-square' ) : '',
 				'APPROVED' === $response->get_payment()->getStatus() ? esc_html_x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ) : esc_html_x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ),
 				wc_price( Money_Utility::cents_to_float( $payment->getTotalMoney()->getAmount(), $order->get_currency() ) ),
-				esc_html__( 'Gift Card', 'woocommerce-square' ),
 				$last_four
 			);
 
@@ -1917,6 +1915,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		if ( $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ) {
 			$this->mark_order_as_held( $order, $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $payment_method_response->get_status_message(), $payment_method_response );
+			$this->update_order_meta( $order, 'other_gateway_partial_total', $order->payment->partial_total->other_gateway );
+			$this->update_order_meta( $order, 'gift_card_partial_total', $order->payment->partial_total->gift_card );
 		} else {
 			// Charge the authorised order which is paid using partial payments.
 			$response = $this->get_api()->pay_order( $payment_ids, $order->square_order_id );
