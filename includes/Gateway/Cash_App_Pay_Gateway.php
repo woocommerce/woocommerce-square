@@ -757,10 +757,58 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			);
 		} elseif ( isset( WC()->cart ) ) {
 			WC()->cart->calculate_totals();
-			$payment_request = $this->build_payment_request( WC()->cart->total );
+			$amount = WC()->cart->total;
+
+			// Check if a gift card is applied.
+			$check_for_giftcard = isset( $_POST['check_for_giftcard'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['check_for_giftcard'] ) ) : false;
+			$gift_card_applied  = false;
+			if ( $check_for_giftcard ) {
+				$partial_amount = $this->get_partial_cash_app_amount();
+				if ( $partial_amount < $amount ) {
+					$amount            = $partial_amount;
+					$gift_card_applied = true;
+				}
+			}
+
+			$payment_request = $this->build_payment_request( $amount, array(), $gift_card_applied );
 		}
 
 		return $payment_request;
+	}
+
+	/**
+	 * Get the partial amount to be paid by Cash App Pay.
+	 * This is the amount after deducting the gift card balance.
+	 *
+	 * @since x.x.x
+	 * @return float Partial amount to be paid by Cash App Pay.
+	 */
+	public function get_partial_cash_app_amount() {
+		$amount        = WC()->cart->total;
+		$payment_token = WC()->session->woocommerce_square_gift_card_payment_token;
+		if ( ! Gift_Card::does_checkout_support_gift_card() || ! $payment_token ) {
+			return $amount;
+		}
+	
+		$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
+		if ( $is_sandbox ) {
+			// The card allowed for testing with the Sandbox account has fund of $1.
+			$balance = 1;
+			$amount  = $amount - $balance;
+		} else {
+			$api_response   = $this->get_api()->retrieve_gift_card( $payment_token );
+			$gift_card_data = $api_response->get_data();
+			if ( $gift_card_data instanceof \Square\Models\RetrieveGiftCardFromNonceResponse ) {
+				$gift_card     = $gift_card_data->getGiftCard();
+				$balance_money = $gift_card->getBalanceMoney();
+				$balance       = (float) Square_Helper::number_format( Money_Utility::cents_to_float( $balance_money->getAmount() ) );
+
+				$amount = $amount - $balance;
+			}
+		}
+		
+
+		return $amount;
 	}
 
 	/**
@@ -773,7 +821,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @param array $data
 	 * @return array
 	 */
-	public function build_payment_request( $amount, $data = array() ) {
+	public function build_payment_request( $amount, $data = array(), $gift_card_applied = false ) {
 		$is_pay_for_order_page = isset( $data['is_pay_for_order_page'] ) ? $data['is_pay_for_order_page'] : false;
 		$order_id              = isset( $data['order_id'] ) ? $data['order_id'] : 0;
 
@@ -804,7 +852,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			unset( $data['is_pay_for_order_page'], $data['order_id'] );
 		}
 
-		if ( ! isset( $data['lineItems'] ) ) {
+		if ( ! isset( $data['lineItems'] ) && ! $gift_card_applied ) {
 			$data['lineItems'] = $this->build_payment_request_line_items( $order_data );
 		}
 

@@ -239,6 +239,7 @@ jQuery( document ).ready( ( $ ) => {
 					security: this.args.payment_request_nonce,
 					is_pay_for_order_page: this.isPayForOrderPage,
 					order_id: this.orderId,
+					check_for_giftcard: !this.isPayForOrderPage,
 				};
 
 				// retrieve a payment request object.

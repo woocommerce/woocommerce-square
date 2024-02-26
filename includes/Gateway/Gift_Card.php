@@ -319,7 +319,7 @@ class Gift_Card {
 					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); ?></td>
 				</tr>
 				<tr>
-					<td><?php esc_html_e( 'Credit card', 'woocommerce-square' ); ?></td>
+					<td><?php esc_html_e( 'Credit card/Cash App Pay', 'woocommerce-square' ); ?></td>
 					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); ?></td>
 				</tr>
 			</tbody>
@@ -367,8 +367,8 @@ class Gift_Card {
 						} else {
 							printf(
 								wp_kses_post(
-									/* translators: %s - remaining amount to be paid using the credit card. */
-									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%s</strong> would need to be paid with a credit card.", 'woocommerce-square' )
+									/* translators: %s - remaining amount to be paid using the credit card or cash app pay. */
+									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%s</strong> would need to be paid with a credit card or cash app pay.", 'woocommerce-square' )
 								),
 								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
 							);
