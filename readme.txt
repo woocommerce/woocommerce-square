@@ -75,6 +75,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.5.1 - TBD =
+* Fix - Issue with Square payment gateway being shown for unsupported currencies.
+
 = 4.5.0 - 2024-01-31 =
 * Add - Support for the Cash App Pay payment method.
 * Dev - Added end-to-end (E2E) tests for the Cash App Pay payment method.
