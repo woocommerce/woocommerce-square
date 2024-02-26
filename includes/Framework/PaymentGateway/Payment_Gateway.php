@@ -73,6 +73,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Credit card payment type */
 	const PAYMENT_TYPE_CREDIT_CARD = 'credit-card';
 
+	/** Credit card payment type */
+	const PAYMENT_TYPE_CASH_APP_PAY = 'cash_app_pay';
+
 	/** Products feature */
 	const FEATURE_PRODUCTS = 'products';
 
@@ -96,6 +99,21 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 	/** Credit Card partial capture transaction feature */
 	const FEATURE_CREDIT_CARD_PARTIAL_CAPTURE = 'partial_capture';
+
+	/** Gateway charge transaction feature */
+	const FEATURE_CHARGE = 'charge';
+
+	/** Gateway authorization transaction feature */
+	const FEATURE_AUTHORIZATION = 'authorization';
+
+	/** Gateway charge virtual-only orders feature */
+	const FEATURE_CHARGE_VIRTUAL = 'charge-virtual';
+
+	/** Gateway capture charge transaction feature */
+	const FEATURE_CAPTURE = 'capture_charge';
+
+	/** Gateway partial capture transaction feature */
+	const FEATURE_PARTIAL_CAPTURE = 'partial_capture';
 
 	/** Display detailed customer decline messages on checkout */
 	const FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES = 'customer_decline_messages';
@@ -2466,7 +2484,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			$this->update_order_meta( $order, 'account_four', substr( $order->payment->account_number, -4 ) );
 		}
 
-		if ( $this->is_credit_card_gateway() ) {
+		if ( $this->is_credit_card_gateway() || $this->is_cash_app_pay_gateway() ) {
 
 			// credit card gateway data
 			if ( ! $is_partial && $response && $response instanceof Payment_Gateway_API_Authorization_Response ) {
@@ -2480,7 +2498,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				if ( $order->payment_total > 0 ) {
 
 					// mark as captured
-					if ( $this->perform_credit_card_charge( $order ) ) {
+					if ( $this->perform_charge( $order ) ) {
 						$captured = 'yes';
 					} else {
 						$captured = 'no';
@@ -2687,7 +2705,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			$user_message = $response->get_user_message();
 		}
 
-		if ( ! $user_message || ( $this->supports_credit_card_authorization() && $this->perform_credit_card_authorization( $order ) ) ) {
+		if ( ! $user_message || ( $this->supports_authorization() && $this->perform_authorization( $order ) ) ) {
 			$user_message = esc_html__( 'Your order has been received and is being reviewed. Thank you for your business.', 'woocommerce-square' );
 		}
 
@@ -2970,6 +2988,61 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return $this->supports_credit_card_capture() && $this->supports( self::FEATURE_CREDIT_CARD_PARTIAL_CAPTURE );
 	}
 
+	/**
+	 * Returns true if gateway supports authorization transactions
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports authorization
+	 */
+	public function supports_authorization() {
+		return $this->supports( self::FEATURE_AUTHORIZATION );
+	}
+
+
+	/**
+	 * Returns true if gateway supports charge transactions
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports charges
+	 */
+	public function supports_charge() {
+		return $this->supports( self::FEATURE_CHARGE );
+	}
+
+
+	/**
+	 * Determines if gateway supports charging virtual-only orders.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	public function supports_charge_virtual() {
+		return $this->supports( self::FEATURE_CHARGE_VIRTUAL );
+	}
+
+
+	/**
+	 * Returns true if the gateway supports capturing a charge
+	 *
+	 * @since x.x.x
+	 * @return boolean true if the gateway supports capturing a charge
+	 */
+	public function supports_capture() {
+		return $this->supports( self::FEATURE_CAPTURE );
+	}
+
+
+	/**
+	 * Determines if the gateway supports capturing a partial charge.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public function supports_partial_capture() {
+		return $this->supports( self::FEATURE_PARTIAL_CAPTURE );
+	}
+
 
 	/**
 	 * Adds any credit card authorization/charge admin fields, allowing the
@@ -2981,7 +3054,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	protected function add_authorization_charge_form_fields( $form_fields ) {
 
-		assert( $this->supports_credit_card_authorization() && $this->supports_credit_card_charge() );
+		assert( $this->supports_authorization() && $this->supports_charge() );
 
 		$form_fields['transaction_type'] = array(
 			'title'    => esc_html__( 'Transaction Type', 'woocommerce-square' ),
@@ -2995,7 +3068,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			),
 		);
 
-		if ( $this->supports_credit_card_charge_virtual() ) {
+		if ( $this->supports_charge_virtual() ) {
 
 			$form_fields['charge_virtual_orders'] = array(
 				'label'       => esc_html__( 'Charge Virtual-Only Orders', 'woocommerce-square' ),
@@ -3005,7 +3078,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			);
 		}
 
-		if ( $this->supports_credit_card_partial_capture() ) {
+		if ( $this->supports_partial_capture() ) {
 
 			$form_fields['enable_partial_capture'] = array(
 				'label'       => esc_html__( 'Enable Partial Capture', 'woocommerce-square' ),
@@ -3015,7 +3088,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			);
 		}
 
-		if ( $this->supports_credit_card_capture() ) {
+		if ( $this->supports_capture() ) {
 
 			// get a list of the "paid" status names
 			$paid_statuses = array_map( 'wc_get_order_status_name', (array) wc_get_is_paid_statuses() );
@@ -3108,6 +3181,62 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return apply_filters( 'wc_' . $this->get_id() . '_perform_credit_card_authorization', $perform, $order, $this );
 	}
 
+	/**
+	 * Determines if a gateway transaction should result in a charge.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order Optional. The order being charged
+	 * @return bool
+	 */
+	public function perform_charge( \WC_Order $order = null ) {
+
+		assert( $this->supports_charge() );
+
+		$perform = self::TRANSACTION_TYPE_CHARGE === $this->transaction_type;
+
+		if ( ! $perform && $order && $this->supports_charge_virtual() && 'yes' === $this->charge_virtual_orders ) {
+			$perform = Square_Helper::is_order_virtual( $order );
+		}
+
+		/**
+		 * Filters whether a gateway transaction should result in a charge.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $perform whether the transaction should result in a charge
+		 * @param \WC_Order|null $order the order being charged
+		 * @param Payment_Gateway $gateway the gateway object
+		 */
+		return apply_filters( 'wc_' . $this->get_id() . '_perform_charge', $perform, $order, $this );
+	}
+
+
+	/**
+	 * Determines if a gateway transaction should result in an authorization.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order Optional. The order being authorized
+	 * @return bool
+	 */
+	public function perform_authorization( \WC_Order $order = null ) {
+
+		assert( $this->supports_authorization() );
+
+		$perform = self::TRANSACTION_TYPE_AUTHORIZATION === $this->transaction_type && ! $this->perform_charge( $order );
+
+		/**
+		 * Filters whether a gateway transaction should result in an authorization.
+		 *
+		 * @since 3.0.0
+		 * @param bool $perform whether the transaction should result in an authorization
+		 * @param \WC_Order|null $order the order being authorized
+		 * @param Payment_Gateway $gateway the gateway object
+		 */
+		return apply_filters( 'wc_' . $this->get_id() . '_perform_authorization', $perform, $order, $this );
+	}
+
 
 	/**
 	 * Determines if partial capture is enabled.
@@ -3118,7 +3247,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function is_partial_capture_enabled() {
 
-		assert( $this->supports_credit_card_partial_capture() );
+		assert( $this->supports_partial_capture() );
 
 		/**
 		 * Filters whether partial capture is enabled.
@@ -3972,6 +4101,16 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	public function is_credit_card_gateway() {
 		return self::PAYMENT_TYPE_CREDIT_CARD == $this->get_payment_type();
+	}
+
+	/**
+	 * Returns true if this is a Cash App Pay gateway
+	 *
+	 * @since x.x.x
+	 * @return boolean true if this is a Cash App Pay gateway
+	 */
+	public function is_cash_app_pay_gateway() {
+		return self::PAYMENT_TYPE_CASH_APP_PAY === $this->get_payment_type();
 	}
 
 	/**
