@@ -2167,10 +2167,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 					$this->update_order_meta( $order, 'gift_card_recorded_refund_total', $gift_card_partial_total );
 				}
 
+				$payment_method        = str_replace( 'square_', '', $this->get_id() );
 				$refund_payment_data[] = array(
 					'amount'       => $refund_amount - ( $gift_card_partial_total - $gift_card_recorded_refund_total ),
 					'tender_id'    => $this->get_order_meta( $order, 'trans_id' ),
-					'payment_type' => 'credit_card',
+					'payment_type' => $payment_method,
 				);
 			}
 			// If payment is not split, then refund the amount.
@@ -2417,10 +2418,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 */
 	protected function add_multi_payment_refund_order_note( \WC_Order $order, $response, $payment_data = array() ) {
 		$message = sprintf(
-			/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - a monetary amount */
-			esc_html__( '%1$s %2$s Refund in the amount of %3$s of total %4$s approved.', 'woocommerce-square' ),
-			$this->get_method_title(),
-			'credit_card' === $payment_data['payment_type'] ? esc_html__( 'Credit Card', 'woocommerce-square' ) : esc_html__( 'Gift Card', 'woocommerce-square' ),
+			/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - a monetary amount, %3$s Total refund amount. */
+			esc_html__( 'Square %1$s Refund in the amount of %2$s of total %3$s approved.', 'woocommerce-square' ),
+			'gift_card' === $payment_data['payment_type'] ? esc_html__( 'Gift Card', 'woocommerce-square' ) : $this->get_method_title(),
 			wc_price( $payment_data['amount'], array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) ),
 			wc_price( $order->refund->amount, array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) )
 		);
@@ -4494,10 +4494,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return string
 	 */
 	public function get_order_tender_types( $order ) {
-		$is_credit_card = Order::is_tender_type_card( $order );
-		$is_gift_card   = Order::is_tender_type_gift_card( $order );
+		$is_credit_card  = Order::is_tender_type_card( $order );
+		$is_gift_card    = Order::is_tender_type_gift_card( $order );
+		$is_cash_app_pay = Order::is_tender_type_cash_app_pay( $order );
 
-		if ( $is_credit_card && $is_gift_card ) {
+		if ( ( $is_credit_card || $is_cash_app_pay ) && $is_gift_card ) {
 			return 'both';
 		}
 
@@ -4508,6 +4509,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( $is_gift_card ) {
 			return 'gift_card';
 		}
+
+		return 'cash_app_pay';
 	}
 
 	/**
