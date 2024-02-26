@@ -481,7 +481,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	public function get_order( $order_id ) {
 		$order = parent::get_order( $order_id );
 
-		$order->payment->nonce               = new \stdClass();
+		$order->payment->nonce = new \stdClass();
 
 		if ( $this->is_gift_card_applied() ) {
 			$order->payment->nonce->gift_card = Square_Helper::get_post( 'square-gift-card-payment-nonce' );
@@ -760,7 +760,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			$amount = WC()->cart->total;
 
 			// Check if a gift card is applied.
-			$check_for_giftcard = isset( $_POST['check_for_giftcard'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['check_for_giftcard'] ) ) : false;
+			$check_for_giftcard = isset( $_POST['check_for_giftcard'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['check_for_giftcard'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$gift_card_applied  = false;
 			if ( $check_for_giftcard ) {
 				$partial_amount = $this->get_partial_cash_app_amount();
@@ -789,7 +789,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		if ( ! Gift_Card::does_checkout_support_gift_card() || ! $payment_token ) {
 			return $amount;
 		}
-	
+
 		$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
 		if ( $is_sandbox ) {
 			// The card allowed for testing with the Sandbox account has fund of $1.
@@ -806,7 +806,6 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$amount = $amount - $balance;
 			}
 		}
-		
 
 		return $amount;
 	}
