@@ -109,19 +109,17 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setCustomerId( $order->square_customer_id );
 		}
 
+		if ( isset( $order->payment->partial_total ) ) {
+			$this->square_request->setAutocomplete( false );
+		} else {
+			$this->square_request->setAutocomplete( $capture );
+		}
+
 		// Cash App Pay payment.
 		if ( $is_cash_app_pay ) {
-			$this->square_request->setAutocomplete( $capture );
-
 			// Payment nonce (from JS)
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
-			if ( isset( $order->payment->partial_total ) ) {
-				$this->square_request->setAutocomplete( false );
-			} else {
-				$this->square_request->setAutocomplete( $capture );
-			}
-
 			// payment token (card ID) or card nonce (from JS)
 			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 
