@@ -12,6 +12,7 @@ module.exports = {
 		new DependencyExtractionWebpackPlugin(),
 	],
 	entry: {
+		...defaultConfig.entry(),
 		'index': path.resolve(process.cwd(), 'assets/blocks', 'index.js'),
 		'cash-app-pay': path.resolve(process.cwd(), 'assets/blocks/cash-app-pay', 'index.js'),
 	}

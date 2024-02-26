@@ -3,6 +3,7 @@
 namespace WooCommerce\Square\Admin;
 
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use Automattic\WooCommerce\Admin\Features\ProductBlockEditor\BlockRegistry;
 use Automattic\WooCommerce\Internal\Admin\Features\ProductBlockEditor\ProductTemplates\ProductBlock;
 use Automattic\WooCommerce\Internal\Admin\Features\ProductBlockEditor\ProductTemplates\Section;
 use WooCommerce\Square\Handlers\Product;
@@ -12,6 +13,11 @@ class Product_Editor_Compatibility {
 		if ( ! FeaturesUtil::feature_is_enabled( 'product_block_editor' ) ) {
 			return;
 		}
+
+		add_action(
+			'init',
+			array( $this, 'register_custom_blocks' )
+		);
 
 		add_filter(
 			'woocommerce_rest_prepare_product_object',
@@ -41,6 +47,17 @@ class Product_Editor_Compatibility {
 			'woocommerce_block_template_after_add_block',
 			array( $this, 'remove_core_blocks' )
 		);
+	}
+
+	/**
+	 * Registers the custom product field blocks.
+	 */
+	public function register_custom_blocks() {
+		if ( isset( $_GET['page'] ) && 'wc-admin' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			BlockRegistry::get_instance()->register_block_type_from_metadata( WC_SQUARE_PLUGIN_PATH . '/build/admin/product-blocks/stock-management-field' );
+			BlockRegistry::get_instance()->register_block_type_from_metadata( WC_SQUARE_PLUGIN_PATH . '/build/admin/product-blocks/stock-quantity-field' );
+			BlockRegistry::get_instance()->register_block_type_from_metadata( WC_SQUARE_PLUGIN_PATH . '/build/admin/product-blocks/sync-with-square-field' );
+		}
 	}
 
 	/**
