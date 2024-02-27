@@ -2417,10 +2417,17 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param Payment_Gateway_API_Response $response transaction response
 	 */
 	protected function add_multi_payment_refund_order_note( \WC_Order $order, $response, $payment_data = array() ) {
+		$method = $this->get_method_title(); 
+		if ( 'gift_card' === $payment_data['payment_type'] ) {
+			$method = esc_html__( 'Square Gift Card', 'woocommerce-square' );
+		} elseif ( 'credit_card' === $payment_data['payment_type'] ) {
+			$method = esc_html__( 'Square Credit Card', 'woocommerce-square' );
+		}
+
 		$message = sprintf(
 			/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - a monetary amount, %3$s Total refund amount. */
-			esc_html__( 'Square %1$s Refund in the amount of %2$s of total %3$s approved.', 'woocommerce-square' ),
-			'gift_card' === $payment_data['payment_type'] ? esc_html__( 'Gift Card', 'woocommerce-square' ) : $this->get_method_title(),
+			esc_html__( '%1$s Refund in the amount of %2$s of total %3$s approved.', 'woocommerce-square' ),
+			$method,
 			wc_price( $payment_data['amount'], array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) ),
 			wc_price( $order->refund->amount, array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) )
 		);
