@@ -657,6 +657,26 @@ class API extends \WooCommerce\Square\API {
 	}
 
 	/**
+	 * Cancel authorized payment.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $payment_id transaction ID
+	 * @return API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cancel_payment( $payment_id ) {
+
+		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
+
+		$request->set_cancel_payment_data( $payment_id );
+
+		$this->set_response_handler( API\Responses\Create_Payment::class );
+
+		return $this->perform_request( $request );
+	}
+
+	/**
 	 * Retrieves a gift card using nonce.
 	 *
 	 * @since 3.7.0

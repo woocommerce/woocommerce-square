@@ -1810,6 +1810,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 			// If the payment is partial, then perform a other payment method (Square Credit Card/Cash App Pay) transaction as well.
 			if ( $is_partial_payment ) {
+				// Bail if the Gift Card transaction fails.
+				if ( ! $gift_card_response->transaction_approved() && ! $gift_card_response->transaction_held() ) {
+					return $this->do_transaction_failed_result( $order, $gift_card_response );
+				}
+
 				$payment_method_response = $this->do_payment_method_transaction( $order );
 
 				// Handle responses when partial payments are made using either Gift and Square Credit Card/Cash App Pay.
@@ -1896,6 +1901,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// allow the concrete class to add any gateway-specific transaction data to the order
 			$this->add_payment_gateway_transaction_data( $order, $payment_method_response );
 		} else {
+			// Cancel the Gift Card transaction if the other payment method transaction fails.
+			$this->gift_card_cancel_payment( $order, $gift_card_response );
+
 			return $this->do_transaction_failed_result( $order, $payment_method_response );
 		}
 
@@ -1986,6 +1994,35 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 					$order->add_order_note( $message );
 				}
+			}
+		}
+	}
+
+	/**
+	 * Cancel authorized gift card payment.
+	 *
+	 * This method cancels gift card payment, and adds a relevant order note.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order order object
+	 * @param Payment_Gateway_API_Response $response response object
+	 * @throws \Exception
+	 */
+	protected function gift_card_cancel_payment( \WC_Order $order, Payment_Gateway_API_Response $response ) {
+		// Cancel the Gift Card transaction if it is approved and  the other payment method transaction fails.
+		if ( $response->transaction_approved() || $response->transaction_held() ) {
+			$cancel_payment = $this->get_api()->cancel_payment( $response->get_transaction_id() );
+
+			if ( $cancel_payment && ! $cancel_payment->has_errors() ) {
+				// Add an order note to inform the user that the Gift Card payment is cancelled.
+				$message = sprintf(
+					/* translators: Placeholders: %1$s - transaction ID */
+					esc_html__( 'Square Gift Card payment cancelled (Transaction ID: %1$s)', 'woocommerce-square' ),
+					$response->get_transaction_id()
+				);
+	
+				$order->add_order_note( $message );
 			}
 		}
 	}

@@ -308,6 +308,17 @@ class Payments extends \WooCommerce\Square\API\Request {
 		$this->square_api_args   = array( $payment_id );
 	}
 
+	/**
+	 * Sets the data for cancel a Payment.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $payment_id payment ID
+	 */
+	public function set_cancel_payment_data( $payment_id ) {
+		$this->square_api_method = 'cancelPayment';
+		$this->square_api_args   = array( $payment_id );
+	}
 
 	/** Getter methods ************************************************************************************************/
 
