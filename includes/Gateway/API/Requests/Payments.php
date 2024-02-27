@@ -183,7 +183,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 		// Set the money object.
 		$amount_money = new \Square\Models\Money();
 
-		$charge_type    = wc_square()->get_gateway()->get_order_meta( $order, 'charge_type' );
+		$charge_type    = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'charge_type' );
 		$body           = new \Square\Models\UpdatePaymentRequest( $order->unique_transaction_ref );
 		$transaction_id = '';
 
@@ -191,7 +191,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 		if ( Payment_Gateway::CHARGE_TYPE_PARTIAL === $charge_type ) {
 			$gift_card_amount = Order::get_gift_card_total_charged_amount( $order );
 			$gift_card_amount = Money_Utility::amount_to_cents( $gift_card_amount, $order->get_currency() );
-			$transaction_id   = wc_square()->get_gateway()->get_order_meta( $order, 'trans_id' );
+			$transaction_id   = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'trans_id' );
 			$amount_money->setAmount( $amount - $gift_card_amount );
 		} else {
 			$transaction_id = $order->get_transaction_id();
