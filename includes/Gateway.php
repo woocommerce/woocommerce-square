@@ -1216,7 +1216,7 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		if ( array_key_exists( Plugin::GATEWAY_ID, $gateways ) ) {
-			return array( $gateways[ Plugin::GATEWAY_ID ] );
+			return array( Plugin::GATEWAY_ID => $gateways[ Plugin::GATEWAY_ID ] );
 		} else {
 			return array();
 		}
