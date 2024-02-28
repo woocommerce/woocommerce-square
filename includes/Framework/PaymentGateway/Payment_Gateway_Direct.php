@@ -351,7 +351,7 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 				$gift_card_purchase_type = Order::get_gift_card_purchase_type( $order );
 
 				// To create/activate/load a gift card, a payment must be in COMPLETE state.
-				if ( self::TRANSACTION_TYPE_CHARGE === wc_square()->get_gateway()->get_option( 'transaction_type' ) ) {
+				if ( $this->perform_credit_card_charge( $order ) ) {
 					if ( 'new' === $gift_card_purchase_type ) {
 						$this->create_gift_card( $order );
 					} elseif ( 'load' === $gift_card_purchase_type ) {
