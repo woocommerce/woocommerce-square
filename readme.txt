@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
 Tested up to: 6.4.0
 Requires PHP: 7.4
-Stable tag: 4.5.0
+Stable tag: 4.5.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.5.1 - 2024-02-27 =
+* Fix - Address the repetitive creation of `wc_square_init_payment_token_migration` actions in the payment token migration process.
+* Dev - Bump WooCommerce "tested up to" version 8.6.
+* Dev - Bump WooCommerce minimum supported version to 8.4.
 
 = 4.5.0 - 2024-01-31 =
 * Add - Support for the Cash App Pay payment method.

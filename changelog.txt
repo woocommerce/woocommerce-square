@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 4.5.1 - 2024-02-27 =
+* Fix - Address the repetitive creation of `wc_square_init_payment_token_migration` actions in the payment token migration process.
+* Dev - Bump WooCommerce "tested up to" version 8.6.
+* Dev - Bump WooCommerce minimum supported version to 8.4.
+
 = 4.5.0 - 2024-01-31 =
 * Add - Support for the Cash App Pay payment method.
 * Dev - Added end-to-end (E2E) tests for the Cash App Pay payment method.
