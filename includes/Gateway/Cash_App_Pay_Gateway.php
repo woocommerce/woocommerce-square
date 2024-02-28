@@ -431,7 +431,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Initialize payment tokens handler.
 	 *
-	 * @since x.x.x
+	 * @since 4.5.1
 	 */
 	protected function init_payment_tokens_handler() {
 		// No payment tokens for Cash App Pay, do nothing.
