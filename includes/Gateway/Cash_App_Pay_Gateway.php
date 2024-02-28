@@ -29,6 +29,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
+use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -1116,6 +1117,17 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				 */
 				do_action( 'wc_payment_gateway_' . $this->get_id() . '_payment_processed', $order, $this );
 
+				// To create/activate/load a gift card, a payment must be in COMPLETE state.
+				if ( $this->perform_charge( $order ) ) {
+					$gift_card_purchase_type = Order::get_gift_card_purchase_type( $order );
+					if ( 'new' === $gift_card_purchase_type ) {
+						$this->create_gift_card( $order );
+					} elseif ( 'load' === $gift_card_purchase_type ) {
+						$gan = Order::get_gift_card_gan( $order );
+						$this->load_gift_card( $gan, $order );
+					}
+				}
+
 				return array(
 					'result'   => 'success',
 					'redirect' => $this->get_return_url( $order ),
@@ -1152,8 +1164,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
-				// TODO: save gift card order details
-				// $this->maybe_save_gift_card_order_details( $response, $order );
+				$this->maybe_save_gift_card_order_details( $response, $order );
 
 				$order->square_order_id = $response->getId();
 

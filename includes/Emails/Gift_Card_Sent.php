@@ -137,7 +137,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 * @return string
 	 */
 	private function get_gift_card_gan( $order ) {
-		return wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_number' );
+		return wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_number' );
 	}
 
 	/**
@@ -149,7 +149,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 * @return string
 	 */
 	private function get_gift_card_amount( $order ) {
-		return wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_balance' );
+		return wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_balance' );
 	}
 
 	/**
@@ -158,7 +158,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 * @return boolean
 	 */
 	private function does_order_contain_gift_card( $order ) {
-		return 'yes' === wc_square()->get_gateway()->get_order_meta( $order, 'is_gift_card_purchased' );
+		return 'yes' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_gift_card_purchased' );
 	}
 
 	/**
