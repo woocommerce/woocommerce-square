@@ -1835,6 +1835,119 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
+	 * Stores gift card details as order meta.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param \Square\Models\Order $square_order
+	 * @param \WC_Order $order
+	 */
+	public function maybe_save_gift_card_order_details( $square_order, $order ) {
+		$line_items = $square_order->getLineItems();
+
+		/** @var \Square\Models\OrderLineItem */
+		foreach ( $line_items as $line_item ) {
+			if ( \Square\Models\OrderLineItemItemType::GIFT_CARD !== $line_item->getItemType() ) {
+				continue;
+			}
+
+			$gift_card_line_item_id = $line_item->getUid();
+			$gift_card_amount       = Square_Helper::number_format(
+				Money_Utility::cents_to_float(
+					$line_item->getTotalMoney()->getAmount()
+				)
+			);
+
+			$this->update_order_meta( $order, 'gift_card_line_item_id', $gift_card_line_item_id );
+			$this->update_order_meta( $order, 'gift_card_balance', $gift_card_amount );
+			$this->update_order_meta( $order, 'is_gift_card_purchased', 'yes' );
+		}
+	}
+
+	/**
+	 * Creates a gift card and activates it.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param \WC_Order $order
+	 */
+	public function create_gift_card( $order ) {
+		$gift_card_line_item_id = $this->get_order_meta( $order, 'gift_card_line_item_id' );
+
+		/** @var API\Responses\Get_Gift_Card $response */
+		$response = $this->get_api()->create_gift_card( $gift_card_line_item_id );
+
+		if ( ! $response->get_data() instanceof \Square\Models\CreateGiftCardResponse ) {
+			return false;
+		}
+
+		/**
+		 * Fires after creation of the gift card.
+		 *
+		 * @since 4.2.0
+		 *
+		 * @param \WC_Order $order Woo Order.
+		 */
+		do_action( 'wc_square_gift_card_created', $order );
+
+		$gift_card_id = $response->get_id();
+
+		$response = $this->get_api()->activate_gift_card( $gift_card_id, $this->get_order_meta( $order, 'square_order_id' ), $gift_card_line_item_id );
+
+		/** @var \Square\Models\GiftCardActivity $gift_card_activity */
+		$gift_card_activity = $response->get_data();
+
+		if ( ! $gift_card_activity instanceof \Square\Models\CreateGiftCardActivityResponse ) {
+			return false;
+		}
+
+		$gan = $gift_card_activity->getGiftCardActivity()->getGiftCardGan();
+		$this->update_order_meta( $order, 'gift_card_number', $gan );
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: %1$s - Gift Card Account Number */
+				esc_html__( 'Gift card with number: %1$s created and activated.', 'woocommerce-square' ),
+				esc_html( $gan )
+			)
+		);
+
+		/**
+		 * Fires after activation of the gift card.
+		 *
+		 * @since 4.2.0
+		 *
+		 * @param \WC_Order $order Woo Order.
+		 */
+		do_action( 'wc_square_gift_card_activated', $order );
+
+		return true;
+	}
+
+	/**
+	 * Loads an existing gift card with an amount.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param string    $gan   The gift card number.
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return boolean
+	 */
+	public function load_gift_card( $gan, $order ) {
+		/** @var API\Responses\Get_Gift_Card $response */
+		$response = $this->get_api()->load_gift_card( $gan, $order );
+
+		/** @var \Square\Models\GiftCardActivity $gift_card_activity */
+		$gift_card_activity = $response->get_data();
+
+		if ( ! $gift_card_activity instanceof \Square\Models\CreateGiftCardActivityResponse ) {
+			return false;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns true if the order total equals to the sum of partial totals.
 	 * False otherwise.
 	 *
