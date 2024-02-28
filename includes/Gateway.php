@@ -1223,8 +1223,11 @@ class Gateway extends Payment_Gateway_Direct {
 			return $gateways;
 		}
 
-		if ( array_key_exists( Plugin::GATEWAY_ID, $gateways ) ) {
-			$allowed_gateways[ Plugin::GATEWAY_ID ] = $gateways[ Plugin::GATEWAY_ID ];
+		$plugin_gateways = wc_square()->get_gateway_ids();
+		foreach ( $gateways as $gateway_id => $gateway ) {
+			if ( in_array( $gateway_id, $plugin_gateways, true ) ) {
+				$allowed_gateways[ $gateway_id ] = $gateway;
+			}
 		}
 
 		return $allowed_gateways;
