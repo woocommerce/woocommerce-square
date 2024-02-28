@@ -2021,7 +2021,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 					esc_html__( 'Square Gift Card payment cancelled (Transaction ID: %1$s)', 'woocommerce-square' ),
 					$response->get_transaction_id()
 				);
-	
+
 				$order->add_order_note( $message );
 			}
 		}
@@ -2454,7 +2454,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param Payment_Gateway_API_Response $response transaction response
 	 */
 	protected function add_multi_payment_refund_order_note( \WC_Order $order, $response, $payment_data = array() ) {
-		$method = $this->get_method_title(); 
+		$method = $this->get_method_title();
 		if ( 'gift_card' === $payment_data['payment_type'] ) {
 			$method = esc_html__( 'Square Gift Card', 'woocommerce-square' );
 		} elseif ( 'credit_card' === $payment_data['payment_type'] ) {
