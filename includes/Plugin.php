@@ -26,6 +26,7 @@ namespace WooCommerce\Square;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
+use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Square_Credit_Card_Payment_Token;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
 use WooCommerce\Square\Handlers\Background_Job;
@@ -130,6 +131,10 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'admin_notices', array( $this, 'add_admin_notices' ) );
 		add_filter( 'woocommerce_locate_template', array( $this, 'locate_template' ), 20, 3 );
 		add_filter( 'woocommerce_locate_core_template', array( $this, 'locate_template' ), 20, 3 );
+
+		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
+		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
+		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
 	}
 
 
@@ -914,5 +919,89 @@ class Plugin extends Payment_Gateway_Plugin {
 		return self::$instance;
 	}
 
+	/**
+	 * Schedules the migration of payment tokens.
+	 *
+	 * @since 3.8.0
+	 */
+	public function schedule_token_migration_job() {
+		if ( false !== get_option( 'wc_square_payment_token_migration_complete' ) ) {
+			return;
+		}
 
+		// Remove all OLD scheduled actions to cleanup DB.
+		// TODO: Remove this in next release.
+		global $wpdb;
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = 'wc_square_init_payment_token_migration'" );
+
+		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration_v2' ) ) {
+			as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => 1 ) );
+		}
+	}
+
+	/**
+	 * Migrates payment token from user_meta to WC_Payment_Token_CC.
+	 *
+	 * @param integer $page Pagination number.
+	 * @since 3.8.0
+	 */
+	public function register_payment_tokens_migration_scheduler( $page ) {
+		$payment_tokens_handler = wc_square()->get_gateway()->get_payment_tokens_handler();
+		$meta_key               = $payment_tokens_handler->get_user_meta_name();
+
+		// Get 5 users in a batch.
+		$users = get_users(
+			array(
+				'fields'     => array( 'ID' ),
+				'number'     => 5,
+				'paged'      => $page,
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					array(
+						'key'     => $meta_key,
+						'compare' => 'EXISTS',
+					),
+				),
+			)
+		);
+
+		// If users array is empty, then set status in options to indicate migration is complete.
+		if ( empty( $users ) ) {
+			$payment_tokens_handler->clear_all_transients();
+			update_option( 'wc_square_payment_token_migration_complete', true );
+			return;
+		}
+
+		// Re-run scheduler for the next page of users.
+		as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => $page + 1 ) );
+
+		foreach ( $users as $user ) {
+			$user_payment_tokens = get_user_meta( $user->id, $meta_key, true );
+
+			if ( ! is_array( $user_payment_tokens ) || empty( $user_payment_tokens ) ) {
+				continue;
+			}
+
+			foreach ( $user_payment_tokens as $token => $user_payment_token_data ) {
+				// Check if token already exists in WC_Payment_Token_CC.
+				if ( $payment_tokens_handler->user_has_token( $user->id, $token ) ) {
+					continue;
+				}
+
+				$payment_token = new Square_Credit_Card_Payment_Token();
+				$payment_token->set_token( $token );
+				$payment_token->set_card_type( $user_payment_token_data['card_type'] );
+				$payment_token->set_last4( $user_payment_token_data['last_four'] );
+				$payment_token->set_expiry_month( $user_payment_token_data['exp_month'] );
+				$payment_token->set_expiry_year( $user_payment_token_data['exp_year'] );
+				$payment_token->set_user_id( $user->id );
+				$payment_token->set_gateway_id( wc_square()->get_gateway()->get_id() );
+
+				if ( isset( $user_payment_token_data['nickname'] ) ) {
+					$payment_token->set_nickname( $user_payment_token_data['nickname'] );
+				}
+
+				$payment_token->save();
+			}
+		}
+	}
 }
