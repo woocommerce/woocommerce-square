@@ -322,7 +322,7 @@ class Gift_Card {
 				</tr>
 				<tr>
 					<td>
-						<?php 
+						<?php
 						if ( $cash_app_available ) {
 							esc_html_e( 'Credit card/Cash App Pay', 'woocommerce-square' );
 						} else {
@@ -377,11 +377,11 @@ class Gift_Card {
 						} else {
 							printf(
 								wp_kses_post(
-									/* translators: %s - remaining amount to be paid using the credit card or cash app pay. */
-									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%s</strong> would need to be paid with a %s.", 'woocommerce-square' )
+									/* translators: %1$s - remaining amount to be paid using the credit card or cash app pay; %2$s - payment method. */
+									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%1\$s</strong> would need to be paid with a %2\$s.", 'woocommerce-square' )
 								),
 								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
-								$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ),
+								$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 							);
 						}
 					}
