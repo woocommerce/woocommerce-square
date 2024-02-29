@@ -1858,8 +1858,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				)
 			);
 
-			$this->update_order_meta( $order, 'gift_card_line_item_id', $gift_card_line_item_id );
-			$this->update_order_meta( $order, 'gift_card_balance', $gift_card_amount );
+			$this->update_order_meta( $order, 'gift_card_line_item_id', wc_clean( $gift_card_line_item_id ) );
+			$this->update_order_meta( $order, 'gift_card_balance', wc_clean( $gift_card_amount ) );
 			$this->update_order_meta( $order, 'is_gift_card_purchased', 'yes' );
 		}
 	}
@@ -1902,7 +1902,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		}
 
 		$gan = $gift_card_activity->getGiftCardActivity()->getGiftCardGan();
-		$this->update_order_meta( $order, 'gift_card_number', $gan );
+		$this->update_order_meta( $order, 'gift_card_number', wc_clean( $gan ) );
 
 		$order->add_order_note(
 			sprintf(
@@ -1944,7 +1944,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	/**
