@@ -57,7 +57,7 @@ test( 'Gift card - Partial payment', async ( { page } ) => {
 	await expect(
 		page.locator( '.square-gift-card-response__content' )
 	).toContainText(
-		"Your gift card doesn't have enough funds to cover the order total. The remaining amount of $13.99 would need to be paid with a credit card or cash app pay."
+		"Your gift card doesn't have enough funds to cover the order total. The remaining amount of $13.99 would need to be paid with a credit card"
 	);
 	
 	await selectPaymentMethod(page, 'square_credit_card', false);

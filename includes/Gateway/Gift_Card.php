@@ -302,7 +302,9 @@ class Gift_Card {
 			}
 		}
 
-		$charge_type = $payment_token && ! $response['has_balance'] ? 'PARTIAL' : 'FULL';
+		$charge_type        = $payment_token && ! $response['has_balance'] ? 'PARTIAL' : 'FULL';
+		$available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+		$cash_app_available = isset( $available_gateways[ plugin::CASH_APP_PAY_GATEWAY_ID ] );
 
 		ob_start();
 		?>
@@ -319,7 +321,15 @@ class Gift_Card {
 					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); ?></td>
 				</tr>
 				<tr>
-					<td><?php esc_html_e( 'Credit card/Cash App Pay', 'woocommerce-square' ); ?></td>
+					<td>
+						<?php 
+						if ( $cash_app_available ) {
+							esc_html_e( 'Credit card/Cash App Pay', 'woocommerce-square' );
+						} else {
+							esc_html_e( 'Credit card', 'woocommerce-square' );
+						}
+						?>
+					</td>
 					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); ?></td>
 				</tr>
 			</tbody>
@@ -368,9 +378,10 @@ class Gift_Card {
 							printf(
 								wp_kses_post(
 									/* translators: %s - remaining amount to be paid using the credit card or cash app pay. */
-									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%s</strong> would need to be paid with a credit card or cash app pay.", 'woocommerce-square' )
+									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%s</strong> would need to be paid with a %s.", 'woocommerce-square' )
 								),
-								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
+								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
+								$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ),
 							);
 						}
 					}

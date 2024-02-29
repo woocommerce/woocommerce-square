@@ -1151,10 +1151,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			try {
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
-
-				// TODO: save gift card order details
-				// $this->maybe_save_gift_card_order_details( $response, $order );
-
+				
 				$order->square_order_id = $response->getId();
 
 				// adjust order by difference between WooCommerce and Square order totals
