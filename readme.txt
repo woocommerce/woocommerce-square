@@ -75,6 +75,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.5.2 - TBD =
+* Fix - Issue with Square payment gateway being shown for unsupported currencies.
+
 = 4.5.1 - 2024-02-27 =
 * Fix - Address the repetitive creation of `wc_square_init_payment_token_migration` actions in the payment token migration process.
 * Dev - Bump WooCommerce "tested up to" version 8.6.
