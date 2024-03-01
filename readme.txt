@@ -51,6 +51,9 @@ The manual installation method involves downloading our plugin and uploading it 
 
 Automatic updates should work like a charm; as always though, ensure you backup your site just in case.
 
+= Note =
+If running PHP 8.2+, you may see some deprecation notices being logged. These notices are known and do not impact any plugin functionality.
+
 == Frequently Asked Questions ==
 
 = Does this require an SSL certificate? =
