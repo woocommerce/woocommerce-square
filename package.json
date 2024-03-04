@@ -36,7 +36,7 @@
     "@woocommerce/dependency-extraction-webpack-plugin": "^1.4.0",
     "@woocommerce/eslint-plugin": "^1.1.0",
     "@wordpress/env": "^8.1.0",
-    "@wordpress/scripts": "^13.0.2",
+    "@wordpress/scripts": "^24.6.0",
     "config": "^1.24.0",
     "cross-env": "^3.0.0",
     "dotenv": "^16.0.3",
@@ -69,7 +69,9 @@
     "wp_org_slug": "woocommerce-square"
   },
   "dependencies": {
-    "@wordpress/data": "^8.1.0",
+    "@woocommerce/product-editor": "^1.4.0",
+    "@wordpress/data": "^7.6.0",
+    "html-react-parser": "^5.1.7",
     "uuid": "^9.0.1"
   }
 }
