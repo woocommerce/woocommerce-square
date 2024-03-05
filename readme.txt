@@ -51,6 +51,9 @@ The manual installation method involves downloading our plugin and uploading it 
 
 Automatic updates should work like a charm; as always though, ensure you backup your site just in case.
 
+= Note =
+If running PHP 8.2+, you may see some deprecation notices being logged. These notices are known and do not impact any plugin functionality.
+
 == Frequently Asked Questions ==
 
 = Does this require an SSL certificate? =
@@ -71,6 +74,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.5.2 - TBD =
+* Fix - Issue with Square payment gateway being shown for unsupported currencies.
 
 = 4.5.1 - 2024-02-27 =
 * Fix - Address the repetitive creation of `wc_square_init_payment_token_migration` actions in the payment token migration process.

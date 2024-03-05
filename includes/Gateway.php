@@ -1217,17 +1217,25 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return array
 	 */
 	public function filter_available_gateways( $gateways ) {
-		$allowed_gateways = array();
+		$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
+
+		foreach ( $this->get_plugin()->get_settings_handler()->get_locations() as $location ) {
+			if ( $location_id === $location->getId() && get_woocommerce_currency() !== $location->getCurrency() ) {
+				unset( $gateways[ Plugin::GATEWAY_ID ] );
+			}
+		}
 
 		if ( ! Gift_Card::cart_contains_gift_card() ) {
 			return $gateways;
 		}
 
 		if ( array_key_exists( Plugin::GATEWAY_ID, $gateways ) ) {
-			$allowed_gateways[ Plugin::GATEWAY_ID ] = $gateways[ Plugin::GATEWAY_ID ];
+			return array( Plugin::GATEWAY_ID => $gateways[ Plugin::GATEWAY_ID ] );
+		} else {
+			return array();
 		}
 
-		return $allowed_gateways;
+		return $gateways;
 	}
 
 	/**

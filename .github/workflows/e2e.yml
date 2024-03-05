@@ -89,7 +89,7 @@ jobs:
 
       - name: Run E2E Smoke Test
         if: ${{ github.event_name == 'push' }}
-        run: npm run test:e2e
+        run: npm run test:e2e-run
       
       - uses: actions/upload-artifact@v3
         if: always()
