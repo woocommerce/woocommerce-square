@@ -1186,13 +1186,20 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return array
 	 */
 	public function filter_available_gateways( $gateways ) {
-		$allowed_gateways = array();
+		$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
+
+		foreach ( $this->get_plugin()->get_settings_handler()->get_locations() as $location ) {
+			if ( $location_id === $location->getId() && get_woocommerce_currency() !== $location->getCurrency() ) {
+				unset( $gateways[ Plugin::GATEWAY_ID ] );
+			}
+		}
 
 		if ( ! Gift_Card::cart_contains_gift_card() ) {
 			return $gateways;
 		}
 
-		$plugin_gateways = wc_square()->get_gateway_ids();
+		$allowed_gateways = array();
+		$plugin_gateways  = wc_square()->get_gateway_ids();
 		foreach ( $gateways as $gateway_id => $gateway ) {
 			if ( in_array( $gateway_id, $plugin_gateways, true ) ) {
 				$allowed_gateways[ $gateway_id ] = $gateway;
