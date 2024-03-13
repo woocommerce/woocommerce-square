@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WooCommerce Square
- * Requires Plugins: WooCommerce
+ * Requires Plugins: woocommerce
  * Version: 4.5.1
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.3
