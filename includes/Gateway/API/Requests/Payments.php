@@ -247,7 +247,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 			Utilities\Money_Utility::amount_to_money( $payment_total, $order->get_currency() )
 		);
 
-		$should_authorize = Payment_Gateway::TRANSACTION_TYPE_AUTHORIZATION === wc_square()->get_gateway()->get_option( 'transaction_type' );
+		$should_authorize = wc_square()->get_gateway( $order->get_payment_method() )->perform_authorization( $order );
 
 		if ( isset( $order->payment->partial_total ) || $should_authorize ) {
 			$this->square_request->setAutocomplete( false );
