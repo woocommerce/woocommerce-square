@@ -35,6 +35,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Direct;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
 
 /**
@@ -448,6 +449,19 @@ class Gateway extends Payment_Gateway_Direct {
 		return parent::do_transaction( $order );
 	}
 
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		return $this->do_credit_card_transaction( $order, $response );
+	}
 
 	/**
 	 * Stores gift card details as order meta.

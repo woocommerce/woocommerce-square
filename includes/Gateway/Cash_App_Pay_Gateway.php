@@ -28,6 +28,7 @@ use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -489,7 +490,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	public function get_order( $order_id ) {
 		$order = parent::get_order( $order_id );
 
-		$order->payment->nonce               = new \stdClass();
+		$order->payment->nonce = new \stdClass();
+
+		if ( $this->is_gift_card_applied() ) {
+			$order->payment->nonce->gift_card = Square_Helper::get_post( 'square-gift-card-payment-nonce' );
+		}
+
 		$order->payment->nonce->cash_app_pay = Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' );
 
 		$order->square_customer_id = $order->customer_id;
@@ -760,10 +766,57 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			);
 		} elseif ( isset( WC()->cart ) ) {
 			WC()->cart->calculate_totals();
-			$payment_request = $this->build_payment_request( WC()->cart->total );
+			$amount = WC()->cart->total;
+
+			// Check if a gift card is applied.
+			$check_for_giftcard = isset( $_POST['check_for_giftcard'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['check_for_giftcard'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$gift_card_applied  = false;
+			if ( $check_for_giftcard ) {
+				$partial_amount = $this->get_partial_cash_app_amount();
+				if ( $partial_amount < $amount ) {
+					$amount            = $partial_amount;
+					$gift_card_applied = true;
+				}
+			}
+
+			$payment_request = $this->build_payment_request( $amount, array(), $gift_card_applied );
 		}
 
 		return $payment_request;
+	}
+
+	/**
+	 * Get the partial amount to be paid by Cash App Pay.
+	 * This is the amount after deducting the gift card balance.
+	 *
+	 * @since x.x.x
+	 * @return float Partial amount to be paid by Cash App Pay.
+	 */
+	public function get_partial_cash_app_amount() {
+		$amount        = WC()->cart->total;
+		$payment_token = WC()->session->woocommerce_square_gift_card_payment_token;
+		if ( ! Gift_Card::does_checkout_support_gift_card() || ! $payment_token ) {
+			return $amount;
+		}
+
+		$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
+		if ( $is_sandbox ) {
+			// The card allowed for testing with the Sandbox account has fund of $1.
+			$balance = 1;
+			$amount  = $amount - $balance;
+		} else {
+			$api_response   = $this->get_api()->retrieve_gift_card( $payment_token );
+			$gift_card_data = $api_response->get_data();
+			if ( $gift_card_data instanceof \Square\Models\RetrieveGiftCardFromNonceResponse ) {
+				$gift_card     = $gift_card_data->getGiftCard();
+				$balance_money = $gift_card->getBalanceMoney();
+				$balance       = (float) Square_Helper::number_format( Money_Utility::cents_to_float( $balance_money->getAmount() ) );
+
+				$amount = $amount - $balance;
+			}
+		}
+
+		return $amount;
 	}
 
 	/**
@@ -776,7 +829,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @param array $data
 	 * @return array
 	 */
-	public function build_payment_request( $amount, $data = array() ) {
+	public function build_payment_request( $amount, $data = array(), $gift_card_applied = false ) {
 		$is_pay_for_order_page = isset( $data['is_pay_for_order_page'] ) ? $data['is_pay_for_order_page'] : false;
 		$order_id              = isset( $data['order_id'] ) ? $data['order_id'] : 0;
 
@@ -807,7 +860,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			unset( $data['is_pay_for_order_page'], $data['order_id'] );
 		}
 
-		if ( ! isset( $data['lineItems'] ) ) {
+		if ( ! isset( $data['lineItems'] ) && ! $gift_card_applied ) {
 			$data['lineItems'] = $this->build_payment_request_line_items( $order_data );
 		}
 
@@ -1130,6 +1183,25 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			}
 		}
 
+		return parent::do_transaction( $order );
+	}
+
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		// Generate a new transaction ref if the order payment is split using multiple payment methods.
+		if ( isset( $order->payment->partial_total ) ) {
+			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
+		}
+
 		// Charge/Authorize the order.
 		if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
 			$response = $this->get_api()->cash_app_pay_charge( $order );
@@ -1174,28 +1246,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 */
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
+			$this->update_order_meta( $order, 'is_tender_type_cash_app_wallet', true );
+
 			$order->add_order_note( $message );
 		}
 
-		if ( $response->transaction_approved() || $response->transaction_held() ) {
-
-			// add the standard transaction data
-			$this->add_transaction_data( $order, $response );
-
-			// allow the concrete class to add any gateway-specific transaction data to the order
-			$this->add_payment_gateway_transaction_data( $order, $response );
-
-			// if the transaction was held (ie fraud validation failure) mark it as such
-			$is_authorization = $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) && $response->is_cash_app_payment_approved();
-			if ( $response->transaction_held() || $is_authorization ) {
-				/* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
-				$this->mark_order_as_held( $order, $is_authorization ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
-			}
-
-			return true;
-		} else {
-			return $this->do_transaction_failed_result( $order, $response );
-		}
+		return $response;
 	}
 
 	/**

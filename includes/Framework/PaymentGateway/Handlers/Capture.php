@@ -173,13 +173,13 @@ class Capture {
 
 			// Handle capture for orders where the payment was split between Square Gift and Credit cards.
 			if ( $this->get_gateway()->get_order_meta( $order, 'charge_type' ) === $this->get_gateway()::CHARGE_TYPE_PARTIAL ) {
-				$credit_card_transaction_id = $this->get_gateway()->get_order_meta( $order, 'trans_id' );
-				$gift_card_transaction_id   = $this->get_gateway()->get_order_meta( $order, 'gift_card_trans_id' );
-				$square_order_id            = $this->get_gateway()->get_order_meta( $order, 'square_order_id' );
+				$transaction_id           = $this->get_gateway()->get_order_meta( $order, 'trans_id' );
+				$gift_card_transaction_id = $this->get_gateway()->get_order_meta( $order, 'gift_card_trans_id' );
+				$square_order_id          = $this->get_gateway()->get_order_meta( $order, 'square_order_id' );
 
 				$response = $this->get_gateway()->get_api()->pay_order(
 					array(
-						$credit_card_transaction_id,
+						$transaction_id,
 						$gift_card_transaction_id,
 					),
 					$square_order_id

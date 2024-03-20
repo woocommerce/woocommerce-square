@@ -31,6 +31,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Integrations\Payment_Gateway_Int
 use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Payment_Gateway_Payment_Tokens_Handler;
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework as SquareFramework;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
@@ -1676,6 +1677,355 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		return apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_get_order_base', $order, $this );
 	}
 
+	/**
+	 * Performs a transaction for the given order and returns the result.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional gateway transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	abstract protected function do_payment_method_transaction( $order, $response = null );
+
+	/**
+	 * Performs a gift card transaction for the given order and returns the result.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param WC_Order_Square $order WooCommerce order object.
+	 *
+	 * @return Create_Payment The payment response.
+	 */
+	public function do_gift_card_transaction( $order ) {
+		// Generate a new transaction ref if the order payment is split using multiple payment methods.
+		if ( isset( $order->payment->partial_total ) ) {
+			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
+		}
+
+		$response = $this->get_api()->gift_card_charge( $order );
+
+		if ( ! $response->transaction_approved() ) {
+			return $response;
+		}
+
+		$payment_response = $response->get_data();
+
+		if ( $payment_response instanceof \Square\Models\CreatePaymentResponse ) {
+			$payment      = $payment_response->getPayment();
+			$card_details = $payment->getCardDetails();
+
+			$card      = $card_details->getCard();
+			$exp_month = $card->getExpMonth();
+			$exp_year  = $card->getExpYear();
+			$last_four = $card->getLast4();
+
+			// Gift card order note.
+			$message = sprintf(
+				/* translators: Placeholders: %1$s - environment ("Test"), %2$s - transaction type (authorization/charge), %3$s - amount, %4$s - last four digits of the card */
+				esc_html__( 'Square Gift Card %1$s %2$s Approved for an amount of %3$s: Gift Card ending in %4$s', 'woocommerce-square' ),
+				wc_square()->get_settings_handler()->is_sandbox() ? esc_html_x( 'Test', 'noun, software environment', 'woocommerce-square' ) : '',
+				'APPROVED' === $response->get_payment()->getStatus() ? esc_html_x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ) : esc_html_x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ),
+				wc_price( Money_Utility::cents_to_float( $payment->getTotalMoney()->getAmount(), $order->get_currency() ) ),
+				$last_four
+			);
+
+			// Add the expiry date.
+			$message .= ' ' . sprintf(
+				/* translators: Placeholders: %s - Gift card expiry date */
+				__( '(expires %s)', 'woocommerce-square' ),
+				esc_html( $exp_month . '/' . substr( $exp_year, -2 ) )
+			);
+
+			// Adds the transaction id (if any) to the order note.
+			if ( $response->get_transaction_id() ) {
+				/* translators: Placeholders: %s - transaction ID */
+				$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
+			}
+
+			/**
+			 * Direct Gateway Gift Card Transaction Approved Order Note Filter.
+			 *
+			 * Allow actors to modify the order note added when a Gift Card transaction
+			 * is approved.
+			 *
+			 * @since 3.7.0
+			 *
+			 * @param string $message order note
+			 * @param \WC_Order $order order object
+			 * @param Create_Payment $response transaction response
+			 * @param Payment_Gateway_Direct $this instance
+			 */
+			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_gift_card_transaction_approved_order_note', $message, $order, $response, $this );
+
+			$this->update_order_meta( $order, 'is_tender_type_gift_card', true );
+
+			$amount = $payment->getTotalMoney()->getAmount();
+
+			Order::set_gift_card_total_charged_amount( $order, Square_Helper::number_format( Money_Utility::cents_to_float( $amount ) ) );
+			Order::set_gift_card_last4( $order, $card->getLast4() );
+
+			$order->add_order_note( $message );
+		}
+
+		return $response;
+	}
+
+
+	/**
+	 * Create a transaction.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param \WC_Order $order the order object
+	 * @return bool
+	 * @throws \Exception
+	 */
+	protected function do_transaction( $order ) {
+
+		// Check if a Gift card is applied.
+		if ( $this->is_gift_card_applied() ) {
+			$is_partial_payment = self::CHARGE_TYPE_PARTIAL === $this->get_charge_type();
+
+			// If payment is partial, i.e.; Gift Card is used along with a Square Credit Card or Cash App Pay, then save the partial totals
+			// in a `$order->payment->partial_total` property.
+			if ( $is_partial_payment ) {
+				$order->payment->partial_total                = new \stdClass();
+				$order->payment->partial_total->gift_card     = $this->get_partial_total_on_gift_card();
+				$order->payment->partial_total->other_gateway = $this->get_partial_total_on_other_gateway();
+
+				// If the sum of partial totals is not equal to the order total, show an error.
+				if ( ! $this->verify_order_total( $order ) ) {
+					Square_Helper::wc_add_notice( esc_html__( 'The sum of partial totals does not match the order total.', 'woocommerce-square' ), 'error' );
+					return false;
+				}
+
+				// Save the charge type as `PARTIAL`.
+				$this->update_order_meta( $order, 'charge_type', self::CHARGE_TYPE_PARTIAL );
+			}
+
+			// Perform a Gift Card transaction.
+			$gift_card_response = $this->do_gift_card_transaction( $order );
+
+			// If the payment is partial, then perform a other payment method (Square Credit Card/Cash App Pay) transaction as well.
+			if ( $is_partial_payment ) {
+				// Bail if the Gift Card transaction fails.
+				if ( ! $gift_card_response->transaction_approved() && ! $gift_card_response->transaction_held() ) {
+					return $this->do_transaction_failed_result( $order, $gift_card_response );
+				}
+
+				$payment_method_response = $this->do_payment_method_transaction( $order );
+
+				// Handle responses when partial payments are made using either Gift and Square Credit Card/Cash App Pay.
+				return $this->handle_multi_payment_methods( $gift_card_response, $payment_method_response, $order );
+			} else {
+				// Handle response when payment is made using either Gift or Square Credit Card.
+				return $this->handle_single_payment_method( $gift_card_response, $order );
+			}
+		} elseif ( $this->is_credit_card_gateway() || $this->is_cash_app_pay_gateway() ) {
+			$response = $this->do_payment_method_transaction( $order );
+		} else {
+			$do_payment_type_transaction = 'do_' . $this->get_payment_type() . '_transaction';
+			$response                    = $this->$do_payment_type_transaction( $order );
+		}
+
+		// Handle response when payment is made using a Square Credit Card.
+		return $this->handle_single_payment_method( $response, $order );
+	}
+
+	/**
+	 * Returns true if the order total equals to the sum of partial totals.
+	 * False otherwise.
+	 *
+	 * @param \WC_Order $order WooCommerce order object.
+	 * @return boolean
+	 */
+	protected function verify_order_total( $order ) {
+		$order_total         = (float) $order->get_total();
+		$gift_card_total     = $order->payment->partial_total->gift_card;
+		$other_gateway_total = $order->payment->partial_total->other_gateway;
+
+		return $order_total === $gift_card_total + $other_gateway_total;
+	}
+
+	/**
+	 * Handles responses when the order payment is made using a Square Gift or a Credit Card.
+	 *
+	 * @param Create_Payment $response       Square Gift Card or Credit Card payment response.
+	 * @param \WC_Order      $order          WooCommerce Order object.
+	 * @param string         $payment_method Describes whether payment was made using a Square Gift or a Credit Card.
+	 */
+	protected function handle_single_payment_method( $response, $order ) {
+		if ( $response->transaction_approved() || $response->transaction_held() ) {
+			if ( ! $this->is_cash_app_pay_gateway() && $response->is_gift_card_payment() ) {
+				$this->maybe_tokenize( $response, $order );
+			}
+
+			// add the standard transaction data
+			$this->add_transaction_data( $order, $response );
+
+			// allow the concrete class to add any gateway-specific transaction data to the order
+			$this->add_payment_gateway_transaction_data( $order, $response );
+
+			// if the transaction was held (ie fraud validation failure) mark it as such
+			// TODO: consider checking whether the response *was* an authorization, rather than blanket-assuming it was because of the settings.  There are times when an auth will be used rather than charge, ie when performing in-plugin AVS handling (moneris)
+			if ( $response->transaction_held() || ( $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ) ) {
+				// TODO: need to make this more flexible, and not force the message to 'Authorization only transaction' for auth transactions (re moneris efraud handling)
+				/* translators: This is a message describing that the transaction in question only performed a credit card authorization and did not capture any funds. */
+				$this->mark_order_as_held( $order, $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
+			}
+
+			return true;
+
+		} else {
+			return $this->do_transaction_failed_result( $order, $response );
+		}
+	}
+
+	/**
+	 * Handles responses when the order total payment is split between a Gift and Square Credit Card.
+	 *
+	 * @param Create_Payment $gift_card_response      Gift Card payment response.
+	 * @param Create_Payment $payment_method_response Other Payment Method payment response.
+	 * @param \WC_Order      $order                   WooCommerce Order object.
+	 */
+	protected function handle_multi_payment_methods( $gift_card_response, $payment_method_response, $order ) {
+		if ( $payment_method_response->transaction_approved() || $payment_method_response->transaction_held() ) {
+			$this->maybe_tokenize( $payment_method_response, $order );
+
+			// add the standard transaction data
+			$payment_method = str_replace( 'square_', '', $this->get_id() );
+			$this->add_transaction_data( $order, $payment_method_response, $payment_method, true );
+
+			// allow the concrete class to add any gateway-specific transaction data to the order
+			$this->add_payment_gateway_transaction_data( $order, $payment_method_response );
+		} else {
+			// Cancel the Gift Card transaction if the other payment method transaction fails.
+			$this->gift_card_cancel_payment( $order, $gift_card_response );
+
+			return $this->do_transaction_failed_result( $order, $payment_method_response );
+		}
+
+		if ( $gift_card_response->transaction_approved() || $gift_card_response->transaction_held() ) {
+			// add the standard transaction data
+			$this->add_transaction_data( $order, $gift_card_response, 'gift_card', true );
+		} else {
+			return $this->do_transaction_failed_result( $order, $gift_card_response );
+		}
+
+		// At this point, the transactions are only authorised - a requirement for partial payments.
+		// We create an array of payment IDs that are authorised and later use this to charge and complete the order.
+		$payment_ids = array(
+			$gift_card_response->get_transaction_id(),
+			$payment_method_response->get_transaction_id(),
+		);
+
+		if ( $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ) {
+			$this->mark_order_as_held( $order, $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $payment_method_response->get_status_message(), $payment_method_response );
+			$this->update_order_meta( $order, 'other_gateway_partial_total', $order->payment->partial_total->other_gateway );
+			$this->update_order_meta( $order, 'gift_card_partial_total', $order->payment->partial_total->gift_card );
+		} else {
+			// Charge the authorised order which is paid using partial payments.
+			$response = $this->get_api()->pay_order( $payment_ids, $order->square_order_id );
+
+			if ( $response->get_data() instanceof \Square\Models\PayOrderResponse ) {
+				$captured_amount = Square_Helper::number_format( Money_Utility::cents_to_float( $response->get_order()->getTotalMoney()->getAmount() ) );
+				$square_order    = $response->get_order();
+				$message         = sprintf(
+					/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - transaction amount. Definitions: Capture, as in capture funds from a credit card. */
+					esc_html__( '%1$s Capture of %2$s Approved', 'woocommerce-square' ),
+					$this->get_method_title(),
+					wc_price( $captured_amount, array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) )
+				);
+
+				$message .= ' ' . $this->build_split_payment_order_note( $order, $square_order );
+				/* translators: %s list of transaction IDs for split payments. */
+				$message .= ' ' . sprintf( esc_html__( '(Transaction IDs %s)', 'woocommerce-square' ), implode( ', ', $response->get_transaction_ids() ) );
+				$order->add_order_note( $message );
+				$this->update_order_meta( $order, 'charge_captured', 'yes' );
+				$this->update_order_meta( $order, 'charge_type', self::CHARGE_TYPE_PARTIAL );
+				$this->update_order_meta( $order, 'other_gateway_partial_total', $order->payment->partial_total->other_gateway );
+				$this->update_order_meta( $order, 'gift_card_partial_total', $order->payment->partial_total->gift_card );
+				return true;
+			} else {
+				$this->update_order_meta( $order, 'charge_captured', 'no' );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Tokenizes Credit Card.
+	 *
+	 * @param Payment_Gateway_API_Response $response Credit Card payment response.
+	 * @param \WC_Order                     $order   WooCommerce order object.
+	 */
+	protected function maybe_tokenize( $response, $order ) {
+		if ( $this->supports_tokenization() && 0 !== $order->get_user_id() && $this->get_payment_tokens_handler()->should_tokenize() &&
+			( $order->payment_total > 0 && ( $this->tokenize_with_sale() || $this->tokenize_after_sale() ) ) ) {
+			try {
+				$order = $this->get_payment_tokens_handler()->create_token( $order, $response );
+			} catch ( \Exception $e ) {
+
+				// handle the case of a "tokenize-after-sale" request failing by marking the order as on-hold with an explanatory note
+				if ( ! $response->transaction_held() && ! ( $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ) ) {
+
+					// transaction has already been successful, but we've encountered an issue with the post-tokenization, add an order note to that effect and continue on
+					$message = sprintf(
+						/* translators: Placeholders: %s - failure message */
+						esc_html__( 'Tokenization Request Failed: %s', 'woocommerce-square' ),
+						$e->getMessage()
+					);
+
+					$this->mark_order_as_held( $order, $message, $response );
+
+				} else {
+
+					// transaction has already been successful, but we've encountered an issue with the post-tokenization, add an order note to that effect and continue on
+					$message = sprintf(
+						/* translators: Placeholders: %1$s - payment method title, %2$s - failure message */
+						esc_html__( '%1$s Tokenization Request Failed: %2$s', 'woocommerce-square' ),
+						$this->get_method_title(),
+						$e->getMessage()
+					);
+
+					$order->add_order_note( $message );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Cancel authorized gift card payment.
+	 *
+	 * This method cancels gift card payment, and adds a relevant order note.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order order object
+	 * @param Payment_Gateway_API_Response $response response object
+	 * @throws \Exception
+	 */
+	protected function gift_card_cancel_payment( \WC_Order $order, Payment_Gateway_API_Response $response ) {
+		// Cancel the Gift Card transaction if it is approved and  the other payment method transaction fails.
+		if ( $response->transaction_approved() || $response->transaction_held() ) {
+			$cancel_payment = $this->get_api()->cancel_payment( $response->get_transaction_id() );
+
+			if ( $cancel_payment && ! $cancel_payment->has_errors() ) {
+				// Add an order note to inform the user that the Gift Card payment is cancelled.
+				$message = sprintf(
+					/* translators: Placeholders: %1$s - transaction ID */
+					esc_html__( 'Square Gift Card payment cancelled (Transaction ID: %1$s)', 'woocommerce-square' ),
+					$response->get_transaction_id()
+				);
+
+				$order->add_order_note( $message );
+			}
+		}
+	}
 
 	/**
 	 * Completes an order payment.
@@ -1854,10 +2204,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 					$this->update_order_meta( $order, 'gift_card_recorded_refund_total', $gift_card_partial_total );
 				}
 
+				$payment_method        = str_replace( 'square_', '', $this->get_id() );
 				$refund_payment_data[] = array(
 					'amount'       => $refund_amount - ( $gift_card_partial_total - $gift_card_recorded_refund_total ),
 					'tender_id'    => $this->get_order_meta( $order, 'trans_id' ),
-					'payment_type' => 'credit_card',
+					'payment_type' => $payment_method,
 				);
 			}
 			// If payment is not split, then refund the amount.
@@ -2103,11 +2454,17 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param Payment_Gateway_API_Response $response transaction response
 	 */
 	protected function add_multi_payment_refund_order_note( \WC_Order $order, $response, $payment_data = array() ) {
+		$method = $this->get_method_title();
+		if ( 'gift_card' === $payment_data['payment_type'] ) {
+			$method = esc_html__( 'Square Gift Card', 'woocommerce-square' );
+		} elseif ( 'credit_card' === $payment_data['payment_type'] ) {
+			$method = esc_html__( 'Square Credit Card', 'woocommerce-square' );
+		}
+
 		$message = sprintf(
-			/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - a monetary amount */
-			esc_html__( '%1$s %2$s Refund in the amount of %3$s of total %4$s approved.', 'woocommerce-square' ),
-			$this->get_method_title(),
-			'credit_card' === $payment_data['payment_type'] ? esc_html__( 'Credit Card', 'woocommerce-square' ) : esc_html__( 'Gift Card', 'woocommerce-square' ),
+			/* translators: Placeholders: %1$s - payment gateway title (such as Authorize.net, Braintree, etc), %2$s - a monetary amount, %3$s Total refund amount. */
+			esc_html__( '%1$s Refund in the amount of %2$s of total %3$s approved.', 'woocommerce-square' ),
+			$method,
 			wc_price( $payment_data['amount'], array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) ),
 			wc_price( $order->refund->amount, array( 'currency' => Order_Compatibility::get_prop( $order, 'currency', 'view' ) ) )
 		);
@@ -3634,9 +3991,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				if ( \Square\Models\TenderType::SQUARE_GIFT_CARD === $tender->getType() ) {
 					$this->update_order_meta( $order, 'gift_card_partial_total', $tender_amount );
 					$message .= ' ' . sprintf( wp_kses_post( 'for an amount of %1$s on the gift card' ), wc_price( $tender_amount ) );
-				} else if ( \Square\Models\TenderType::CARD === $tender->getType() ) {
-					$this->update_order_meta( $order, 'credit_card_partial_total', $tender_amount );
+				} elseif ( \Square\Models\TenderType::CARD === $tender->getType() ) {
+					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
 					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the credit card' ), wc_price( $tender_amount ) );
+				} elseif ( \Square\Models\TenderType::WALLET === $tender->getType() ) {
+					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
+					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the cash app pay' ), wc_price( $tender_amount ) );
 				}
 			}
 		}
@@ -4147,13 +4507,25 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
+	 * Returns the partial total amount paid using other gateway (Credit card/cash app pay etc...).
+	 * Gets the data from the $_POST array.
+	 *
+	 * @return float
+	 */
+	public function get_partial_total_on_other_gateway() {
+		return (float) Square_Helper::get_post( 'square-gift-card-difference-amount' );
+	}
+
+	/**
 	 * Returns the partial total amount paid using Square Credit Card.
 	 * Gets the data from the $_POST array.
 	 *
 	 * @return float
 	 */
 	public function get_partial_total_on_credit_card() {
-		return (float) Square_Helper::get_post( 'square-gift-card-difference-amount' );
+		wc_deprecated_function( __METHOD__, 'x.x.x', __CLASS__ . '::get_partial_total_on_other_gateway()' );
+
+		return $this->get_partial_total_on_other_gateway();
 	}
 
 	/**
@@ -4166,10 +4538,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return string
 	 */
 	public function get_order_tender_types( $order ) {
-		$is_credit_card = Order::is_tender_type_card( $order );
-		$is_gift_card   = Order::is_tender_type_gift_card( $order );
+		$is_credit_card  = Order::is_tender_type_card( $order );
+		$is_gift_card    = Order::is_tender_type_gift_card( $order );
+		$is_cash_app_pay = Order::is_tender_type_cash_app_pay( $order );
 
-		if ( $is_credit_card && $is_gift_card ) {
+		if ( ( $is_credit_card || $is_cash_app_pay ) && $is_gift_card ) {
 			return 'both';
 		}
 
@@ -4180,6 +4553,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( $is_gift_card ) {
 			return 'gift_card';
 		}
+
+		return 'cash_app_pay';
 	}
 
 	/**
@@ -4189,7 +4564,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * direct communication
 	 *
 	 * @since 3.0.0
-	 * @return SquareFramework\PaymentGateway\Api\Payment_Gateway_API the payment gateway API instance
+	 * @return \WooCommerce\Square\Gateway\API the payment gateway API instance
 	 */
 	public function get_api() {
 
