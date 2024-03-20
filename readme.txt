@@ -2,7 +2,7 @@
 Contributors: woocommerce, automattic, royho, woothemes, bor0, mattdallan, menakas, chickenn00dle, jorgeatorres, jamesgallan, achyuthajoy
 Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
-Tested up to: 6.4.0
+Tested up to: 6.5
 Requires PHP: 7.4
 Stable tag: 4.5.1
 License: GPL-3.0-or-later

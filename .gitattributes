@@ -19,6 +19,7 @@ tests                   export-ignore
 .travis.yml             export-ignore
 .tx                     export-ignore
 .wp-env.json            export-ignore
+.wp-env.override.json   export-ignore
 composer.json           export-ignore
 composer.lock           export-ignore
 default.env             export-ignore
