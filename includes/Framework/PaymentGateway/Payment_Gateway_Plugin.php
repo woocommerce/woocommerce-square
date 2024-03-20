@@ -1075,7 +1075,10 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 	public function get_gateway( $gateway_id = null ) {
 
 		// default to first gateway
-		if ( is_null( $gateway_id ) ) {
+		if (
+			is_null( $gateway_id ) ||
+			! in_array( $gateway_id, $this->get_gateway_ids(), true )
+		) {
 			reset( $this->gateways );
 			$gateway_id = key( $this->gateways );
 		}
