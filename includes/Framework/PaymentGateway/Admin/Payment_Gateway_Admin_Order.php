@@ -132,7 +132,7 @@ class Payment_Gateway_Admin_Order {
 				'capture_action' => 'wc_square_capture_charge',
 				'capture_nonce'  => wp_create_nonce( 'wc_square_capture_charge' ),
 				'capture_error'  => esc_html__( 'Something went wrong, and the capture could no be completed. Please try again.', 'woocommerce-square' ),
-				'has_gift_card'  => 'yes' === wc_square()->get_gateway()->get_order_meta( $order, 'is_gift_card_purchased' ),
+				'has_gift_card'  => 'yes' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_gift_card_purchased' ),
 			)
 		);
 

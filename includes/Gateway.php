@@ -464,37 +464,6 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
-	 * Stores gift card details as order meta.
-	 *
-	 * @since 4.2.0
-	 *
-	 * @param \Square\Models\Order $square_order
-	 * @param \WC_Order $order
-	 */
-	public function maybe_save_gift_card_order_details( $square_order, $order ) {
-		$line_items = $square_order->getLineItems();
-
-		/** @var \Square\Models\OrderLineItem */
-		foreach ( $line_items as $line_item ) {
-			if ( \Square\Models\OrderLineItemItemType::GIFT_CARD !== $line_item->getItemType() ) {
-				continue;
-			}
-
-			$gift_card_line_item_id = $line_item->getUid();
-			$gift_card_amount       = Square_Helper::number_format(
-				Money_Utility::cents_to_float(
-					$line_item->getTotalMoney()->getAmount()
-				)
-			);
-
-			$this->update_order_meta( $order, 'gift_card_line_item_id', $gift_card_line_item_id );
-			$this->update_order_meta( $order, 'gift_card_balance', $gift_card_amount );
-			$this->update_order_meta( $order, 'is_gift_card_purchased', 'yes' );
-		}
-	}
-
-
-	/**
 	 * Adds transaction data to the order.
 	 *
 	 * @since 2.0.0
@@ -1229,13 +1198,15 @@ class Gateway extends Payment_Gateway_Direct {
 			return $gateways;
 		}
 
-		if ( array_key_exists( Plugin::GATEWAY_ID, $gateways ) ) {
-			return array( Plugin::GATEWAY_ID => $gateways[ Plugin::GATEWAY_ID ] );
-		} else {
-			return array();
+		$allowed_gateways = array();
+		$plugin_gateways  = wc_square()->get_gateway_ids();
+		foreach ( $gateways as $gateway_id => $gateway ) {
+			if ( in_array( $gateway_id, $plugin_gateways, true ) ) {
+				$allowed_gateways[ $gateway_id ] = $gateway;
+			}
 		}
 
-		return $gateways;
+		return $allowed_gateways;
 	}
 
 	/**
