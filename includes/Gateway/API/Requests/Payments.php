@@ -311,7 +311,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 	/**
 	 * Sets the data for cancel a Payment.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param string $payment_id payment ID
 	 */

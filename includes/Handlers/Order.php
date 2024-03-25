@@ -664,7 +664,7 @@ class Order {
 	/**
 	 * Returns if the order was placed using a Square cash app pay.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order WooCommerce order.
 	 *
