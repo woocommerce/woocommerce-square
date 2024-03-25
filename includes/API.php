@@ -720,7 +720,7 @@ class API extends Base {
 	 * @since 2.0.0
 	 *
 	 * @param API\Request $request request object
-	 * @return API_Response
+	 * @return API\Response
 	 * @throws \Exception
 	 */
 	protected function perform_request( $request ) {

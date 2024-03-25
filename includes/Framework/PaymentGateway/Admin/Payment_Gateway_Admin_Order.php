@@ -136,7 +136,7 @@ class Payment_Gateway_Admin_Order {
 			)
 		);
 
-		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array( 'jquery' ), Plugin::VERSION );
+		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array(), Plugin::VERSION );
 	}
 
 

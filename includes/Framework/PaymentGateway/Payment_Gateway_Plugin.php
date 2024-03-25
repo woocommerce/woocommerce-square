@@ -453,38 +453,6 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 
 	/** Admin methods ******************************************************/
 
-
-	/**
-	 * Adds the gateway plugin action links.
-	 *
-	 * @see Plugin::plugin_action_links()
-	 *
-	 * @since 3.0.0
-	 *
-	 * @param string[] $actions associative array of action names to anchor tags
-	 * @return string[]
-	 */
-	public function plugin_action_links( $actions ) {
-
-		$actions = parent::plugin_action_links( $actions );
-
-		// remove the configure plugin link if it exists, since we'll be adding a link per available gateway
-		if ( isset( $actions['configure'] ) ) {
-			unset( $actions['configure'] );
-		}
-
-		// a configure link per gateway
-		$custom_actions = array();
-
-		foreach ( $this->get_gateway_ids() as $gateway_id ) {
-			$custom_actions[ 'configure_' . $gateway_id ] = $this->get_settings_link( $gateway_id );
-		}
-
-		// add the links to the front of the actions list
-		return array_merge( $custom_actions, $actions );
-	}
-
-
 	/**
 	 * Determines if on the admin gateway settings screen for this plugin.
 	 *
@@ -1107,7 +1075,10 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 	public function get_gateway( $gateway_id = null ) {
 
 		// default to first gateway
-		if ( is_null( $gateway_id ) ) {
+		if (
+			is_null( $gateway_id ) ||
+			! in_array( $gateway_id, $this->get_gateway_ids(), true )
+		) {
 			reset( $this->gateways );
 			$gateway_id = key( $this->gateways );
 		}

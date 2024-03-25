@@ -151,7 +151,7 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @param \WC_Order $order order object
 	 * @since 3.7.0
-	 * @return \WooCommerce\Square\API\Response
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
 	 */
 	public function gift_card_charge( \WC_Order $order ) {
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
@@ -521,6 +521,7 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @param array  $payment_ids Array of payment IDs.
 	 * @param string $order_id    Square order ID.
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_PayOrder
 	 * @since 3.9.0
 	 */
 	public function pay_order( $payment_ids, $order_id ) {
@@ -649,6 +650,26 @@ class API extends \WooCommerce\Square\API {
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
 		$request->set_get_payment_data( $payment_id );
+
+		$this->set_response_handler( API\Responses\Create_Payment::class );
+
+		return $this->perform_request( $request );
+	}
+
+	/**
+	 * Cancel authorized payment.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $payment_id transaction ID
+	 * @return API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cancel_payment( $payment_id ) {
+
+		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
+
+		$request->set_cancel_payment_data( $payment_id );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 
