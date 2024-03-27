@@ -75,7 +75,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.6.0 - 2024-03-25 =
+= 4.6.0 - 2024-03-27 =
 * Add - Support for buying a Square Gift Card using Cash App Pay.
 * Add - Support for splitting payments between a Square Gift Card and Cash App Pay.
 * Add - Support for the “Charge” and “Authorization” transaction types in the Cash App Pay payment method.
