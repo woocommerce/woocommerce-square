@@ -160,7 +160,7 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 	/**
 	 * Returns true if the payment status is approved.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean
 	 */
 	public function is_cash_app_payment_approved() {

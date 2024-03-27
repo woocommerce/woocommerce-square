@@ -452,7 +452,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Performs a credit card transaction for the given order and returns the result.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param WC_Order_Square     $order the order object
 	 * @param Create_Payment|null $response optional credit card transaction response

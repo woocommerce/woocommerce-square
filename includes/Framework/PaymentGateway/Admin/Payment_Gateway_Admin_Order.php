@@ -190,7 +190,7 @@ class Payment_Gateway_Admin_Order {
 	/**
 	 * Adds 'Capture charge' to the Orders screen bulk action select (HPOS).
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param array $bulk_actions bulk actions
 	 * @return array
@@ -222,7 +222,7 @@ class Payment_Gateway_Admin_Order {
 	/**
 	 * Processes the 'Capture Charge' custom bulk action in HPOS.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 */
 	public function hpos_process_capture_charge_bulk_order_action( $redirect_to, $action, $ids ) {
 		// bail if not processing a capture or if the user doesn't have the capability

@@ -542,7 +542,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Gets an order with capture data attached.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param int|\WC_Order $order order object
 	 * @param null|float    $amount amount to capture
@@ -790,7 +790,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Get the partial amount to be paid by Cash App Pay.
 	 * This is the amount after deducting the gift card balance.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return float Partial amount to be paid by Cash App Pay.
 	 */
 	public function get_partial_cash_app_amount() {
@@ -1203,7 +1203,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	/**
 	 * Performs a credit card transaction for the given order and returns the result.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param WC_Order_Square     $order the order object
 	 * @param Create_Payment|null $response optional credit card transaction response
