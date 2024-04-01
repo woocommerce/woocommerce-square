@@ -37,16 +37,16 @@ class Connection {
 
 
 	/** @var string production connect URL */
-	const CONNECT_URL_PRODUCTION = 'https://api.woocommerce.com/integrations/login/square';
+	const CONNECT_URL_PRODUCTION = 'https://api-staging.woocommerce.com/integrations/login/square';
 
 	/** @var string sandbox connect URL */
-	const CONNECT_URL_SANDBOX = 'https://api.woocommerce.com/integrations/login/squaresandbox';
+	const CONNECT_URL_SANDBOX = 'https://api-staging.woocommerce.com/integrations/login/squaresandbox';
 
 	/** @var string production refresh URL */
-	const REFRESH_URL_PRODUCTION = 'https://api.woocommerce.com/integrations/renew/square';
+	const REFRESH_URL_PRODUCTION = 'https://api-staging.woocommerce.com/integrations/renew/square';
 
 	/** @var string sandbox refresh URL */
-	const REFRESH_URL_SANDBOX = 'https://api.woocommerce.com/integrations/renew/squaresandbox';
+	const REFRESH_URL_SANDBOX = 'https://api-staging.woocommerce.com/integrations/renew/squaresandbox';
 
 	/** @var Square\Plugin plugin instance */
 	protected $plugin;
