@@ -132,11 +132,11 @@ class Payment_Gateway_Admin_Order {
 				'capture_action' => 'wc_square_capture_charge',
 				'capture_nonce'  => wp_create_nonce( 'wc_square_capture_charge' ),
 				'capture_error'  => esc_html__( 'Something went wrong, and the capture could no be completed. Please try again.', 'woocommerce-square' ),
-				'has_gift_card'  => 'yes' === wc_square()->get_gateway()->get_order_meta( $order, 'is_gift_card_purchased' ),
+				'has_gift_card'  => 'yes' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_gift_card_purchased' ),
 			)
 		);
 
-		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array( 'jquery' ), Plugin::VERSION );
+		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array(), Plugin::VERSION );
 	}
 
 
@@ -190,7 +190,7 @@ class Payment_Gateway_Admin_Order {
 	/**
 	 * Adds 'Capture charge' to the Orders screen bulk action select (HPOS).
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param array $bulk_actions bulk actions
 	 * @return array
@@ -222,7 +222,7 @@ class Payment_Gateway_Admin_Order {
 	/**
 	 * Processes the 'Capture Charge' custom bulk action in HPOS.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 */
 	public function hpos_process_capture_charge_bulk_order_action( $redirect_to, $action, $ids ) {
 		// bail if not processing a capture or if the user doesn't have the capability

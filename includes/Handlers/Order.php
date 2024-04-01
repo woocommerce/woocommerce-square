@@ -647,7 +647,7 @@ class Order {
 	 * @return boolean
 	 */
 	public static function is_tender_type_card( $order ) {
-		return '1' === wc_square()->get_gateway()->get_order_meta( $order, 'is_tender_type_card' );
+		return '1' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_tender_type_card' );
 	}
 
 	/**
@@ -658,7 +658,20 @@ class Order {
 	 * @return boolean
 	 */
 	public static function is_tender_type_gift_card( $order ) {
-		return '1' === wc_square()->get_gateway()->get_order_meta( $order, 'is_tender_type_gift_card' );
+		return '1' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_tender_type_gift_card' );
+	}
+
+	/**
+	 * Returns if the order was placed using a Square cash app pay.
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 *
+	 * @return boolean
+	 */
+	public static function is_tender_type_cash_app_pay( $order ) {
+		return '1' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_tender_type_cash_app_wallet' );
 	}
 
 	/**
@@ -670,7 +683,7 @@ class Order {
 	 * @param float     $amount The total amount charged on the gift card for the order.
 	 */
 	public static function set_gift_card_total_charged_amount( $order, $amount ) {
-		wc_square()->get_gateway()->update_order_meta( $order, 'gift_card_charged_amount', $amount );
+		wc_square()->get_gateway( $order->get_payment_method() )->update_order_meta( $order, 'gift_card_charged_amount', $amount );
 	}
 
 	/**
@@ -683,7 +696,7 @@ class Order {
 	 * @return float
 	 */
 	public static function get_gift_card_total_charged_amount( $order ) {
-		return (float) wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_charged_amount' );
+		return (float) wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_charged_amount' );
 	}
 
 	/**
@@ -696,7 +709,7 @@ class Order {
 	 * @return string
 	 */
 	public static function get_gift_card_last4( $order ) {
-		return wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_last4' );
+		return wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_last4' );
 	}
 
 	/**
@@ -709,7 +722,7 @@ class Order {
 	 * @return string
 	 */
 	public static function set_gift_card_last4( $order, $number ) {
-		return wc_square()->get_gateway()->update_order_meta( $order, 'gift_card_last4', $number );
+		return wc_square()->get_gateway( $order->get_payment_method() )->update_order_meta( $order, 'gift_card_last4', $number );
 	}
 
 	/**
@@ -722,7 +735,7 @@ class Order {
 	 * @return float
 	 */
 	public static function get_gift_card_total_refunded_amount( $order ) {
-		$amount = (float) wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_refunded_amount' );
+		$amount = (float) wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_refunded_amount' );
 		$amount = empty( $amount ) ? 0 : $amount;
 
 		return $amount;
@@ -737,7 +750,7 @@ class Order {
 	 * @param float     $amount The total amount refunded to the gift card for the order.
 	 */
 	public static function set_gift_card_total_refunded_amount( $order, $amount ) {
-		wc_square()->get_gateway()->update_order_meta( $order, 'gift_card_refunded_amount', $amount );
+		wc_square()->get_gateway( $order->get_payment_method() )->update_order_meta( $order, 'gift_card_refunded_amount', $amount );
 	}
 
 	/**
@@ -749,7 +762,7 @@ class Order {
 	 * @param float     $amount
 	 */
 	public static function set_order_total_before_gift_card( $order, $amount ) {
-		wc_square()->get_gateway()->update_order_meta( $order, 'order_total_before_gift_card', $amount );
+		wc_square()->get_gateway( $order->get_payment_method() )->update_order_meta( $order, 'order_total_before_gift_card', $amount );
 	}
 
 	/**
@@ -760,7 +773,7 @@ class Order {
 	 * @return float
 	 */
 	public static function get_order_total_before_gift_card( $order ) {
-		return (float) wc_square()->get_gateway()->get_order_meta( $order, 'order_total_before_gift_card' );
+		return (float) wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'order_total_before_gift_card' );
 	}
 
 	/**
@@ -834,16 +847,23 @@ class Order {
 	public function filter_payment_method_title( $value, $order ) {
 		$is_tender_gift_card = self::is_tender_type_gift_card( $order );
 		$is_tender_card      = self::is_tender_type_card( $order );
+		$is_tender_cash_app  = self::is_tender_type_cash_app_pay( $order );
 
-		if ( $is_tender_gift_card && $is_tender_card ) {
-			$gift_card_charged   = wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_partial_total' );
-			$credit_card_charged = wc_square()->get_gateway()->get_order_meta( $order, 'credit_card_partial_total' );
+		if ( $is_tender_gift_card && ( $is_tender_card || $is_tender_cash_app ) ) {
+			$gateway               = wc_square()->get_gateway( $order->get_payment_method() );
+			$gift_card_charged     = $gateway->get_order_meta( $order, 'gift_card_partial_total' );
+			$other_gateway_charged = $gateway->get_order_meta( $order, 'other_gateway_partial_total' );
+			if ( empty( $other_gateway_charged ) ) {
+				// Backward compatibility.
+				$other_gateway_charged = $gateway->get_order_meta( $order, 'credit_card_partial_total' );
+			}
 
 			return sprintf(
 				/* translators: %1$s - Amount charged on gift card, %2$s -  Amount charged on credit card. */
-				__( 'Square Gift Card (%1$s) and Credit Card (%2$s)', 'woocommerce-square' ),
+				__( 'Square Gift Card (%1$s) and %2$s (%3$s)', 'woocommerce-square' ),
 				get_woocommerce_currency_symbol( $order->get_currency() ) . Square_Helper::number_format( $gift_card_charged ),
-				get_woocommerce_currency_symbol( $order->get_currency() ) . Square_Helper::number_format( $credit_card_charged )
+				$value ?? '',
+				get_woocommerce_currency_symbol( $order->get_currency() ) . Square_Helper::number_format( $other_gateway_charged )
 			);
 		}
 
@@ -869,7 +889,8 @@ class Order {
 	 * @return string
 	 */
 	public function filter_gateway_title( $value, $id ) {
-		if ( Plugin::GATEWAY_ID !== $id || ! is_admin() || ! function_exists( 'get_current_screen' ) ) {
+		$plugin_gateways = wc_square()->get_gateway_ids() ?? array();
+		if ( ! in_array( $id, $plugin_gateways, true ) || ! is_admin() || ! function_exists( 'get_current_screen' ) ) {
 			return $value;
 		}
 
@@ -902,21 +923,26 @@ class Order {
 	 * @return array
 	 */
 	public function filter_order_item_totals( $total_rows, $order ) {
-		$charge_type = wc_square()->get_gateway()->get_order_meta( $order, 'charge_type' );
+		$charge_type = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'charge_type' );
 
 		if ( Payment_Gateway::CHARGE_TYPE_PARTIAL !== $charge_type ) {
 			return $total_rows;
 		}
 
-		$gift_card_partial_total   = wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_partial_total' );
-		$credit_card_partial_total = wc_square()->get_gateway()->get_order_meta( $order, 'credit_card_partial_total' );
+		$gift_card_partial_total     = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_partial_total' );
+		$other_gateway_partial_total = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'other_gateway_partial_total' );
+		if ( empty( $other_gateway_partial_total ) ) {
+			// Backward compatibility.
+			$other_gateway_partial_total = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'credit_card_partial_total' );
+		}
 
 		$total_rows['order_total']['value'] = sprintf(
-			/* translators: %1$s - Order total, %2$s - Amount charged on gift card, %3$s -  Amount charged on credit card. */
-			esc_html__( '%1$s — Total split between gift card (%2$s) and credit card (%3$s)', 'woocommerce-square' ),
+			/* translators: %1$s - Order total, %2$s - Amount charged on gift card, %3$s - Other payment method %4$s -  Amount charged on credit card/cash app pay. */
+			esc_html__( '%1$s — Total split between gift card (%2$s) and %3$s (%4$s)', 'woocommerce-square' ),
 			wp_kses_post( $total_rows['order_total']['value'] ),
 			wp_kses_post( wc_price( $gift_card_partial_total, array( 'currency' => $order->get_currency() ) ) ),
-			wp_kses_post( wc_price( $credit_card_partial_total, array( 'currency' => $order->get_currency() ) ) )
+			'square_cash_app_pay' === $order->get_payment_method() ? esc_html__( 'cash app pay', 'woocommerce-square' ) : esc_html__( 'credit card', 'woocommerce-square' ),
+			wp_kses_post( wc_price( $other_gateway_partial_total, array( 'currency' => $order->get_currency() ) ) )
 		);
 
 		return $total_rows;

@@ -90,8 +90,8 @@ class Gift_Card_Activities extends API\Request {
 	 * @param \WC_Order $order WooCommerce order.
 	 */
 	public function set_load_gift_card_data( $gan, $order ) {
-		$gift_card_line_item_id = wc_square()->get_gateway()->get_order_meta( $order, 'gift_card_line_item_id' );
-		$square_order_id        = wc_square()->get_gateway()->get_order_meta( $order, 'square_order_id' );
+		$gift_card_line_item_id = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_line_item_id' );
+		$square_order_id        = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'square_order_id' );
 
 		$load_activity_details = new \Square\Models\GiftCardActivityLoad();
 		$gift_card_activity    = new \Square\Models\GiftCardActivity(

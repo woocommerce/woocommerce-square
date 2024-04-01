@@ -35,6 +35,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Direct;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
 
 /**
@@ -448,37 +449,19 @@ class Gateway extends Payment_Gateway_Direct {
 		return parent::do_transaction( $order );
 	}
 
-
 	/**
-	 * Stores gift card details as order meta.
+	 * Performs a credit card transaction for the given order and returns the result.
 	 *
-	 * @since 4.2.0
+	 * @since 4.6.0
 	 *
-	 * @param \Square\Models\Order $square_order
-	 * @param \WC_Order $order
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
 	 */
-	public function maybe_save_gift_card_order_details( $square_order, $order ) {
-		$line_items = $square_order->getLineItems();
-
-		/** @var \Square\Models\OrderLineItem */
-		foreach ( $line_items as $line_item ) {
-			if ( \Square\Models\OrderLineItemItemType::GIFT_CARD !== $line_item->getItemType() ) {
-				continue;
-			}
-
-			$gift_card_line_item_id = $line_item->getUid();
-			$gift_card_amount       = Square_Helper::number_format(
-				Money_Utility::cents_to_float(
-					$line_item->getTotalMoney()->getAmount()
-				)
-			);
-
-			$this->update_order_meta( $order, 'gift_card_line_item_id', $gift_card_line_item_id );
-			$this->update_order_meta( $order, 'gift_card_balance', $gift_card_amount );
-			$this->update_order_meta( $order, 'is_gift_card_purchased', 'yes' );
-		}
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		return $this->do_credit_card_transaction( $order, $response );
 	}
-
 
 	/**
 	 * Adds transaction data to the order.
@@ -1215,13 +1198,15 @@ class Gateway extends Payment_Gateway_Direct {
 			return $gateways;
 		}
 
-		if ( array_key_exists( Plugin::GATEWAY_ID, $gateways ) ) {
-			return array( Plugin::GATEWAY_ID => $gateways[ Plugin::GATEWAY_ID ] );
-		} else {
-			return array();
+		$allowed_gateways = array();
+		$plugin_gateways  = wc_square()->get_gateway_ids();
+		foreach ( $gateways as $gateway_id => $gateway ) {
+			if ( in_array( $gateway_id, $plugin_gateways, true ) ) {
+				$allowed_gateways[ $gateway_id ] = $gateway;
+			}
 		}
 
-		return $gateways;
+		return $allowed_gateways;
 	}
 
 	/**

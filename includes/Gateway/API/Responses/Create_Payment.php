@@ -136,7 +136,13 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 	public function is_gift_card_payment() {
 		$payment      = $this->get_payment();
 		$card_details = $payment->getCardDetails();
-		$card         = $card_details->getCard();
+
+		// If the card details are not available, we can't determine if it's a gift card.
+		if ( ! $card_details ) {
+			return false;
+		}
+
+		$card = $card_details->getCard();
 
 		return 'SQUARE_GIFT_CARD' === $card->getCardBrand();
 	}
@@ -154,7 +160,7 @@ class Create_Payment extends \WooCommerce\Square\Gateway\API\Response implements
 	/**
 	 * Returns true if the payment status is approved.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean
 	 */
 	public function is_cash_app_payment_approved() {

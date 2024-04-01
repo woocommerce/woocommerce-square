@@ -278,6 +278,10 @@ export async function deleteAllPaymentMethods( page ) {
  */
 export async function fillGiftCardField( page ) {
 	const { giftCard } = dummy;
+	if ( await page.locator( '#square-gift-card-remove' ).isVisible() ) {
+		await page.locator( '#square-gift-card-remove' ).click();
+		await waitForUnBlock( page );
+	}
 	await page
 		.frameLocator('#square-gift-card-fields-input .sq-card-component')
 		.locator('#giftCardNumber')

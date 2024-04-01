@@ -61,7 +61,7 @@ test( 'Partial Refund – Gift card order', async ( { page } ) => {
 	await expect( page.locator( '#order_status' ) ).toHaveValue( 'wc-processing' );
 	await expect(
 		page.getByText(
-			'Square Test Charge Approved for an amount of $1.00: Gift Card ending in 0000'
+			'Square Gift Card Test Charge Approved for an amount of $1.00: Gift Card ending in 0000'
 		)
 	).toBeVisible();
 

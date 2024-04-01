@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 4.5.1
+Stable tag: 4.6.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -75,7 +75,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.5.2 - TBD =
+= 4.6.0 - 2024-03-27 =
+* Add - Support for buying a Square Gift Card using Cash App Pay.
+* Add - Support for splitting payments between a Square Gift Card and Cash App Pay.
+* Add - Support for the “Charge” and “Authorization” transaction types in the Cash App Pay payment method.
+* Dev - Declare compatibility with PHP 8.3.
+* Dev - Bump WooCommerce "tested up to" version 8.7.
+* Dev - Bump WooCommerce minimum supported version to 8.5
+* Dev - Bump WordPress "tested up to" version 6.5.
+* Fix - Ensure a Gift Card is created when the Credit Card transaction type is "Authorization," and "Charge Virtual-Only Orders" is enabled.
+* Fix - npm ERR! Missing script: "test:e2e".
 * Fix - Issue with Square payment gateway being shown for unsupported currencies.
 
 = 4.5.1 - 2024-02-27 =
