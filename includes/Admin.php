@@ -116,6 +116,9 @@ class Admin {
 	private function load_scripts_styles() {
 		global $typenow;
 
+		$screen    = get_current_screen();
+		$screen_id = $screen ? $screen->id : '';
+
 		if ( 'product' === $typenow ) {
 
 			wp_enqueue_script(
@@ -212,6 +215,21 @@ class Admin {
 					),
 				)
 			);
+		} else {
+			// Don't enqueue styles and JS on non-WC screens.
+			if ( ! in_array( $screen_id, wc_get_screen_ids(), true ) ) {
+				return;
+			}
+
+			if ( 'woocommerce_page_square-wizard' === $screen_id ) {
+				wp_register_script(
+					'wc-square-square-wizard',
+					$this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-wizard.min.js',
+					array( 'jquery' ),
+					Plugin::VERSION,
+					true
+				);
+			}
 		}
 	}
 

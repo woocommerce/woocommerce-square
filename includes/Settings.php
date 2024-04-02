@@ -136,7 +136,7 @@ class Settings extends \WC_Settings_API {
 		return array_merge(
 			$ids,
 			array(
-				'woocommerce_page_square-setup',
+				'woocommerce_page_square-wizard',
 			)
 		);
 	}
@@ -147,7 +147,9 @@ class Settings extends \WC_Settings_API {
 	 * @since x.x.x
 	 */
 	public function register_pages() {
-		$setup_wizard  = add_submenu_page( 'woocommerce', __( 'Setup Wizard', 'woocommerce-square' ), __( 'Setup Wizard', 'woocommerce-square' ), 'manage_woocommerce', 'setup-wizard', array( $this, 'setup_wizard' ) );
+		$setup_wizard  = add_submenu_page( 'woocommerce', __( 'Setup Wizard', 'woocommerce-square' ), __( 'Square Wizard', 'woocommerce-square' ), 'manage_woocommerce', 'square-wizard', array( $this, 'setup_wizard' ) );
+
+		add_action( 'admin_print_scripts-' . $setup_wizard, array( $this, 'setup_wizard_scripts' ) );
 	}
 
 	/**
@@ -159,6 +161,10 @@ class Settings extends \WC_Settings_API {
 			$step = 'start';
 		}
 		include "Admin/Views/html-product-$step-page.php";
+	}
+
+	public function setup_wizard_scripts() {
+		wp_enqueue_script( 'wc-square-square-wizard' );	
 	}
 
 	/**
