@@ -126,6 +126,28 @@ class Settings extends \WC_Settings_API {
 		);
 
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
+
+		add_action( 'admin_menu', array( $this, 'register_pages' ) );
+	}
+
+	/**
+	 * Registers square page(s).
+	 *
+	 * @since x.x.x
+	 */
+	public function register_pages() {
+		$setup_wizard  = add_submenu_page( 'woocommerce', __( 'Setup Wizard', 'woocommerce-square' ), __( 'Setup Wizard', 'woocommerce-square' ), 'manage_woocommerce', 'setup-wizard', array( $this, 'setup_wizard' ) );
+	}
+
+	/**
+	 * Output the Setup Wizard page(s).
+	 */
+	public function setup_wizard() {
+		$step = filter_input( INPUT_GET, 'step', FILTER_SANITIZE_STRING );
+		if ( ! $step ) {
+			$step = 'start';
+		}
+		include "Admin/Views/html-product-$step-page.php";
 	}
 
 	/**
