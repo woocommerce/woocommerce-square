@@ -229,6 +229,13 @@ class Admin {
 					Plugin::VERSION,
 					true
 				);
+
+				wp_enqueue_style(
+					'wc-square-wizard',
+					$this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-wizard.min.css',
+					array(),
+					Plugin::VERSION
+				);
 			}
 		}
 	}
