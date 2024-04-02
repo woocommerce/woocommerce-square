@@ -156,15 +156,12 @@ class Settings extends \WC_Settings_API {
 	 * Output the Setup Wizard page(s).
 	 */
 	public function setup_wizard() {
-		$step = filter_input( INPUT_GET, 'step', FILTER_SANITIZE_STRING );
-		if ( ! $step ) {
-			$step = 'start';
-		}
+		$step = isset( $_GET['step'] ) ? htmlentities( $_GET['step'] ) : 'start';
 		include "Admin/Views/html-product-$step-page.php";
 	}
 
 	public function setup_wizard_scripts() {
-		wp_enqueue_script( 'wc-square-square-wizard' );	
+		wp_enqueue_script( 'wc-square-square-wizard' );
 	}
 
 	/**
