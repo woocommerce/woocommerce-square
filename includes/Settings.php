@@ -128,6 +128,17 @@ class Settings extends \WC_Settings_API {
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
 
 		add_action( 'admin_menu', array( $this, 'register_pages' ) );
+
+		add_filter( 'woocommerce_screen_ids', array( $this, 'woocommerce_screen_ids' ) );
+	}
+
+	public function woocommerce_screen_ids( $ids ) {
+		return array_merge(
+			$ids,
+			array(
+				'woocommerce_page_square-setup',
+			)
+		);
 	}
 
 	/**
