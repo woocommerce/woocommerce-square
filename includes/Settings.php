@@ -130,8 +130,19 @@ class Settings extends \WC_Settings_API {
 		add_action( 'admin_menu', array( $this, 'register_pages' ) );
 
 		add_filter( 'woocommerce_screen_ids', array( $this, 'woocommerce_screen_ids' ) );
+
+		add_action( 'admin_init', array( $this, 'square_wizard_redirect' ) );
 	}
 
+	/**
+	 * Add the square wizard screen to the WooCommerce screen ids.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $ids screen ids.
+	 *
+	 * @return array updated screen ids.
+	 */
 	public function woocommerce_screen_ids( $ids ) {
 		return array_merge(
 			$ids,
@@ -139,6 +150,19 @@ class Settings extends \WC_Settings_API {
 				'woocommerce_page_square-wizard',
 			)
 		);
+	}
+
+	/**
+	 * Redirect users to the templates screen on plugin activation.
+	 *
+	 * @since x.x.x
+	 */
+	public function square_wizard_redirect() {
+		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
+			add_option( 'wc_square_show_wizard_on_activation', true );
+			wp_safe_redirect( admin_url( 'admin.php?page=square-wizard' ) );
+			exit;
+		}
 	}
 
 	/**
