@@ -834,6 +834,29 @@ class Plugin extends Payment_Gateway_Plugin {
 		// nosemgrep audit.php.wp.security.xss.query-arg
 		return add_query_arg( $params, admin_url( 'admin.php' ) );
 	}
+	
+	/**
+	 * Gets the Setup Wizard URL.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string
+	 */
+	public function get_square_wizard_url( $step = '' ) {
+
+		$params = array(
+			'page' => 'square-wizard',
+		);
+
+		// Add 'step' if $step is not empty.
+		if ( ! empty( $step ) ) {
+			$params['step'] = $step;
+		}
+
+		// All usage of this return value has been escaped late.
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		return add_query_arg( $params, admin_url( 'admin.php' ) );
+	}
 
 
 	/**
