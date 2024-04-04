@@ -306,7 +306,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			'woocommerce_square_credit_card_settings',
 			'woocommerce_gift_cards_pay_settings',
 			array(
-				'enable_gift_cards',
+				'enable_gift_cards' => 'enabled',
 			)
 		);
 
@@ -474,9 +474,9 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		}
 
 		// Migrate the fields.
-		foreach ( $fields as $field ) {
-			if ( isset( $legacy_settings[ $field ] ) ) {
-				$new_settings[ $field ] = $legacy_settings[ $field ];
+		foreach ( $fields as $legacy_field => $new_field ) {
+			if ( isset( $legacy_settings[ $legacy_field ] ) ) {
+				$new_settings[ $new_field ] = $legacy_settings[ $legacy_field ];
 			}
 		}
 
