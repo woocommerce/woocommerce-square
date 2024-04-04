@@ -58,6 +58,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			'3.2.0',
 			'3.7.1',
 			'3.8.3',
+			'4.7.0',
 		);
 	}
 
@@ -294,6 +295,26 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	}
 
 	/**
+	 * Upgrades to version 2.3.0.
+	 *
+	 * @since 4.7.0
+	 */
+	protected function upgrade_to_4_7_0() {
+
+		// Migrate Gift Cards settings.
+		$this->migrate_gateway_settings_dynamically(
+			'woocommerce_square_credit_card_settings',
+			'woocommerce_gift_cards_pay_settings',
+			array(
+				'enable_gift_cards',
+			)
+		);
+
+		// Mark upgrade complete.
+		update_option( 'wc_square_updated_to_4_7_0', true );
+	}
+
+	/**
 	 * Migrates plugin settings from v1 to v2.
 	 *
 	 * @see Lifecycle::upgrade_to_2_0_0()
@@ -429,6 +450,41 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		update_option( 'woocommerce_square_credit_card_settings', $new_settings );
 
 		$this->get_plugin()->log( 'Gateway settings migration complete.' );
+	}
+
+	/**
+	 * Migrates gateway settings dynamically.
+	 *
+	 * @param string $legacy_option legacy option name.
+	 * @param string $new_option    new option name.
+	 * @param array  $fields        fields to migrate.
+	 *
+	 * @since 2.0.0
+	 */
+	private function migrate_gateway_settings_dynamically( $legacy_option, $new_option, $fields = array() ) {
+
+		$this->get_plugin()->log( sprintf( __( 'Migrating gateway settings from %s to %s...', 'woocommerce-square' ), $legacy_option, $new_option ) );
+
+		$legacy_settings = get_option( $legacy_option, array() );
+		$new_settings    = get_option( $new_option, array() );
+
+		// Bail if they already have new settings present.
+		if ( ! empty( $new_settings ) ) {
+			return;
+		}
+
+		// Migrate the fields.
+		foreach ( $fields as $field ) {
+			if ( isset( $legacy_settings[ $field ] ) ) {
+				$new_settings[ $field ] = $legacy_settings[ $field ];
+			}
+		}
+
+		// Save migrated settings.
+		update_option( $new_option, $new_settings );
+
+		// use sprintf to log the migration completion.
+		$this->get_plugin()->log( sprintf( __( 'Gateway settings migration from %s to %s completed.', 'woocommerce-square' ), $legacy_option, $new_option ) );
 	}
 
 
