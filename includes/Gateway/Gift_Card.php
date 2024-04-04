@@ -4,12 +4,13 @@ namespace WooCommerce\Square\Gateway;
 
 defined( 'ABSPATH' ) || exit;
 
+use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Handlers\Product;
-use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Utilities\Money_Utility;
+use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 
-class Gift_Card {
+class Gift_Card extends Payment_Gateway {
 	/**
 	 * @var \WooCommerce\Square\Gateway $gateway
 	 */
@@ -22,7 +23,7 @@ class Gift_Card {
 	 * @return bool
 	 */
 	public function is_gift_card_enabled() {
-		return 'yes' === $this->gateway->get_option( 'enable_gift_cards', 'no' );
+		return 'yes' === $this->gateway->get_option( 'enabled', 'no' );
 	}
 
 	/**
@@ -32,6 +33,16 @@ class Gift_Card {
 	 * @since 3.7.0
 	 */
 	public function __construct( $gateway ) {
+		parent::__construct(
+			Plugin::GIFT_CARD_PAY_GATEWAY_ID,
+			wc_square(),
+			array(
+				'method_title'       => __( 'Gift Cards', 'woocommerce-square' ),
+				'method_description' => $this->get_default_description(),
+				'payment_type'       => self::PAYMENT_TYPE_GIFT_CARD_PAY,
+			)
+		);
+
 		$this->gateway = $gateway;
 
 		add_action( 'wp', array( $this, 'init_gift_cards' ) );
@@ -42,6 +53,134 @@ class Gift_Card {
 		add_action( 'wp_ajax_nopriv_wc_square_gift_card_remove', array( $this, 'remove_gift_card' ) );
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'add_gift_card_fragments' ) );
 		add_filter( 'woocommerce_checkout_order_processed', array( $this, 'delete_sessions' ) );
+	}
+
+	/**
+	 * Returns true if the gateway is properly configured to perform transactions
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return boolean true if the gateway is properly configured
+	 */
+	public function is_configured() {
+		// Always false for Gift Cards to hide on the checkout page.
+		return false;
+	}
+	
+	/**
+	 * Returns the API instance.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return \WooCommerce\Square\API\Square_API
+	 */
+	public function get_api() {
+		return $this->gateway->get_api();
+	}
+
+	/**
+	 * Gets the gateway settings fields.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return array
+	 */
+	protected function get_method_form_fields() {
+		return array();
+	}
+
+	/**
+	 * Initialize payment tokens handler.
+	 *
+	 * @since 4.7.0
+	 */
+	protected function init_payment_tokens_handler() {
+		// No payment tokens for Gift Cards Pay, do nothing.
+	}
+
+	/**
+	 * Get the default payment method title, which is configurable within the
+	 * admin and displayed on checkout.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return string payment method title to show on checkout
+	 */
+	protected function get_default_title() {
+		return esc_html__( 'Square Gift Cards', 'woocommerce-square' );
+	}
+
+	/**
+	 * Get the default payment method description, which is configurable
+	 * within the admin and displayed on checkout.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return string payment method description to show on checkout
+	 */
+	protected function get_default_description() {
+		return esc_html__( 'Allow customers to purchase and redeem gift cards during checkout.', 'woocommerce-square' );
+	}
+
+	/**
+	 * Initialize payment gateway settings fields
+	 *
+	 * @since 4.7.0
+	 *
+	 * @see WC_Settings_API::init_form_fields()
+	 */
+	public function init_form_fields() {
+
+		// Common top form fields.
+		$this->form_fields = array(
+			'enabled'     => array(
+				'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
+				'description' => esc_html__( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
+				'type'        => 'checkbox',
+				'default'     => '',
+				'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
+			),
+
+			'title'       => array(
+				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
+				'type'     => 'text',
+				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
+				'default'  => $this->get_default_title(),
+			),
+
+			'description' => array(
+				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
+				'type'     => 'textarea',
+				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
+				'default'  => $this->get_default_description(),
+			),
+		);
+
+		/**
+		 * Payment Gateway Form Fields Filter.
+		 *
+		 * Actors can use this to add, remove, or tweak gateway form fields
+		 *
+		 * @since 4.7.0
+		 *
+		 * @param array $form_fields array of form fields in format required by WC_Settings_API
+		 * @param Payment_Gateway $this gateway instance
+		 */
+		$this->form_fields = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_form_fields', $this->form_fields, $this );
+	}
+
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		return false;
 	}
 
 	/**

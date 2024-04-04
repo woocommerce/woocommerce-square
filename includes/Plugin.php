@@ -54,6 +54,9 @@ class Plugin extends Payment_Gateway_Plugin {
 	/** string gateway ID */
 	const GATEWAY_ID = 'square_credit_card';
 
+	/** string Gift Cards gateway ID */
+	const GIFT_CARD_PAY_GATEWAY_ID = 'gift_cards_pay';
+
 	/** string Cash App Pay gateway ID */
 	const CASH_APP_PAY_GATEWAY_ID = 'square_cash_app_pay';
 
