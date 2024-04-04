@@ -673,8 +673,6 @@ class Gateway extends Payment_Gateway_Direct {
 			$this->form_fields = $this->add_digital_wallets_form_fields( $this->form_fields );
 		}
 
-		$this->form_fields = $this->add_gift_cards_form_fields( $this->form_fields );
-
 		$this->form_fields['advanced_settings_title'] = array(
 			'title' => esc_html__( 'Advanced Settings', 'woocommerce-square' ),
 			'type'  => 'title',
@@ -862,32 +860,6 @@ class Gateway extends Payment_Gateway_Direct {
 				'apple'  => 'Apple Pay',
 				'google' => 'Google Pay',
 			),
-		);
-
-		return $form_fields;
-	}
-
-	/**
-	 * Adds the Gift Cards setting fields.
-	 *
-	 * @since 3.7.0
-	 *
-	 * @param array $form_fields
-	 * @return array
-	 */
-	public function add_gift_cards_form_fields( $form_fields ) {
-		$form_fields['gift_card_settings'] = array(
-			'title'       => esc_html__( 'Gift Card settings', 'woocommerce-square' ),
-			'description' => esc_html__( 'Take payments on your store with a Gift Card.', 'woocommerce-square' ),
-			'type'        => 'title',
-		);
-
-		$form_fields['enable_gift_cards'] = array(
-			'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-			'description' => esc_html__( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
-			'type'        => 'checkbox',
-			'default'     => '',
-			'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
 		);
 
 		return $form_fields;
