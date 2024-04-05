@@ -43,7 +43,7 @@ class Connection {
 	const CONNECT_URL_SANDBOX = 'https://api-staging.woocommerce.com/integrations/login/squaresandbox';
 
 	/** @var string production refresh URL */
-	const REFRESH_URL_PRODUCTION = 'https://api-staging.woocommerce.com/integrations/renew/square';
+	const REFRESH_URL_PRODUCTION = 'https://api.woocommerce.com/integrations/renew/square';
 
 	/** @var string sandbox refresh URL */
 	const REFRESH_URL_SANDBOX = 'https://api.woocommerce.com/integrations/renew/squaresandbox';
