@@ -37,7 +37,7 @@ class Connection {
 
 
 	/** @var string production connect URL */
-	const CONNECT_URL_PRODUCTION = 'https://api-staging.woocommerce.com/integrations/login/square';
+	const CONNECT_URL_PRODUCTION = 'https://api.woocommerce.com/integrations/login/square';
 
 	/** @var string sandbox connect URL */
 	const CONNECT_URL_SANDBOX = 'https://api.woocommerce.com/integrations/login/squaresandbox';
