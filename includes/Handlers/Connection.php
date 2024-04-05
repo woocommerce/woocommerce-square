@@ -46,7 +46,7 @@ class Connection {
 	const REFRESH_URL_PRODUCTION = 'https://api-staging.woocommerce.com/integrations/renew/square';
 
 	/** @var string sandbox refresh URL */
-	const REFRESH_URL_SANDBOX = 'https://api-staging.woocommerce.com/integrations/renew/squaresandbox';
+	const REFRESH_URL_SANDBOX = 'https://api.woocommerce.com/integrations/renew/squaresandbox';
 
 	/** @var Square\Plugin plugin instance */
 	protected $plugin;
