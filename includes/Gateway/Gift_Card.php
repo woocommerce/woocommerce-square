@@ -158,7 +158,6 @@ class Gift_Card extends Payment_Gateway {
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
-
 		// Common top form fields.
 		$this->form_fields = array(
 			'enabled'     => array(

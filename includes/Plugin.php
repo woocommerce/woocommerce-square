@@ -845,10 +845,11 @@ class Plugin extends Payment_Gateway_Plugin {
 	 *
 	 * @since x.x.x
 	 *
+	 * @param string $step Step to go to.
+	 *
 	 * @return string
 	 */
 	public function get_square_wizard_url( $step = '' ) {
-
 		$params = array(
 			'page' => 'square-wizard',
 		);

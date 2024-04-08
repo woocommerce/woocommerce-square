@@ -152,7 +152,7 @@ class Products {
 
 		add_action( 'admin_notices', array( $this, 'add_notice_product_hidden_from_catalog' ) );
 
-		if ( $this->gift_card_enabled ) {
+		if ( 'yes' === $this->gift_card_enabled ) {
 			add_filter( 'product_type_options', array( __CLASS__, 'add_gift_card_checkbox' ) );
 			add_filter( 'woocommerce_product_data_tabs', array( $this, 'filter_product_tabs' ), 50 );
 		}

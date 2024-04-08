@@ -462,7 +462,6 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	 * @since 2.0.0
 	 */
 	private function migrate_gateway_settings_dynamically( $legacy_option, $new_option, $fields = array() ) {
-
 		$this->get_plugin()->log( sprintf( __( 'Migrating gateway settings from %s to %s...', 'woocommerce-square' ), $legacy_option, $new_option ) );
 
 		$legacy_settings = get_option( $legacy_option, array() );
@@ -483,7 +482,6 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		// Save migrated settings.
 		update_option( $new_option, $new_settings );
 
-		// use sprintf to log the migration completion.
 		$this->get_plugin()->log( sprintf( __( 'Gateway settings migration from %s to %s completed.', 'woocommerce-square' ), $legacy_option, $new_option ) );
 	}
 

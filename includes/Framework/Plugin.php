@@ -670,9 +670,8 @@ abstract class Plugin {
 	 *
 	 * @since 3.0.0
 	 * @see Plugin::get_settings_url()
-	 * @param string $plugin_id optional plugin identifier.  Note that this can be a
-	 *        sub-identifier for plugins with multiple parallel settings pages
-	 *        (ie a gateway that supports credit cards)
+	 * @param string $step optional step identifier.
+	 *
 	 * @return string plugin configure link
 	 */
 	public function get_square_wizard_link( $step = '' ) {
@@ -693,9 +692,7 @@ abstract class Plugin {
 	 *
 	 * @since 3.0.0
 	 * @see Plugin::get_settings_link()
-	 * @param string $plugin_id optional plugin identifier.  Note that this can be a
-	 *        sub-identifier for plugins with multiple parallel settings pages
-	 *        (ie a gateway that supports credit cards)
+	 * @param string $step optional step identifier.
 	 * @return string plugin settings URL
 	 */
 	public function get_square_wizard_url( $step = '' ) {
