@@ -79,14 +79,6 @@ class Gateway extends Payment_Gateway_Direct {
 	private $digital_wallet = null;
 
 	/**
-	 * Holds the instance of the Gift_Card class.
-	 * @since 4.2.0
-	 *
-	 * @var null|Gift_Card
-	 */
-	private $gift_card = null;
-
-	/**
 	 * Constructs the class.
 	 *
 	 * @since 2.0.0
@@ -149,9 +141,6 @@ class Gateway extends Payment_Gateway_Direct {
 
 		// Init Square digital wallets.
 		$this->digital_wallet = new Digital_Wallet( $this );
-
-		// Init Square gift card.
-		$this->gift_card = new Gift_Card( $this );
 	}
 
 	/**
@@ -592,17 +581,6 @@ class Gateway extends Payment_Gateway_Direct {
 	public function build_payment_tokens_handler() {
 
 		return new Card_Handler( $this );
-	}
-
-	/**
-	 * Returns the gift card object.
-	 *
-	 * @since 4.2.0
-	 *
-	 * @return Gift_Card;
-	 */
-	public function get_gift_card_handler() {
-		return $this->gift_card;
 	}
 
 	/**

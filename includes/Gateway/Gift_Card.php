@@ -9,12 +9,13 @@ use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
+use WooCommerce\Square\Gateway;
 
 class Gift_Card extends Payment_Gateway {
 	/**
-	 * @var \WooCommerce\Square\Gateway $gateway
+	 * @var API API base instance
 	 */
-	public $gateway = null;
+	private $api;
 
 	/**
 	 * Checks if Gift Card is enabled.
@@ -23,16 +24,15 @@ class Gift_Card extends Payment_Gateway {
 	 * @return bool
 	 */
 	public function is_gift_card_enabled() {
-		return 'yes' === $this->gateway->get_option( 'enabled', 'no' );
+		return 'yes' === $this->get_option( 'enabled', 'no' );
 	}
 
 	/**
 	 * Setup the Gift Card class
 	 *
-	 * @param \WooCommerce\Square\Gateway $gateway The payment gateway object.
 	 * @since 3.7.0
 	 */
-	public function __construct( $gateway ) {
+	public function __construct() {
 		parent::__construct(
 			Plugin::GIFT_CARD_PAY_GATEWAY_ID,
 			wc_square(),
@@ -43,9 +43,6 @@ class Gift_Card extends Payment_Gateway {
 			)
 		);
 
-		$this->gateway = $gateway;
-
-		add_action( 'wp', array( $this, 'init_gift_cards' ) );
 		add_action( 'init', array( $this, 'add_gift_card_image_placeholder' ) );
 		add_action( 'wp_ajax_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
 		add_action( 'wp_ajax_nopriv_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
@@ -68,14 +65,45 @@ class Gift_Card extends Payment_Gateway {
 	}
 	
 	/**
-	 * Returns the API instance.
+	 * Gets the API instance.
 	 *
 	 * @since 4.7.0
 	 *
-	 * @return \WooCommerce\Square\API\Square_API
+	 * @return Gateway\API
 	 */
 	public function get_api() {
-		return $this->gateway->get_api();
+		if ( ! $this->api ) {
+			$settings  = $this->get_plugin()->get_settings_handler();
+			$this->api = new Gateway\API( $settings->get_access_token(), $settings->get_location_id(), $settings->is_sandbox() );
+			$this->api->set_api_id( $this->get_id() );
+		}
+
+		return $this->api;
+	}
+
+
+	/**
+	 * Gets the configured application ID.
+	 *
+	 * @since 4.7.0
+	 *
+	 * @return string application ID
+	 */
+	public function get_application_id() {
+		$square_application_id = 'sq0idp-wGVapF8sNt9PLrdj5znuKA';
+
+		if ( $this->get_plugin()->get_settings_handler()->is_sandbox() ) {
+			$square_application_id = $this->get_plugin()->get_settings_handler()->get_option( 'sandbox_application_id' );
+		}
+
+		/**
+		 * Filters the configured application ID.
+		 *
+		 * @since 4.5.0
+		 *
+		 * @param string $application_id application ID
+		 */
+		return apply_filters( 'wc_square_application_id', $square_application_id );
 	}
 
 	/**
@@ -135,7 +163,14 @@ class Gift_Card extends Payment_Gateway {
 		$this->form_fields = array(
 			'enabled'     => array(
 				'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-				'description' => esc_html__( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
+				'description' => sprintf(
+					esc_html__(
+						'Allow customers to pay with a gift card. Please note the Gift Card feature requires %sSquare Credit Card%s payment gateway to be enabled.',
+						'woocommerce-square'
+					),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=square_credit_card' ) ) . '">',
+					'</a>'
+				),
 				'type'        => 'checkbox',
 				'default'     => '',
 				'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
@@ -181,24 +216,6 @@ class Gift_Card extends Payment_Gateway {
 	 */
 	protected function do_payment_method_transaction( $order, $response = null ) {
 		return false;
-	}
-
-	/**
-	 * Loads resources required for the Gift Card feature.
-	 *
-	 * @since 3.7.0
-	 */
-	public function init_gift_cards() {
-		// Return if Gateway or Gift Card is not enabled.
-		if ( ! ( 'yes' === $this->gateway->get_option( 'enabled', 'no' ) && $this->is_gift_card_enabled() ) ) {
-			return;
-		}
-
-		if ( ! self::does_checkout_support_gift_card() ) {
-			return;
-		}
-
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 	}
 
 	/**
@@ -327,6 +344,18 @@ class Gift_Card extends Payment_Gateway {
 	 * @since 3.7.0
 	 */
 	public function enqueue_scripts() {
+		$settings = get_option( 'woocommerce_square_credit_card_settings', array() );
+		$enabled  = isset( $settings['enabled'] ) ? $settings['enabled'] : 'no';
+
+		// Return if Credit Card Gateway or Gift Card is not enabled.
+		if ( ! ( 'yes' === $enabled && $this->is_gift_card_enabled() ) ) {
+			return;
+		}
+
+		if ( ! self::does_checkout_support_gift_card() ) {
+			return;
+		}
+
 		/**
 		 * Hook to filter JS args for Gift cards.
 		 *
@@ -336,14 +365,14 @@ class Gift_Card extends Payment_Gateway {
 		$args = apply_filters(
 			'wc_square_gift_card_js_args',
 			array(
-				'applicationId'       => $this->gateway->get_application_id(),
+				'applicationId'       => $this->get_application_id(),
 				'locationId'          => wc_square()->get_settings_handler()->get_location_id(),
-				'gatewayId'           => $this->gateway->get_id(),
-				'gatewayIdDasherized' => $this->gateway->get_id_dasherized(),
+				'gatewayId'           => $this->get_id(),
+				'gatewayIdDasherized' => $this->get_id_dasherized(),
 				'generalError'        => __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
 				'ajaxUrl'             => \WC_AJAX::get_endpoint( '%%endpoint%%' ),
 				'applyGiftCardNonce'  => wp_create_nonce( 'wc-square-apply-gift-card' ),
-				'logging_enabled'     => $this->gateway->debug_log(),
+				'logging_enabled'     => $this->debug_log(),
 				'orderId'             => absint( get_query_var( 'order-pay' ) ),
 			)
 		);
@@ -351,7 +380,7 @@ class Gift_Card extends Payment_Gateway {
 		if ( is_checkout() || is_product() ) {
 			wp_enqueue_script(
 				'wc-square-gift-card',
-				$this->gateway->get_plugin()->get_plugin_url() . '/assets/js/frontend/gift-card.min.js',
+				$this->get_plugin()->get_plugin_url() . '/assets/js/frontend/gift-card.min.js',
 				array( 'jquery' ),
 				Plugin::VERSION,
 				true
@@ -363,7 +392,7 @@ class Gift_Card extends Payment_Gateway {
 		if ( is_checkout() || is_product() ) {
 			wp_enqueue_style(
 				'wc-square-gift-card',
-				$this->gateway->get_plugin()->get_plugin_url() . '/assets/css/frontend/wc-square-gift-card.min.css',
+				$this->get_plugin()->get_plugin_url() . '/assets/css/frontend/wc-square-gift-card.min.css',
 				array(),
 				Plugin::VERSION
 			);
@@ -407,7 +436,7 @@ class Gift_Card extends Payment_Gateway {
 			}
 		} else {
 			if ( $payment_token ) {
-				$api_response   = $this->gateway->get_api()->retrieve_gift_card( $payment_token );
+				$api_response   = $this->get_api()->retrieve_gift_card( $payment_token );
 				$gift_card_data = $api_response->get_data();
 
 				if ( $gift_card_data instanceof \Square\Models\RetrieveGiftCardFromNonceResponse ) {

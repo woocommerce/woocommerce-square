@@ -29,6 +29,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
 use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Square_Credit_Card_Payment_Token;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
+use WooCommerce\Square\Gateway\Gift_Card;
 use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
@@ -106,8 +107,9 @@ class Plugin extends Payment_Gateway_Plugin {
 			array(
 				'text_domain'  => 'woocommerce-square',
 				'gateways'     => array(
-					self::GATEWAY_ID              => Gateway::class,
-					self::CASH_APP_PAY_GATEWAY_ID => Cash_App_Pay_Gateway::class,
+					self::GATEWAY_ID               => Gateway::class,
+					self::CASH_APP_PAY_GATEWAY_ID  => Cash_App_Pay_Gateway::class,
+					self::GIFT_CARD_PAY_GATEWAY_ID => Gift_Card::class,
 				),
 				'require_ssl'  => true,
 				'supports'     => array(

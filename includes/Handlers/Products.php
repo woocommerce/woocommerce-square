@@ -52,6 +52,9 @@ class Products {
 	/** @var int[] array of product IDs that have been scheduled for deletion in this request */
 	private $products_to_delete = array();
 
+	/** @var bool whether gift card features are enabled */
+	private $gift_card_enabled = 'no';
+
 	/** @var int[] array of product IDs that have been scheduled for inventory sync in this request */
 	private $products_to_inventory_sync = array();
 
@@ -74,6 +77,10 @@ class Products {
 			/* translators: Placeholder: %s - product name */
 			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
 		);
+
+		// Get gift card features status.
+		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$this->gift_card_enabled = isset( $gift_card_settings['enabled'] ) ? $gift_card_settings['enabled'] : 'no';
 
 		// add hooks
 		$this->add_products_edit_screen_hooks();
@@ -113,8 +120,7 @@ class Products {
 		add_filter( 'woocommerce_csv_product_import_mapping_default_columns', array( $this, 'map_sync_status_column' ) );
 		add_filter( 'woocommerce_product_import_pre_insert_product_object', array( $this, 'import_sync_status' ), 10, 2 );
 
-		// gift card features.
-		if ( wc_square()->get_gateway()->get_gift_card_handler()->is_gift_card_enabled() ) {
+		if ( 'yes' === $this->gift_card_enabled ) {
 			add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'add_input_fields_to_gift_card_product' ) );
 			add_filter( 'woocommerce_product_is_taxable', array( $this, 'disable_taxes_for_gift_card_product' ), 10, 2 );
 			add_filter( 'woocommerce_product_needs_shipping', array( $this, 'disable_shipping_for_gift_card_product' ), 10, 2 );
@@ -146,7 +152,7 @@ class Products {
 
 		add_action( 'admin_notices', array( $this, 'add_notice_product_hidden_from_catalog' ) );
 
-		if ( wc_square()->get_gateway()->get_gift_card_handler()->is_gift_card_enabled() ) {
+		if ( $this->gift_card_enabled ) {
 			add_filter( 'product_type_options', array( __CLASS__, 'add_gift_card_checkbox' ) );
 			add_filter( 'woocommerce_product_data_tabs', array( $this, 'filter_product_tabs' ), 50 );
 		}
