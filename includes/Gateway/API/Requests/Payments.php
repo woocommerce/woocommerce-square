@@ -74,15 +74,14 @@ class Payments extends \WooCommerce\Square\API\Request {
 	public function set_charge_data( \WC_Order $order, $capture = true, $is_cash_app_pay = false ) {
 		$this->square_api_method = 'createPayment';
 
+		$payment_total = isset( $order->payment->partial_total ) ? $order->payment->partial_total->other_gateway : $order->payment_total;
 		// Cash App Pay payment.
 		if ( $is_cash_app_pay ) {
-			$payment_total        = $order->payment_total;
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
 				$order->payment->nonce->cash_app_pay,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
-			$payment_total        = isset( $order->payment->partial_total ) ? $order->payment->partial_total->credit_card : $order->payment_total;
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
 				! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
@@ -110,19 +109,17 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setCustomerId( $order->square_customer_id );
 		}
 
+		if ( isset( $order->payment->partial_total ) ) {
+			$this->square_request->setAutocomplete( false );
+		} else {
+			$this->square_request->setAutocomplete( $capture );
+		}
+
 		// Cash App Pay payment.
 		if ( $is_cash_app_pay ) {
-			$this->square_request->setAutocomplete( $capture );
-
 			// Payment nonce (from JS)
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
-			if ( isset( $order->payment->partial_total ) ) {
-				$this->square_request->setAutocomplete( false );
-			} else {
-				$this->square_request->setAutocomplete( $capture );
-			}
-
 			// payment token (card ID) or card nonce (from JS)
 			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 
@@ -186,7 +183,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 		// Set the money object.
 		$amount_money = new \Square\Models\Money();
 
-		$charge_type    = wc_square()->get_gateway()->get_order_meta( $order, 'charge_type' );
+		$charge_type    = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'charge_type' );
 		$body           = new \Square\Models\UpdatePaymentRequest( $order->unique_transaction_ref );
 		$transaction_id = '';
 
@@ -194,7 +191,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 		if ( Payment_Gateway::CHARGE_TYPE_PARTIAL === $charge_type ) {
 			$gift_card_amount = Order::get_gift_card_total_charged_amount( $order );
 			$gift_card_amount = Money_Utility::amount_to_cents( $gift_card_amount, $order->get_currency() );
-			$transaction_id   = wc_square()->get_gateway()->get_order_meta( $order, 'trans_id' );
+			$transaction_id   = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'trans_id' );
 			$amount_money->setAmount( $amount - $gift_card_amount );
 		} else {
 			$transaction_id = $order->get_transaction_id();
@@ -250,7 +247,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 			Utilities\Money_Utility::amount_to_money( $payment_total, $order->get_currency() )
 		);
 
-		$should_authorize = Payment_Gateway::TRANSACTION_TYPE_AUTHORIZATION === wc_square()->get_gateway()->get_option( 'transaction_type' );
+		$should_authorize = wc_square()->get_gateway( $order->get_payment_method() )->perform_authorization( $order );
 
 		if ( isset( $order->payment->partial_total ) || $should_authorize ) {
 			$this->square_request->setAutocomplete( false );
@@ -311,6 +308,17 @@ class Payments extends \WooCommerce\Square\API\Request {
 		$this->square_api_args   = array( $payment_id );
 	}
 
+	/**
+	 * Sets the data for cancel a Payment.
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param string $payment_id payment ID
+	 */
+	public function set_cancel_payment_data( $payment_id ) {
+		$this->square_api_method = 'cancelPayment';
+		$this->square_api_args   = array( $payment_id );
+	}
 
 	/** Getter methods ************************************************************************************************/
 

@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.5.0",
+  "version": "4.6.0",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "main": "Gruntfile.js",
   "scripts": {

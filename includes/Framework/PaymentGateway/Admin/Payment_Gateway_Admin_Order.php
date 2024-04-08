@@ -65,6 +65,10 @@ class Payment_Gateway_Admin_Order {
 			// bulk capture order action
 			add_action( 'admin_footer-edit.php', array( $this, 'maybe_add_capture_charge_bulk_order_action' ) );
 			add_action( 'load-edit.php', array( $this, 'process_capture_charge_bulk_order_action' ) );
+
+			// bulk capture order action - for HPOS
+			add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'maybe_add_capture_charge_bulk_actions' ) );
+			add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'hpos_process_capture_charge_bulk_order_action' ), 10, 3 );
 		}
 	}
 
@@ -79,19 +83,26 @@ class Payment_Gateway_Admin_Order {
 	 * @param string $hook_suffix page hook suffix
 	 */
 	public function enqueue_scripts( $hook_suffix ) {
-		global $post;
-
-		if ( ! $post ) {
+		global $post, $theorder;
+		if ( ! $post && ! $theorder ) {
 			return;
 		}
 
+		// get the order ID
+		$order_id = null;
+		if ( $theorder instanceof \WC_Order ) {
+			$order_id = $theorder->get_id();
+		} elseif ( is_a( $post, 'WP_Post' ) && 'shop_order' === get_post_type( $post ) ) {
+			$order_id = absint( $post->ID );
+		}
+
 		// Order screen assets
-		if ( 'shop_order' === get_post_type() ) {
+		if ( ! empty( $order_id ) ) {
 
 			// Edit Order screen assets
-			if ( 'post.php' === $hook_suffix || 'post-new.php' === $hook_suffix ) {
+			if ( 'post.php' === $hook_suffix || 'post-new.php' === $hook_suffix || 'woocommerce_page_wc-orders' === $hook_suffix ) {
 
-				$order = wc_get_order( $post->ID );
+				$order = wc_get_order( $order_id );
 
 				$this->enqueue_edit_order_assets( $order );
 			}
@@ -121,11 +132,11 @@ class Payment_Gateway_Admin_Order {
 				'capture_action' => 'wc_square_capture_charge',
 				'capture_nonce'  => wp_create_nonce( 'wc_square_capture_charge' ),
 				'capture_error'  => esc_html__( 'Something went wrong, and the capture could no be completed. Please try again.', 'woocommerce-square' ),
-				'has_gift_card'  => 'yes' === wc_square()->get_gateway()->get_order_meta( $order, 'is_gift_card_purchased' ),
+				'has_gift_card'  => 'yes' === wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'is_gift_card_purchased' ),
 			)
 		);
 
-		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array( 'jquery' ), Plugin::VERSION );
+		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array(), Plugin::VERSION );
 	}
 
 
@@ -152,7 +163,7 @@ class Payment_Gateway_Admin_Order {
 			foreach ( $this->get_plugin()->get_gateways() as $gateway ) {
 
 				// ensure that it supports captures
-				if ( $gateway->supports_credit_card_capture() ) {
+				if ( $gateway->supports_capture() ) {
 
 					$can_capture_charge = true;
 					break;
@@ -172,6 +183,65 @@ class Payment_Gateway_Admin_Order {
 						});
 					</script>
 				<?php
+			}
+		}
+	}
+
+	/**
+	 * Adds 'Capture charge' to the Orders screen bulk action select (HPOS).
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param array $bulk_actions bulk actions
+	 * @return array
+	 */
+	public function maybe_add_capture_charge_bulk_actions( $bulk_actions ) {
+		$can_capture_charge = false;
+		$status             = sanitize_text_field( wp_unslash( $_REQUEST['status'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown
+		if ( ! current_user_can( 'edit_shop_orders' ) || 'trash' === $status ) {
+			return $bulk_actions;
+		}
+
+		// ensure at least one gateway supports capturing charge
+		foreach ( $this->get_plugin()->get_gateways() as $gateway ) {
+			// ensure that it supports captures
+			if ( $gateway->supports_capture() ) {
+				$can_capture_charge = true;
+				break;
+			}
+		}
+
+		if ( $can_capture_charge ) {
+			return array_merge( $bulk_actions, array( 'wc_capture_charge' => __( 'Capture Charge', 'woocommerce-square' ) ) );
+		}
+		return $bulk_actions;
+	}
+
+	/**
+	 * Processes the 'Capture Charge' custom bulk action in HPOS.
+	 *
+	 * @since 4.6.0
+	 */
+	public function hpos_process_capture_charge_bulk_order_action( $redirect_to, $action, $ids ) {
+		// bail if not processing a capture or if the user doesn't have the capability
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown
+		if ( 'wc_capture_charge' !== $action || empty( $ids ) || ! current_user_can( 'edit_shop_orders' ) ) {
+			return;
+		}
+
+		// give ourselves an unlimited timeout if possible
+		@set_time_limit( 0 ); // phpcs:ignore
+
+		foreach ( $ids as $order_id ) {
+			$order = wc_get_order( $order_id );
+			if ( ! $order ) {
+				continue;
+			}
+			$gateway = $this->get_order_gateway( $order );
+			if ( $gateway ) {
+				$gateway->get_capture_handler()->maybe_perform_capture( $order );
 			}
 		}
 	}
@@ -270,7 +340,7 @@ class Payment_Gateway_Admin_Order {
 		);
 
 		// indicate if the partial-capture UI can be shown
-		if ( $gateway->supports_credit_card_partial_capture() && $gateway->is_partial_capture_enabled() ) {
+		if ( $gateway->supports_partial_capture() && $gateway->is_partial_capture_enabled() ) {
 			$classes[] = 'partial-capture';
 		} elseif ( $gateway->get_capture_handler()->order_can_be_captured( $order ) ) {
 			$classes[] = 'button-primary';
@@ -298,7 +368,7 @@ class Payment_Gateway_Admin_Order {
 		<?php
 
 		// add the partial capture UI HTML
-		if ( $gateway->supports_credit_card_partial_capture() && $gateway->is_partial_capture_enabled() ) {
+		if ( $gateway->supports_partial_capture() && $gateway->is_partial_capture_enabled() ) {
 			$this->output_partial_capture_html( $order, $gateway );
 		}
 	}
@@ -426,7 +496,7 @@ class Payment_Gateway_Admin_Order {
 			$gateway = $this->get_plugin()->get_gateway( $payment_method );
 
 			// ensure that it supports captures
-			if ( $gateway->supports_credit_card_capture() ) {
+			if ( $gateway->supports_capture() ) {
 				$capture_gateway = $gateway;
 			}
 		}

@@ -107,16 +107,15 @@ class API extends \WooCommerce\Square\API {
 
 
 	/**
-	 * Performs a credit card capture for a given authorized order.
+	 * Performs a capture for a given authorized order.
 	 *
-	 * @since 2.0.0
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\API\Response
 	 * @throws \Exception
 	 */
-	public function credit_card_capture( \WC_Order $order ) {
-
+	public function capture_payment( \WC_Order $order ) {
 		$location_id = ! empty( $order->capture->location_id ) ? $order->capture->location_id : $this->get_location_id();
 
 		// use the Payments API to capture orders that were processed with Square v2.2+
@@ -133,12 +132,26 @@ class API extends \WooCommerce\Square\API {
 		return $this->perform_request( $request );
 	}
 
+
+	/**
+	 * Performs a credit card capture for a given authorized order.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param \WC_Order $order order object
+	 * @return \WooCommerce\Square\API\Response
+	 * @throws \Exception
+	 */
+	public function credit_card_capture( \WC_Order $order ) {
+		return $this->capture_payment( $order );
+	}
+
 	/**
 	 * Performs a gift card charge for a given order.
 	 *
 	 * @param \WC_Order $order order object
 	 * @since 3.7.0
-	 * @return \WooCommerce\Square\API\Response
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
 	 */
 	public function gift_card_charge( \WC_Order $order ) {
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
@@ -151,19 +164,33 @@ class API extends \WooCommerce\Square\API {
 	}
 
 	/**
-	 * Performs a Cash App Pay charge for the given order.
+	 * Performs a cash app pay authorization for the given order.
 	 *
-	 * @since 4.5.0
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
 	 * @throws \Exception
 	 */
-	public function cash_app_pay_charge( \WC_Order $order ) {
+	public function cash_app_pay_authorization( \WC_Order $order ) {
+		return $this->cash_app_pay_charge( $order, false );
+	}
+
+	/**
+	 * Performs a Cash App Pay charge for the given order.
+	 *
+	 * @since 4.5.0
+	 *
+	 * @param \WC_Order $order   Order object
+	 * @param bool      $capture Whether to capture the charge or not.
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cash_app_pay_charge( \WC_Order $order, $capture = true ) {
 
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
-		$request->set_charge_data( $order, true, true );
+		$request->set_charge_data( $order, $capture, true );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 
@@ -494,6 +521,7 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @param array  $payment_ids Array of payment IDs.
 	 * @param string $order_id    Square order ID.
+	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_PayOrder
 	 * @since 3.9.0
 	 */
 	public function pay_order( $payment_ids, $order_id ) {
@@ -622,6 +650,26 @@ class API extends \WooCommerce\Square\API {
 		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
 
 		$request->set_get_payment_data( $payment_id );
+
+		$this->set_response_handler( API\Responses\Create_Payment::class );
+
+		return $this->perform_request( $request );
+	}
+
+	/**
+	 * Cancel authorized payment.
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param string $payment_id transaction ID
+	 * @return API\Responses\Create_Payment
+	 * @throws \Exception
+	 */
+	public function cancel_payment( $payment_id ) {
+
+		$request = new API\Requests\Payments( $this->get_location_id(), $this->client );
+
+		$request->set_cancel_payment_data( $payment_id );
 
 		$this->set_response_handler( API\Responses\Create_Payment::class );
 

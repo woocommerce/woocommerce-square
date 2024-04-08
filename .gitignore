@@ -5,6 +5,7 @@
 /build
 *.iml
 .vscode
+.wp-env.override.json
 *.zip
 
 # Compiled assets

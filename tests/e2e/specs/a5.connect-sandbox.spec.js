@@ -9,6 +9,8 @@ test( 'Connect a Square account', async ( { page } ) => {
 	await page.locator( '#wc_square_enable_sandbox' ).check();
 	await page.locator( '.woocommerce-save-button' ).click();
 
+	expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
+
 	await page
 		.locator( '#wc_square_sandbox_application_id' )
 		.fill( process.env.SQUARE_APPLICATION_ID );
@@ -16,6 +18,8 @@ test( 'Connect a Square account', async ( { page } ) => {
 		.locator( '#wc_square_sandbox_token' )
 		.fill( process.env.SQUARE_ACCESS_TOKEN );
 	await page.locator( '.woocommerce-save-button' ).click();
+
+	expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
 
 	await expect(
 		page.getByText(
@@ -26,8 +30,22 @@ test( 'Connect a Square account', async ( { page } ) => {
 	await page
 		.locator( '#wc_square_sandbox_location_id' )
 		.selectOption( { label: 'Default Test Account' } );
+
 	await page
 		.locator( '#wc_square_system_of_record' )
 		.selectOption( { label: 'WooCommerce' } );
 	await page.locator( '.woocommerce-save-button' ).click();
+
+	// @todo: Note: We are repeating the same steps here because for some reason
+	// the location and SoR doesn't save for the first time.
+	await page
+		.locator( '#wc_square_sandbox_location_id' )
+		.selectOption( { label: 'Default Test Account' } );
+
+	await page
+		.locator( '#wc_square_system_of_record' )
+		.selectOption( { label: 'WooCommerce' } );
+	await page.locator( '.woocommerce-save-button' ).click();
+
+	expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
 } );

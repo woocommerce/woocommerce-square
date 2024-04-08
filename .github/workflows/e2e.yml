@@ -37,6 +37,11 @@ jobs:
       - name: Install playwright
         run: npx playwright install
 
+      - name: Set the core version
+        if: "${{ contains(github.event.pull_request.labels.*.name, 'needs: WP RC test') }}"
+        id: run-rc-test
+        run: ./tests/bin/set-core-version.js WordPress/WordPress#master
+
       - name: Setup E2E environment
         run: npm run test:env:start
 
@@ -89,8 +94,8 @@ jobs:
 
       - name: Run E2E Smoke Test
         if: ${{ github.event_name == 'push' }}
-        run: npm run test:e2e
-      
+        run: npm run test:e2e-run
+
       - uses: actions/upload-artifact@v3
         if: always()
         with:

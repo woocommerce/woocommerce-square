@@ -28,6 +28,8 @@ use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
+use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -58,10 +60,14 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			array(
 				'method_title'       => __( 'Cash App Pay (Square)', 'woocommerce-square' ),
 				'method_description' => __( 'Allow customers to securely pay with Cash App', 'woocommerce-square' ),
-				'payment_type'       => 'cash_app_pay',
+				'payment_type'       => self::PAYMENT_TYPE_CASH_APP_PAY,
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_REFUNDS,
+					self::FEATURE_AUTHORIZATION,
+					self::FEATURE_CHARGE,
+					self::FEATURE_CHARGE_VIRTUAL,
+					self::FEATURE_CAPTURE,
 				),
 				'countries'          => array( 'US' ),
 				'currencies'         => array( 'USD' ),
@@ -222,6 +228,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 					'</a>'
 				),
 				'wc-square-enable-cash-app-pay',
+				array(
+					'always_show_on_settings' => false,
+				)
 			);
 		}
 	}
@@ -270,49 +279,55 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 
 		// common top form fields
 		$this->form_fields = array(
-			'enabled'      => array(
+			'enabled'     => array(
 				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
 				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
 				'type'    => 'checkbox',
 				'default' => 'no',
 			),
 
-			'title'        => array(
+			'title'       => array(
 				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
 				'type'     => 'text',
 				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_title(),
 			),
 
-			'description'  => array(
+			'description' => array(
 				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
 				'type'     => 'textarea',
 				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
 				'default'  => $this->get_default_description(),
 			),
+		);
 
-			'button_theme' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'dark',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
-					'light' => esc_html__( 'Light', 'woocommerce-square' ),
-				),
+		// Both authorization & charge supported.
+		if ( $this->supports_authorization() && $this->supports_charge() ) {
+			$this->form_fields = $this->add_authorization_charge_form_fields( $this->form_fields );
+		}
+
+		// Cash App Pay button theme and shape
+		$this->form_fields['button_theme'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Theme', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the theme of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'dark',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'dark'  => esc_html__( 'Dark', 'woocommerce-square' ),
+				'light' => esc_html__( 'Light', 'woocommerce-square' ),
 			),
+		);
 
-			'button_shape' => array(
-				'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
-				'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
-				'type'     => 'select',
-				'default'  => 'semiround',
-				'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
-				'options'  => array(
-					'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
-					'round'     => esc_html__( 'Round', 'woocommerce-square' ),
-				),
+		$this->form_fields['button_shape'] = array(
+			'title'    => esc_html__( 'Cash App Pay Button Shape', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the shape of the Cash App Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'semiround',
+			'class'    => 'wc-enhanced-select wc-square-cash-app-pay-options',
+			'options'  => array(
+				'semiround' => esc_html__( 'Semiround', 'woocommerce-square' ),
+				'round'     => esc_html__( 'Round', 'woocommerce-square' ),
 			),
 		);
 
@@ -415,6 +430,15 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		return array();
 	}
 
+	/**
+	 * Initialize payment tokens handler.
+	 *
+	 * @since 4.5.1
+	 */
+	protected function init_payment_tokens_handler() {
+		// No payment tokens for Cash App Pay, do nothing.
+	}
+
 
 	/**
 	 * Gets a user's stored customer ID.
@@ -467,7 +491,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	public function get_order( $order_id ) {
 		$order = parent::get_order( $order_id );
 
-		$order->payment->nonce               = new \stdClass();
+		$order->payment->nonce = new \stdClass();
+
+		if ( $this->is_gift_card_applied() ) {
+			$order->payment->nonce->gift_card = Square_Helper::get_post( 'square-gift-card-payment-nonce' );
+		}
+
 		$order->payment->nonce->cash_app_pay = Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' );
 
 		$order->square_customer_id = $order->customer_id;
@@ -506,6 +535,25 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				}
 			}
 		}
+
+		return $order;
+	}
+
+	/**
+	 * Gets an order with capture data attached.
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param int|\WC_Order $order order object
+	 * @param null|float    $amount amount to capture
+	 * @return \WC_Order
+	 */
+	public function get_order_for_capture( $order, $amount = null ) {
+
+		$order = parent::get_order_for_capture( $order, $amount );
+
+		$order->capture->location_id = $this->get_order_meta( $order, 'square_location_id' );
+		$order->square_version       = $this->get_order_meta( $order, 'square_version' );
 
 		return $order;
 	}
@@ -719,10 +767,57 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			);
 		} elseif ( isset( WC()->cart ) ) {
 			WC()->cart->calculate_totals();
-			$payment_request = $this->build_payment_request( WC()->cart->total );
+			$amount = WC()->cart->total;
+
+			// Check if a gift card is applied.
+			$check_for_giftcard = isset( $_POST['check_for_giftcard'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['check_for_giftcard'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$gift_card_applied  = false;
+			if ( $check_for_giftcard ) {
+				$partial_amount = $this->get_partial_cash_app_amount();
+				if ( $partial_amount < $amount ) {
+					$amount            = $partial_amount;
+					$gift_card_applied = true;
+				}
+			}
+
+			$payment_request = $this->build_payment_request( $amount, array(), $gift_card_applied );
 		}
 
 		return $payment_request;
+	}
+
+	/**
+	 * Get the partial amount to be paid by Cash App Pay.
+	 * This is the amount after deducting the gift card balance.
+	 *
+	 * @since 4.6.0
+	 * @return float Partial amount to be paid by Cash App Pay.
+	 */
+	public function get_partial_cash_app_amount() {
+		$amount        = WC()->cart->total;
+		$payment_token = WC()->session->woocommerce_square_gift_card_payment_token;
+		if ( ! Gift_Card::does_checkout_support_gift_card() || ! $payment_token ) {
+			return $amount;
+		}
+
+		$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
+		if ( $is_sandbox ) {
+			// The card allowed for testing with the Sandbox account has fund of $1.
+			$balance = 1;
+			$amount  = $amount - $balance;
+		} else {
+			$api_response   = $this->get_api()->retrieve_gift_card( $payment_token );
+			$gift_card_data = $api_response->get_data();
+			if ( $gift_card_data instanceof \Square\Models\RetrieveGiftCardFromNonceResponse ) {
+				$gift_card     = $gift_card_data->getGiftCard();
+				$balance_money = $gift_card->getBalanceMoney();
+				$balance       = (float) Square_Helper::number_format( Money_Utility::cents_to_float( $balance_money->getAmount() ) );
+
+				$amount = $amount - $balance;
+			}
+		}
+
+		return $amount;
 	}
 
 	/**
@@ -735,7 +830,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @param array $data
 	 * @return array
 	 */
-	public function build_payment_request( $amount, $data = array() ) {
+	public function build_payment_request( $amount, $data = array(), $gift_card_applied = false ) {
 		$is_pay_for_order_page = isset( $data['is_pay_for_order_page'] ) ? $data['is_pay_for_order_page'] : false;
 		$order_id              = isset( $data['order_id'] ) ? $data['order_id'] : 0;
 
@@ -766,7 +861,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			unset( $data['is_pay_for_order_page'], $data['order_id'] );
 		}
 
-		if ( ! isset( $data['lineItems'] ) ) {
+		if ( ! isset( $data['lineItems'] ) && ! $gift_card_applied ) {
 			$data['lineItems'] = $this->build_payment_request_line_items( $order_data );
 		}
 
@@ -1022,6 +1117,17 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				 */
 				do_action( 'wc_payment_gateway_' . $this->get_id() . '_payment_processed', $order, $this );
 
+				// To create/activate/load a gift card, a payment must be in COMPLETE state.
+				if ( $this->perform_charge( $order ) ) {
+					$gift_card_purchase_type = Order::get_gift_card_purchase_type( $order );
+					if ( 'new' === $gift_card_purchase_type ) {
+						$this->create_gift_card( $order );
+					} elseif ( 'load' === $gift_card_purchase_type ) {
+						$gan = Order::get_gift_card_gan( $order );
+						$this->load_gift_card( $gan, $order );
+					}
+				}
+
 				return array(
 					'result'   => 'success',
 					'redirect' => $this->get_return_url( $order ),
@@ -1058,6 +1164,8 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
+				$this->maybe_save_gift_card_order_details( $response, $order );
+
 				$order->square_order_id = $response->getId();
 
 				// adjust order by difference between WooCommerce and Square order totals
@@ -1089,11 +1197,34 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			}
 		}
 
-		// Charge the order.
-		$response = $this->get_api()->cash_app_pay_charge( $order );
+		return parent::do_transaction( $order );
+	}
+
+	/**
+	 * Performs a credit card transaction for the given order and returns the result.
+	 *
+	 * @since 4.6.0
+	 *
+	 * @param WC_Order_Square     $order the order object
+	 * @param Create_Payment|null $response optional credit card transaction response
+	 * @return Create_Payment     the response
+	 * @throws \Exception network timeouts, etc
+	 */
+	protected function do_payment_method_transaction( $order, $response = null ) {
+		// Generate a new transaction ref if the order payment is split using multiple payment methods.
+		if ( isset( $order->payment->partial_total ) ) {
+			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
+		}
+
+		// Charge/Authorize the order.
+		if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
+			$response = $this->get_api()->cash_app_pay_charge( $order );
+		} else {
+			$response = $this->get_api()->cash_app_pay_authorization( $order );
+		}
 
 		// success! update order record
-		if ( $response->transaction_approved() && $response->is_cash_app_payment_completed() ) {
+		if ( $response->transaction_approved() ) {
 
 			$payment_response = $response->get_data();
 			$payment          = $payment_response->getPayment();
@@ -1129,18 +1260,12 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			 */
 			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
 
+			$this->update_order_meta( $order, 'is_tender_type_cash_app_wallet', true );
+
 			$order->add_order_note( $message );
-
-			// add the standard transaction data
-			$this->add_transaction_data( $order, $response );
-
-			// allow the concrete class to add any gateway-specific transaction data to the order
-			$this->add_payment_gateway_transaction_data( $order, $response );
-
-			return true;
-		} else {
-			return $this->do_transaction_failed_result( $order, $response );
 		}
+
+		return $response;
 	}
 
 	/**
