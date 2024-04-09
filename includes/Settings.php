@@ -184,6 +184,9 @@ class Settings extends \WC_Settings_API {
 		include "Admin/Views/html-product-$step-page.php";
 	}
 
+	/**
+	 * Enqueue scripts for the setup wizard.
+	 */
 	public function setup_wizard_scripts() {
 		wp_enqueue_script( 'wc-square-square-wizard' );
 	}
