@@ -135,8 +135,48 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
 		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
+
+		// This is the temporary page where we will develop and test components.
+		// Once final, replace this page with Faisal's page from `89-nux-onboarding`.
+		add_action( 'admin_menu', array( $this, 'onboarding_wizard' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'load_onboarding_wizard_scripts' ) );
 	}
 
+	public function onboarding_wizard() {
+		add_options_page(
+			__( 'Square Obnoarding', 'woocommerce-square' ),
+			__( 'Square Obnoarding', 'woocommerce-square' ),
+			'manage_options',
+			'woocommerce-square-onboarding',
+			array( $this, 'render_onboarding_page' )
+		);
+	}
+
+	function render_onboarding_page() {
+		printf(
+			'<div class="wrap" id="woocommerce-square__onboarding"></div>',
+		);
+	}
+
+	function load_onboarding_wizard_scripts() {
+		$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
+
+		if ( ! file_exists( $asset_file ) ) {
+			return;
+		}
+	
+		$asset = include $asset_file;
+	
+		wp_enqueue_script(
+			'woocommerce-square-onboarding-js',
+			WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',
+			$asset['dependencies'],
+			$asset['version'],
+			array(
+				'in_footer' => true,
+			)
+		);
+	}
 
 	/**
 	 * Includes required classes.
