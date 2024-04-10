@@ -9,7 +9,7 @@
  * Requires PHP: 7.4
  * PHP tested up to: 8.3
  *
- * Description: Adds ability to sync inventory between WooCommerce and Square POS. In addition, you can also make purchases through the Square payment gateway.
+ * Description: Securely accept payments, synchronize sales, and seamlessly manage inventory and product data between WooCommerce and Square POS.
  * Author: WooCommerce
  * Author URI: https://www.woocommerce.com/
  * Text Domain: woocommerce-square
