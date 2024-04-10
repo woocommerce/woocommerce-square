@@ -34,7 +34,7 @@
     "@babel/preset-env": "^7.12.11",
     "@playwright/test": "^1.39.0",
     "@woocommerce/dependency-extraction-webpack-plugin": "^1.4.0",
-    "@woocommerce/eslint-plugin": "^1.1.0",
+    "@woocommerce/eslint-plugin": "^2.2.0",
     "@wordpress/env": "^8.1.0",
     "@wordpress/scripts": "^13.0.2",
     "config": "^1.24.0",
