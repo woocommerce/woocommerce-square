@@ -72,6 +72,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.6.1 - 2024-04-10 =
+* Fix - Problem with connection to Square warning.
+* Update - Refreshed plugin marketing copy in readme file.
+* Update - Replace the middleware URL from `connect.woocommerce.com` to `api.woocommerce.com/integrations`.
+
 = 4.6.0 - 2024-03-27 =
 * Add - Support for buying a Square Gift Card using Cash App Pay.
 * Add - Support for splitting payments between a Square Gift Card and Cash App Pay.
