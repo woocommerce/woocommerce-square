@@ -69,7 +69,6 @@
     "wp_org_slug": "woocommerce-square"
   },
   "dependencies": {
-    "@wordpress/data": "^8.1.0",
     "uuid": "^9.0.1"
   }
 }
