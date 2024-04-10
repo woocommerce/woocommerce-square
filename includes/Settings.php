@@ -188,7 +188,7 @@ class Settings extends \WC_Settings_API {
 	 * Enqueue scripts for the setup wizard.
 	 */
 	public function setup_wizard_scripts() {
-		wp_enqueue_script( 'wc-square-square-wizard' );
+		wp_enqueue_script( 'wc-square-wizard' );
 	}
 
 	/**

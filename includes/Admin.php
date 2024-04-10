@@ -223,7 +223,7 @@ class Admin {
 
 			if ( 'woocommerce_page_square-wizard' === $screen_id ) {
 				wp_register_script(
-					'wc-square-square-wizard',
+					'wc-square-wizard',
 					$this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-wizard.min.js',
 					array( 'jquery' ),
 					Plugin::VERSION,
