@@ -144,8 +144,8 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	public function onboarding_wizard() {
 		add_options_page(
-			__( 'Square Obnoarding', 'woocommerce-square' ),
-			__( 'Square Obnoarding', 'woocommerce-square' ),
+			__( 'Square Onboarding', 'woocommerce-square' ),
+			__( 'Square Onboarding', 'woocommerce-square' ),
 			'manage_options',
 			'woocommerce-square-onboarding',
 			array( $this, 'render_onboarding_page' )
@@ -154,7 +154,7 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	function render_onboarding_page() {
 		printf(
-			'<div class="wrap" id="woocommerce-square__onboarding"></div>',
+			'<div class="wrap" id="woocommerce-square-onboarding"></div>',
 		);
 	}
 
@@ -176,6 +176,15 @@ class Plugin extends Payment_Gateway_Plugin {
 				'in_footer' => true,
 			)
 		);
+
+		wp_enqueue_style(
+			'woocommerce-square-onboarding-css',
+			WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
+			array(),
+			$asset['version'],
+		);
+
+		wp_enqueue_style( 'wp-components' );
 	}
 
 	/**

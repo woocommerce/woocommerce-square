@@ -69,6 +69,7 @@
     "wp_org_slug": "woocommerce-square"
   },
   "dependencies": {
+    "@codeamp/block-components": "^0.0.1-beta.13",
     "uuid": "^9.0.1"
   }
 }
