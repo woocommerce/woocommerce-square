@@ -1,6 +1,16 @@
+/**
+ * External dependencies.
+ */
 import { useSelect, useDispatch } from '@wordpress/data';
+
+/**
+ * Internal dependencies.
+ */
 import { store } from '../data/store';
 
+/**
+ * Getters / Setters for payment gateway data store.
+ */
 export const useSettings = () => {
 	const dispatch = useDispatch();
 

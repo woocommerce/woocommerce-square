@@ -1,3 +1,6 @@
+/**
+ * Internal dependencies.
+ */
 import './index.scss';
 
 export const ModalDescription = ( { children } ) => {

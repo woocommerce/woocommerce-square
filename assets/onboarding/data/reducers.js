@@ -2,7 +2,7 @@ const CREDIT_CARD_DEFAULT_STATE = {
 	enabled: 'no',
 	title: 'Credit Card',
 	description: 'Pay securely using your credit card.',
-	charge: 'charge',
+	transaction_type: 'charge',
 	charge_virtual_orders: 'no',
 	enable_paid_capture: 'no',
 	card_types: [
@@ -35,7 +35,7 @@ const DIGITAL_WALLETS_DEFAULT_STATE = {
 	digital_wallets_button_type: 'buy',
 	digital_wallets_apple_pay_button_color: 'black',
 	digital_wallets_google_pay_button_color: 'black',
-	digital_wallets_hide_button_options: '',
+	digital_wallets_hide_button_options: [],
 };
 
 const digitalWalletsReducer = ( state = DIGITAL_WALLETS_DEFAULT_STATE, action ) => {

@@ -140,6 +140,8 @@ class Plugin extends Payment_Gateway_Plugin {
 		// Once final, replace this page with Faisal's page from `89-nux-onboarding`.
 		add_action( 'admin_menu', array( $this, 'onboarding_wizard' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_onboarding_wizard_scripts' ) );
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Payment_Settings_Controller();
 	}
 
 	public function onboarding_wizard() {
