@@ -8,8 +8,7 @@ import apiFetch from '@wordpress/api-fetch';
  * Internal dependencies.
  */
 import { useSettings } from './hooks';
-import { CreditCard } from './steps/setup/credit-card';
-import { DigitalWallets } from './steps/setup/digital-wallets';
+import { CreditCardSetup, DigitalWalletsSetup } from './steps';
 
 export const OnboardingApp = () => {
 	const { setCreditCardData, setDigitalWalletData } = useSettings();
@@ -45,8 +44,8 @@ export const OnboardingApp = () => {
 
 	return (
 		<>
-			<CreditCard />
-			<DigitalWallets />
+			<CreditCardSetup />
+			<DigitalWalletsSetup />
 		</>
 	)
 };

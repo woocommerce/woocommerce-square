@@ -21,7 +21,7 @@ import {
 	SectionDescription,
 	InputWrapper,
 	SquareCheckboxControl,
-} from './components';
+} from '../components';
 
 import { useSettingsForm } from './hooks';
 
