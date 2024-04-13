@@ -54,7 +54,8 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'enable_inventory_sync',
 			'override_product_images',
 			'hide_missing_products',
-			'sync_interval'
+			'sync_interval',
+			'is_connected',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -144,6 +145,19 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	public function get_settings() {
 		$square_settings   = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 		$filtered_settings = array_intersect_key( $square_settings, array_flip( $this->allowed_params ) );
+
+		// Generate disconnection URL.
+		$action = 'wc_square_disconnect';
+		$url    = add_query_arg( 'action', $action, admin_url() );
+
+		// Add the connection parameters to the response.
+		$filtered_settings['is_connected']      = wc_square()->get_gateway()->get_plugin()->get_settings_handler()->is_connected();
+		$filtered_settings['disconnection_url'] = html_entity_decode( wp_nonce_url( $url, $action ) );
+
+		// Add locations to the response.
+		if ( wc_square()->get_settings_handler()->is_connected() ) {
+			$filtered_settings['locations'] = wc_square()->get_settings_handler()->get_locations();
+		}
 
 		return new WP_REST_Response( $filtered_settings );
 	}

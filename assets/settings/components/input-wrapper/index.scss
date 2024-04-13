@@ -1,0 +1,58 @@
+.woo-square-setting__input-wrapper {
+	margin: 36px 0;
+	max-width: 450px;
+
+	&--boxed {
+		max-width: 780px;
+	}
+
+	&--boxed-bg {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background-color: #E8E8E8;
+		padding: 24px 32px;
+		max-width: 780px;
+
+		.woo-square-setting__input-label {
+			font-family: 'SF Pro', sans-serif;
+			font-size: 19px;
+			font-weight: 590;
+			line-height: 22.67px;
+			letter-spacing: -0.03em;
+			text-align: left;
+			margin: 0;
+		}
+
+		.components-toggle-control {
+			margin-bottom: 0;
+		}
+	}
+
+	.components-form-token-field__remove-token.components-button {
+		display: none;
+	}
+
+	.components-form-token-field__token-text {
+		padding: 0 8px 0 8px;
+	}
+}
+
+.woo-square-setting__input-label {
+	font-family: 'SF Pro', sans-serif;
+	font-size: 15px;
+	font-weight: 590;
+	line-height: 17.9px;
+	letter-spacing: -0.03em;
+	margin-bottom: 7px;
+}
+
+.woo-square-setting__input-description {
+	font-family: 'SF Pro', sans-serif;
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 14.32px;
+	text-align: left;
+	margin-top: 9px;
+	color: #4B4B4B;
+}

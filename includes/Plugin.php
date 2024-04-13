@@ -140,6 +140,7 @@ class Plugin extends Payment_Gateway_Plugin {
 		// Once final, replace this page with Faisal's page from `89-nux-onboarding`.
 		add_action( 'admin_menu', array( $this, 'onboarding_wizard' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_onboarding_wizard_scripts' ) );
+		add_action( 'woocommerce_settings_square', array( $this, 'render_square_settings_container' ) );
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Payment_Settings_Controller();
 	}
@@ -157,6 +158,12 @@ class Plugin extends Payment_Gateway_Plugin {
 	function render_onboarding_page() {
 		printf(
 			'<div class="wrap" id="woocommerce-square-onboarding"></div>',
+		);
+	}
+
+	function render_square_settings_container() {
+		printf(
+			'<div class="wrap" id="woocommerce-square-settings__container"></div>',
 		);
 	}
 
@@ -179,9 +186,26 @@ class Plugin extends Payment_Gateway_Plugin {
 			)
 		);
 
+		wp_enqueue_script(
+			'woocommerce-square-settings-js',
+			WC_SQUARE_PLUGIN_URL . 'build/settings.js',
+			$asset['dependencies'],
+			$asset['version'],
+			array(
+				'in_footer' => true,
+			)
+		);
+
 		wp_enqueue_style(
 			'woocommerce-square-onboarding-css',
 			WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
+			array(),
+			$asset['version'],
+		);
+
+		wp_enqueue_style(
+			'woocommerce-square-settings-css',
+			WC_SQUARE_PLUGIN_URL . 'build/settings.css',
 			array(),
 			$asset['version'],
 		);

@@ -15,5 +15,6 @@ module.exports = {
 		'index': path.resolve(process.cwd(), 'assets/blocks', 'index.js'),
 		'cash-app-pay': path.resolve(process.cwd(), 'assets/blocks/cash-app-pay', 'index.js'),
 		'onboarding': path.resolve(process.cwd(), 'assets/onboarding', 'index.js'),
+		'settings': path.resolve(process.cwd(), 'assets/settings', 'index.js'),
 	}
 };
