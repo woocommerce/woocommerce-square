@@ -5,10 +5,12 @@ import selectors from './selectors';
 
 const STORE_NAME = 'woo-square/onboarding';
 
-export const store = createReduxStore( STORE_NAME, {
+const store = createReduxStore( STORE_NAME, {
 	reducer: combineReducers( reducers ),
 	actions,
 	selectors,
 } );
 
 register( store );
+
+export default store;

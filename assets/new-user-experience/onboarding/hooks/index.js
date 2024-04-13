@@ -8,7 +8,7 @@ import apiFetch from '@wordpress/api-fetch';
 /**
  * Internal dependencies.
  */
-import { store } from '../data/store';
+import store from '../data/store';
 
 /**
  * Getters / Setters for payment gateway data store.

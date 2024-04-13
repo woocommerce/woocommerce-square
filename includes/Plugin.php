@@ -169,8 +169,19 @@ class Plugin extends Payment_Gateway_Plugin {
 	}
 
 	function render_payments_settings_container() {
+		$tab     = wc_clean( $_GET['tab'] ?? '' );
+		$section = wc_clean( $_GET['section'] ?? '' );
+
+		if ( 'checkout' !== $tab ) {
+			return;
+		}
+
+		if ( '' === $section ) {
+			return;
+		}
+
 		printf(
-			'<div class="wrap" id="woocommerce-square-payment-settings__container"></div>',
+			'<div class="wrap" id="woocommerce-square-payment-gateway-settings__container"></div>',
 		);
 	}
 

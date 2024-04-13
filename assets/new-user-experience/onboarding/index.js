@@ -10,9 +10,10 @@ import { createRoot } from '@wordpress/element';
 import { OnboardingApp } from './onboarding-app';
 
 domReady( () => {
-	const root = createRoot(
-		document.getElementById( 'woocommerce-square-onboarding' )
-	);
+	const wrapper = document.getElementById( 'woocommerce-square-onboarding' );
 
-	root.render( <OnboardingApp /> );
+	if ( wrapper ) {
+		const root = createRoot( wrapper );
+		root.render( <OnboardingApp /> );
+	}
 } );
