@@ -25,6 +25,12 @@ export const getPaymentGatewaySettingsData = async () => {
 	return { creditCard, digitalWallet };
 };
 
-export const savePaymentGatewaySettings = ( data ) => {
-	
+export const savePaymentGatewaySettings = async ( data ) => {
+	const response = await apiFetch( {
+		path: '/wc/v3/wc_square/payment_settings',
+		method: 'POST',
+		data,
+	} );
+
+	return response;
 };

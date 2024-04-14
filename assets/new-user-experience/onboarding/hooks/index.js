@@ -2,7 +2,7 @@
  * External dependencies.
  */
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 
 /**
@@ -44,6 +44,8 @@ export const usePaymentGatewayData = () => {
 		setGiftCardData,
 	} = useSettings();
 
+	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
+
 	/**
 	 * Initializes payment gateway data store.
 	 */
@@ -75,6 +77,7 @@ export const usePaymentGatewayData = () => {
 			setCreditCardData( creditCard );
 			setDigitalWalletData( digitalWallet );
 			setGiftCardData( giftCard );
+			setSettingsLoaded( true );
 		} );
 	}, [] );
 
@@ -84,5 +87,5 @@ export const usePaymentGatewayData = () => {
 		...getGiftCardData(),
 	};
 
-	return { setCreditCardData, setDigitalWalletData, setGiftCardData, paymentGatewayData };
+	return { setCreditCardData, setDigitalWalletData, setGiftCardData, paymentGatewayData, settingsLoaded };
 };

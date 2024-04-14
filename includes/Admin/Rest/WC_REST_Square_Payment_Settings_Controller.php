@@ -192,18 +192,16 @@ class WC_REST_Square_Payment_Settings_Controller extends WC_Square_REST_Base_Con
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, [] );
-
+		$settings             = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, [] );
 		$current_account_keys = array_intersect_key( $settings, array_flip( $this->allowed_params ) );
+
 		foreach ( $current_account_keys as $key => $value ) {
 			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
 
 			$settings[ $key ] = $new_value;
 		}
 
-
-		// update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
-
-		return new WP_REST_Response( null, 200 );
+		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
+		wp_send_json_success();
 	}
 }

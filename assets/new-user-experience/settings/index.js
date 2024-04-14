@@ -21,7 +21,12 @@ domReady( () => {
 		const root = createRoot( container );
 		root.render( <SettingsApp /> );
 	} else {
-		container = document.getElementById( 'woocommerce-square-payment-gateway-settings__container' );
+		container = document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_credit_card' )
+		|| document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay' );
+
+		if ( ! container ) {
+			return;
+		}
 
 		const root = createRoot( container );
 		root.render( <PaymentGatewaySettingsApp /> );

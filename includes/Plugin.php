@@ -164,7 +164,7 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	function render_square_settings_container() {
 		printf(
-			'<div class="wrap" id="woocommerce-square-settings__container"></div>',
+			'<div id="woocommerce-square-settings__container"></div>',
 		);
 	}
 
@@ -176,12 +176,12 @@ class Plugin extends Payment_Gateway_Plugin {
 			return;
 		}
 
-		if ( '' === $section ) {
+		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section ) ) {
 			return;
 		}
 
 		printf(
-			'<div class="wrap" id="woocommerce-square-payment-gateway-settings__container"></div>',
+			'<div id="woocommerce-square-payment-gateway-settings__container--' . $section . '"></div>',
 		);
 	}
 

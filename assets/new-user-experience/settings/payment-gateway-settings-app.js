@@ -3,12 +3,32 @@
  */
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
+import { useState, useEffect } from '@wordpress/element';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 
 import { CreditCardSetup, DigitalWalletsSetup, GiftCardSetup } from '../../new-user-experience/onboarding/steps';
-import { usePaymentGatewayData, useSettings } from '../onboarding/hooks';
+import { usePaymentGatewayData } from '../onboarding/hooks';
 import { savePaymentGatewaySettings } from '../utils';
 
 export const PaymentGatewaySettingsApp = () => {
+	const { paymentGatewayData, settingsLoaded } = usePaymentGatewayData();
+	const [ saveInProgress, setSaveInProgress ] = useState( false );
+	const { createSuccessNotice } = useDispatch( noticesStore );
+
+	const saveSettings = async () => {
+		setSaveInProgress( true );
+		const response = await savePaymentGatewaySettings( paymentGatewayData );
+
+		if ( response.success ) {
+			createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
+				type: 'snackbar',
+			} )
+		}
+
+		setSaveInProgress( false );
+	};
+
 	const style = {
 		width: '100%',
 		maxWidth: '780px',
@@ -16,7 +36,9 @@ export const PaymentGatewaySettingsApp = () => {
 		marginLeft: '50px',
 	};
 
-	const { paymentGatewayData } = usePaymentGatewayData();
+	if ( ! settingsLoaded ) {
+		return null;
+	}
 
 	return (
 		<div style={ style }>
@@ -25,7 +47,8 @@ export const PaymentGatewaySettingsApp = () => {
 			<GiftCardSetup />
 			<Button
 				variant='primary'
-				onClick={ () => savePaymentGatewaySettings( paymentGatewayData ) }
+				onClick={ () => saveSettings() }
+				isBusy={ saveInProgress }
 			>
 				{ __( 'Save Changes', 'woocommerce-square' ) }
 			</Button>
