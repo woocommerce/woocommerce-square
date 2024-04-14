@@ -2,12 +2,11 @@
  * External dependencies.
  */
 import {
-	TextControl,
-	TextareaControl,
 	SelectControl,
 } from '@wordpress/components';
 import { MultiSelectControl } from '@codeamp/block-components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+import parse from 'html-react-parser';
 
 /**
  * Internal dependencies.
@@ -25,6 +24,7 @@ import { useSettings } from '../../hooks';
 export const DigitalWalletsSetup = () => {
 	const { setDigitalWalletData, getDigitalWalletData } = useSettings();
 	const {
+		enable_digital_wallets,
 		digital_wallets_button_type,
 		digital_wallets_apple_pay_button_color,
 		digital_wallets_google_pay_button_color,
@@ -39,8 +39,27 @@ export const DigitalWalletsSetup = () => {
 					{ __( 'Accept payments with Apple Pay and Google Pay on your store, available in select countries. Enabling digital wallets adds payment buttons to Product, Cart, and Checkout pages.', 'woocommerce-square' ) }
 				</SectionDescription>
 
+				<InputWrapper
+					label={ __( 'Enable / Disable', 'woocommerce-square' ) }
+					description={
+						parse(
+							sprintf(
+								__( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. Read more about the availablity of digital wallets in our %1$sdocumentation%2$s.', 'woocommerce-square' ),
+								'<a target="_blank" href="https://docs.woocommerce.com/document/woocommerce-square/">',
+								'</a>'
+							)
+						)
+					}
+					>
+					<SquareCheckboxControl
+						label={ __( 'Enable digital wallets.', 'woocommerce-square' ) }
+						checked={ 'yes' === enable_digital_wallets }
+						onChange={ ( enable_digital_wallets ) => setDigitalWalletData( { enable_digital_wallets: enable_digital_wallets ? 'yes' : 'no' } ) }
+					/>
+				</InputWrapper>
+
 				<InputWrapper label={ __( 'Button Type', 'woocommerce-square' ) } >
-					<TextControl
+					<SelectControl
 						value={ digital_wallets_button_type }
 						onChange={ ( digital_wallets_button_type ) => setDigitalWalletData( { digital_wallets_button_type } ) }
 						options={ [

@@ -25,19 +25,21 @@ import { useSettings } from '../../hooks';
 export const CreditCardSetup = () => {
 	const { setCreditCardData, getCreditCardData } = useSettings();
 	const {
+		enabled,
 		title,
 		description,
 		charge_virtual_orders,
 		enable_paid_capture,
 		transaction_type,
 		tokenization,
-		card_types
+		card_types,
 	} = getCreditCardData();
 
 	const authorizationFields = 'authorization' === transaction_type && (
 		<>
 			<InputWrapper
 				description={ __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ) }
+				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
@@ -48,6 +50,7 @@ export const CreditCardSetup = () => {
 
 			<InputWrapper
 				description={ __( 'Automatically capture orders when they are changed to Processing or Completed.', 'woocommerce-square' ) }
+				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
@@ -65,6 +68,16 @@ export const CreditCardSetup = () => {
 				<SectionDescription>
 					{ __( 'Here you can fine-tune the details of how credit card payments are processed, ensuring a secure and smooth transaction for every customer.', 'woocommerce-square' ) }
 				</SectionDescription>
+
+				<InputWrapper
+					label={ __( 'Enable / Disable', 'woocommerce-square' ) }
+					>
+					<SquareCheckboxControl
+						label={ __( 'Enable this gateway.', 'woocommerce-square' ) }
+						checked={ 'yes' === enabled }
+						onChange={ ( enabled ) => setCreditCardData( { enabled: enabled ? 'yes' : 'no' } ) }
+					/>
+				</InputWrapper>
 
 				<InputWrapper label={ __( 'Title', 'woocommerce-square' ) } >
 					<TextControl

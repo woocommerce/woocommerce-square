@@ -1,4 +1,4 @@
-import { register, createReduxStore, combineReducers } from '@wordpress/data';
+import { createReduxStore, combineReducers } from '@wordpress/data';
 import reducers from './reducers';
 import actions from './actions';
 import selectors from './selectors';
@@ -10,7 +10,5 @@ const store = createReduxStore( STORE_NAME, {
 	actions,
 	selectors,
 } );
-
-register( store );
 
 export default store;

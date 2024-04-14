@@ -24,3 +24,7 @@ export const getPaymentGatewaySettingsData = async () => {
 
 	return { creditCard, digitalWallet };
 };
+
+export const savePaymentGatewaySettings = ( data ) => {
+	
+};

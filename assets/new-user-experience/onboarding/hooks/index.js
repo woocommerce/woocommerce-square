@@ -35,7 +35,14 @@ export const useSettings = () => {
 };
 
 export const usePaymentGatewayData = () => {
-	const { setCreditCardData, setDigitalWalletData } = useSettings();
+	const {
+		getCreditCardData,
+		getDigitalWalletData,
+		getGiftCardData,
+		setCreditCardData,
+		setDigitalWalletData,
+		setGiftCardData,
+	} = useSettings();
 
 	/**
 	 * Initializes payment gateway data store.
@@ -49,7 +56,7 @@ export const usePaymentGatewayData = () => {
 				transaction_type: settings.transaction_type,
 				charge_virtual_orders: settings.charge_virtual_orders,
 				enable_paid_capture: settings.enable_paid_capture,
-				card_types: settings.card_types,
+				card_types: settings.card_types || [],
 				tokenization: settings.tokenization,
 			};
 
@@ -61,10 +68,21 @@ export const usePaymentGatewayData = () => {
 				digital_wallets_hide_button_options: settings.digital_wallets_hide_button_options || [],
 			};
 
+			const giftCard = {
+				enable_gift_cards: settings.enable_gift_cards
+			};
+
 			setCreditCardData( creditCard );
 			setDigitalWalletData( digitalWallet );
+			setGiftCardData( giftCard );
 		} );
 	}, [] );
 
-	return { setCreditCardData, setDigitalWalletData };
+	const paymentGatewayData = {
+		...getCreditCardData(),
+		...getDigitalWalletData(),
+		...getGiftCardData(),
+	};
+
+	return { setCreditCardData, setDigitalWalletData, setGiftCardData, paymentGatewayData };
 };
