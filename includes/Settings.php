@@ -174,7 +174,7 @@ class Settings extends \WC_Settings_API {
 		if ( 'start' === $step ) {
 			// Redirect if square is already connected.
 			if ( $this->get_access_token() ) {
-				wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding&step=payments' ) );
+				wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding&step=payment-methods' ) );
 				exit;
 			}
 
@@ -183,7 +183,7 @@ class Settings extends \WC_Settings_API {
 			// successful connection, for that we need this to be false.
 			update_option( 'wc_square_onboarding_completed', false );
 		
-		} else if ( 'payments' === $step ) {
+		} else if ( 'payment-methods' === $step ) {
 			// Mark the Onboarding as completed.
 			update_option( 'wc_square_onboarding_completed', true );
 		}
