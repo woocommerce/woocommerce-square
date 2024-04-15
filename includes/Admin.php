@@ -216,27 +216,49 @@ class Admin {
 				)
 			);
 		} else {
-			// Don't enqueue styles and JS on non-WC screens.
-			if ( ! in_array( $screen_id, wc_get_screen_ids(), true ) ) {
+			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
+
+			if ( ! file_exists( $asset_file ) ) {
 				return;
 			}
+		
+			$asset = include $asset_file;
+		
+			wp_enqueue_script(
+				'woocommerce-square-onboarding-js',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
 
-			if ( 'woocommerce_page_square-wizard' === $screen_id ) {
-				wp_register_script(
-					'wc-square-wizard',
-					$this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-wizard.min.js',
-					array( 'jquery' ),
-					Plugin::VERSION,
-					true
-				);
+			wp_enqueue_script(
+				'woocommerce-square-settings-js',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
 
-				wp_enqueue_style(
-					'wc-square-wizard',
-					$this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-wizard.min.css',
-					array(),
-					Plugin::VERSION
-				);
-			}
+			wp_enqueue_style(
+				'woocommerce-square-onboarding-css',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
+				array(),
+				$asset['version'],
+			);
+
+			wp_enqueue_style(
+				'woocommerce-square-settings-css',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.css',
+				array(),
+				$asset['version'],
+			);
+
+			wp_enqueue_style( 'wp-components' );
 		}
 	}
 
