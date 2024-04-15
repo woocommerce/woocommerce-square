@@ -169,6 +169,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
+		$settings     = array();
 		$keys_to_skip = array( 'is_connected', 'locations' );
 
 		foreach ( $this->allowed_params as $index => $key ) {

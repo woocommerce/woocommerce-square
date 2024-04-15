@@ -1,4 +1,4 @@
-const CREDIT_CARD_DEFAULT_STATE = {
+export const CREDIT_CARD_DEFAULT_STATE = {
 	enabled: 'no',
 	title: 'Credit Card',
 	description: 'Pay securely using your credit card.',
@@ -30,7 +30,7 @@ const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
 	}
 };
 
-const DIGITAL_WALLETS_DEFAULT_STATE = {
+export const DIGITAL_WALLETS_DEFAULT_STATE = {
 	enable_digital_wallets: 'yes',
 	digital_wallets_button_type: 'buy',
 	digital_wallets_apple_pay_button_color: 'black',
@@ -51,7 +51,7 @@ const digitalWalletsReducer = ( state = DIGITAL_WALLETS_DEFAULT_STATE, action ) 
 	}
 };
 
-const GIFT_CARDS_DEFAULT_STATE = {
+export const GIFT_CARDS_DEFAULT_STATE = {
 	enable_gift_cards: 'no',
 };
 
@@ -68,7 +68,7 @@ const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
 	}
 };
 
-const CASH_APP_DEFAULT_STATE = {
+export const CASH_APP_DEFAULT_STATE = {
 	enabled: 'no',
 	title: 'Cash App Pay',
 	description: 'Pay securely using Cash App Pay.',
