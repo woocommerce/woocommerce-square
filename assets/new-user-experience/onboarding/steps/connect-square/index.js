@@ -35,9 +35,9 @@ export const ConnectSetup = ( { updateStep } ) => {
 	}
 
 	return (
-		<div className="woo-square-onbarding__payment-settings">
-			<div className="woo-square-onbarding__payment-settings--right">
-				<div className="woo-square-onbarding__payment-settings__toggles">
+		<div className="woo-square-onbarding__connect-square">
+			<div className="woo-square-onbarding__connect-square--right">
+				<div className="woo-square-onbarding__connect-square__toggles">
 					<SectionTitle title={ __( 'Thanks for installing WooCommerce Square!', 'woocommerce-square' ) } />
 					<SectionDescription>
 						{ __( 'To get started, let’s connect to your Square Account to complete the setup process.', 'woocommerce-square' ) }
