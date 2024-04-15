@@ -10,6 +10,7 @@ import { register } from '@wordpress/data';
  */
 import { SettingsApp } from './settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
+import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import store from '../../new-user-experience/onboarding/data/store';
 
 register( store );
@@ -21,14 +22,15 @@ domReady( () => {
 		const root = createRoot( container );
 		root.render( <SettingsApp /> );
 	} else {
-		container = document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_credit_card' )
-		|| document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay' );
-
-		if ( ! container ) {
-			return;
+		container = document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_credit_card' );
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <PaymentGatewaySettingsApp /> );
 		}
-
-		const root = createRoot( container );
-		root.render( <PaymentGatewaySettingsApp /> );
+		document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay' );
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <CashAppSettingsApp /> );
+		}
 	}
 } );

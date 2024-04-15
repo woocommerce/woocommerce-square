@@ -39,6 +39,16 @@ export const savePaymentGatewaySettings = async ( data ) => {
 	return response;
 };
 
+export const saveCashAppSettings = async ( data ) => {
+	const response = await apiFetch( {
+		path: '/wc/v3/wc_square/cash_app_settings',
+		method: 'POST',
+		data,
+	} );
+
+	return response;
+};
+
 export const saveSquareSettings = async ( data ) => {
 	const response = await apiFetch( {
 		path: '/wc/v3/wc_square/settings',

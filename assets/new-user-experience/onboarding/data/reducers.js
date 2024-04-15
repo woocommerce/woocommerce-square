@@ -68,8 +68,31 @@ const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
 	}
 };
 
+const CASH_APP_DEFAULT_STATE = {
+	enabled: 'no',
+	title: 'Cash App Pay',
+	description: 'Pay securely using Cash App Pay.',
+	transaction_type: 'charge',
+	button_theme: 'dark',
+	button_shape: 'semiround',
+};
+
+const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
+		case 'SET_CASH_APP_DATA':
+			return {
+				...state,
+				...action.payload,
+			};
+
+		default:
+			return state;
+	}
+};
+
 export default { 
 	creditCard: creditCardReducer,
 	digitalWallet: digitalWalletsReducer,
 	giftCard: giftCardReducer,
+	cashApp: cashAppReducer,
 };
