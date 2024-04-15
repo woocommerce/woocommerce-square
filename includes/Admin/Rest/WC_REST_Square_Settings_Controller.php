@@ -169,10 +169,13 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings             = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
-		$current_account_keys = array_intersect_key( $settings, array_flip( $this->allowed_params ) );
+		$keys_to_skip = array( 'is_connected', 'locations' );
 
-		foreach ( $current_account_keys as $key => $value ) {
+		foreach ( $this->allowed_params as $index => $key ) {
+			if ( in_array( $key, $keys_to_skip, true ) ) {
+				continue;
+			}
+
 			$new_value        = wc_clean( wp_unslash( $request->get_param( $key ) ) );
 			$settings[ $key ] = $new_value;
 		}

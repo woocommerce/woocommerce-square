@@ -212,6 +212,7 @@ export const SettingsApp = () => {
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
 						isBusy={ saveInProgress }
+						disabled={ saveInProgress }
 					>
 						{
 							is_connected
@@ -364,7 +365,7 @@ export const SettingsApp = () => {
 							<SelectControl
 								value={ sync_interval }
 								options={ sync_interval_options }
-								onChange={ ( sync_interval ) => setFieldValue( { sync_interval: sync_interval.pop() } ) }
+								onChange={ ( sync_interval ) => setFieldValue( { sync_interval } ) }
 							/>
 						</InputWrapper>
 					)
@@ -379,15 +380,37 @@ export const SettingsApp = () => {
 
 				<InputWrapper
 					label={ __( 'Detailed Decline Messages', 'woocommerce-square' ) }
-					description={ __( "After enabling you'll see a new Sandbox settings section with two fields; Sandbox Application ID & Sandbox Access Token.", 'woocommerce-square' ) }
-					variant="boxed"
 				>
-					<ToggleControl
-						checked={ 'on' === debug_logging_enabled }
-						onChange={ ( debug_logging_enabled ) => setFieldValue( { debug_logging_enabled: debug_logging_enabled ? 'on' : 'off' } ) }
+					<SquareCheckboxControl
+						checked={ 'yes' === debug_logging_enabled }
+						onChange={ ( debug_logging_enabled ) => setFieldValue( { debug_logging_enabled: debug_logging_enabled ? 'yes' : 'no' } ) }
+						label={
+							parse(
+								sprintf(
+									__( 'Log debug messages to the %1$sWooCommerce status log%2$s', 'woocommerce-square' ),
+									'<a target="_blank" href="https://wcsquare.mylocal/wp-admin/admin.php?page=wc-status&tab=logs">',
+									'</a>',
+								)
+							)
+						}
 					/>
 				</InputWrapper>
 			</Section>
+
+			<Button
+				variant='primary'
+				onClick={ () => {
+					setSaveInProgress( true );
+					saveSquareSettings( formState )
+					setSaveInProgress( false );
+					createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
+						type: 'snackbar',
+					} );
+				} }
+				isBusy={ saveInProgress }
+			>
+				{ __( 'Save Changes', 'woocommerce-square' ) }
+			</Button>
 		</div>
 	)
 };
