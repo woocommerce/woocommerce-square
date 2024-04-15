@@ -20,18 +20,22 @@ export const useSettings = () => {
 	const getCreditCardData = ( key ) => useSelect( ( select ) => select( store ).getCreditCardData( key ));
 	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ));
 	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ));
+	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ));
 
 	const setCreditCardData = ( data ) => dispatch( store ).setCreditCardData( data );
 	const setDigitalWalletData = ( data ) => dispatch( store ).setDigitalWalletData( data );
 	const setGiftCardData = ( data ) => dispatch( store ).setGiftCardData( data );
+	const setCashAppData = ( data ) => dispatch( store ).setCashAppData( data );
 
 	return {
 		getCreditCardData,
 		getDigitalWalletData,
 		getGiftCardData,
+		getCashAppData,
 		setCreditCardData,
 		setDigitalWalletData,
-		setGiftCardData
+		setGiftCardData,
+		setCashAppData
 	};
 };
 
@@ -55,15 +59,13 @@ export const useCashAppData = () => {
 				transaction_type: settings.transaction_type,
 				button_theme: settings.button_theme,
 				button_shape: settings.button_shape,
+				debug_mode: settings.debug_mode,
 			} );
 			setSettingsLoaded( true );
 		} );
 	}, [] );
 
 	const cashApData = {
-		...getCreditCardData(),
-		...getDigitalWalletData(),
-		...getGiftCardData(),
 		...getCashAppData(),
 	};
 

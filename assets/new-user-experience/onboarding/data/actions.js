@@ -19,11 +19,11 @@ const setGiftCardData = ( data ) => {
 	};
 };
 
-const setCashAppdData = ( data ) => {
+const setCashAppData = ( data ) => {
 	return {
 		type: 'SET_CASH_APP_DATA',
 		payload: data,
 	};
 };
 
-export default { setCreditCardData, setDigitalWalletData, setGiftCardData, setCashAppdData };
+export default { setCreditCardData, setDigitalWalletData, setGiftCardData, setCashAppData };

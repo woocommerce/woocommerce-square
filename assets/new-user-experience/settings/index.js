@@ -27,7 +27,7 @@ domReady( () => {
 			const root = createRoot( container );
 			root.render( <PaymentGatewaySettingsApp /> );
 		}
-		document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay' );
+		container = document.getElementById( 'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay' );
 		if ( container ) {
 			const root = createRoot( container );
 			root.render( <CashAppSettingsApp /> );

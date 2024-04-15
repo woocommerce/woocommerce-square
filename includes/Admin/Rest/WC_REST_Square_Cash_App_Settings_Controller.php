@@ -49,8 +49,9 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 			'title',
 			'description',
 			'transaction_type',
+			'button_theme',
 			'button_shape',
-			'button_shape',
+			'debug_mode',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
