@@ -263,6 +263,8 @@ class Admin {
 				$asset['version'],
 			);
 		}
+
+		wp_enqueue_style( 'wp-components' );
 	}
 
 
