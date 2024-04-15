@@ -14,10 +14,12 @@ import store from '../../new-user-experience/onboarding/data/store';
 register( store );
 
 domReady( () => {
-	const wrapper = document.getElementById( 'woocommerce-square-onboarding' );
+	const urlParams = new URLSearchParams( window.location.search );
+	const step = urlParams.get( 'step' ) || 'start';
+	const wrapper = document.getElementById( 'woocommerce-square-onboarding-' + step );
 
 	if ( wrapper ) {
 		const root = createRoot( wrapper );
-		root.render( <OnboardingApp /> );
+		root.render( <OnboardingApp step={step} /> );
 	}
 } );

@@ -50,6 +50,8 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 			'description',
 			'transaction_type',
 			'button_theme',
+			'charge_virtual_orders',
+			'enable_paid_capture',
 			'button_shape',
 			'debug_mode',
 		);
@@ -108,48 +110,13 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 						'type' => 'string',
 						'sanitize_callback' => '',
 					),
-					'card_types' => array(
-						'description' => __( 'Array of card type logos.', 'woocommerce-square' ),
+					'button_theme' => array(
+						'description' => __( 'Button Theme.', 'woocommerce-square' ),
 						'type' => 'string',
 						'sanitize_callback' => '',
 					),
-					'tokenization' => array(
-						'description' => __( 'Enable tokenization and allow customers to securely save their payment details for future checkout.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'enable_digital_wallets' => array(
-						'description' => __( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'digital_wallets_button_type' => array(
-						'description' => __( 'This setting only applies to the Apple Pay button. When Google Pay is available, the Google Pay button will always have the "Buy with" button text.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'digital_wallets_apple_pay_button_color' => array(
-						'description' => __( 'Color of the Apple Pay button.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'digital_wallets_google_pay_button_color' => array(
-						'description' => __( 'Color of the GPay button.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'digital_wallets_hide_button_options' => array(
-						'description' => __( 'Array of digital wallet buttons to hide', 'woocommerce-square' ),
-						'type' => 'array',
-						'sanitize_callback' => ''
-					),
-					'enable_gift_cards' => array(
-						'description' => __( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
-					'enable_customer_decline_messages' => array(
-						'description' => __( 'Enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
+					'button_shape' => array(
+						'description' => __( 'Button Shape.', 'woocommerce-square' ),
 						'type' => 'string',
 						'sanitize_callback' => '',
 					),

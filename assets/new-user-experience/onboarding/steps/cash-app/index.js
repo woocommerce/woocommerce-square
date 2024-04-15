@@ -30,9 +30,37 @@ export const CashAppSetup = () => {
 		description,
 		transaction_type,
 		button_theme,
+        charge_virtual_orders,
+        enable_paid_capture,
 		button_shape,
         debug_mode,
 	} = getCashAppData();
+
+    const authorizationFields = 'authorization' === transaction_type && (
+		<>
+			<InputWrapper
+				description={ __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ) }
+				indent={ 2 }
+			>
+				<SquareCheckboxControl
+					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
+					checked={ 'yes' === charge_virtual_orders }
+					onChange={ ( charge_virtual_orders ) => setCreditCardData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
+				/>
+			</InputWrapper>
+
+			<InputWrapper
+				description={ __( 'Automatically capture orders when they are changed to Processing or Completed.', 'woocommerce-square' ) }
+				indent={ 2 }
+			>
+				<SquareCheckboxControl
+					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
+					checked={ 'yes' === enable_paid_capture }
+					onChange={ ( enable_paid_capture ) => setCreditCardData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }
+				/>
+			</InputWrapper>
+		</>
+	);
 
 	return (
 		<>
@@ -82,6 +110,8 @@ export const CashAppSetup = () => {
 						] }
 					/>
 				</InputWrapper>
+
+                { authorizationFields }
 
 				<InputWrapper
 					label={ __( 'Cash App Pay Button Theme', 'woocommerce-square' ) }

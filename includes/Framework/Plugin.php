@@ -363,8 +363,8 @@ abstract class Plugin {
 		$custom_actions = array();
 
 		// settings url(s)
-		if ( $this->get_settings_link( 'square' ) ) {
-			$custom_actions['configure'] = $this->get_settings_link( 'square' );
+		if ( $this->get_square_onboarding_link() ) {
+			$custom_actions['setup-wizard'] = $this->get_square_onboarding_link();
 		}
 
 		// documentation url if any
@@ -664,6 +664,42 @@ abstract class Plugin {
 		return '';
 	}
 
+	/**
+	 * Returns the "Configure" plugin action link to go directly to the plugin
+	 * settings page (if any)
+	 *
+	 * @since 3.0.0
+	 * @see Plugin::get_settings_url()
+	 * @param string $step optional step identifier.
+	 *
+	 * @return string plugin configure link
+	 */
+	public function get_square_onboarding_link( $step = '' ) {
+
+		$square_onboarding_url = $this->get_square_onboarding_url( $step );
+
+		if ( $square_onboarding_url ) {
+			return sprintf( '<a href="%s">%s</a>', esc_url( $square_onboarding_url ), esc_html__( 'Setup Wizard', 'woocommerce-square' ) );
+		}
+
+		// no settings
+		return '';
+	}
+
+
+	/**
+	 * Gets the plugin configuration URL
+	 *
+	 * @since 3.0.0
+	 * @see Plugin::get_settings_link()
+	 * @param string $step optional step identifier.
+	 * @return string plugin settings URL
+	 */
+	public function get_square_onboarding_url( $step = '' ) {
+
+		// stub method
+		return '';
+	}
 
 	/**
 	 * Gets the plugin configuration URL

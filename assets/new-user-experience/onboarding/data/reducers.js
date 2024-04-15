@@ -73,6 +73,8 @@ export const CASH_APP_DEFAULT_STATE = {
 	title: 'Cash App Pay',
 	description: 'Pay securely using Cash App Pay.',
 	transaction_type: 'charge',
+	charge_virtual_orders: 'no',
+	enable_paid_capture: 'no',
 	button_theme: 'dark',
 	button_shape: 'semiround',
 	debug_mode: 'semiround',

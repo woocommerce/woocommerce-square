@@ -79,14 +79,6 @@ class Gateway extends Payment_Gateway_Direct {
 	private $digital_wallet = null;
 
 	/**
-	 * Holds the instance of the Gift_Card class.
-	 * @since 4.2.0
-	 *
-	 * @var null|Gift_Card
-	 */
-	private $gift_card = null;
-
-	/**
 	 * Constructs the class.
 	 *
 	 * @since 2.0.0
@@ -149,9 +141,6 @@ class Gateway extends Payment_Gateway_Direct {
 
 		// Init Square digital wallets.
 		$this->digital_wallet = new Digital_Wallet( $this );
-
-		// Init Square gift card.
-		$this->gift_card = new Gift_Card( $this );
 	}
 
 	/**
@@ -599,17 +588,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 *
 	 * @since 4.2.0
 	 *
-	 * @return Gift_Card;
-	 */
-	public function get_gift_card_handler() {
-		return $this->gift_card;
-	}
-
-	/**
-	 * Returns the gift card object.
-	 *
-	 * @since 4.2.0
-	 *
 	 * @return Digital_Wallet;
 	 */
 	public function get_digital_wallet_handler() {
@@ -672,8 +650,6 @@ class Gateway extends Payment_Gateway_Direct {
 		if ( $this->is_digital_wallet_available() ) {
 			$this->form_fields = $this->add_digital_wallets_form_fields( $this->form_fields );
 		}
-
-		$this->form_fields = $this->add_gift_cards_form_fields( $this->form_fields );
 
 		$this->form_fields['advanced_settings_title'] = array(
 			'title' => esc_html__( 'Advanced Settings', 'woocommerce-square' ),
@@ -862,32 +838,6 @@ class Gateway extends Payment_Gateway_Direct {
 				'apple'  => 'Apple Pay',
 				'google' => 'Google Pay',
 			),
-		);
-
-		return $form_fields;
-	}
-
-	/**
-	 * Adds the Gift Cards setting fields.
-	 *
-	 * @since 3.7.0
-	 *
-	 * @param array $form_fields
-	 * @return array
-	 */
-	public function add_gift_cards_form_fields( $form_fields ) {
-		$form_fields['gift_card_settings'] = array(
-			'title'       => esc_html__( 'Gift Card settings', 'woocommerce-square' ),
-			'description' => esc_html__( 'Take payments on your store with a Gift Card.', 'woocommerce-square' ),
-			'type'        => 'title',
-		);
-
-		$form_fields['enable_gift_cards'] = array(
-			'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-			'description' => esc_html__( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
-			'type'        => 'checkbox',
-			'default'     => '',
-			'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
 		);
 
 		return $form_fields;

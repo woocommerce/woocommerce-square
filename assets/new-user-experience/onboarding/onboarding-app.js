@@ -7,13 +7,18 @@ import { useEffect } from '@wordpress/element';
  * Internal dependencies.
  */
 import { getPaymentGatewaySettingsData } from '../utils';
-import { PaymentMethods } from './steps';
+import { CashAppSetup, ConnectSetup, CreditCardSetup, DigitalWalletsSetup, GiftCardSetup, PaymentMethods } from './steps';
 
-export const OnboardingApp = () => {
+export const OnboardingApp = ( { step } ) => {
 
 	return (
 		<>
-			<PaymentMethods />
+			{ step === 'start' && <ConnectSetup /> }
+			{ step === 'credit-card' && <CreditCardSetup /> }
+			{ step === 'digital-wallets' && <DigitalWalletsSetup /> }
+			{ step === 'gift-card' && <GiftCardSetup /> }
+			{ step === 'cash-app' && <CashAppSetup /> }
+			{ step === 'payment-methods' && <PaymentMethods /> }
 		</>
 	)
 };

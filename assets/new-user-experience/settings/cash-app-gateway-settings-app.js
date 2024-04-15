@@ -18,7 +18,7 @@ export const CashAppSettingsApp = () => {
 
 	const saveSettings = async () => {
 		setSaveInProgress( true );
-		const response = await saveCashAppSettings( 'cash_app_settings', cashAppData );
+		const response = await saveCashAppSettings( cashAppData );
 
 		if ( response.success ) {
 			createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {

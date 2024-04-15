@@ -128,6 +128,103 @@ class Settings extends \WC_Settings_API {
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
 
 		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations' ) );
+
+		add_action( 'admin_init', array( $this, 'square_onboarding_redirect' ) );
+
+		add_action( 'admin_menu', array( $this, 'register_pages' ) );
+
+		add_action( 'woocommerce_settings_square', array( $this, 'render_square_settings_container' ) );
+
+		add_action( 'woocommerce_settings_checkout', array( $this, 'render_payments_settings_container' ) );
+
+		// Register REST API controllers.
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Cash_App_Settings_Controller();
+	}
+
+	/**
+	 * Redirect users to the templates screen on plugin activation.
+	 *
+	 * @since x.x.x
+	 */
+	public function square_onboarding_redirect() {
+		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
+			add_option( 'wc_square_show_wizard_on_activation', true );
+			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Registers square page(s).
+	 *
+	 * @since x.x.x
+	 */
+	public function register_pages() {
+		add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) );
+	}
+
+	/**
+	 * Output the Setup Wizard page(s).
+	 */
+	public function render_onboarding_page() {
+		$step = isset( $_GET['step'] ) ? htmlentities( $_GET['step'] ) : 'start';
+
+		if ( 'start' === $step ) {
+			// Redirect if square is already connected.
+			if ( $this->get_access_token() ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding&step=payment-methods' ) );
+				exit;
+			}
+
+			// Update the onbaording status. This is required if user navigates back to the wizard,
+			// And try to connect from here, we need to redirect them to the wizard page after
+			// successful connection, for that we need this to be false.
+			update_option( 'wc_square_onboarding_completed', false );
+		
+		} else if ( 'payment-methods' === $step ) {
+			// Mark the Onboarding as completed.
+			update_option( 'wc_square_onboarding_completed', true );
+		}
+
+		echo sprintf(
+			'<div class="wrap" id="woocommerce-square-onboarding-%s"></div>',
+			esc_attr( $step )
+		);
+	}
+
+	/**
+	 * Redirect users to the onboarding wizard screen on plugin activation.
+	 *
+	 * @since x.x.x
+	 */
+	function render_square_settings_container() {
+		printf(
+			'<div id="woocommerce-square-settings__container"></div>',
+		);
+	}
+
+	/**
+	 * Redirect users to the onboarding wizard screen on plugin activation.
+	 *
+	 * @since x.x.x
+	 */
+	function render_payments_settings_container() {
+		$tab     = wc_clean( $_GET['tab'] ?? '' );
+		$section = wc_clean( $_GET['section'] ?? '' );
+
+		if ( 'checkout' !== $tab ) {
+			return;
+		}
+
+		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section ) ) {
+			return;
+		}
+
+		printf(
+			'<div id="woocommerce-square-payment-gateway-settings__container--' . $section . '"></div>',
+		);
 	}
 
 	/**

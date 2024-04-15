@@ -29,6 +29,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
 use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Square_Credit_Card_Payment_Token;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
+use WooCommerce\Square\Gateway\Gift_Card;
 use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
@@ -53,6 +54,9 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	/** string gateway ID */
 	const GATEWAY_ID = 'square_credit_card';
+
+	/** string Gift Cards gateway ID */
+	const GIFT_CARD_PAY_GATEWAY_ID = 'gift_cards_pay';
 
 	/** string Cash App Pay gateway ID */
 	const CASH_APP_PAY_GATEWAY_ID = 'square_cash_app_pay';
@@ -103,8 +107,9 @@ class Plugin extends Payment_Gateway_Plugin {
 			array(
 				'text_domain'  => 'woocommerce-square',
 				'gateways'     => array(
-					self::GATEWAY_ID              => Gateway::class,
-					self::CASH_APP_PAY_GATEWAY_ID => Cash_App_Pay_Gateway::class,
+					self::GATEWAY_ID               => Gateway::class,
+					self::CASH_APP_PAY_GATEWAY_ID  => Cash_App_Pay_Gateway::class,
+					self::GIFT_CARD_PAY_GATEWAY_ID => Gift_Card::class,
 				),
 				'require_ssl'  => true,
 				'supports'     => array(
@@ -135,101 +140,6 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
 		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
-
-		// This is the temporary page where we will develop and test components.
-		// Once final, replace this page with Faisal's page from `89-nux-onboarding`.
-		add_action( 'admin_menu', array( $this, 'onboarding_wizard' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'load_onboarding_wizard_scripts' ) );
-		add_action( 'woocommerce_settings_square', array( $this, 'render_square_settings_container' ) );
-		add_action( 'woocommerce_settings_checkout', array( $this, 'render_payments_settings_container' ) );
-		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
-		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller();
-		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Cash_App_Settings_Controller();
-	}
-
-	public function onboarding_wizard() {
-		add_options_page(
-			__( 'Square Onboarding', 'woocommerce-square' ),
-			__( 'Square Onboarding', 'woocommerce-square' ),
-			'manage_options',
-			'woocommerce-square-onboarding',
-			array( $this, 'render_onboarding_page' )
-		);
-	}
-
-	function render_onboarding_page() {
-		printf(
-			'<div class="wrap" id="woocommerce-square-onboarding"></div>',
-		);
-	}
-
-	function render_square_settings_container() {
-		printf(
-			'<div id="woocommerce-square-settings__container"></div>',
-		);
-	}
-
-	function render_payments_settings_container() {
-		$tab     = wc_clean( $_GET['tab'] ?? '' );
-		$section = wc_clean( $_GET['section'] ?? '' );
-
-		if ( 'checkout' !== $tab ) {
-			return;
-		}
-
-		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section ) ) {
-			return;
-		}
-
-		printf(
-			'<div id="woocommerce-square-payment-gateway-settings__container--' . $section . '"></div>',
-		);
-	}
-
-	function load_onboarding_wizard_scripts() {
-		$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
-
-		if ( ! file_exists( $asset_file ) ) {
-			return;
-		}
-	
-		$asset = include $asset_file;
-	
-		wp_enqueue_script(
-			'woocommerce-square-onboarding-js',
-			WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',
-			$asset['dependencies'],
-			$asset['version'],
-			array(
-				'in_footer' => true,
-			)
-		);
-
-		wp_enqueue_script(
-			'woocommerce-square-settings-js',
-			WC_SQUARE_PLUGIN_URL . 'build/settings.js',
-			$asset['dependencies'],
-			$asset['version'],
-			array(
-				'in_footer' => true,
-			)
-		);
-
-		wp_enqueue_style(
-			'woocommerce-square-onboarding-css',
-			WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
-			array(),
-			$asset['version'],
-		);
-
-		wp_enqueue_style(
-			'woocommerce-square-settings-css',
-			WC_SQUARE_PLUGIN_URL . 'build/settings.css',
-			array(),
-			$asset['version'],
-		);
-
-		wp_enqueue_style( 'wp-components' );
 	}
 
 	/**
@@ -923,6 +833,30 @@ class Plugin extends Payment_Gateway_Plugin {
 			'page' => 'wc-settings',
 			'tab'  => self::PLUGIN_ID,
 		);
+
+		// All usage of this return value has been escaped late.
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		return add_query_arg( $params, admin_url( 'admin.php' ) );
+	}
+	
+	/**
+	 * Gets the Setup Wizard URL.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step Step to go to.
+	 *
+	 * @return string
+	 */
+	public function get_square_onboarding_url( $step = '' ) {
+		$params = array(
+			'page' => 'woocommerce-square-onboarding',
+		);
+
+		// Add 'step' if $step is not empty.
+		if ( ! empty( $step ) ) {
+			$params['step'] = $step;
+		}
 
 		// All usage of this return value has been escaped late.
 		// nosemgrep audit.php.wp.security.xss.query-arg

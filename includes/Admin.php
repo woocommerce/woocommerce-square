@@ -212,7 +212,59 @@ class Admin {
 					),
 				)
 			);
+
+			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/settings.asset.php';
+
+			if ( ! file_exists( $asset_file ) ) {
+				return;
+			}
+		
+			$asset = include $asset_file;
+
+			wp_enqueue_script(
+				'woocommerce-square-settings-js',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
+
+			wp_enqueue_style(
+				'woocommerce-square-settings-css',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.css',
+				array(),
+				$asset['version'],
+			);
+		} else {
+			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
+
+			if ( ! file_exists( $asset_file ) ) {
+				return;
+			}
+		
+			$asset = include $asset_file;
+		
+			wp_enqueue_script(
+				'woocommerce-square-onboarding-js',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
+
+			wp_enqueue_style(
+				'woocommerce-square-onboarding-css',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
+				array(),
+				$asset['version'],
+			);
 		}
+
+		wp_enqueue_style( 'wp-components' );
 	}
 
 
