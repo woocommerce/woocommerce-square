@@ -10,7 +10,7 @@ export const getPaymentGatewaySettingsData = async () => {
 		transaction_type: settings.transaction_type,
 		charge_virtual_orders: settings.charge_virtual_orders,
 		enable_paid_capture: settings.enable_paid_capture,
-		card_types: settings.card_types,
+		card_types: settings.card_types || [],
 		tokenization: settings.tokenization,
 	};
 
@@ -20,9 +20,13 @@ export const getPaymentGatewaySettingsData = async () => {
 		digital_wallets_apple_pay_button_color: settings.digital_wallets_apple_pay_button_color,
 		digital_wallets_google_pay_button_color: settings.digital_wallets_google_pay_button_color,
 		digital_wallets_hide_button_options: settings.digital_wallets_hide_button_options || [],
-	}
+	};
 
-	return { creditCard, digitalWallet };
+	const giftCard = {
+		enable_gift_cards: settings.enable_gift_cards
+	};
+
+	return { creditCard, digitalWallet, giftCard };
 };
 
 export const savePaymentGatewaySettings = async ( data ) => {
