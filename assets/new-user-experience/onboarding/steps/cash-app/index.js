@@ -28,45 +28,18 @@ export const CashAppSetup = () => {
 		enabled,
 		title,
 		description,
-		charge_virtual_orders,
-		enable_paid_capture,
 		transaction_type,
-		tokenization,
-		card_types,
+		button_theme,
+		button_shape,
+        debug_mode,
 	} = getCashAppData();
-
-	const authorizationFields = 'authorization' === transaction_type && (
-		<>
-			<InputWrapper
-				description={ __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ) }
-				indent={ 2 }
-			>
-				<SquareCheckboxControl
-					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
-					checked={ 'yes' === charge_virtual_orders }
-					onChange={ ( charge_virtual_orders ) => setCashAppData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
-				/>
-			</InputWrapper>
-
-			<InputWrapper
-				description={ __( 'Automatically capture orders when they are changed to Processing or Completed.', 'woocommerce-square' ) }
-				indent={ 2 }
-			>
-				<SquareCheckboxControl
-					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
-					checked={ 'yes' === enable_paid_capture }
-					onChange={ ( enable_paid_capture ) => setCashAppData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }
-				/>
-			</InputWrapper>
-		</>
-	);
 
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Manage Credit Card Payment Settings', 'woocommerce-square' ) } />
+				<SectionTitle title={ __( 'Manage Cash App Pay Settings', 'woocommerce-square' ) } />
 				<SectionDescription>
-					{ __( 'Here you can fine-tune the details of how credit card payments are processed, ensuring a secure and smooth transaction for every customer.', 'woocommerce-square' ) }
+					{ __( 'Cash App Pay is an innovative payment solution that offers your customers a quick and secure way to check out. With just a few settings, you can tailor how Cash App Pay appears and operates on your site.', 'woocommerce-square' ) }
 				</SectionDescription>
 
 				<InputWrapper
@@ -110,54 +83,68 @@ export const CashAppSetup = () => {
 					/>
 				</InputWrapper>
 
-				{ authorizationFields }
-
-				<InputWrapper label={ __( 'Accepted Card Logos', 'woocommerce-square' ) } >
-					<MultiSelectControl
-						label=""
-						__experimentalShowHowTo={ false }
-						value={ card_types }
-						onChange={ ( card_types ) => setCashAppData( { card_types } ) }
+				<InputWrapper
+					label={ __( 'Cash App Pay Button Theme', 'woocommerce-square' ) }
+					>
+					<SelectControl
+						value={ button_theme }
+						onChange={ ( button_theme ) => setCashAppData( { button_theme } ) }
 						options={ [
 							{
-								label: __( 'Visa', 'woocommerce-square' ),
-								value: 'VISA',
+								label: __( 'Dark', 'woocommerce-square' ),
+								value: 'dark'
 							},
 							{
-								label: __( 'MasterCard', 'woocommerce-square' ),
-								value: 'MC',
-							},
-							{
-								label: __( 'American Express', 'woocommerce-square' ),
-								value: 'AMEX',
-							},
-							{
-								label: __( 'Discover', 'woocommerce-square' ),
-								value: 'DISC',
-							},
-							{
-								label: __( 'Diners', 'woocommerce-square' ),
-								value: 'DINERS',
-							},
-							{
-								label: __( 'JCB', 'woocommerce-square' ),
-								value: 'JCB',
-							},
-							{
-								label: __( 'UnionPay', 'woocommerce-square' ),
-								value: 'UNIONPAY',
-							},
+								label: __( 'Light', 'woocommerce-square' ),
+								value: 'light'
+							}
 						] }
 					/>
 				</InputWrapper>
 
 				<InputWrapper
-					label={ __( 'Customer Profiles', 'woocommerce-square' ) }
+					label={ __( 'Cash App Pay Button Shape', 'woocommerce-square' ) }
 					>
-					<SquareCheckboxControl
-						label={ __( 'Check to enable tokenization and allow customers to securely save their payment details for future checkout.', 'woocommerce-square' ) }
-						checked={ 'yes' === tokenization }
-						onChange={ ( tokenization ) => setCashAppData( { tokenization: tokenization ? 'yes' : 'no' } ) }
+					<SelectControl
+						value={ button_shape }
+						onChange={ ( button_shape ) => setCashAppData( { button_shape } ) }
+						options={ [
+							{
+								label: __( 'Semiround', 'woocommerce-square' ),
+								value: 'semiround'
+							},
+							{
+								label: __( 'Round', 'woocommerce-square' ),
+								value: 'round'
+							}
+						] }
+					/>
+				</InputWrapper>
+
+				<InputWrapper
+					label={ __( 'Debug Mode', 'woocommerce-square' ) }
+					>
+					<SelectControl
+						value={ debug_mode }
+						onChange={ ( debug_mode ) => setCashAppData( { debug_mode } ) }
+						options={ [
+							{
+								label: __( 'Off', 'woocommerce-square' ),
+								value: 'off'
+							},
+							{
+								label: __( 'Show on Checkout Page', 'woocommerce-square' ),
+								value: 'Checkout'
+							},
+							{
+								label: __( 'Save to Log', 'woocommerce-square' ),
+								value: 'log'
+							},
+							{
+								label: __( 'Both', 'woocommerce-square' ),
+								value: 'both'
+							}
+						] }
 					/>
 				</InputWrapper>
 			</Section>

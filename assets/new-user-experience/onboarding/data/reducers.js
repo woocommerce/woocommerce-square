@@ -75,6 +75,7 @@ const CASH_APP_DEFAULT_STATE = {
 	transaction_type: 'charge',
 	button_theme: 'dark',
 	button_shape: 'semiround',
+	debug_mode: 'semiround',
 };
 
 const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
