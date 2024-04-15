@@ -56,6 +56,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'hide_missing_products',
 			'sync_interval',
 			'is_connected',
+			'locations',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -168,18 +169,17 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
-
+		$settings             = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 		$current_account_keys = array_intersect_key( $settings, array_flip( $this->allowed_params ) );
+
 		foreach ( $current_account_keys as $key => $value ) {
 			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
 
 			$settings[ $key ] = $new_value;
 		}
 
+		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
-		// update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
-
-		return new WP_REST_Response( null, 200 );
+		wp_send_json_success();
 	}
 }

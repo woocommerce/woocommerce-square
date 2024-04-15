@@ -126,6 +126,8 @@ class Settings extends \WC_Settings_API {
 		);
 
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
+
+		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations' ) );
 	}
 
 	/**
@@ -829,7 +831,13 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_locations() {
 
+		$is_ajax = wp_doing_ajax();
+
 		if ( is_array( $this->locations ) ) {
+
+			if ( $is_ajax ) {
+				wp_send_json_success( $this->locations );
+			}
 
 			return $this->locations;
 		}
@@ -870,9 +878,16 @@ class Settings extends \WC_Settings_API {
 					$this->clear_location_id();
 				}
 			} catch ( \Exception $exception ) {
+				if ( $is_ajax ) {
+					wp_send_json_error( __( 'Could not retrieve business locations.', 'woocommerce-square' ) );
+				}
 
 				$this->get_plugin()->log( 'Could not retrieve business locations.' );
 			}
+		}
+
+		if ( $is_ajax ) {
+			wp_send_json_success( $this->locations );
 		}
 
 		return $this->locations;

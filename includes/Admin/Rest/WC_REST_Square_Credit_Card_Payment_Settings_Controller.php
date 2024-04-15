@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @since 5.6.0
  */
-class WC_REST_Square_Payment_Settings_Controller extends WC_Square_REST_Base_Controller {
+class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_REST_Base_Controller {
 
 	/**
 	 * Square settings option name.

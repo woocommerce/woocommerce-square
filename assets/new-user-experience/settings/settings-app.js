@@ -24,6 +24,7 @@ import {
 } from '../components';
 
 import { useSettingsForm } from './hooks';
+import { saveSquareSettings, connectToSquare, filterBusinessLocations } from '../utils';
 
 export const SettingsApp = () => {
 	const [ settingsData, setSettingsData ] = useState( null );
@@ -69,12 +70,6 @@ export const SettingsApp = () => {
 		locations = [],
 	} = formState;
 
-	let location_options = [ { label: __( 'Please choose a location', 'woocommerce-square' ), value: '' } ];
-
-	location_options.push(
-		...locations.filter( ( location ) => 'ACTIVE' === location.status ).map( ( location ) => ( { value: location.id, label: location.name } ) )
-	);
-
 	const sync_interval_options = [
 		{
 			label: __( '15 minutes', 'woocommerce-square' ),
@@ -117,6 +112,26 @@ export const SettingsApp = () => {
 			value: '24',
 		},
 	];
+
+	const initiateConnection = async () => {
+		const settings = await saveSquareSettings( formState );
+
+		if ( ! settings?.success ) {
+			return;
+		}
+
+		const businessLocations = await connectToSquare();
+
+		if ( businessLocations.success ) {
+			const filteredBusinessLocations = filterBusinessLocations( businessLocations.data );
+			setFieldValue( { locations: filteredBusinessLocations } );
+			setFieldValue( { is_connected: true } );
+		}
+	};
+
+	if ( ! settingsData ) {
+		return null;
+	}
 
 	return (
 		<div style={ settingsWrapperStyle }>
@@ -169,7 +184,8 @@ export const SettingsApp = () => {
 				>
 					<Button
 						variant='primary'
-						href={ is_connected ? disconnection_url : '#' }
+						{ ...( is_connected && { href: disconnection_url } ) }
+						onClick={ () => initiateConnection() }
 					>
 						{
 							is_connected
@@ -198,7 +214,10 @@ export const SettingsApp = () => {
 					<SelectControl
 						value={ sandbox_location_id }
 						onChange={ ( sandbox_location_id ) => setFieldValue( { sandbox_location_id } ) }
-						options={ location_options }
+						options={ [
+							{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
+							...locations
+						] }
 					/>
 				</InputWrapper>
 			</Section> ) }

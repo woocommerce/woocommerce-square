@@ -34,3 +34,36 @@ export const savePaymentGatewaySettings = async ( data ) => {
 
 	return response;
 };
+
+export const saveSquareSettings = async ( data ) => {
+	const response = await apiFetch( {
+		path: '/wc/v3/wc_square/settings',
+		method: 'POST',
+		data,
+	} );
+
+	return response;
+};
+
+export const connectToSquare = async () => {
+	try {
+		const response = await fetch( `${ ajaxurl }?action=wc_square_settings_get_locations` );
+
+		if ( ! response.ok ) {
+			throw new Error( 'Failed to fetch business locations.' );
+		}
+
+		const data = await response.json();
+		return data;
+	} catch ( e ) {
+		console.error( 'Error fetching business locations:', error );
+	}
+
+	return {};
+};
+
+export const filterBusinessLocations = ( locations = [] ) => {
+	return locations
+		.filter( ( location ) => 'ACTIVE' === location.status )
+		.map( location => ( { label: location.name, value: location.id } ) );
+};

@@ -143,7 +143,7 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'woocommerce_settings_square', array( $this, 'render_square_settings_container' ) );
 		add_action( 'woocommerce_settings_checkout', array( $this, 'render_payments_settings_container' ) );
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
-		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Payment_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller();
 	}
 
 	public function onboarding_wizard() {
