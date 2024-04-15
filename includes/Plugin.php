@@ -848,9 +848,9 @@ class Plugin extends Payment_Gateway_Plugin {
 	 *
 	 * @return string
 	 */
-	public function get_square_wizard_url( $step = '' ) {
+	public function get_square_onboarding_url( $step = '' ) {
 		$params = array(
-			'page' => 'square-wizard',
+			'page' => 'woocommerce-square-onboarding',
 		);
 
 		// Add 'step' if $step is not empty.

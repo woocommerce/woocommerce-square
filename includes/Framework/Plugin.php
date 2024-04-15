@@ -363,8 +363,8 @@ abstract class Plugin {
 		$custom_actions = array();
 
 		// settings url(s)
-		if ( $this->get_square_wizard_link() ) {
-			$custom_actions['setup-wizard'] = $this->get_square_wizard_link();
+		if ( $this->get_square_onboarding_link() ) {
+			$custom_actions['setup-wizard'] = $this->get_square_onboarding_link();
 		}
 
 		// documentation url if any
@@ -674,12 +674,12 @@ abstract class Plugin {
 	 *
 	 * @return string plugin configure link
 	 */
-	public function get_square_wizard_link( $step = '' ) {
+	public function get_square_onboarding_link( $step = '' ) {
 
-		$square_wizard_url = $this->get_square_wizard_url( $step );
+		$square_onboarding_url = $this->get_square_onboarding_url( $step );
 
-		if ( $square_wizard_url ) {
-			return sprintf( '<a href="%s">%s</a>', esc_url( $square_wizard_url ), esc_html__( 'Setup Wizard', 'woocommerce-square' ) );
+		if ( $square_onboarding_url ) {
+			return sprintf( '<a href="%s">%s</a>', esc_url( $square_onboarding_url ), esc_html__( 'Setup Wizard', 'woocommerce-square' ) );
 		}
 
 		// no settings
@@ -695,7 +695,7 @@ abstract class Plugin {
 	 * @param string $step optional step identifier.
 	 * @return string plugin settings URL
 	 */
-	public function get_square_wizard_url( $step = '' ) {
+	public function get_square_onboarding_url( $step = '' ) {
 
 		// stub method
 		return '';
