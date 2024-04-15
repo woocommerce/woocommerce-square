@@ -58,6 +58,8 @@ export const useCashAppData = () => {
 				description: settings.description,
 				transaction_type: settings.transaction_type,
 				button_theme: settings.button_theme,
+				charge_virtual_orders: settings.charge_virtual_orders,
+				enable_paid_capture: settings.enable_paid_capture,
 				button_shape: settings.button_shape,
 				debug_mode: settings.debug_mode,
 			} );
