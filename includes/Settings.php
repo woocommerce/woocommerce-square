@@ -183,7 +183,7 @@ class Settings extends \WC_Settings_API {
 			// successful connection, for that we need this to be false.
 			update_option( 'wc_square_onboarding_completed', false );
 		
-		} else if ( 'payents' === $step ) {
+		} else if ( 'payments' === $step ) {
 			// Mark the Onboarding as completed.
 			update_option( 'wc_square_onboarding_completed', true );
 		}
