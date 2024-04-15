@@ -3,7 +3,8 @@ import apiFetch from '@wordpress/api-fetch';
 import {
 	CREDIT_CARD_DEFAULT_STATE,
 	DIGITAL_WALLETS_DEFAULT_STATE,
-	GIFT_CARDS_DEFAULT_STATE
+	GIFT_CARDS_DEFAULT_STATE,
+	CASH_APP_DEFAULT_STATE
 } from '../new-user-experience/onboarding/data/reducers';
 
 export const getPaymentGatewaySettingsData = async () => {
@@ -33,6 +34,24 @@ export const getPaymentGatewaySettingsData = async () => {
 	};
 
 	return { creditCard, digitalWallet, giftCard };
+};
+
+export const getCashAppSettingsData = async () => {
+	const settings = await apiFetch( { path: '/wc/v3/wc_square/cash_app_settings' } );
+
+	const cashApp = {
+		enabled: settings.enabled || CASH_APP_DEFAULT_STATE.enabled,
+		title: settings.title || CASH_APP_DEFAULT_STATE.title,
+		description: settings.description || CASH_APP_DEFAULT_STATE.description,
+		transaction_type: settings.transaction_type || CASH_APP_DEFAULT_STATE.transaction_type,
+		charge_virtual_orders: settings.charge_virtual_orders || CASH_APP_DEFAULT_STATE.charge_virtual_orders,
+		enable_paid_capture: settings.enable_paid_capture || CASH_APP_DEFAULT_STATE.enable_paid_capture,
+		button_theme: settings.button_theme || CASH_APP_DEFAULT_STATE.button_theme,
+		button_shape: settings.button_shape || CASH_APP_DEFAULT_STATE.button_shape,
+		debug_mode: settings.debug_mode || CASH_APP_DEFAULT_STATE.debug_mode,
+	};
+
+	return { cashApp };
 };
 
 export const savePaymentGatewaySettings = async ( data ) => {

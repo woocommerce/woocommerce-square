@@ -9,7 +9,7 @@ import apiFetch from '@wordpress/api-fetch';
  * Internal dependencies.
  */
 import store from '../data/store';
-import { getPaymentGatewaySettingsData } from '../../utils';
+import { getPaymentGatewaySettingsData, getCashAppSettingsData } from '../../utils';
 
 /**
  * Getters / Setters for payment gateway data store.
@@ -48,30 +48,27 @@ export const useCashAppData = () => {
 	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
 
 	/**
-	 * Initializes payment gateway data store.
+	 * Initializes cash app gateway data store.
 	 */
 	useEffect( () => {
-		apiFetch( { path: '/wc/v3/wc_square/cash_app_settings' } ).then( ( settings ) => {
-			setCashAppData( {
-				enabled: settings.enabled,
-				title: settings.title,
-				description: settings.description,
-				transaction_type: settings.transaction_type,
-				button_theme: settings.button_theme,
-				charge_virtual_orders: settings.charge_virtual_orders,
-				enable_paid_capture: settings.enable_paid_capture,
-				button_shape: settings.button_shape,
-				debug_mode: settings.debug_mode,
-			} );
+		( async function () {
+			const { cashApp } = await getCashAppSettingsData();
+
+			setCashAppData( cashApp );
 			setSettingsLoaded( true );
-		} );
+		} )();
 	}, [] );
 
-	const cashApData = {
+	const cashAppData = {
 		...getCashAppData(),
 	};
 
-	return { setCashAppData, cashApData, settingsLoaded };
+	return {
+		getCashAppData,
+		setCashAppData,
+		cashAppData,
+		settingsLoaded
+	};
 };
 
 export const usePaymentGatewayData = () => {
