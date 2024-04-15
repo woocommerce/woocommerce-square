@@ -29,6 +29,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Plugin;
 use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Square_Credit_Card_Payment_Token;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\Cash_App_Pay_Gateway;
+use WooCommerce\Square\Gateway\Gift_Card;
 use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
@@ -53,6 +54,9 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	/** string gateway ID */
 	const GATEWAY_ID = 'square_credit_card';
+
+	/** string Gift Cards gateway ID */
+	const GIFT_CARD_PAY_GATEWAY_ID = 'gift_cards_pay';
 
 	/** string Cash App Pay gateway ID */
 	const CASH_APP_PAY_GATEWAY_ID = 'square_cash_app_pay';
@@ -103,8 +107,9 @@ class Plugin extends Payment_Gateway_Plugin {
 			array(
 				'text_domain'  => 'woocommerce-square',
 				'gateways'     => array(
-					self::GATEWAY_ID              => Gateway::class,
-					self::CASH_APP_PAY_GATEWAY_ID => Cash_App_Pay_Gateway::class,
+					self::GATEWAY_ID               => Gateway::class,
+					self::CASH_APP_PAY_GATEWAY_ID  => Cash_App_Pay_Gateway::class,
+					self::GIFT_CARD_PAY_GATEWAY_ID => Gift_Card::class,
 				),
 				'require_ssl'  => true,
 				'supports'     => array(
@@ -923,6 +928,30 @@ class Plugin extends Payment_Gateway_Plugin {
 			'page' => 'wc-settings',
 			'tab'  => self::PLUGIN_ID,
 		);
+
+		// All usage of this return value has been escaped late.
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		return add_query_arg( $params, admin_url( 'admin.php' ) );
+	}
+	
+	/**
+	 * Gets the Setup Wizard URL.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step Step to go to.
+	 *
+	 * @return string
+	 */
+	public function get_square_wizard_url( $step = '' ) {
+		$params = array(
+			'page' => 'square-wizard',
+		);
+
+		// Add 'step' if $step is not empty.
+		if ( ! empty( $step ) ) {
+			$params['step'] = $step;
+		}
 
 		// All usage of this return value has been escaped late.
 		// nosemgrep audit.php.wp.security.xss.query-arg

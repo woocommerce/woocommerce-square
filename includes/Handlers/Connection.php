@@ -153,7 +153,9 @@ class Connection {
 			update_option( 'wc_square_auth_key_updated', true );
 		}
 
-		wp_safe_redirect( $this->get_plugin()->get_settings_url() );
+		$wizard_completed = get_option( 'wc_square_wizard_completed' );
+
+		wp_safe_redirect( $wizard_completed ? $this->get_plugin()->get_settings_url() : admin_url( 'admin.php?page=square-wizard&step=payments' ) );
 		exit;
 	}
 

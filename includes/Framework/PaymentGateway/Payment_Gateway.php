@@ -77,6 +77,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Credit card payment type */
 	const PAYMENT_TYPE_CASH_APP_PAY = 'cash_app_pay';
 
+	/** Credit card payment type */
+	const PAYMENT_TYPE_GIFT_CARD_PAY = 'enable_gift_cards_pay';
+
 	/** Products feature */
 	const FEATURE_PRODUCTS = 'products';
 
@@ -241,9 +244,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 	/** @var array configuration option: list of buttons that are hidden on the front end. */
 	protected $digital_wallets_hide_button_options;
-
-	/** @var string gift cards section title field. */
-	protected $gift_card_settings;
 
 	/** @var string configuration option: whether gift cards is enabled. */
 	protected $enable_gift_cards;

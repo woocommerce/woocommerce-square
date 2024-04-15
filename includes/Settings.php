@@ -128,6 +128,69 @@ class Settings extends \WC_Settings_API {
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
 
 		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations' ) );
+
+		add_action( 'admin_menu', array( $this, 'register_pages' ) );
+
+		add_filter( 'woocommerce_screen_ids', array( $this, 'woocommerce_screen_ids' ) );
+
+		add_action( 'admin_init', array( $this, 'square_wizard_redirect' ) );
+	}
+
+	/**
+	 * Add the square wizard screen to the WooCommerce screen ids.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $ids screen ids.
+	 *
+	 * @return array updated screen ids.
+	 */
+	public function woocommerce_screen_ids( $ids ) {
+		return array_merge(
+			$ids,
+			array(
+				'woocommerce_page_square-wizard',
+			)
+		);
+	}
+
+	/**
+	 * Redirect users to the templates screen on plugin activation.
+	 *
+	 * @since x.x.x
+	 */
+	public function square_wizard_redirect() {
+		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
+			add_option( 'wc_square_show_wizard_on_activation', true );
+			wp_safe_redirect( admin_url( 'admin.php?page=square-wizard' ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Registers square page(s).
+	 *
+	 * @since x.x.x
+	 */
+	public function register_pages() {
+		$setup_wizard  = add_submenu_page( 'woocommerce', __( 'Setup Wizard', 'woocommerce-square' ), __( 'Square Wizard', 'woocommerce-square' ), 'manage_woocommerce', 'square-wizard', array( $this, 'setup_wizard' ) );
+
+		add_action( 'admin_print_scripts-' . $setup_wizard, array( $this, 'setup_wizard_scripts' ) );
+	}
+
+	/**
+	 * Output the Setup Wizard page(s).
+	 */
+	public function setup_wizard() {
+		$step = isset( $_GET['step'] ) ? htmlentities( $_GET['step'] ) : 'start';
+		include "Admin/Views/html-product-$step-page.php";
+	}
+
+	/**
+	 * Enqueue scripts for the setup wizard.
+	 */
+	public function setup_wizard_scripts() {
+		wp_enqueue_script( 'wc-square-wizard' );
 	}
 
 	/**
