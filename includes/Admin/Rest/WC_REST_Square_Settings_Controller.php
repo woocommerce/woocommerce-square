@@ -173,9 +173,12 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$current_account_keys = array_intersect_key( $settings, array_flip( $this->allowed_params ) );
 
 		foreach ( $current_account_keys as $key => $value ) {
-			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
-
+			$new_value        = wc_clean( wp_unslash( $request->get_param( $key ) ) );
 			$settings[ $key ] = $new_value;
+		}
+
+		if ( isset( $settings['sandbox_token'] ) && ! empty( $settings['sandbox_token'] ) ) {
+			wc_square()->get_settings_handler()->update_access_token( $settings['sandbox_token'] );
 		}
 
 		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );

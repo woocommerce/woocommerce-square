@@ -4,6 +4,8 @@
 import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __, sprintf } from '@wordpress/i18n';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 import parse from 'html-react-parser';
 import {
 	TextControl,
@@ -29,6 +31,8 @@ import { saveSquareSettings, connectToSquare, filterBusinessLocations } from '..
 export const SettingsApp = () => {
 	const [ settingsData, setSettingsData ] = useState( null );
 	const [ formState, setFieldValue ] = useSettingsForm( settingsData );
+	const [ saveInProgress, setSaveInProgress ] = useState( null );
+	const { createSuccessNotice } = useDispatch( 'core/notices' );
 
 	const settingsWrapperStyle = {
 		width: '100%',
@@ -42,9 +46,23 @@ export const SettingsApp = () => {
 	 */
 	useEffect( () => {
 		apiFetch( { path: '/wc/v3/wc_square/settings' } ).then( ( settings ) => {
-			setSettingsData( settings );
+			setSettingsData( {
+				...settings,
+				locations: filterBusinessLocations( settings.locations ),
+			} );
 		} );
 	}, [] );
+
+	useEffect( () => {
+		if ( false === saveInProgress ) {
+			apiFetch( { path: '/wc/v3/wc_square/settings' } ).then( ( settings ) => {
+				setSettingsData( {
+					...settings,
+					locations: filterBusinessLocations( settings.locations ),
+				} );
+			} );
+		}
+	}, [ saveInProgress ] );
 
 	useEffect( () => {
 		if ( null === settingsData ) {
@@ -114,11 +132,17 @@ export const SettingsApp = () => {
 	];
 
 	const initiateConnection = async () => {
+		setSaveInProgress( true );
 		const settings = await saveSquareSettings( formState );
+		setSaveInProgress( false );
 
 		if ( ! settings?.success ) {
 			return;
 		}
+
+		createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
+			type: 'snackbar',
+		} );
 
 		const businessLocations = await connectToSquare();
 
@@ -127,6 +151,7 @@ export const SettingsApp = () => {
 			setFieldValue( { locations: filteredBusinessLocations } );
 			setFieldValue( { is_connected: true } );
 		}
+		setSaveInProgress( null );
 	};
 
 	if ( ! settingsData ) {
@@ -186,6 +211,7 @@ export const SettingsApp = () => {
 						variant='primary'
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
+						isBusy={ saveInProgress }
 					>
 						{
 							is_connected
@@ -329,9 +355,9 @@ export const SettingsApp = () => {
 				}
 
 				{
-					'woocommerce' === system_of_record || 'square' === system_of_record && (
+					( 'woocommerce' === system_of_record || 'square' === system_of_record ) && (
 						<InputWrapper
-							label={ __( 'Sync interval.', 'woocommerce-square' ) }
+							label={ __( 'Sync interval', 'woocommerce-square' ) }
 							description={ __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ) }
 							indent={ 2 }
 						>
