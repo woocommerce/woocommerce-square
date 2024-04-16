@@ -45,15 +45,20 @@ export const useSquareSettings = ( fromServer = false ) => {
 		setSquareSettingData( { locations: filterBusinessLocations( locations ) } );
 	};
 
-	const saveSquareSettings = async ( data ) => {
+	const settings = getSquareSettingData();
+	const isSquareSettingsSaving = getSquareSettingsSavingProcess();
+
+	const saveSquareSettings = async () => {
 		setSquareSettingsSavingProcess( true );
 
 		const response = await apiFetch( {
 			path: '/wc/v3/wc_square/settings',
 			method: 'POST',
-			data,
+			data: settings,
 		} );
 
+		setSquareSettingsSavingProcess( null ); // marks that the saving is over.
+		await new Promise( ( resolve ) => setTimeout( () => resolve(), 100 ) );
 		setSquareSettingsSavingProcess( false );
 	
 		return response;
@@ -72,9 +77,6 @@ export const useSquareSettings = ( fromServer = false ) => {
 			setSquareSettingsLoaded( true );
 		} )()
 	}, [ fromServer ] );
-
-	const settings = getSquareSettingData();
-	const isSquareSettingsSaving = getSquareSettingsSavingProcess();
 
 	return {
 		settings,

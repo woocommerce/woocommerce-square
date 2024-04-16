@@ -27,7 +27,8 @@ export const OnboardingApp = ( { step } ) => {
 			{ step === 'digital-wallets' && <DigitalWalletsSetup /> }
 			{ step === 'gift-card' && <GiftCardSetup /> }
 			{ step === 'cash-app' && <CashAppSetup /> }
-			{ step === 'payment-methods' && <PaymentMethods /> }
+			{/* { step === 'payment-methods' && <PaymentMethods /> } */}
+			{ step === 'payment-methods' && <BusinessLocation /> }
 		</>
 	)
 };

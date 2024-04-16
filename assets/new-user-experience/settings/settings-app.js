@@ -21,6 +21,7 @@ import {
 	SectionDescription,
 	InputWrapper,
 	SquareCheckboxControl,
+	SquareSettingsSaveButton,
 } from '../components';
 
 import { useSquareSettings } from './hooks';
@@ -119,9 +120,9 @@ export const SettingsApp = () => {
 	];
 
 	const initiateConnection = async () => {
-		const settings = await saveSquareSettings( settings );
+		const response = await saveSquareSettings();
 
-		if ( ! settings?.success ) {
+		if ( ! response?.success ) {
 			return;
 		}
 
@@ -381,18 +382,7 @@ export const SettingsApp = () => {
 				</InputWrapper>
 			</Section>
 
-			<Button
-				variant='primary'
-				onClick={ () => {
-					saveSquareSettings( settings )
-					createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
-						type: 'snackbar',
-					} );
-				} }
-				isBusy={ isSquareSettingsSaving }
-			>
-				{ __( 'Save Changes', 'woocommerce-square' ) }
-			</Button>
+			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
 		</div>
 	)
 };
