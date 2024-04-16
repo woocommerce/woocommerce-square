@@ -10,4 +10,6 @@ const getGiftCardData = ( state, key ) => key ? state.giftCard[ key ] || state.g
 // Selector for credit card data.
 const getCashAppData = ( state, key ) => key ? state.cashApp[ key ] || state.cashApp : state.cashApp;
 
-export default { getCreditCardData, getDigitalWalletData, getGiftCardData, getCashAppData };
+const getSquareSettings = ( state, key ) => key ? state.squareSettings[ key ] || state.squareSettings : state.squareSettings;
+
+export default { getCreditCardData, getDigitalWalletData, getGiftCardData, getCashAppData, getSquareSettings };

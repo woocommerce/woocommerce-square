@@ -4,7 +4,7 @@ import {
 	CREDIT_CARD_DEFAULT_STATE,
 	DIGITAL_WALLETS_DEFAULT_STATE,
 	GIFT_CARDS_DEFAULT_STATE,
-	CASH_APP_DEFAULT_STATE
+	CASH_APP_DEFAULT_STATE,
 } from '../new-user-experience/onboarding/data/reducers';
 
 export const getPaymentGatewaySettingsData = async () => {
@@ -105,4 +105,10 @@ export const filterBusinessLocations = ( locations = [] ) => {
 	return locations
 		.filter( ( location ) => 'ACTIVE' === location.status )
 		.map( location => ( { label: location.name, value: location.id } ) );
+};
+
+export const getSquareSettings = async () => {
+	const settings = await apiFetch( { path: '/wc/v3/wc_square/settings' } );
+
+	return settings;
 };

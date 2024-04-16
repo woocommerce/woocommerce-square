@@ -1,4 +1,8 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
+import { useSelect, useDispatch } from '@wordpress/data';
+
+import { getSquareSettings, filterBusinessLocations } from '../../utils';
+import store from '../../onboarding/data/store';
 
 export const useSettingsForm = ( initialState = {} ) => {
 	const defaultState = {
@@ -27,4 +31,38 @@ export const useSettingsForm = ( initialState = {} ) => {
 	};
 
 	return [ formState, setFieldValue ];
+};
+
+export const useSquareSettings = ( fromServer = false ) => {
+	const dispatch = useDispatch();
+	const [ squareSettingsLoaded, setSquareSettingsLoaded ] = useState( false );
+	const getSquareSettingData = ( key ) => useSelect( ( select ) => select( store ).getSquareSettings( key ) );
+	const setSquareSettingData = ( data ) => dispatch( store ).setSquareSettings( data );
+	const setBusinessLocation = ( locations = [] ) => {
+		setSquareSettingData( { locations: filterBusinessLocations( locations ) } );
+	};
+
+	useEffect( () => {
+		if ( ! fromServer ) {
+			setSquareSettingsLoaded( true );
+			return;
+		}
+
+		( async () => {
+			const settings = await getSquareSettings();
+			setSquareSettingData( settings );
+			setBusinessLocation( settings.locations );
+			setSquareSettingsLoaded( true );
+		} )()
+	}, [ fromServer ] );
+
+	const settings = getSquareSettingData();
+
+	return {
+		settings,
+		squareSettingsLoaded,
+		getSquareSettingData,
+		setSquareSettingData,
+		setBusinessLocation, // Extra utility to normalise locations data.
+	}
 };

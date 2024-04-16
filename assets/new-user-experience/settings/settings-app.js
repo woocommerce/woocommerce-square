@@ -25,12 +25,17 @@ import {
 	SquareCheckboxControl,
 } from '../components';
 
-import { useSettingsForm } from './hooks';
-import { saveSquareSettings, connectToSquare, filterBusinessLocations } from '../utils';
+import { useSquareSettings } from './hooks';
+import { saveSquareSettings, connectToSquare, filterBusinessLocations, getSquareSettings } from '../utils';
 
 export const SettingsApp = () => {
-	const [ settingsData, setSettingsData ] = useState( null );
-	const [ formState, setFieldValue ] = useSettingsForm( settingsData );
+	const {
+		settings,
+		squareSettingsLoaded,
+		getSquareSettingData,
+		setSquareSettingData,
+		setBusinessLocation
+	} = useSquareSettings( true );
 	const [ saveInProgress, setSaveInProgress ] = useState( null );
 	const { createSuccessNotice } = useDispatch( 'core/notices' );
 
@@ -41,36 +46,14 @@ export const SettingsApp = () => {
 		marginLeft: '50px',
 	};
 
-	/**
-	 * Initializes square settings state.
-	 */
-	useEffect( () => {
-		apiFetch( { path: '/wc/v3/wc_square/settings' } ).then( ( settings ) => {
-			setSettingsData( {
-				...settings,
-				locations: filterBusinessLocations( settings.locations ),
-			} );
-		} );
-	}, [] );
-
 	useEffect( () => {
 		if ( false === saveInProgress ) {
-			apiFetch( { path: '/wc/v3/wc_square/settings' } ).then( ( settings ) => {
-				setSettingsData( {
-					...settings,
-					locations: filterBusinessLocations( settings.locations ),
-				} );
-			} );
+			( async () => {
+				const settings = await getSquareSettings();
+				setBusinessLocation( settings.locations )
+			} )()
 		}
 	}, [ saveInProgress ] );
-
-	useEffect( () => {
-		if ( null === settingsData ) {
-			return;
-		}
-
-		setFieldValue( settingsData );
-	}, [ settingsData ] );
 
 	const {
 		enable_sandbox = 'yes',
@@ -86,7 +69,7 @@ export const SettingsApp = () => {
 		is_connected = false,
 		disconnection_url = '',
 		locations = [],
-	} = formState;
+	} = settings;
 
 	const sync_interval_options = [
 		{
@@ -133,7 +116,7 @@ export const SettingsApp = () => {
 
 	const initiateConnection = async () => {
 		setSaveInProgress( true );
-		const settings = await saveSquareSettings( formState );
+		const settings = await saveSquareSettings( settings );
 		setSaveInProgress( false );
 
 		if ( ! settings?.success ) {
@@ -148,13 +131,13 @@ export const SettingsApp = () => {
 
 		if ( businessLocations.success ) {
 			const filteredBusinessLocations = filterBusinessLocations( businessLocations.data );
-			setFieldValue( { locations: filteredBusinessLocations } );
-			setFieldValue( { is_connected: true } );
+			setSquareSettingData( { locations: filteredBusinessLocations } );
+			setSquareSettingData( { is_connected: true } );
 		}
 		setSaveInProgress( null );
 	};
 
-	if ( ! settingsData ) {
+	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
 
@@ -173,7 +156,7 @@ export const SettingsApp = () => {
 				>
 					<ToggleControl
 						checked={ 'yes' === enable_sandbox }
-						onChange={ ( enable_sandbox ) => setFieldValue( { enable_sandbox: enable_sandbox ? 'yes' : 'no' } ) }
+						onChange={ ( enable_sandbox ) => setSquareSettingData( { enable_sandbox: enable_sandbox ? 'yes' : 'no' } ) }
 					/>
 				</InputWrapper>
 
@@ -186,7 +169,7 @@ export const SettingsApp = () => {
 						>
 							<TextControl
 								value={ sandbox_application_id }
-								onChange={ ( sandbox_application_id ) => setFieldValue( { sandbox_application_id } ) }
+								onChange={ ( sandbox_application_id ) => setSquareSettingData( { sandbox_application_id } ) }
 							/>
 						</InputWrapper>
 
@@ -197,7 +180,7 @@ export const SettingsApp = () => {
 						>
 							<TextControl
 								value={ sandbox_token }
-								onChange={ ( sandbox_token ) => setFieldValue( { sandbox_token } ) }
+								onChange={ ( sandbox_token ) => setSquareSettingData( { sandbox_token } ) }
 							/>
 						</InputWrapper>
 					</>
@@ -240,7 +223,7 @@ export const SettingsApp = () => {
 				>
 					<SelectControl
 						value={ sandbox_location_id }
-						onChange={ ( sandbox_location_id ) => setFieldValue( { sandbox_location_id } ) }
+						onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id } ) }
 						options={ [
 							{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
 							...locations
@@ -271,7 +254,7 @@ export const SettingsApp = () => {
 				>
 					<SelectControl
 						value={ system_of_record }
-						onChange={ ( system_of_record ) => setFieldValue( { system_of_record } ) }
+						onChange={ ( system_of_record ) => setSquareSettingData( { system_of_record } ) }
 						options={ [
 							{
 								label: __( 'Disabled', 'woocommerce-square' ),
@@ -306,7 +289,7 @@ export const SettingsApp = () => {
 						>
 							<SquareCheckboxControl
 								checked={ 'yes' === enable_inventory_sync }
-								onChange={ ( enable_inventory_sync ) => setFieldValue( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
+								onChange={ ( enable_inventory_sync ) => setSquareSettingData( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
 								label={ __( 'Enable to push inventory changes to Square', 'woocommerce-square' ) }
 							/>
 						</InputWrapper>
@@ -323,7 +306,7 @@ export const SettingsApp = () => {
 							>
 								<SquareCheckboxControl
 									checked={ 'yes' === enable_inventory_sync }
-									onChange={ ( enable_inventory_sync ) => setFieldValue( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
+									onChange={ ( enable_inventory_sync ) => setSquareSettingData( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
 									label={ __( 'Enable to fetch inventory changes from Square', 'woocommerce-square' ) }
 								/>
 							</InputWrapper>
@@ -335,7 +318,7 @@ export const SettingsApp = () => {
 							>
 								<SquareCheckboxControl
 									checked={ 'yes' === override_product_images }
-									onChange={ ( override_product_images ) => setFieldValue( { override_product_images: override_product_images ? 'yes' : 'no' } ) }
+									onChange={ ( override_product_images ) => setSquareSettingData( { override_product_images: override_product_images ? 'yes' : 'no' } ) }
 									label={ __( 'Enable to override Product images from Square', 'woocommerce-square' ) }
 								/>
 							</InputWrapper>
@@ -347,7 +330,7 @@ export const SettingsApp = () => {
 							>
 								<SquareCheckboxControl
 									checked={ 'yes' === hide_missing_products }
-									onChange={ ( hide_missing_products ) => setFieldValue( { hide_missing_products: hide_missing_products ? 'yes' : 'no' } ) }
+									onChange={ ( hide_missing_products ) => setSquareSettingData( { hide_missing_products: hide_missing_products ? 'yes' : 'no' } ) }
 									label={ __( 'Hide synced products when not found in Square', 'woocommerce-square' ) }
 								/>
 							</InputWrapper>
@@ -365,7 +348,7 @@ export const SettingsApp = () => {
 							<SelectControl
 								value={ sync_interval }
 								options={ sync_interval_options }
-								onChange={ ( sync_interval ) => setFieldValue( { sync_interval } ) }
+								onChange={ ( sync_interval ) => setSquareSettingData( { sync_interval } ) }
 							/>
 						</InputWrapper>
 					)
@@ -383,7 +366,7 @@ export const SettingsApp = () => {
 				>
 					<SquareCheckboxControl
 						checked={ 'yes' === debug_logging_enabled }
-						onChange={ ( debug_logging_enabled ) => setFieldValue( { debug_logging_enabled: debug_logging_enabled ? 'yes' : 'no' } ) }
+						onChange={ ( debug_logging_enabled ) => setSquareSettingData( { debug_logging_enabled: debug_logging_enabled ? 'yes' : 'no' } ) }
 						label={
 							parse(
 								sprintf(
@@ -401,7 +384,7 @@ export const SettingsApp = () => {
 				variant='primary'
 				onClick={ () => {
 					setSaveInProgress( true );
-					saveSquareSettings( formState )
+					saveSquareSettings( settings )
 					setSaveInProgress( false );
 					createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
 						type: 'snackbar',

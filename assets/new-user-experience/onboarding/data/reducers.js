@@ -93,9 +93,39 @@ const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
 	}
 };
 
+const SQUARE_SETTINGS_STATE = {
+	enable_sandbox: 'yes',
+	sandbox_application_id: '',
+	sandbox_token: '',
+	debug_logging_enabled: 'no',
+	sandbox_location_id: '',
+	system_of_record: 'disabled',
+	enable_inventory_sync: 'no',
+	override_product_images: 'no',
+	hide_missing_products: 'no',
+	sync_interval: '0.25',
+	is_connected: false,
+	disconnection_url: '',
+	locations: [],
+}
+
+const squareSettingsReducer = ( state = SQUARE_SETTINGS_STATE, action ) => {
+	switch ( action.type ) {
+		case 'SET_SQUARE_SETTING_DATA':
+			return {
+				...state,
+				...action.payload
+			}
+
+		default:
+			return state;
+	}
+};
+
 export default { 
 	creditCard: creditCardReducer,
 	digitalWallet: digitalWalletsReducer,
 	giftCard: giftCardReducer,
 	cashApp: cashAppReducer,
+	squareSettings: squareSettingsReducer,
 };

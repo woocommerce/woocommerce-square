@@ -26,4 +26,11 @@ const setCashAppData = ( data ) => {
 	};
 };
 
-export default { setCreditCardData, setDigitalWalletData, setGiftCardData, setCashAppData };
+const setSquareSettings = ( data ) => {
+	return {
+		type: 'SET_SQUARE_SETTING_DATA',
+		payload: data,
+	};
+};
+
+export default { setCreditCardData, setDigitalWalletData, setGiftCardData, setCashAppData, setSquareSettings };
