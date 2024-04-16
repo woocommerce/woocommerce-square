@@ -93,7 +93,7 @@ const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
 	}
 };
 
-const SQUARE_SETTINGS_STATE = {
+const SQUARE_SETTINGS_DEFAULT_STATE = {
 	enable_sandbox: 'yes',
 	sandbox_application_id: '',
 	sandbox_token: '',
@@ -109,7 +109,7 @@ const SQUARE_SETTINGS_STATE = {
 	locations: [],
 }
 
-const squareSettingsReducer = ( state = SQUARE_SETTINGS_STATE, action ) => {
+const squareSettingsReducer = ( state = SQUARE_SETTINGS_DEFAULT_STATE, action ) => {
 	switch ( action.type ) {
 		case 'SET_SQUARE_SETTING_DATA':
 			return {
@@ -122,10 +122,42 @@ const squareSettingsReducer = ( state = SQUARE_SETTINGS_STATE, action ) => {
 	}
 };
 
+const PROCESS_STATUS_DEFAULT_STATE = {
+	squareSettingsIsSaving: false,
+	creditCardSettingsIsSaving: false,
+	cashAppSettingsIsSaving: false,
+};
+
+const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
+		case 'SET_SQUARE_SETTING_PROCESS_STATUS':
+			return {
+				...state,
+				squareSettingsIsSaving: action.payload,
+			};
+
+		case 'SET_CREDIT_CARD_SETTING_PROCESS_STATUS':
+			return {
+				...state,
+				creditCardSettingsIsSaving: action.payload,
+			};
+
+		case 'SET_CASH_APP_PROCESS_STATUS':
+			return {
+				...state,
+				cashAppSettingsIsSaving: action.payload,
+			};
+
+		default:
+			return state;
+	}
+};
+
 export default { 
 	creditCard: creditCardReducer,
 	digitalWallet: digitalWalletsReducer,
 	giftCard: giftCardReducer,
 	cashApp: cashAppReducer,
 	squareSettings: squareSettingsReducer,
+	savingProcessStatus,
 };

@@ -12,4 +12,19 @@ const getCashAppData = ( state, key ) => key ? state.cashApp[ key ] || state.cas
 
 const getSquareSettings = ( state, key ) => key ? state.squareSettings[ key ] || state.squareSettings : state.squareSettings;
 
-export default { getCreditCardData, getDigitalWalletData, getGiftCardData, getCashAppData, getSquareSettings };
+const getSquareSettingsSavingProcess = ( state ) => state.savingProcessStatus.squareSettingsIsSaving;
+
+const getCreditCardSettingsSavingProcess = ( state ) => state.savingProcessStatus.creditCardSettingsIsSaving;
+
+const getCashAppSettingsSavingProcess = ( state ) => state.savingProcessStatus.cashAppSettingsIsSaving;
+
+export default {
+	getCreditCardData,
+	getDigitalWalletData,
+	getGiftCardData,
+	getCashAppData,
+	getSquareSettings,
+	getSquareSettingsSavingProcess,
+	getCreditCardSettingsSavingProcess,
+	getCashAppSettingsSavingProcess,
+};

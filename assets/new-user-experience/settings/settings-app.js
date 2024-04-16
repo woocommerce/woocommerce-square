@@ -1,11 +1,9 @@
 /**
  * External dependencies.
  */
-import { useState, useEffect } from '@wordpress/element';
-import apiFetch from '@wordpress/api-fetch';
+import { useEffect, useRef } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { useDispatch } from '@wordpress/data';
-import { store as noticesStore } from '@wordpress/notices';
 import parse from 'html-react-parser';
 import {
 	TextControl,
@@ -26,17 +24,19 @@ import {
 } from '../components';
 
 import { useSquareSettings } from './hooks';
-import { saveSquareSettings, connectToSquare, filterBusinessLocations, getSquareSettings } from '../utils';
+import { connectToSquare, filterBusinessLocations, getSquareSettings } from '../utils';
 
 export const SettingsApp = () => {
 	const {
 		settings,
+		isSquareSaving,
 		squareSettingsLoaded,
-		getSquareSettingData,
 		setSquareSettingData,
-		setBusinessLocation
+		setBusinessLocation,
+		saveSquareSettings,
 	} = useSquareSettings( true );
-	const [ saveInProgress, setSaveInProgress ] = useState( null );
+
+	const isFirstLoad = useRef( true );
 	const { createSuccessNotice } = useDispatch( 'core/notices' );
 
 	const settingsWrapperStyle = {
@@ -47,13 +47,17 @@ export const SettingsApp = () => {
 	};
 
 	useEffect( () => {
-		if ( false === saveInProgress ) {
+		if ( isFirstLoad.current ) {
+			isFirstLoad.current = false;
+			return;
+		}
+		if ( false === isSquareSaving ) {
 			( async () => {
 				const settings = await getSquareSettings();
 				setBusinessLocation( settings.locations )
 			} )()
 		}
-	}, [ saveInProgress ] );
+	}, [ isSquareSaving ] );
 
 	const {
 		enable_sandbox = 'yes',
@@ -115,9 +119,7 @@ export const SettingsApp = () => {
 	];
 
 	const initiateConnection = async () => {
-		setSaveInProgress( true );
 		const settings = await saveSquareSettings( settings );
-		setSaveInProgress( false );
 
 		if ( ! settings?.success ) {
 			return;
@@ -134,7 +136,6 @@ export const SettingsApp = () => {
 			setSquareSettingData( { locations: filteredBusinessLocations } );
 			setSquareSettingData( { is_connected: true } );
 		}
-		setSaveInProgress( null );
 	};
 
 	if ( ! squareSettingsLoaded ) {
@@ -194,8 +195,8 @@ export const SettingsApp = () => {
 						variant='primary'
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
-						isBusy={ saveInProgress }
-						disabled={ saveInProgress }
+						isBusy={ isSquareSaving }
+						disabled={ isSquareSaving }
 					>
 						{
 							is_connected
@@ -383,14 +384,12 @@ export const SettingsApp = () => {
 			<Button
 				variant='primary'
 				onClick={ () => {
-					setSaveInProgress( true );
 					saveSquareSettings( settings )
-					setSaveInProgress( false );
 					createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
 						type: 'snackbar',
 					} );
 				} }
-				isBusy={ saveInProgress }
+				isBusy={ isSquareSaving }
 			>
 				{ __( 'Save Changes', 'woocommerce-square' ) }
 			</Button>

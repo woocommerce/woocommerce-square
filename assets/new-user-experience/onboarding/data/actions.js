@@ -33,4 +33,34 @@ const setSquareSettings = ( data ) => {
 	};
 };
 
-export default { setCreditCardData, setDigitalWalletData, setGiftCardData, setCashAppData, setSquareSettings };
+const setSquareSettingsSavingProcess = ( data ) => {
+	return {
+		type: 'SET_SQUARE_SETTING_PROCESS_STATUS',
+		payload: data,
+	}
+}
+
+const setCreditCardSettingsSavingProcess = ( data ) => {
+	return {
+		type: 'SET_CREDIT_CARD_SETTING_PROCESS_STATUS',
+		payload: data,
+	}
+}
+
+const setCashAppSettingsSavingProcess = ( data ) => {
+	return {
+		type: 'SET_CASH_APP_PROCESS_STATUS',
+		payload: data,
+	}
+}
+
+export default {
+	setCreditCardData,
+	setDigitalWalletData,
+	setGiftCardData,
+	setCashAppData,
+	setSquareSettings,
+	setSquareSettingsSavingProcess,
+	setCreditCardSettingsSavingProcess,
+	setCashAppSettingsSavingProcess,
+};
