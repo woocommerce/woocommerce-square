@@ -169,28 +169,8 @@ class Settings extends \WC_Settings_API {
 	 * Output the Setup Wizard page(s).
 	 */
 	public function render_onboarding_page() {
-		$step = isset( $_GET['step'] ) ? htmlentities( $_GET['step'] ) : 'start';
-
-		if ( 'start' === $step ) {
-			// Redirect if square is already connected.
-			if ( $this->get_access_token() ) {
-				wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding&step=payment-methods' ) );
-				exit;
-			}
-
-			// Update the onbaording status. This is required if user navigates back to the wizard,
-			// And try to connect from here, we need to redirect them to the wizard page after
-			// successful connection, for that we need this to be false.
-			update_option( 'wc_square_onboarding_completed', false );
-		
-		} else if ( 'payment-methods' === $step ) {
-			// Mark the Onboarding as completed.
-			update_option( 'wc_square_onboarding_completed', true );
-		}
-
-		echo sprintf(
-			'<div class="wrap" id="woocommerce-square-onboarding-%s"></div>',
-			esc_attr( $step )
+		printf(
+			'<div class="wrap" id="woocommerce-square-onboarding"></div>'
 		);
 	}
 
