@@ -29,7 +29,7 @@ import { connectToSquare, filterBusinessLocations, getSquareSettings } from '../
 export const SettingsApp = () => {
 	const {
 		settings,
-		isSquareSaving,
+		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
 		setBusinessLocation,
@@ -51,13 +51,13 @@ export const SettingsApp = () => {
 			isFirstLoad.current = false;
 			return;
 		}
-		if ( false === isSquareSaving ) {
+		if ( false === isSquareSettingsSaving ) {
 			( async () => {
 				const settings = await getSquareSettings();
 				setBusinessLocation( settings.locations )
 			} )()
 		}
-	}, [ isSquareSaving ] );
+	}, [ isSquareSettingsSaving ] );
 
 	const {
 		enable_sandbox = 'yes',
@@ -195,8 +195,8 @@ export const SettingsApp = () => {
 						variant='primary'
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
-						isBusy={ isSquareSaving }
-						disabled={ isSquareSaving }
+						isBusy={ isSquareSettingsSaving }
+						disabled={ isSquareSettingsSaving }
 					>
 						{
 							is_connected
@@ -389,7 +389,7 @@ export const SettingsApp = () => {
 						type: 'snackbar',
 					} );
 				} }
-				isBusy={ isSquareSaving }
+				isBusy={ isSquareSettingsSaving }
 			>
 				{ __( 'Save Changes', 'woocommerce-square' ) }
 			</Button>

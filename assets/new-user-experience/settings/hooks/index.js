@@ -74,12 +74,12 @@ export const useSquareSettings = ( fromServer = false ) => {
 	}, [ fromServer ] );
 
 	const settings = getSquareSettingData();
-	const isSquareSaving = getSquareSettingsSavingProcess();
+	const isSquareSettingsSaving = getSquareSettingsSavingProcess();
 
 	return {
 		settings,
 		squareSettingsLoaded,
-		isSquareSaving,
+		isSquareSettingsSaving,
 		getSquareSettingData,
 		setSquareSettingData,
 		setBusinessLocation, // Extra utility to normalise locations data.

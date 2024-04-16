@@ -8,20 +8,20 @@ import { useEffect } from '@wordpress/element';
  */
 import { getPaymentGatewaySettingsData } from '../utils';
 import {
-	BusinessLocation,
 	CashAppSetup,
 	ConnectSetup,
 	CreditCardSetup,
 	DigitalWalletsSetup,
 	GiftCardSetup,
 	PaymentMethods,
+	BusinessLocation,
 } from './steps';
 
 export const OnboardingApp = ( { step } ) => {
 
 	return (
 		<>
-			{/* { step === 'start' && <ConnectSetup /> } */}
+			{ step === 'start' && <ConnectSetup /> }
 			{ step === 'start' && <BusinessLocation /> }
 			{ step === 'credit-card' && <CreditCardSetup /> }
 			{ step === 'digital-wallets' && <DigitalWalletsSetup /> }
