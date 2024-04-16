@@ -74,16 +74,6 @@ export const saveCashAppSettings = async ( data ) => {
 	return response;
 };
 
-export const saveSquareSettings = async ( data ) => {
-	const response = await apiFetch( {
-		path: '/wc/v3/wc_square/settings',
-		method: 'POST',
-		data,
-	} );
-
-	return response;
-};
-
 export const connectToSquare = async () => {
 	try {
 		const response = await fetch( `${ ajaxurl }?action=wc_square_settings_get_locations` );
