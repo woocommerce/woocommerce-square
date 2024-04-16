@@ -17,7 +17,7 @@ import { Confetti, RightArrowInCircle } from '../../../icons';
 import { usePaymentGatewayData, } from '../../hooks';
 import { savePaymentGatewaySettings } from '../../../utils';
 
-export const PaymentMethods = ( { updateStep } ) => {
+export const PaymentMethods = ( { setStep } ) => {
 	const {
 		settingsLoaded,
 		paymentGatewayData,
