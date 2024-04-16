@@ -12,27 +12,12 @@ import {
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
-import { usePaymentGatewayData, } from '../../hooks';
+import { useSquareSettings } from '../../../settings/hooks';
 
-export const ConnectSetup = ( { updateStep } ) => {
+export const ConnectSetup = ( {} ) => {
 	const {
-		settingsLoaded,
-		paymentGatewayData,
-
-		setCreditCardData,
-		setDigitalWalletData,
-		setGiftCardData,
-	} = usePaymentGatewayData();
-
-	const {
-		enabled,
-		enable_digital_wallets,
-		enable_gift_cards,
-	} = paymentGatewayData;
-
-	if ( ! settingsLoaded ) {
-		return null;
-	}
+		settings,
+	} = useSquareSettings( true );
 
 	return (
 		<div className="woo-square-onbarding__connect-square">
@@ -45,7 +30,7 @@ export const ConnectSetup = ( { updateStep } ) => {
 
                     <Button
                             variant='primary'
-                            href={ '#' }
+                            href={settings.connection_url}
                     >
                         {
                             __( 'Connect to Square', 'woocommerce-square' )
