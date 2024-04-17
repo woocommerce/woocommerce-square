@@ -1,0 +1,48 @@
+.woo-square-onboarding__header {
+    position: absolute;
+    top: 0;
+    left: -20px;
+    width: calc(100% + 20px);
+    background: #fff;
+    padding: 22px 0;
+    border-bottom: 0.5px solid #bfbfbf;
+
+    .backBtn {
+        button {
+            margin-left: 10px;
+            font-size: 15px;
+            font-weight: 590;
+        }
+
+        svg {
+            margin-right: 10px;
+        }
+    }
+
+    .wizardTitle {
+        text-align: center;
+        font-size: 23px;
+
+        svg {
+            margin: 0 10px -7px;
+        }
+
+        span {
+            font-weight: 700;
+        }
+    }
+
+    .closeWizard {
+        margin-right: 20px;
+    }
+}
+
+.woocommerce_page_woocommerce-square-onboarding {
+    #wpcontent {
+        background: #FFF;
+    }
+
+    #wpbody-content {
+        margin-top: 100px;
+    }
+}
