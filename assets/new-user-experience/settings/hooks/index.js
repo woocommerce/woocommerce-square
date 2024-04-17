@@ -58,7 +58,7 @@ export const useSquareSettings = ( fromServer = false ) => {
 		} );
 
 		setSquareSettingsSavingProcess( null ); // marks that the saving is over.
-		await new Promise( ( resolve ) => setTimeout( () => resolve(), 100 ) );
+		await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 		setSquareSettingsSavingProcess( false );
 	
 		return response;

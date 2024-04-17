@@ -1,15 +1,14 @@
 import { Button } from '@wordpress/components';
-import { useEffect } from '@wordpress/element';
-import { useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
-import { store as noticesStore } from '@wordpress/notices';
+import { check } from '@wordpress/icons';
 
 import { useSquareSettings } from '../../settings/hooks';
 
 const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
-			label = __( 'Save', 'woocommerce-square' ),
+			label = __( 'Apply Changes', 'woocommerce-square' ),
+			afterSaveLabel = __( 'Changes applied' ),
 		} = props;
 
 		const {
@@ -18,19 +17,10 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 			saveSquareSettings,
 		} = useSquareSettings();
 
-		const { createSuccessNotice } = useDispatch( noticesStore );
-
-		useEffect( () => {
-			if ( null == isSquareSettingsSaving ) {
-				createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
-					type: 'snackbar',
-				} );
-			}
-		}, [ isSquareSettingsSaving ] );
-
 		return (
 			<WrappedComponent
 				{ ...props }
+				{ ...( null === isSquareSettingsSaving && { icon: check } ) }
 				isBusy={ isSquareSettingsSaving }
 				disabled={ isSquareSettingsSaving }
 				variant="primary"
@@ -38,7 +28,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 					saveSquareSettings( settings );
 				} }
 			>
-				{ label }
+				{ null === isSquareSettingsSaving ? afterSaveLabel : label }
 			</WrappedComponent>
 		)
 	};

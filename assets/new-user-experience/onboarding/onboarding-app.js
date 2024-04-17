@@ -1,12 +1,6 @@
 /**
- * External dependencies.
- */
-import { useEffect } from '@wordpress/element';
-
-/**
  * Internal dependencies.
  */
-import { getPaymentGatewaySettingsData } from '../utils';
 import {
 	CashAppSetup,
 	ConnectSetup,
@@ -18,7 +12,6 @@ import {
 } from './steps';
 
 export const OnboardingApp = ( { step } ) => {
-
 	return (
 		<>
 			{ step === 'start' && <ConnectSetup /> }
