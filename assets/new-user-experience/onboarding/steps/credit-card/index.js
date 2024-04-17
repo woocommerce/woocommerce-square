@@ -20,10 +20,10 @@ import {
 	SquareCheckboxControl,
 } from '../../../components';
 
-import { useSettings } from '../../hooks';
+import { usePaymentGatewaySettings } from '../../hooks';
 
 export const CreditCardSetup = () => {
-	const { setCreditCardData, getCreditCardData } = useSettings();
+	const { setCreditCardData, getCreditCardData } = usePaymentGatewaySettings();
 	const {
 		enabled,
 		title,

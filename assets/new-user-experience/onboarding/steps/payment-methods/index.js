@@ -14,26 +14,27 @@ import {
 	InputWrapper
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
-import { usePaymentGatewayData, } from '../../hooks';
+import { usePaymentGatewaySettings } from '../../hooks';
 import { savePaymentGatewaySettings } from '../../../utils';
 
 export const PaymentMethods = ( { setStep } ) => {
 	const {
-		settingsLoaded,
-		paymentGatewayData,
+		paymentGatewaySettings,
+		paymentGatewaySettingsLoaded,
+		cashAppGatewaySettingsLoaded,
 
 		setCreditCardData,
 		setDigitalWalletData,
 		setGiftCardData,
-	} = usePaymentGatewayData();
+	} = usePaymentGatewaySettings();
 
 	const {
 		enabled,
 		enable_digital_wallets,
 		enable_gift_cards,
-	} = paymentGatewayData;
+	} = paymentGatewaySettings;
 
-	if ( ! settingsLoaded ) {
+	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
 	}
 
