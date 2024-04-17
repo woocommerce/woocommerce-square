@@ -127,6 +127,8 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ));
 	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ));
 	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ));
+	const getCreditCardSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCreditCardSettingsSavingProcess( key ) );
+	const getCashAppSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCashAppSettingsSavingProcess( key ) );
 
 	const setCreditCardData = ( data ) => dispatch( store ).setCreditCardData( data );
 	const setDigitalWalletData = ( data ) => dispatch( store ).setDigitalWalletData( data );
@@ -135,6 +137,9 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 
 	const setCreditCardSettingsSavingProcess = ( data ) => dispatch( store ).setCreditCardSettingsSavingProcess( data );
 	const setCashAppSettingsSavingProcess = ( data ) => dispatch( store ).setCashAppSettingsSavingProcess( data );
+
+	const isPaymentGatewaySettingsSaving = getCreditCardSettingsSavingProcess();
+	const isCashAppGatewaySettingsSaving = getCashAppSettingsSavingProcess();
 
 	const paymentGatewaySettings = {
 		...getCreditCardData(),
@@ -209,6 +214,8 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	} )
 
 	return {
+		isPaymentGatewaySettingsSaving,
+		isCashAppGatewaySettingsSaving,
 		paymentGatewaySettings,
 		cashAppGatewaySettings,
 		paymentGatewaySettingsLoaded,

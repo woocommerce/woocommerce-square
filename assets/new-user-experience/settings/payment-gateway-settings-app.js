@@ -7,6 +7,7 @@ import { useState } from '@wordpress/element';
 
 import { CreditCardSetup, DigitalWalletsSetup, GiftCardSetup } from '../../new-user-experience/onboarding/steps';
 import { usePaymentGatewaySettings } from '../onboarding/hooks';
+import { PaymentGatewaySettingsSaveButton } from '../components';
 
 export const PaymentGatewaySettingsApp = () => {
 	const {
@@ -32,13 +33,7 @@ export const PaymentGatewaySettingsApp = () => {
 			<CreditCardSetup />
 			<DigitalWalletsSetup />
 			<GiftCardSetup />
-			<Button
-				variant='primary'
-				onClick={ () => savePaymentGatewaySettings() }
-				isBusy={ saveInProgress }
-			>
-				{ __( 'Save Changes', 'woocommerce-square' ) }
-			</Button>
+			<PaymentGatewaySettingsSaveButton />
 		</div>
 	)
 };
