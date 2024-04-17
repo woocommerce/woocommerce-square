@@ -19,13 +19,21 @@ import { savePaymentGatewaySettings } from '../../../utils';
 
 export const PaymentMethods = ( { setStep } ) => {
 	const {
+		isPaymentGatewaySettingsSaving,
+		isCashAppGatewaySettingsSaving,
+
 		paymentGatewaySettings,
+		cashAppGatewaySettings,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 
 		setCreditCardData,
 		setDigitalWalletData,
 		setGiftCardData,
+		setCashAppData,
+
+		savePaymentGatewaySettings,
+		saveCashAppSettings,
 	} = usePaymentGatewaySettings();
 
 	const {
@@ -33,6 +41,10 @@ export const PaymentMethods = ( { setStep } ) => {
 		enable_digital_wallets,
 		enable_gift_cards,
 	} = paymentGatewaySettings;
+
+	const {
+		enabled: enable_cash_app
+	} = cashAppGatewaySettings;
 
 	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
@@ -87,6 +99,16 @@ export const PaymentMethods = ( { setStep } ) => {
 					</InputWrapper>
 
 					<InputWrapper
+						label={ __( 'Enable Cash App Pay', 'woocommerce-square' ) }
+						variant="boxed"
+					>
+						<ToggleControl
+							checked={ 'yes' === enable_cash_app }
+							onChange={ ( enable_cash_app ) => setCashAppData( { enabled: enable_cash_app ? 'yes' : 'no' } ) }
+						/>
+					</InputWrapper>
+
+					<InputWrapper
 						label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
 						variant="boxed"
 					>
@@ -99,8 +121,13 @@ export const PaymentMethods = ( { setStep } ) => {
 					<div className="woo-square-onbarding__payment-settings__toggles__next-btn">
 						<Button
 							variant="primary"
+							isBusy={ isPaymentGatewaySettingsSaving || isCashAppGatewaySettingsSaving }
+							disabled={ isPaymentGatewaySettingsSaving || isCashAppGatewaySettingsSaving }
 							onClick={ () => {
-								savePaymentGatewaySettings( paymentGatewayData )
+								( async () => {
+									await savePaymentGatewaySettings();
+									await saveCashAppSettings();
+								} )()
 							} }
 						>
 							{ __( 'Next', 'woocommerce-square' ) }

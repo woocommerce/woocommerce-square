@@ -148,10 +148,9 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings             = get_option( self::SQUARE_CASH_APP_SETTINGS_OPTION_NAME, [] );
-		$current_account_keys = array_intersect_key( $settings, array_flip( $this->allowed_params ) );
+		$settings = array();
 
-		foreach ( $current_account_keys as $key => $value ) {
+		foreach ( $this->allowed_params as $index => $key ) {
 			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
 
 			$settings[ $key ] = $new_value;
