@@ -1,1 +1,12 @@
 // Common styles for onboarding and settings.
+.woo-square-onboarding__cover {
+	width: 600px;
+	margin: 80px auto;
+	text-align: center;
+
+	.woo-square-wizard__fields {
+		width: 450px;
+		margin: auto;
+		text-align: left;
+	}
+}

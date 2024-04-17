@@ -59,16 +59,18 @@ export const BusinessLocation = () => {
 		<div>
 			<Section>
 				{ intro }
-				<InputWrapper>
-					<SelectControl
-						value={ sandbox_location_id }
-						onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id }) }
-						options={ [
-							{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
-							...locations
-						] }
-					/>
-				</InputWrapper>
+				<div className='woo-square-wizard__fields'>
+					<InputWrapper>
+						<SelectControl
+							value={ sandbox_location_id }
+							onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id }) }
+							options={ [
+								{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
+								...locations
+							] }
+						/>
+					</InputWrapper>
+				</div>
 				<SquareSettingsSaveButton label={ __( 'Apply changes', 'woocommerce-square' ) } />
 			</Section>
 		</div>

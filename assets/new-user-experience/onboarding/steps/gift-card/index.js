@@ -31,15 +31,17 @@ export const GiftCardSetup = () => {
 					{ __( 'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.', 'woocommerce-square' ) }
 				</SectionDescription>
 
-				<InputWrapper
-					label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
-					variant="boxed"
-				>
-					<ToggleControl
-						checked={ 'yes' === enable_gift_cards }
-						onChange={ ( enable_gift_cards ) => setGiftCardData( { enable_gift_cards: enable_gift_cards ? 'yes' : 'no' } ) }
-					/>
-				</InputWrapper>
+				<div className='woo-square-wizard__fields'>
+					<InputWrapper
+						label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
+						variant="boxed"
+					>
+						<ToggleControl
+							checked={ 'yes' === enable_gift_cards }
+							onChange={ ( enable_gift_cards ) => setGiftCardData( { enable_gift_cards: enable_gift_cards ? 'yes' : 'no' } ) }
+						/>
+					</InputWrapper>
+				</div>
 			</Section>
 		</>
 	);

@@ -86,7 +86,7 @@ export const PaymentComplete = ( { setStep }) => {
 								<Button variant="secondary" onClick={ () => setStep( 'credit-card' ) }>
 									{ __( 'Credit Card Settings', 'woocommerce-square' ) }
 								</Button>
-								<Button variant="secondary" onClick={ () => setStep( 'digital-wallet' ) }>
+								<Button variant="secondary" onClick={ () => setStep( 'digital-wallets' ) }>
 									{ __( 'Digital Wallet Settings', 'woocommerce-square' ) }
 								</Button>
 								<Button variant="secondary" onClick={ () => setStep( 'cash-app' ) }>
