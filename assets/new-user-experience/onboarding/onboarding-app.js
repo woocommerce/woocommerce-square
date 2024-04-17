@@ -19,12 +19,14 @@ import {
 	PaymentComplete,
 } from './steps';
 
-import { PaymentGatewaySettingsSaveButton } from '../components';
+import { OnboardingHeader, PaymentGatewaySettingsSaveButton } from '../components';
 
 const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 	<>
-		<WrappedComponent { ...props } />
-		<PaymentGatewaySettingsSaveButton />
+		<div className="woo-square-onboarding__cover">
+			<WrappedComponent { ...props } />
+			<PaymentGatewaySettingsSaveButton />
+		</div>
 	</>
 );
 
@@ -33,7 +35,9 @@ const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalW
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState('payment-complete');
+	const [step, setStep] = useState('credit-card');
+	const [title, setTitle] = useState('Plugin Activated');
+	const [backStep, setBackStep] = useState('payment-methods');
 	const {
 		settings,
 	} = useSquareSettings( true );
@@ -42,11 +46,12 @@ export const OnboardingApp = () => {
 	usePaymentGatewaySettings( true );
 
 	if ( 'start' === step && settings.is_connected ) {
-		// setStep('business-location');
+		setStep('business-location');
 	}
 
 	return (
 		<>
+			<OnboardingHeader backStep={backStep} title={title} setStep={setStep} />
 			{ step === 'start' && <ConnectSetup /> }
 			{ step === 'business-location' && <BusinessLocation /> }
 			{ step === 'payment-methods' && <PaymentMethods setStep={setStep} /> }
