@@ -1,3 +1,4 @@
+export { OnboardingHeader } from './onboarding-header';
 export { Section } from './section';
 export { SectionTitle } from './section-title';
 export { SectionDescription } from './section-description';
