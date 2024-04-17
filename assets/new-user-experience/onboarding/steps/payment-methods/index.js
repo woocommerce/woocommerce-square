@@ -7,7 +7,6 @@ import { ToggleControl, Button } from '@wordpress/components';
 /**
  * Internal dependencies.
  */
-import './index.scss';
 import {
 	SectionTitle,
 	SectionDescription,
