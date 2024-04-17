@@ -151,8 +151,12 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$action = 'wc_square_disconnect';
 		$url    = add_query_arg( 'action', $action, admin_url() );
 
+		// Get the sandbox status.
+		$sandbox = 'yes' === $filtered_settings['enable_sandbox'] ? true : false;
+
 		// Add the connection parameters to the response.
 		$filtered_settings['is_connected']      = wc_square()->get_gateway()->get_plugin()->get_settings_handler()->is_connected();
+		$filtered_settings['connection_url']    = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( $sandbox, array( 'from' => 'wizard' ) );
 		$filtered_settings['disconnection_url'] = html_entity_decode( wp_nonce_url( $url, $action ) );
 
 		// Add locations to the response.

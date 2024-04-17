@@ -73,6 +73,7 @@ export const SettingsApp = () => {
 		sync_interval = '0.25',
 		is_connected = false,
 		disconnection_url = '',
+		connection_url = '',
 		locations = [],
 	} = settings;
 

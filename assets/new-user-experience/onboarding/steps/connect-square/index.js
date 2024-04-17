@@ -12,27 +12,12 @@ import {
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
-import { usePaymentGatewayData, } from '../../hooks';
+import { useSquareSettings } from '../../../settings/hooks';
 
-export const ConnectSetup = ( { updateStep } ) => {
+export const ConnectSetup = ( {} ) => {
 	const {
-		settingsLoaded,
-		paymentGatewayData,
-
-		setCreditCardData,
-		setDigitalWalletData,
-		setGiftCardData,
-	} = usePaymentGatewayData();
-
-	const {
-		enabled,
-		enable_digital_wallets,
-		enable_gift_cards,
-	} = paymentGatewayData;
-
-	if ( ! settingsLoaded ) {
-		return null;
-	}
+		settings,
+	} = useSquareSettings( true );
 
 	return (
 		<div className="woo-square-onbarding__connect-square">
@@ -40,17 +25,17 @@ export const ConnectSetup = ( { updateStep } ) => {
 				<div className="woo-square-onbarding__connect-square__toggles">
 					<SectionTitle title={ __( 'Thanks for installing WooCommerce Square!', 'woocommerce-square' ) } />
 					<SectionDescription>
-						{ __( 'To get started, let’s connect to your Square Account to complete the setup process.', 'woocommerce-square' ) }
+						{ __( "To get started, let's connect to your Square Account to complete the setup process.", 'woocommerce-square' ) }
 					</SectionDescription>
 
-                    <Button
-                            variant='primary'
-                            href={ '#' }
-                    >
-                        {
-                            __( 'Connect to Square', 'woocommerce-square' )
-                        }
-                    </Button>
+					<Button
+							variant='primary'
+							href={settings.connection_url}
+					>
+						{
+							__( 'Connect to Square', 'woocommerce-square' )
+						}
+					</Button>
 				</div>
 			</div>
 		</div>

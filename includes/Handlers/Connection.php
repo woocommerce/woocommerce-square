@@ -97,6 +97,9 @@ class Connection {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended - Setting variable, nonce checked next line.
 		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$from = isset( $_GET['from'] ) ? wc_clean( wp_unslash( $_GET['from'] ) ) : '';
 
 		// check the user role & nonce
 		if ( ! current_user_can( 'manage_woocommerce' ) || ! wp_verify_nonce( $nonce, 'wc_square_connected' ) ) {
@@ -153,9 +156,7 @@ class Connection {
 			update_option( 'wc_square_auth_key_updated', true );
 		}
 
-		$wizard_completed = get_option( 'wc_square_onboarding_completed' );
-
-		wp_safe_redirect( $wizard_completed ? $this->get_plugin()->get_settings_url() : admin_url( 'admin.php?page=woocommerce-square-onboarding&step=payment-methods' ) );
+		wp_safe_redirect( 'wizard' === $from ? admin_url( 'admin.php?page=woocommerce-square-onboarding' ) : $this->get_plugin()->get_settings_url() );
 		exit;
 	}
 
@@ -426,9 +427,11 @@ class Connection {
 	 * @since 2.0.0
 	 *
 	 * @param bool $is_sandbox whether to point to production or sandbox
+	 * @param array $args additional query args
+	 *
 	 * @return string
 	 */
-	public function get_connect_url( $is_sandbox = false ) {
+	public function get_connect_url( $is_sandbox = false, $args = array() ) {
 
 		if ( $is_sandbox ) {
 			$raw_url = self::CONNECT_URL_SANDBOX;
@@ -447,6 +450,11 @@ class Connection {
 
 		$action       = 'wc_square_connected';
 		$redirect_url = wp_nonce_url( add_query_arg( 'action', $action, admin_url() ), $action );
+
+		// Append all args.
+		foreach( $args as $key => $value ) {
+			$redirect_url = add_query_arg( $key, $value, $redirect_url );
+		}
 
 		$args = array(
 			'redirect' => urlencode( urlencode( $redirect_url ) ),
