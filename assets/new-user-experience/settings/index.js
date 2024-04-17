@@ -8,6 +8,8 @@ import { register } from '@wordpress/data';
 /**
  * Internal dependencies.
  */
+import '../styles/index.scss';
+import '../styles/settings.scss';
 import { SettingsApp } from './settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
 import { CashAppSettingsApp } from './cash-app-gateway-settings-app';

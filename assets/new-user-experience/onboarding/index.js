@@ -8,6 +8,8 @@ import { register } from '@wordpress/data';
 /**
  * Internal dependencies.
  */
+import '../styles/index.scss';
+import '../styles/onboarding.scss';
 import { OnboardingApp } from './onboarding-app';
 import store from '../../new-user-experience/onboarding/data/store';
 
