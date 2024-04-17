@@ -16,6 +16,7 @@ import {
 	GiftCardSetup,
 	PaymentMethods,
 	BusinessLocation,
+	PaymentComplete,
 } from './steps';
 
 import { PaymentGatewaySettingsSaveButton } from '../components';
@@ -32,7 +33,7 @@ const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalW
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState('start');
+	const [step, setStep] = useState('payment-complete');
 	const {
 		settings,
 	} = useSquareSettings( true );
@@ -41,7 +42,7 @@ export const OnboardingApp = () => {
 	usePaymentGatewaySettings( true );
 
 	if ( 'start' === step && settings.is_connected ) {
-		setStep('payment-methods');
+		// setStep('business-location');
 	}
 
 	return (
@@ -53,6 +54,7 @@ export const OnboardingApp = () => {
 			{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup /> }
 			{ step === 'gift-card' && <WrapperGiftCardSetup /> }
 			{ step === 'cash-app' && <CashAppSetup /> }
+			{ step === 'payment-complete' && <PaymentComplete setStep={setStep} /> }
 		</>
 	)
 };
