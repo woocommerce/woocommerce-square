@@ -9,6 +9,7 @@ import { Button } from '@wordpress/components';
  */
 import './index.scss';
 import {
+	Section,
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
@@ -21,8 +22,8 @@ export const ConnectSetup = ( {} ) => {
 
 	return (
 		<div className="woo-square-onbarding__connect-square">
-			<div className="woo-square-onbarding__connect-square--right">
-				<div className="woo-square-onbarding__connect-square__toggles">
+			<div className="woo-square-onbarding__connect-square--single">
+				<Section>
 					<SectionTitle title={ __( 'Thanks for installing WooCommerce Square!', 'woocommerce-square' ) } />
 					<SectionDescription>
 						{ __( "To get started, let's connect to your Square Account to complete the setup process.", 'woocommerce-square' ) }
@@ -36,7 +37,7 @@ export const ConnectSetup = ( {} ) => {
 							__( 'Connect to Square', 'woocommerce-square' )
 						}
 					</Button>
-				</div>
+				</Section>
 			</div>
 		</div>
 	);

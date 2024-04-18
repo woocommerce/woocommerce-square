@@ -23,10 +23,8 @@ import { OnboardingHeader, PaymentGatewaySettingsSaveButton } from '../component
 
 const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 	<>
-		<div className="woo-square-onboarding__cover">
-			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton />
-		</div>
+		<WrappedComponent { ...props } />
+		<PaymentGatewaySettingsSaveButton />
 	</>
 );
 
@@ -35,9 +33,9 @@ const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalW
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState('credit-card');
+	const [step, setStep] = useState('connect-square');
+	const [backStep, setBackStep] = useState('');
 	const [title, setTitle] = useState('Plugin Activated');
-	const [backStep, setBackStep] = useState('payment-methods');
 	const {
 		settings,
 	} = useSquareSettings( true );
@@ -52,14 +50,16 @@ export const OnboardingApp = () => {
 	return (
 		<>
 			<OnboardingHeader backStep={backStep} title={title} setStep={setStep} />
-			{ step === 'start' && <ConnectSetup /> }
-			{ step === 'business-location' && <BusinessLocation /> }
-			{ step === 'payment-methods' && <PaymentMethods setStep={setStep} /> }
-			{ step === 'credit-card' && <WrapperCreditCardSetup /> }
-			{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup /> }
-			{ step === 'gift-card' && <WrapperGiftCardSetup /> }
-			{ step === 'cash-app' && <CashAppSetup /> }
-			{ step === 'payment-complete' && <PaymentComplete setStep={setStep} /> }
+			<div className="woo-square-onboarding__cover">
+				{ step === 'connect-square' && <ConnectSetup /> }
+				{ step === 'business-location' && <BusinessLocation setStep={setStep} /> }
+				{ step === 'payment-methods' && <PaymentMethods setStep={setStep} /> }
+				{ step === 'payment-complete' && <PaymentComplete setStep={setStep} /> }
+				{ step === 'credit-card' && <WrapperCreditCardSetup /> }
+				{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup /> }
+				{ step === 'gift-card' && <WrapperGiftCardSetup /> }
+				{ step === 'cash-app' && <CashAppSetup /> }
+			</div>
 		</>
 	)
 };
