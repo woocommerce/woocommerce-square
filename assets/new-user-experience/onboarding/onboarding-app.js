@@ -25,7 +25,7 @@ import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveB
 const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 	<>
 		<WrappedComponent { ...props } />
-		<PaymentGatewaySettingsSaveButton />
+		<PaymentGatewaySettingsSaveButton setStep={props.setStep} nextStep={props.nextStep} />
 	</>
 );
 
@@ -39,13 +39,13 @@ const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 const WrapperCreditCardSetup = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
 const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
+const WrapperCashAppSetup = paymentGatwaySettingsWithSaveButton( CashAppSetup );
 const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
 const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings );
 const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
 
 export const OnboardingApp = () => {
-	// const [step, setStep] = useState('connect-square');
-	const [step, setStep] = useState('sandbox-settings');
+	const [step, setStep] = useState('connect-square');
 	const [backStep, setBackStep] = useState('');
 	const [title, setTitle] = useState('Plugin Activated');
 	const {
@@ -55,7 +55,7 @@ export const OnboardingApp = () => {
 	// Calling this once to populate the data store.
 	usePaymentGatewaySettings( true );
 
-	if ( 'start' === step && settings.is_connected ) {
+	if ( 'connect-square' === step && settings.is_connected ) {
 		setStep('business-location');
 	}
 
@@ -67,10 +67,10 @@ export const OnboardingApp = () => {
 				{ step === 'business-location' && <BusinessLocation setStep={setStep} /> }
 				{ step === 'payment-methods' && <PaymentMethods setStep={setStep} /> }
 				{ step === 'payment-complete' && <PaymentComplete setStep={setStep} /> }
-				{ step === 'credit-card' && <WrapperCreditCardSetup /> }
-				{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup /> }
-				{ step === 'gift-card' && <WrapperGiftCardSetup /> }
-				{ step === 'cash-app' && <CashAppSetup /> }
+				{ step === 'credit-card' && <WrapperCreditCardSetup setStep={setStep} nextStep={'payment-complete'} /> }
+				{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup setStep={setStep} nextStep={'payment-complete'} /> }
+				{ step === 'gift-card' && <WrapperGiftCardSetup setStep={setStep} nextStep={'payment-complete'} /> }
+				{ step === 'cash-app' && <WrapperCashAppSetup setStep={setStep} nextStep={'payment-complete'} /> }
 				{ step === 'sync-settings' && <WrapperConfigureSyncSetup setStep={setStep} nextStep={'payment-complete'} /> }
 				{ step === 'advanced-settings' && <WrapperAdvancedSettings setStep={setStep} nextStep={'payment-complete'} /> }
 				{ step === 'sandbox-settings' && <WrapperSandboxSettings setStep={setStep} nextStep={'payment-complete'} /> }

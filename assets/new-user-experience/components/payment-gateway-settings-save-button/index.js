@@ -9,6 +9,8 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes applied' ),
+			nextStep,
+			setStep
 		} = props;
 
 		const {
@@ -24,7 +26,11 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				isBusy={ isPaymentGatewaySettingsSaving }
 				disabled={ isPaymentGatewaySettingsSaving }
 				variant="primary"
-				onClick={ () => savePaymentGatewaySettings( paymentGatewaySettings ) }
+				onClick={ () => savePaymentGatewaySettings( paymentGatewaySettings ).then( () => {
+					if ( nextStep ) {
+						setStep( nextStep );
+					}
+				} ) }
 			>
 				{ null === isPaymentGatewaySettingsSaving ? afterSaveLabel : label }
 			</WrappedComponent>
