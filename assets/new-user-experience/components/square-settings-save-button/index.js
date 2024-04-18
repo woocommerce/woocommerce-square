@@ -27,8 +27,11 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				disabled={ isSquareSettingsSaving }
 				variant="primary"
 				onClick={ () => {
-					saveSquareSettings( settings );
-					setStep( nextStep );
+					saveSquareSettings( settings ).then( () => {
+						if ( nextStep ) {
+							setStep( nextStep );
+						}
+					} );
 				} }
 			>
 				{ null === isSquareSettingsSaving ? afterSaveLabel : label }
