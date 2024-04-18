@@ -108,7 +108,7 @@ export const PaymentComplete = ( { setStep }) => {
 								<p>{ __( 'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.', 'woocommerce-square' ) }</p>
 							</FlexBlock>
 							<FlexBlock>
-								<Button variant="link" onClick={ () => setStep( 'advanced-settings' ) }>
+								<Button variant="link" onClick={ () => setStep( 'sandbox-settings' ) }>
 									{ __( 'Go to Sandbox Settings', 'woocommerce-square' ) }
 								</Button>
 								<p>{ __( 'Test new features and payment scenarios safely. Experiment in a risk-free environment to make sure everything is set up correctly before going live.', 'woocommerce-square' ) }</p>
