@@ -9,6 +9,8 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes applied' ),
+			nextStep,
+			setStep
 		} = props;
 
 		const {
@@ -26,6 +28,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ () => {
 					saveSquareSettings( settings );
+					setStep( nextStep );
 				} }
 			>
 				{ null === isSquareSettingsSaving ? afterSaveLabel : label }

@@ -13,7 +13,7 @@ import {
 
 import { useSquareSettings } from '../../../settings/hooks';
 
-export const BusinessLocation = () => {
+export const BusinessLocation = ({ setStep }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
@@ -71,7 +71,7 @@ export const BusinessLocation = () => {
 						/>
 					</InputWrapper>
 				</div>
-				<SquareSettingsSaveButton label={ __( 'Apply changes', 'woocommerce-square' ) } />
+				<SquareSettingsSaveButton label={ __( 'Apply changes', 'woocommerce-square' ) } nextStep='payment-methods' setStep={setStep} />
 			</Section>
 		</div>
 	);
