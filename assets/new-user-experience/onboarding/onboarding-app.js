@@ -18,8 +18,9 @@ import {
 	BusinessLocation,
 	PaymentComplete,
 } from './steps';
+import { ConfigureSync } from '../modules';
 
-import { OnboardingHeader, PaymentGatewaySettingsSaveButton } from '../components';
+import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton } from '../components';
 
 const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 	<>
@@ -28,9 +29,17 @@ const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) =>
 	</>
 );
 
+const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
+	<>
+		<WrappedComponent { ...props } />
+		<SquareSettingsSaveButton setStep={props.setStep} nextStep={props.nextStep} />
+	</>
+);
+
 const WrapperCreditCardSetup = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
 const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
+const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
 
 export const OnboardingApp = () => {
 	const [step, setStep] = useState('connect-square');
@@ -59,6 +68,7 @@ export const OnboardingApp = () => {
 				{ step === 'digital-wallets' && <WrapperDigitalWalletsSetup /> }
 				{ step === 'gift-card' && <WrapperGiftCardSetup /> }
 				{ step === 'cash-app' && <CashAppSetup /> }
+				{ step === 'sync-settings' && <WrapperConfigureSyncSetup setStep={setStep} nextStep={'payment-complete'} /> }
 			</div>
 		</>
 	)
