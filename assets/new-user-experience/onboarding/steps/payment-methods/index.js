@@ -126,6 +126,7 @@ export const PaymentMethods = ( { setStep } ) => {
 								( async () => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
+									setStep( 'payment-complete' );
 								} )()
 							} }
 						>

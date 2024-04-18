@@ -211,7 +211,7 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 			setCashAppData( cashAppSettings );
 			setCashAppGatewaySettingsLoaded( true );
 		} )()
-	} )
+	}, [ fromServer ] )
 
 	return {
 		isPaymentGatewaySettingsSaving,
