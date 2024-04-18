@@ -23,7 +23,7 @@ import {
 	SquareCheckboxControl,
 	SquareSettingsSaveButton,
 } from '../components';
-import { ConfigureSync } from '../modules';
+import { ConfigureSync, AdvancedSettings } from '../modules';
 import { useSquareSettings } from './hooks';
 import { connectToSquare, filterBusinessLocations, getSquareSettings } from '../utils';
 
@@ -188,30 +188,7 @@ export const SettingsApp = () => {
 
 			{ is_connected && <ConfigureSync indent={2} /> }
 
-			<Section>
-				<SectionTitle title={ __( 'Advanced Settings', 'woocommerce-square' ) } />
-				<SectionDescription>
-					{ __( 'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively', 'woocommerce-square' ) }
-				</SectionDescription>
-
-				<InputWrapper
-					label={ __( 'Detailed Decline Messages', 'woocommerce-square' ) }
-				>
-					<SquareCheckboxControl
-						checked={ 'yes' === debug_logging_enabled }
-						onChange={ ( debug_logging_enabled ) => setSquareSettingData( { debug_logging_enabled: debug_logging_enabled ? 'yes' : 'no' } ) }
-						label={
-							parse(
-								sprintf(
-									__( 'Log debug messages to the %1$sWooCommerce status log%2$s', 'woocommerce-square' ),
-									'<a target="_blank" href="https://wcsquare.mylocal/wp-admin/admin.php?page=wc-status&tab=logs">',
-									'</a>',
-								)
-							)
-						}
-					/>
-				</InputWrapper>
-			</Section>
+			<AdvancedSettings />
 
 			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
 		</div>
