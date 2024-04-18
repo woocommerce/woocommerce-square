@@ -18,7 +18,7 @@ import {
 	BusinessLocation,
 	PaymentComplete,
 } from './steps';
-import { ConfigureSync, AdvancedSettings } from '../modules';
+import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton } from '../components';
 
@@ -41,9 +41,11 @@ const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalW
 const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
 const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
 const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings );
+const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState('connect-square');
+	// const [step, setStep] = useState('connect-square');
+	const [step, setStep] = useState('sandbox-settings');
 	const [backStep, setBackStep] = useState('');
 	const [title, setTitle] = useState('Plugin Activated');
 	const {
@@ -71,6 +73,7 @@ export const OnboardingApp = () => {
 				{ step === 'cash-app' && <CashAppSetup /> }
 				{ step === 'sync-settings' && <WrapperConfigureSyncSetup setStep={setStep} nextStep={'payment-complete'} /> }
 				{ step === 'advanced-settings' && <WrapperAdvancedSettings setStep={setStep} nextStep={'payment-complete'} /> }
+				{ step === 'sandbox-settings' && <WrapperSandboxSettings setStep={setStep} nextStep={'payment-complete'} /> }
 			</div>
 		</>
 	)
