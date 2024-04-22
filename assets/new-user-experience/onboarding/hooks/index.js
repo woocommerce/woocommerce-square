@@ -74,50 +74,6 @@ export const useCashAppData = () => {
 	};
 };
 
-export const usePaymentGatewayData = () => {
-	const {
-		getCreditCardData,
-		getDigitalWalletData,
-		getGiftCardData,
-		setCreditCardData,
-		setDigitalWalletData,
-		setGiftCardData,
-	} = useSettings();
-
-	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
-
-	/**
-	 * Initializes payment gateway data store.
-	 */
-	useEffect( () => {
-		( async function () {
-			const { creditCard, digitalWallet, giftCard } = await getPaymentGatewaySettingsData();
-
-			setCreditCardData( creditCard );
-			setDigitalWalletData( digitalWallet );
-			setGiftCardData( giftCard );
-			setSettingsLoaded( true );
-		} )();
-	}, [] );
-
-	const paymentGatewayData = {
-		...getCreditCardData(),
-		...getDigitalWalletData(),
-		...getGiftCardData(),
-	};
-
-	return {
-		getCreditCardData,
-		getDigitalWalletData,
-		getGiftCardData,
-		setCreditCardData,
-		setDigitalWalletData,
-		setGiftCardData,
-		paymentGatewayData,
-		settingsLoaded
-	};
-};
-
 export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	const dispatch = useDispatch();
 
@@ -158,6 +114,7 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 			data: paymentGatewaySettings,
 		} );
 
+		// why is this promise required?
 		setCreditCardSettingsSavingProcess( null ); // marks that the saving is over.
 		await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 		setCreditCardSettingsSavingProcess( false );
