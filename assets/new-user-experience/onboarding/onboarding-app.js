@@ -1,13 +1,13 @@
 /**
  * External dependencies.
  */
-import { useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies.
  */
 import { useSquareSettings } from '../settings/hooks';
-import { usePaymentGatewaySettings } from '../onboarding/hooks';
+import { usePaymentGatewaySettings } from './hooks';
 import {
 	CashAppSetup,
 	ConnectSetup,
@@ -45,12 +45,36 @@ const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings )
 const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState('connect-square');
-	const [backStep, setBackStep] = useState('');
-	const [title, setTitle] = useState('Plugin Activated');
+	const [step, setStep] = useState( localStorage.getItem('step') || 'connect-square' );
+	const [backStep, setBackStep] = useState( localStorage.getItem('backStep') || '' );
 	const {
 		settings,
 	} = useSquareSettings( true );
+
+	// Set info in local storage.
+	useEffect(() => {
+		localStorage.setItem('step', step);
+		localStorage.setItem('backStep', backStep);
+	}, [step, backStep]);
+
+	// Set the backStep value.
+	useEffect(() => {
+		switch (step) {
+			case 'connect-square':
+			case 'business-location':
+				setBackStep('');
+				break;
+			case 'payment-methods':
+				setBackStep('business-location');
+				break;
+			case 'payment-complete':
+				setBackStep('payment-methods');
+				break;
+			default:
+				setBackStep('payment-complete');
+				break;
+		}
+	}, [step]);
 
 	// Calling this once to populate the data store.
 	usePaymentGatewaySettings( true );
