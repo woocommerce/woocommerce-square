@@ -11,7 +11,6 @@
     .backBtn {
         button {
             margin-left: 10px;
-            font-size: 15px;
             font-weight: 590;
         }
 
@@ -22,7 +21,7 @@
 
     .wizardTitle {
         text-align: center;
-        font-size: 23px;
+        margin-left: 70px;
 
         svg {
             margin: 0 10px -7px;
@@ -35,19 +34,5 @@
 
     .closeWizard {
         margin-right: 20px;
-    }
-}
-
-.woocommerce_page_woocommerce-square-onboarding {
-    #wpcontent {
-        background: #FFF;
-    }
-
-    #wpbody-content {
-        margin-top: 100px;
-    }
-
-    .notice:not(.import-notice) {
-        display: none !important;
     }
 }

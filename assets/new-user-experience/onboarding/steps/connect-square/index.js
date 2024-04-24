@@ -33,7 +33,7 @@ export const ConnectSetup = ( { useSquareSettings } ) => {
 							href={settings.connection_url_wizard}
 					>
 						{
-							__( 'Connect to Square', 'woocommerce-square' )
+							__( 'Connect with Square', 'woocommerce-square' )
 						}
 					</Button>
 				</Section>
