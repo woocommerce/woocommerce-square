@@ -1,7 +1,6 @@
 /**
  * External dependencies.
  */
-import { useEffect, useRef } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { useDispatch } from '@wordpress/data';
 import parse from 'html-react-parser';
@@ -19,22 +18,22 @@ import {
 	SectionDescription,
 	InputWrapper,
 	SquareSettingsSaveButton,
+	Loader,
 } from '../components';
 import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 import { useSquareSettings } from './hooks';
-import { connectToSquare, filterBusinessLocations, getSquareSettings } from '../utils';
+import { connectToSquare, filterBusinessLocations } from '../utils';
 
 export const SettingsApp = () => {
+	const useSquareSettingsData = useSquareSettings( true );
 	const {
 		settings,
 		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
-		setBusinessLocation,
 		saveSquareSettings,
-	} = useSquareSettings( true );
+	} = useSquareSettingsData;
 
-	const isFirstLoad = useRef( true );
 	const { createSuccessNotice } = useDispatch( 'core/notices' );
 
 	const settingsWrapperStyle = {
@@ -44,27 +43,21 @@ export const SettingsApp = () => {
 		marginLeft: '50px',
 	};
 
-	useEffect( () => {
-		if ( isFirstLoad.current ) {
-			isFirstLoad.current = false;
-			return;
-		}
-		if ( false === isSquareSettingsSaving ) {
-			( async () => {
-				const settings = await getSquareSettings();
-				setBusinessLocation( settings.locations )
-			} )()
-		}
-	}, [ isSquareSettingsSaving ] );
-
 	const {
+		enable_sandbox = 'yes',
 		sandbox_location_id = '',
 		is_connected = false,
+		connection_url = '',
 		disconnection_url = '',
 		locations = [],
 	} = settings;
 
 	const initiateConnection = async () => {
+		if ( 'yes' !== enable_sandbox ) {
+			window.location.assign( connection_url );
+			return;
+		}
+
 		const response = await saveSquareSettings();
 
 		if ( ! response?.success ) {
@@ -85,32 +78,11 @@ export const SettingsApp = () => {
 	};
 
 	if ( ! squareSettingsLoaded ) {
-		return null;
+		return <Loader />;
 	}
 
 	return (
 		<div style={ settingsWrapperStyle }>
-			<SandboxSettings />
-
-			<InputWrapper
-					label={ __( 'Connection', 'woocommerce-square' ) }
-					variant="boxed"
-				>
-					<Button
-						variant='primary'
-						{ ...( is_connected && { href: disconnection_url } ) }
-						onClick={ () => initiateConnection() }
-						isBusy={ isSquareSettingsSaving }
-						disabled={ isSquareSettingsSaving }
-					>
-						{
-							is_connected
-							? __( 'Disconnect from Square', 'woocommerce-square' )
-							: __( 'Connect to Square', 'woocommerce-square' )
-						}
-					</Button>
-				</InputWrapper>
-
 			{ is_connected && ( <Section>
 				<SectionTitle title={ __( 'Select your business location', 'woocommerce-square' ) } />
 				<SectionDescription>
@@ -137,9 +109,30 @@ export const SettingsApp = () => {
 				</InputWrapper>
 			</Section> ) }
 
-			{ is_connected && <ConfigureSync indent={2} /> }
+			{ is_connected && <ConfigureSync indent={2} useSquareSettings={useSquareSettingsData} /> }
 
-			<AdvancedSettings />
+			<SandboxSettings useSquareSettings={useSquareSettingsData} />
+
+			<InputWrapper
+					label={ __( 'Connection', 'woocommerce-square' ) }
+					variant="boxed"
+				>
+					<Button
+						variant='primary'
+						{ ...( is_connected && { href: disconnection_url } ) }
+						onClick={ () => initiateConnection() }
+						isBusy={ isSquareSettingsSaving }
+						disabled={ isSquareSettingsSaving }
+					>
+						{
+							is_connected
+							? __( 'Disconnect from Square', 'woocommerce-square' )
+							: __( 'Connect to Square', 'woocommerce-square' )
+						}
+					</Button>
+			</InputWrapper>
+
+			<AdvancedSettings useSquareSettings={useSquareSettingsData} />
 
 			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
 		</div>
