@@ -19,10 +19,8 @@ import {
 	SquareCheckboxControl,
 } from '../../../components';
 
-import { useSettings } from '../../hooks';
-
-export const DigitalWalletsSetup = () => {
-	const { setDigitalWalletData, getDigitalWalletData } = useSettings();
+export const DigitalWalletsSetup = ({ usePaymentGatewaySettings }) => {
+	const { setDigitalWalletData, getDigitalWalletData, paymentGatewaySettingsLoaded } = usePaymentGatewaySettings;
 	const {
 		enable_digital_wallets,
 		digital_wallets_button_type,
@@ -30,6 +28,10 @@ export const DigitalWalletsSetup = () => {
 		digital_wallets_google_pay_button_color,
 		digital_wallets_hide_button_options,
 	} = getDigitalWalletData();
+
+	if ( ! paymentGatewaySettingsLoaded ) {
+		return null;
+	}
 
 	return (
 		<>

@@ -6,7 +6,6 @@ import {
 	TextareaControl,
 	SelectControl,
 } from '@wordpress/components';
-import { MultiSelectControl } from '@codeamp/block-components';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -20,10 +19,8 @@ import {
 	SquareCheckboxControl,
 } from '../../../components';
 
-import { useSettings } from '../../hooks';
-
-export const CashAppSetup = () => {
-	const { setCashAppData, getCashAppData } = useSettings();
+export const CashAppSetup = ( { usePaymentGatewaySettings } ) => {
+	const { setCashAppData, getCashAppData } = usePaymentGatewaySettings;
 	const {
 		enabled,
 		title,

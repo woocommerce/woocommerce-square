@@ -13,12 +13,11 @@ import {
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
-import { useSquareSettings } from '../../../settings/hooks';
 
-export const ConnectSetup = ( {} ) => {
+export const ConnectSetup = ( { useSquareSettings } ) => {
 	const {
 		settings,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
 	return (
 		<div className="woo-square-onbarding__connect-square">
@@ -31,7 +30,7 @@ export const ConnectSetup = ( {} ) => {
 
 					<Button
 							variant='primary'
-							href={settings.connection_url}
+							href={settings.connection_url_wizard}
 					>
 						{
 							__( 'Connect to Square', 'woocommerce-square' )

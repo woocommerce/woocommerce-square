@@ -15,7 +15,7 @@ import { __ } from '@wordpress/i18n';
 import './index.scss';
 import { Back, Square, Close } from '../../icons';
 
-export const OnboardingHeader = ( { backStep, title, setStep } ) => {
+export const OnboardingHeader = ( { backStep, setStep } ) => {
     return (
         <div className="woo-square-onboarding__header">
             <Flex direction={[
@@ -32,8 +32,6 @@ export const OnboardingHeader = ( { backStep, title, setStep } ) => {
                 </FlexItem>
                 <FlexBlock className='wizardTitle'>
                     <Square />
-                    { __( 'Setup Wizard', 'woocommerce-square' ) + ' - ' }
-                    <span>{ title }</span>
                 </FlexBlock>
                 <FlexItem className='flexItem closeWizard'>
                     <Button href='/wp-admin/'>

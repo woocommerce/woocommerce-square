@@ -1,5 +1,6 @@
 import { __ } from '@wordpress/i18n';
 import {
+	Button,
 	SelectControl,
 } from '@wordpress/components';
 
@@ -11,14 +12,12 @@ import {
 	SquareSettingsSaveButton,
 } from '../../../components';
 
-import { useSquareSettings } from '../../../settings/hooks';
-
-export const BusinessLocation = ({ setStep }) => {
+export const BusinessLocation = ({ setStep, useSquareSettings }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
 	const {
 		sandbox_location_id,
@@ -29,7 +28,30 @@ export const BusinessLocation = ({ setStep }) => {
 		return null;
 	}
 
-	const intro = 1 === locations.length ? (
+	// Check if no locations found.
+	const locationCount = locations.length;
+	const buttonText = 1 === locationCount ? __( 'Confirm', 'woocommerce-square' ) : __( 'Next', 'woocommerce-square' );
+
+	const noLocation = (
+		<>
+			<Section>
+				<SectionTitle title={ __( 'Your Square account is missing a Business Location', 'woocommerce-square' ) } />
+				<SectionDescription>
+					<p>
+						{ __( 'Please go here or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ) }
+					</p>
+				</SectionDescription>
+			</Section>
+			<Button
+				variant="primary"
+				onClick={ () => window.open( 'https://squareup.com/', '_blank' ) }
+			>
+				{ __( 'Create a Business Location', 'woocommerce-square' ) }
+			</Button>
+		</>
+	);
+
+	const intro = 1 === locationCount ? (
 		<>
 			<SectionTitle title={ __( 'Confirm Your Business Location', 'woocommerce-square' ) } />
 			<SectionDescription>
@@ -58,20 +80,32 @@ export const BusinessLocation = ({ setStep }) => {
 	return (
 		<div>
 			<Section>
-				{ intro }
-				<div className='woo-square-wizard__fields'>
-					<InputWrapper>
-						<SelectControl
-							value={ sandbox_location_id }
-							onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id }) }
-							options={ [
-								{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
-								...locations
-							] }
+				{(locationCount === 0 && noLocation) ||
+					(locationCount && (
+					<>
+						{intro}
+						<div className='woo-square-wizard__fields'>
+							<InputWrapper>
+								<SelectControl
+								value={sandbox_location_id}
+								onChange={(sandbox_location_id) =>
+									setSquareSettingData({ sandbox_location_id })
+								}
+								options={[
+									{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
+									...locations
+								]}
+								/>
+							</InputWrapper>
+						</div>
+						<SquareSettingsSaveButton
+							label={buttonText}
+							nextStep={'payment-methods'}
+							setStep={setStep}
 						/>
-					</InputWrapper>
-				</div>
-				<SquareSettingsSaveButton label={ __( 'Apply changes', 'woocommerce-square' ) } nextStep='payment-methods' setStep={setStep} />
+					</>
+					))
+				}
 			</Section>
 		</div>
 	);

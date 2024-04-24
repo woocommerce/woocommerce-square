@@ -20,6 +20,8 @@ export const useSettingsForm = ( initialState = {} ) => {
 		is_connected: false,
 		disconnection_url: '',
 		connection_url: '',
+		connection_url_sandbox: '',
+		connection_url_wizard: '',
 		locations: [],
 	};
 
@@ -72,10 +74,12 @@ export const useSquareSettings = ( fromServer = false ) => {
 		}
 
 		( async () => {
-			const settings = await getSquareSettings();
-			setSquareSettingData( settings );
-			setBusinessLocation( settings.locations );
-			setSquareSettingsLoaded( true );
+			if ( ! squareSettingsLoaded ) {
+				const settings = await getSquareSettings();
+				setSquareSettingData( settings );
+				setBusinessLocation( settings.locations );
+				setSquareSettingsLoaded( true );
+			}
 		} )()
 	}, [ fromServer ] );
 

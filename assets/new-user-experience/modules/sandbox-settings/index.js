@@ -16,14 +16,13 @@ import {
 	SectionDescription,
 	InputWrapper,
 } from '../../components';
-import { useSquareSettings } from '../../settings/hooks';
 
-export const SandboxSettings = () => {
+export const SandboxSettings = ( { useSquareSettings }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
 	const {
 		enable_sandbox = 'yes',

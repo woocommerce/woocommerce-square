@@ -15,14 +15,12 @@ import {
 	SquareCheckboxControl,
 } from '../../components';
 
-import { useSquareSettings } from '../../settings/hooks';
-
-export const AdvancedSettings = () => {
+export const AdvancedSettings = ( { useSquareSettings }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
 	const {
 		debug_logging_enabled = 'no',
