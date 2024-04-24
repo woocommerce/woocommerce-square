@@ -6,6 +6,7 @@
     background: #fff;
     padding: 22px 0;
     border-bottom: 0.5px solid #bfbfbf;
+    z-index: 99999;
 
     .backBtn {
         button {
@@ -44,5 +45,9 @@
 
     #wpbody-content {
         margin-top: 100px;
+    }
+
+    .notice:not(.import-notice) {
+        display: none !important;
     }
 }

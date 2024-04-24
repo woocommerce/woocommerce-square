@@ -76,6 +76,7 @@
 // Hide all elements after the react based settings container, hiding the native settings.
 #woocommerce-square-payment-gateway-settings__container--square_cash_app_pay ~ *,
 #woocommerce-square-payment-gateway-settings__container--square_credit_card ~ *,
-#woocommerce-square-settings__container ~ * {
+#woocommerce-square-payment-gateway-settings__container--gift_cards_pay ~ *,
+#woocommerce-square-settings__container-general ~ * {
 	display: none;
 }

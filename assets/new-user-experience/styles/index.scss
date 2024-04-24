@@ -1,12 +1,36 @@
 // Common styles for onboarding and settings.
 .woo-square-onboarding__cover {
-	width: 600px;
+	width: 400px;
+	max-width: 100%;
 	margin: 80px auto;
 	text-align: center;
 
+	&.payment-complete,
+	&.payment-methods {
+		width: 100%;
+	}
+
 	.woo-square-wizard__fields {
 		width: 450px;
+		max-width: 100%;
 		margin: auto;
 		text-align: left;
+	}
+}
+
+.woo-square-loader {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+
+	svg {
+		height: 100px;
+		width: 100px;
+		z-index: 99999;
 	}
 }
