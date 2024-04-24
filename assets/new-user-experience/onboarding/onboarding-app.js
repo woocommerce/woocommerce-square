@@ -22,28 +22,6 @@ import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
 
-const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
-	<>
-		<WrappedComponent { ...props } />
-		<PaymentGatewaySettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
-	</>
-);
-
-const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
-	<>
-		<WrappedComponent { ...props } />
-		<SquareSettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
-	</>
-);
-
-const WrapperCreditCardSetup = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
-const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
-const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
-const WrapperCashAppSetup = paymentGatwaySettingsWithSaveButton( CashAppSetup );
-const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
-const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings );
-const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
-
 export const OnboardingApp = () => {
 	const [step, setStep] = useState( localStorage.getItem('step') || 'connect-square' );
 	const [backStep, setBackStep] = useState( localStorage.getItem('backStep') || '' );
@@ -68,6 +46,7 @@ export const OnboardingApp = () => {
 		localStorage.setItem('backStep', backStep);
 	}, [step, backStep]);
 
+	// Set the settings loaded value based on the step.
 	useEffect(() => {
 		switch (step) {
 			case 'connect-square':
@@ -113,6 +92,28 @@ export const OnboardingApp = () => {
 	if ( ! squareSettingsLoaded ) {
 		return <Loader />;
 	}
+
+	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
+		<>
+			<WrappedComponent { ...props } />
+			<PaymentGatewaySettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
+		</>
+	);
+	
+	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
+		<>
+			<WrappedComponent { ...props } />
+			<SquareSettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
+		</>
+	);
+	
+	const WrapperCreditCardSetup = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
+	const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
+	const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
+	const WrapperCashAppSetup = paymentGatwaySettingsWithSaveButton( CashAppSetup );
+	const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
+	const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings );
+	const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
 
 	// Redirect to the next page from the connect page when connection is successful.
 	if ( 'connect-square' === step && settings.is_connected ) {

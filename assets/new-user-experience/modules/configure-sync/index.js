@@ -23,9 +23,7 @@ import {
 	SquareCheckboxControl,
 } from '../../components';
 
-import { useSquareSettings } from '../../settings/hooks';
-
-export const ConfigureSync = ( { indent = 0 }) => {
+export const ConfigureSync = ( { indent = 0, useSquareSettings }) => {
 	const {
 		settings,
 		squareSettingsLoaded,

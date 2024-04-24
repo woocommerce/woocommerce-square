@@ -19,8 +19,11 @@ import {
 } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 
-export const PaymentComplete = ( { setStep, usePaymentGatewaySettingsData }) => {
-	console.log( usePaymentGatewaySettingsData );
+export const PaymentComplete = ( { setStep, usePaymentGatewaySettings }) => {
+	const creditCardEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enabled;
+	const digitalWalletsEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enable_digital_wallets;
+	const giftCardsEnabled = usePaymentGatewaySettings.giftCardsGatewaySettings.enabled;
+	const cashAppEnabled = usePaymentGatewaySettings.cashAppGatewaySettings.enabled;
 	
 	return (
 		<>
@@ -70,34 +73,46 @@ export const PaymentComplete = ( { setStep, usePaymentGatewaySettingsData }) => 
 							</FlexItem>
 						</Flex>
 
-						<Divider margin="10"/>
+						{ ( 'yes' === creditCardEnabled || 'yes' === digitalWalletsEnabled || 'yes' === cashAppEnabled || 'yes' === giftCardsEnabled ) && (
+							<>
+								<Divider margin="10"/>
 
-						<Flex direction={[
-							'column',
-							'row'
-						]}>
-							<FlexItem className='flexItem iconBox'>
-								<Manage />
-							</FlexItem>
-							<FlexBlock className='flexItem contentBox'>
-								<b>{ __( 'Manage Payment Methods', 'woocommerce-square' ) }</b>
-								<p>{ __( 'Easily add, edit, or remove your credit cards, digital wallets, and Cash App settings to streamline your payments securely and efficiently.', 'woocommerce-square' ) }</p>
-							</FlexBlock>
-							<FlexItem>
-								<Button variant="secondary" onClick={ () => setStep( 'credit-card' ) }>
-									{ __( 'Credit Card Settings', 'woocommerce-square' ) }
-								</Button>
-								<Button variant="secondary" onClick={ () => setStep( 'digital-wallets' ) }>
-									{ __( 'Digital Wallet Settings', 'woocommerce-square' ) }
-								</Button>
-								<Button variant="secondary" onClick={ () => setStep( 'cash-app' ) }>
-									{ __( 'Cash App Pay Settings', 'woocommerce-square' ) }
-								</Button>
-								<Button variant="secondary" onClick={ () => setStep( 'gift-card' ) }>
-									{ __( 'Gift Cards Settings', 'woocommerce-square' ) }
-								</Button>
-							</FlexItem>
-						</Flex>
+								<Flex direction={[
+									'column',
+									'row'
+								]}>
+									<FlexItem className='flexItem iconBox'>
+										<Manage />
+									</FlexItem>
+									<FlexBlock className='flexItem contentBox'>
+										<b>{ __( 'Manage Payment Methods', 'woocommerce-square' ) }</b>
+										<p>{ __( 'Easily add, edit, or remove your credit cards, digital wallets, and Cash App settings to streamline your payments securely and efficiently.', 'woocommerce-square' ) }</p>
+									</FlexBlock>
+									<FlexItem>
+										{ 'yes' === creditCardEnabled && 
+											<Button variant="secondary" onClick={ () => setStep( 'credit-card' ) }>
+												{ __( 'Credit Card Settings', 'woocommerce-square' ) }
+											</Button>
+										}
+										{ 'yes' === digitalWalletsEnabled &&
+											<Button variant="secondary" onClick={ () => setStep( 'digital-wallets' ) }>
+												{ __( 'Digital Wallet Settings', 'woocommerce-square' ) }
+											</Button>
+										}
+										{ 'yes' === cashAppEnabled &&
+											<Button variant="secondary" onClick={ () => setStep( 'cash-app' ) }>
+												{ __( 'Cash App Pay Settings', 'woocommerce-square' ) }
+											</Button>
+										}
+										{ 'yes' === giftCardsEnabled &&								
+											<Button variant="secondary" onClick={ () => setStep( 'gift-card' ) }>
+												{ __( 'Gift Cards Settings', 'woocommerce-square' ) }
+											</Button>
+										}
+									</FlexItem>
+								</Flex>
+							</>
+						)}
 
 						<Divider margin="10"/>
 
