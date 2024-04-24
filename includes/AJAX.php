@@ -59,6 +59,35 @@ class AJAX {
 
 		// get the status of a sync job
 		add_action( 'wp_ajax_wc_square_get_sync_with_square_status', array( $this, 'get_sync_with_square_job_status' ) );
+
+		// rest end point to import products
+		add_action( 'rest_api_init', array( $this, 'register_rest_endpoints' ) );
+	}
+
+	/**
+	 * Register REST API endpoints.
+	 *
+	 * @since 2.1.6
+	 */
+	public function register_rest_endpoints() {
+		register_rest_route(
+			'wc/v3',
+			'wc_square/import-products',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'import_products_from_square' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+			)
+		);
+	}
+
+	/**
+	 * Verify access.
+	 *
+	 * Override this method if custom permissions required.
+	 */
+	public function check_permission() {
+		return current_user_can( 'manage_woocommerce' );
 	}
 
 	/**
@@ -108,16 +137,24 @@ class AJAX {
 	 *
 	 * @since 2.0.0
 	 */
-	public function import_products_from_square() {
+	public function import_products_from_square( $request = null ) {
 
-		check_ajax_referer( 'import-products-from-square', 'security' );
+		$api_callback = $request ? $request->get_param( 'api_callback' ) : false;
+		
+		$update_during_import = $request
+			? $request->get_param( 'update_during_import' )
+			: ( ! empty( $_POST['update_during_import'] ) && 'true' === $_POST['update_during_import'] );
+
+		if ( ! $api_callback ) {
+			check_ajax_referer( 'import-products-from-square', 'security' );
+		}
 
 		// The edit_others_shop_orders capability is used to determine if the user can access these settings.
 		if ( ! current_user_can( 'edit_others_shop_orders' ) ) {
 			wp_send_json_error( __( 'Could not start import. Invalid permissions.', 'woocommerce-square' ) );
 		}
 
-		$started = wc_square()->get_sync_handler()->start_product_import( ( ! empty( $_POST['update_during_import'] ) && 'true' === $_POST['update_during_import'] ) );
+		$started = wc_square()->get_sync_handler()->start_product_import( $update_during_import );
 
 		if ( ! $started ) {
 			wp_send_json_error( __( 'Could not start import. Please try again.', 'woocommerce-square' ) );

@@ -4,8 +4,13 @@
 import { __, sprintf } from '@wordpress/i18n';
 import parse from 'html-react-parser';
 import {
+    Button,
 	SelectControl,
+    Modal,
+    CheckboxControl,
 } from '@wordpress/components';
+import { useState } from '@wordpress/element';
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal dependencies.
@@ -25,8 +30,14 @@ export const ConfigureSync = ( { indent = 0 }) => {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
+    const [ updateImport, setUpdateImport ] = useState( false );
+    const [ isOpen, setOpen ] = useState( false );
+    const [ isImporting, setIsImporting ] = useState( false );
+    const [ importDoneNotice, setImportDoneNotice ] = useState( '' );
+    const openModal = () => setOpen( true );
+    const closeModal = () => setOpen( false );
 
 	const {
 		system_of_record = 'disabled',
@@ -84,6 +95,21 @@ export const ConfigureSync = ( { indent = 0 }) => {
 		return null;
 	}
 
+    const importProducts = async () => {
+        const response = await apiFetch( {
+			path: '/wc/v3/wc_square/import-products',
+			method: 'POST',
+			data: {
+                update_during_import: updateImport,
+                api_callback: true,
+            },
+		} );
+
+        closeModal();
+        setIsImporting( false );
+        setImportDoneNotice( response.data );
+    }
+
 	return (
 		<>
 			{ is_connected && ( <Section>
@@ -130,7 +156,7 @@ export const ConfigureSync = ( { indent = 0 }) => {
                     {
                         'woocommerce' === system_of_record && (
                             <InputWrapper
-                                label={ __( 'Sync Inventory2', 'woocommerce-square' ) }
+                                label={ __( 'Sync Inventory', 'woocommerce-square' ) }
                                 indent = { indent }
                                 description={
                                     parse(
@@ -206,6 +232,66 @@ export const ConfigureSync = ( { indent = 0 }) => {
                                     onChange={ ( sync_interval ) => setSquareSettingData( { sync_interval } ) }
                                 />
                             </InputWrapper>
+                        )
+                    }
+
+                    {
+                        ( 'woocommerce' === system_of_record ) && (
+                            <>
+                                <InputWrapper
+                                    label={ __( 'Import Products', 'woocommerce-square' ) }
+                                >
+                                    <Button
+                                        variant='secondary'
+                                        className='import-square-products-react'
+                                        onClick={ openModal }
+                                        style={ { display: importDoneNotice ? 'none' : 'block' } }
+                                    >
+                                        { __( 'Import all Products from Square', 'woocommerce-square' ) }
+                                    </Button>
+                                    <div className='import-notice notice notice-info is-dismissible' style={ { display: importDoneNotice ? 'block' : 'none', padding: '10px' } }>
+                                        { importDoneNotice }
+                                    </div>
+                                </InputWrapper>
+
+                                { isOpen &&
+                                    <Modal title='Import Products From Square' size={'large'} onRequestClose={ closeModal }>
+                                        <div className='import-modal-cover'>
+                                            <div className='import-modal-content'>
+                                                <p>{__( 'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.', 'woocommerce-square' )} </p>
+                                                <h4>{__( 'Do you wish to import existing product updates from Square?', 'woocommerce-square' )} </h4>
+                                                <p>
+                                                    {
+                                                        parse(
+                                                            sprintf( __( 'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.', 'woocommerce-square' ), '<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">', '</a>' )
+                                                        )
+                                                    }
+                                                </p>
+                                                <CheckboxControl
+                                                    checked={ updateImport }
+                                                    onChange={ ( updateImport ) => setUpdateImport( updateImport ) }
+                                                    label={ __( 'Update existing products during import.', 'woocommerce-square' ) }
+                                                />
+                                            </div>
+                                            <div className="import-buttons">
+                                                <Button variant="secondary" onClick={ closeModal }>
+                                                    {__( 'Cancel', 'woocommerce-square' )}
+                                                </Button>
+                                                <Button
+                                                    variant="primary"
+                                                    onClick={ () => {
+                                                        setIsImporting( true );
+                                                        importProducts();
+                                                    } }
+                                                    isBusy={ isImporting }
+                                                >
+                                                    {__( 'Import Products', 'woocommerce-square' )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Modal>
+                                }
+                            </>
                         )
                     }
                 </div>

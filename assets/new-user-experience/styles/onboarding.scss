@@ -13,6 +13,18 @@
 			box-shadow: inset 0 0 0 1px #949494;
 		}
 	}
+
+	.components-button {
+		min-width: 70px;
+		width: 100%;
+		text-align: center;
+		display: block;
+		padding: 10px 0;
+	}
+
+	.woo-square-setting__section-description {
+		margin: 30px 0;
+	}
 }
 
 // Styles for Payment Methods and Payment Complete Steps.
@@ -20,21 +32,16 @@
 	display: flex;
 	justify-content: center;
 	align-items: stretch;
-	position: absolute;
-	top: 0;
-	left: 0;
 	width: 100%;
 	height: 100vh;
 	z-index: 9999;
-	margin-left: -20px;
-
-	.woo-square-onbarding__payment-settings__toggles {
-		box-sizing: border-box;
-	}
+	// margin-left: -20px;
+	text-align: left;
 
 	&--left {
 		background-color: #fff;
 		width: 50%;
+		position: relative;
 	}
 
 	&__intro {
@@ -49,14 +56,23 @@
 	&__center-icon {
 		position: absolute;
 		top: 50%;
-		left: calc( 50% - 94.5px );
+		right: 0;
 		z-index: 999;
 		transform: translate( 0, -50% );
 	}
 
 	&--right {
 		width: 50%;
-		background-color: #F0F0F1;
+
+		&:before {
+			content: '';
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			display: block;
+			top: 0;
+			background: #F0F0F1;
+		}
 	}
 
 	&__intro--title {
@@ -84,8 +100,9 @@
 		top: 50%;
 		left: -50px;
 		transform: translate( 0, -50% );
-		width: 915px;
-		max-width: 100%;
+		max-width: 915px;
+		width: 100%;
+		box-sizing: border-box;
 
 		&__next-btn {
 			position: absolute;
