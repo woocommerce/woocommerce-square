@@ -12,79 +12,25 @@ import store from '../data/store';
 import {
 	getPaymentGatewaySettingsData,
 	getCashAppSettingsData,
+	getGiftCardsSettingsData,
 } from '../../utils';
 
 /**
  * Getters / Setters for payment gateway data store.
  */
-export const useSettings = () => {
-	const dispatch = useDispatch();
-
-	const getCreditCardData = ( key ) => useSelect( ( select ) => select( store ).getCreditCardData( key ));
-	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ));
-	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ));
-	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ));
-
-	const setCreditCardData = ( data ) => dispatch( store ).setCreditCardData( data );
-	const setDigitalWalletData = ( data ) => dispatch( store ).setDigitalWalletData( data );
-	const setGiftCardData = ( data ) => dispatch( store ).setGiftCardData( data );
-	const setCashAppData = ( data ) => dispatch( store ).setCashAppData( data );
-
-	return {
-		getCreditCardData,
-		getDigitalWalletData,
-		getGiftCardData,
-		getCashAppData,
-		setCreditCardData,
-		setDigitalWalletData,
-		setGiftCardData,
-		setCashAppData
-	};
-};
-
-export const useCashAppData = () => {
-	const {
-		getCashAppData,
-		setCashAppData,
-	} = useSettings();
-
-	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
-
-	/**
-	 * Initializes cash app gateway data store.
-	 */
-	useEffect( () => {
-		( async function () {
-			const { cashApp } = await getCashAppSettingsData();
-
-			setCashAppData( cashApp );
-			setSettingsLoaded( true );
-		} )();
-	}, [] );
-
-	const cashAppData = {
-		...getCashAppData(),
-	};
-
-	return {
-		getCashAppData,
-		setCashAppData,
-		cashAppData,
-		settingsLoaded
-	};
-};
-
 export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	const dispatch = useDispatch();
 
 	const [ paymentGatewaySettingsLoaded, setPaymentGatewaySettingsLoaded ] = useState( false );
 	const [ cashAppGatewaySettingsLoaded, setCashAppGatewaySettingsLoaded ] = useState( false );
+	const [ giftCardsGatewaySettingsLoaded, setGiftCardsGatewaySettingsLoaded ] = useState( false );
 	const getCreditCardData = ( key ) => useSelect( ( select ) => select( store ).getCreditCardData( key ));
 	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ));
 	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ));
 	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ));
 	const getCreditCardSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCreditCardSettingsSavingProcess( key ) );
 	const getCashAppSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCashAppSettingsSavingProcess( key ) );
+	const getGiftCardsSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getGiftCardsSettingsSavingProcess( key ) );
 
 	const setCreditCardData = ( data ) => dispatch( store ).setCreditCardData( data );
 	const setDigitalWalletData = ( data ) => dispatch( store ).setDigitalWalletData( data );
@@ -93,17 +39,24 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 
 	const setCreditCardSettingsSavingProcess = ( data ) => dispatch( store ).setCreditCardSettingsSavingProcess( data );
 	const setCashAppSettingsSavingProcess = ( data ) => dispatch( store ).setCashAppSettingsSavingProcess( data );
+	const setGiftCardsSettingsSavingProcess = ( data ) => dispatch( store ).setGiftCardsSettingsSavingProcess( data );
 
 	const isPaymentGatewaySettingsSaving = getCreditCardSettingsSavingProcess();
 	const isCashAppGatewaySettingsSaving = getCashAppSettingsSavingProcess();
+	const isGiftCardsGatewaySettingsSaving = getGiftCardsSettingsSavingProcess();
 
 	const paymentGatewaySettings = {
 		...getCreditCardData(),
 		...getDigitalWalletData(),
+	};
+
+	const giftCardsGatewaySettings = {
 		...getGiftCardData(),
 	};
 
-	const cashAppGatewaySettings = getCashAppData();
+	const cashAppGatewaySettings = {
+		...getCashAppData(),
+	};
 
 	const savePaymentGatewaySettings = async () => {
 		setCreditCardSettingsSavingProcess( true );
@@ -114,10 +67,25 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 			data: paymentGatewaySettings,
 		} );
 
-		// why is this promise required?
 		setCreditCardSettingsSavingProcess( null ); // marks that the saving is over.
 		await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 		setCreditCardSettingsSavingProcess( false );
+	
+		return response;
+	};
+
+	const saveGiftCardsSettings = async () => {
+		setGiftCardsSettingsSavingProcess( true );
+
+		const response = await apiFetch( {
+			path: '/wc/v3/wc_square/gift_cards_settings',
+			method: 'POST',
+			data: giftCardsGatewaySettings,
+		} );
+
+		setGiftCardsSettingsSavingProcess( null ); // marks that the saving is over.
+		await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
+		setGiftCardsSettingsSavingProcess( false );
 	
 		return response;
 	};
@@ -146,12 +114,18 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 		}
 
 		( async () => {
-			const { creditCard, digitalWallet, giftCard } = await getPaymentGatewaySettingsData();
+			if ( ! paymentGatewaySettingsLoaded ) {
+				const { creditCard, digitalWallet } = await getPaymentGatewaySettingsData();
+				setCreditCardData( creditCard );
+				setDigitalWalletData( digitalWallet );
+				setPaymentGatewaySettingsLoaded( true );
+			}
 
-			setCreditCardData( creditCard );
-			setDigitalWalletData( digitalWallet );
-			setGiftCardData( giftCard );
-			setPaymentGatewaySettingsLoaded( true );
+			if ( ! giftCardsGatewaySettingsLoaded ) {
+				const { giftCard } = await getGiftCardsSettingsData();
+				setGiftCardData( giftCard );
+				setGiftCardsGatewaySettingsLoaded( true );
+			}
 		} )()
 	}, [ fromServer ] );
 
@@ -163,20 +137,25 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 		}
 
 		( async () => {
-			const { cashAppSettings } = await getCashAppSettingsData();
+			const { cashApp } = await getCashAppSettingsData();
 
-			setCashAppData( cashAppSettings );
-			setCashAppGatewaySettingsLoaded( true );
+			if ( ! cashAppGatewaySettingsLoaded ) {
+				setCashAppData( cashApp );
+				setCashAppGatewaySettingsLoaded( true );
+			}
 		} )()
 	}, [ fromServer ] )
 
 	return {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
+		isGiftCardsGatewaySettingsSaving,
 		paymentGatewaySettings,
 		cashAppGatewaySettings,
+		giftCardsGatewaySettings,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
+		giftCardsGatewaySettingsLoaded,
 		getCreditCardData,
 		getDigitalWalletData,
 		getGiftCardData,
@@ -186,6 +165,7 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 		setGiftCardData,
 		setCashAppData,
 		savePaymentGatewaySettings,
+		saveGiftCardsSettings,
 		saveCashAppSettings,
 	}
 };

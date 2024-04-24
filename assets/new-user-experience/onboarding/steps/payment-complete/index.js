@@ -19,7 +19,8 @@ import {
 } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 
-export const PaymentComplete = ( { setStep }) => {
+export const PaymentComplete = ( { setStep, usePaymentGatewaySettingsData }) => {
+	console.log( usePaymentGatewaySettingsData );
 	
 	return (
 		<>
@@ -91,6 +92,9 @@ export const PaymentComplete = ( { setStep }) => {
 								</Button>
 								<Button variant="secondary" onClick={ () => setStep( 'cash-app' ) }>
 									{ __( 'Cash App Pay Settings', 'woocommerce-square' ) }
+								</Button>
+								<Button variant="secondary" onClick={ () => setStep( 'gift-card' ) }>
+									{ __( 'Gift Cards Settings', 'woocommerce-square' ) }
 								</Button>
 							</FlexItem>
 						</Flex>

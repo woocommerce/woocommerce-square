@@ -52,7 +52,7 @@ const digitalWalletsReducer = ( state = DIGITAL_WALLETS_DEFAULT_STATE, action ) 
 };
 
 export const GIFT_CARDS_DEFAULT_STATE = {
-	enable_gift_cards: 'no',
+	enabled: 'no',
 };
 
 const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
@@ -107,6 +107,8 @@ const SQUARE_SETTINGS_DEFAULT_STATE = {
 	is_connected: false,
 	disconnection_url: '',
 	connection_url: '',
+	connection_url_wizard: '',
+	connection_url_sandbox: '',
 	locations: [],
 }
 
@@ -127,6 +129,7 @@ const PROCESS_STATUS_DEFAULT_STATE = {
 	squareSettingsIsSaving: false,
 	creditCardSettingsIsSaving: false,
 	cashAppSettingsIsSaving: false,
+	giftCardsSettingsIsSaving: false,
 };
 
 const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => {
@@ -147,6 +150,12 @@ const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => 
 			return {
 				...state,
 				cashAppSettingsIsSaving: action.payload,
+			};
+
+		case 'SET_GIFT_CARDS_PROCESS_STATUS':
+			return {
+				...state,
+				giftCardsSettingsIsSaving: action.payload,
 			};
 
 		default:

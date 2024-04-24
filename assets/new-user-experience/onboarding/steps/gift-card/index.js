@@ -12,15 +12,12 @@ import {
 	SectionTitle,
 	SectionDescription,
 	InputWrapper,
-	SquareCheckboxControl,
 } from '../../../components';
 
-import { useSettings } from '../../hooks';
-
-export const GiftCardSetup = () => {
-	const { setGiftCardData, getGiftCardData } = useSettings();
+export const GiftCardSetup = ( { usePaymentGatewaySettings } ) => {
+	const { setGiftCardData, getGiftCardData } = usePaymentGatewaySettings;
 	const {
-		enable_gift_cards
+		enabled
 	} = getGiftCardData();
 
 	return (
@@ -37,8 +34,8 @@ export const GiftCardSetup = () => {
 						variant="boxed"
 					>
 						<ToggleControl
-							checked={ 'yes' === enable_gift_cards }
-							onChange={ ( enable_gift_cards ) => setGiftCardData( { enable_gift_cards: enable_gift_cards ? 'yes' : 'no' } ) }
+							checked={ 'yes' === enabled }
+							onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>
 					</InputWrapper>
 				</div>

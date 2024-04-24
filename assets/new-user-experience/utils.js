@@ -29,11 +29,17 @@ export const getPaymentGatewaySettingsData = async () => {
 		digital_wallets_hide_button_options: settings.digital_wallets_hide_button_options || DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_hide_button_options,
 	};
 
+	return { creditCard, digitalWallet };
+};
+
+export const getGiftCardsSettingsData = async () => {
+	const settings = await apiFetch( { path: '/wc/v3/wc_square/gift_cards_settings' } );
+
 	const giftCard = {
-		enable_gift_cards: settings.enable_gift_cards || GIFT_CARDS_DEFAULT_STATE.enable_gift_cards,
+		enabled: settings.enabled || GIFT_CARDS_DEFAULT_STATE.enabled,
 	};
 
-	return { creditCard, digitalWallet, giftCard };
+	return { giftCard };
 };
 
 export const getCashAppSettingsData = async () => {

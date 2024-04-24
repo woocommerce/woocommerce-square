@@ -60,7 +60,6 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 			'digital_wallets_google_pay_button_color',
 			'digital_wallets_hide_button_options',
 			'gift_card_settings',
-			'enable_gift_cards',
 			'enable_customer_decline_messages',
 			'debug_mode',
 		);
@@ -153,11 +152,6 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 						'description' => __( 'Array of digital wallet buttons to hide', 'woocommerce-square' ),
 						'type' => 'array',
 						'sanitize_callback' => ''
-					),
-					'enable_gift_cards' => array(
-						'description' => __( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
 					),
 					'enable_customer_decline_messages' => array(
 						'description' => __( 'Enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),

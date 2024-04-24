@@ -54,6 +54,13 @@ const setCashAppSettingsSavingProcess = ( data ) => {
 	}
 }
 
+const setGiftCardsSettingsSavingProcess = ( data ) => {
+	return {
+		type: 'SET_GIFT_CARDS_PROCESS_STATUS',
+		payload: data,
+	}
+}
+
 export default {
 	setCreditCardData,
 	setDigitalWalletData,
@@ -63,4 +70,5 @@ export default {
 	setSquareSettingsSavingProcess,
 	setCreditCardSettingsSavingProcess,
 	setCashAppSettingsSavingProcess,
+	setGiftCardsSettingsSavingProcess,
 };
