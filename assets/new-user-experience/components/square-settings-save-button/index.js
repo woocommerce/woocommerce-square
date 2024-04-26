@@ -3,14 +3,16 @@ import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
 import { useSquareSettings } from '../../settings/hooks';
+import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 
 const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
-			afterSaveLabel = __( 'Changes applied' ),
+			afterSaveLabel = __( 'Changes Saved' ),
 			nextStep,
-			setStep
+			setStep,
+			saveSettings = '',
 		} = props;
 
 		const {
@@ -19,6 +21,9 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 			saveSquareSettings,
 		} = useSquareSettings();
 
+		const { paymentGatewaySettings } = 'credit-card' === saveSettings && usePaymentGatewaySettings();
+		const { savePaymentGatewaySettings } = 'credit-card' === saveSettings && usePaymentGatewaySettings();
+
 		return (
 			<WrappedComponent
 				{ ...props }
@@ -26,8 +31,9 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				isBusy={ isSquareSettingsSaving }
 				disabled={ isSquareSettingsSaving }
 				variant="primary"
-				onClick={ () => {
-					saveSquareSettings( settings ).then( () => {
+				onClick={ async () => {
+					'credit-card' === saveSettings && await savePaymentGatewaySettings( paymentGatewaySettings );
+					await saveSquareSettings( settings ).then( () => {
 						if ( nextStep ) {
 							setStep( nextStep );
 						}
