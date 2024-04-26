@@ -8,15 +8,20 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
-			afterSaveLabel = __( 'Changes applied' ),
+			afterSaveLabel = __( 'Changes Saved' ),
 			nextStep,
-			setStep
+			setStep,
+			saveSettings = '',
 		} = props;
 
 		const {
 			isPaymentGatewaySettingsSaving,
 			paymentGatewaySettings,
+			giftCardsGatewaySettings,
+			cashAppGatewaySettings,
 			savePaymentGatewaySettings,
+			saveGiftCardsSettings,
+			saveCashAppSettings,
 		} = usePaymentGatewaySettings();
 
 		return (
@@ -26,11 +31,27 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				isBusy={ isPaymentGatewaySettingsSaving }
 				disabled={ isPaymentGatewaySettingsSaving }
 				variant="primary"
-				onClick={ () => savePaymentGatewaySettings( paymentGatewaySettings ).then( () => {
-					if ( nextStep ) {
-						setStep( nextStep );
+				onClick={ () => {
+					if ('gift-card' === saveSettings) {
+						saveGiftCardsSettings( giftCardsGatewaySettings ).then( () => {
+							if ( nextStep ) {
+								setStep( nextStep );
+							}
+						} );
+					} else if ('cash-app' === saveSettings) {
+						saveCashAppSettings( cashAppGatewaySettings ).then( () => {
+							if ( nextStep ) {
+								setStep( nextStep );
+							}
+						} );
+					} else {
+						savePaymentGatewaySettings( paymentGatewaySettings ).then( () => {
+							if ( nextStep ) {
+								setStep( nextStep );
+							}
+						} );
 					}
-				} ) }
+				} }
 			>
 				{ null === isPaymentGatewaySettingsSaving ? afterSaveLabel : label }
 			</WrappedComponent>
