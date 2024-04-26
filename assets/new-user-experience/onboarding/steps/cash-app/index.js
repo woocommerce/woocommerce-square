@@ -162,7 +162,7 @@ export const CashAppSetup = ( { usePaymentGatewaySettings } ) => {
 								},
 								{
 									label: __( 'Show on Checkout Page', 'woocommerce-square' ),
-									value: 'Checkout'
+									value: 'checkout'
 								},
 								{
 									label: __( 'Save to Log', 'woocommerce-square' ),
