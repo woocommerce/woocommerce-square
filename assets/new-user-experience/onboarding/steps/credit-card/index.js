@@ -31,6 +31,7 @@ export const CreditCardSetup = ( { usePaymentGatewaySettings = [] }) => {
 		transaction_type,
 		tokenization,
 		card_types,
+		debug_mode,
 	} = getCreditCardData();
 
 	if ( ! paymentGatewaySettingsLoaded ) {
@@ -161,6 +162,33 @@ export const CreditCardSetup = ( { usePaymentGatewaySettings = [] }) => {
 							label={ __( 'Check to enable tokenization and allow customers to securely save their payment details for future checkout.', 'woocommerce-square' ) }
 							checked={ 'yes' === tokenization }
 							onChange={ ( tokenization ) => setCreditCardData( { tokenization: tokenization ? 'yes' : 'no' } ) }
+						/>
+					</InputWrapper>
+
+					<InputWrapper
+						label={ __( 'Debug Mode', 'woocommerce-square' ) }
+						>
+						<SelectControl
+							value={ debug_mode }
+							onChange={ ( debug_mode ) => setCreditCardData( { debug_mode } ) }
+							options={ [
+								{
+									label: __( 'Off', 'woocommerce-square' ),
+									value: 'off'
+								},
+								{
+									label: __( 'Show on Checkout Page', 'woocommerce-square' ),
+									value: 'checkout'
+								},
+								{
+									label: __( 'Save to Log', 'woocommerce-square' ),
+									value: 'log'
+								},
+								{
+									label: __( 'Both', 'woocommerce-square' ),
+									value: 'both'
+								}
+							] }
 						/>
 					</InputWrapper>
 				</div>
