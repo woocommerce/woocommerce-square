@@ -1,5 +1,9 @@
 // Settings styles.
-[id*="woocommerce-square-settings__container-general"] {
+[id*="woocommerce-square-settings__container"] {
     position: relative;
     min-height: 400px;
+}
+
+.heading_1 {
+    text-align: left;
 }

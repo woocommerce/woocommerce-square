@@ -3,7 +3,8 @@ body.woocommerce_page_woocommerce-square-onboarding {
 	background: #FFF;
 
     #wpbody-content {
-        margin-top: 100px;
+        padding-bottom: 0;
+    	margin-top: 90px;
     }
 
     .notice:not(.import-notice),
@@ -14,9 +15,13 @@ body.woocommerce_page_woocommerce-square-onboarding {
 
 #woocommerce-square-onboarding {
 	min-height: 700px;
+	margin: 0;
 
 	button {
-		&.is-link,
+		&.is-link {
+			color: #4B4B4B;
+		}
+
 		&.is-secondary {
 			color: #000000;
 		}
@@ -27,6 +32,14 @@ body.woocommerce_page_woocommerce-square-onboarding {
 			min-width: 215px;
 			box-shadow: inset 0 0 0 1px #949494;
 		}
+	}
+
+	hr {
+		color: #4b4b4b80;
+	}
+
+	b {
+		color: #000000;
 	}
 
 	.woo-square-setting__section-description {
@@ -112,6 +125,10 @@ body.woocommerce_page_woocommerce-square-onboarding {
 			top: calc(100% + 46px);
 			right: 0;
 		}
+
+		.woo-square-setting__section-title {
+			text-align: left;
+		}
 	}
 
 	& > * {
@@ -128,5 +145,15 @@ body.woocommerce_page_woocommerce-square-onboarding {
 
 	.flexItem.contentBox {
 		margin-right: 80px;
+	}
+}
+
+@media screen and (max-width: 1900px) {
+	.flexItem.contentBox {
+		margin-right: 20px;
+	}
+
+	.woo-square-onbarding__payment-settings--left {
+		width: 75%;
 	}
 }

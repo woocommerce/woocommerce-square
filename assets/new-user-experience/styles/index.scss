@@ -4,13 +4,21 @@
 	src: url('./fonts/sf-pro/SFPRODISPLAYREGULAR.OTF') format('opentype');
 }
 
-body {
+#woocommerce-square-onboarding,
+#woocommerce-square-settings__container-general,
+[class*="woocommerce-square-payment-gateway-settings__container"] {
 	font-family: 'SF Pro', sans-serif;
 	font-size: 15px;
 	font-weight: 400;
 	line-height: 17.9px;
 	color: #4B4B4B;
 
+	.codeamp-components-multi-select-control__tokens-container {
+		padding: 15px;
+	}
+}
+
+body {
 	p {
 		font-size: 15px;
 		font-weight: 400;
@@ -18,7 +26,7 @@ body {
 	}
 
 	// Adding under body to gain high priority.
-	.components-button {
+	.components-button:not(.codeamp-components-multi-select-control__remove-token) {
 		font-family: 'SF Pro', sans-serif;
 		min-width: 70px;
 		font-size: 15px;
@@ -27,7 +35,7 @@ body {
 		width: 100%;
 		text-align: center;
 		display: block;
-		padding: 15px 0;
+		padding: 15px;
 		min-height: 46px;
 
 		&.is-primary {
@@ -43,6 +51,17 @@ body {
 			&.is-busy[aria-disabled=true] {
 				background-image: linear-gradient(-45deg, #3858E9 33%, #193feb 33%, #1d3fd6 70%, #3858E9 70%);
 			}
+		}
+
+		&.is-link {
+			text-align: left;
+			padding: 0;
+		}
+
+		&.has-icon svg {
+			margin: 0 0 -10px 0;
+			position: relative;
+			top: -4px;
 		}
 	}
 }
@@ -62,8 +81,11 @@ body {
 .woo-square-onboarding__cover {
 	width: 400px;
 	max-width: 100%;
-	margin: 80px auto;
+	// margin: 80px auto;
+	margin: 0;
 	text-align: center;
+	overflow: hidden;
+    position: relative;
 
 	&.payment-complete,
 	&.payment-methods {
@@ -79,6 +101,7 @@ body {
 		bottom: 0;
 		margin: auto;
 		max-height: 250px;
+		overflow: initial;
 	}
 
 	.woo-square-wizard__fields {
