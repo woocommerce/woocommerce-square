@@ -96,14 +96,14 @@ export const OnboardingApp = () => {
 	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
+			<PaymentGatewaySettingsSaveButton setStep={setStep} nextStep={'payment-complete'} saveSettings={props.saveSettings} />
 		</>
 	);
 	
 	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<SquareSettingsSaveButton setStep={setStep} nextStep={'payment-complete'} />
+			<SquareSettingsSaveButton setStep={setStep} nextStep={'payment-complete'} saveSettings={props.usePaymentGatewaySettings ? 'credit-card' : ''} />
 		</>
 	);
 	
@@ -143,10 +143,10 @@ export const OnboardingApp = () => {
 					(step === 'payment-complete' && <PaymentComplete setStep={setStep} usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
 					(step === 'credit-card' && <WrapperCreditCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
 					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData}  />) ||
-					(step === 'gift-card' && <WrapperGiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
-					(step === 'cash-app' && <WrapperCashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
+					(step === 'gift-card' && <WrapperGiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'gift-card'} />) ||
+					(step === 'cash-app' && <WrapperCashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'cash-app'} />) ||
 					(step === 'sync-settings' && <WrapperConfigureSyncSetup useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'advanced-settings' && <WrapperAdvancedSettings useSquareSettings={useSquareSettingsData} />) ||
+					(step === 'advanced-settings' && <WrapperAdvancedSettings useSquareSettings={useSquareSettingsData} usePaymentGatewaySettings={usePaymentGatewaySettingsData} furtherRefine={true} />) ||
 					(step === 'sandbox-settings' && <WrapperSandboxSettings useSquareSettings={useSquareSettingsData} /> )
 				}
 			</div>
