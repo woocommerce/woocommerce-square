@@ -19,6 +19,8 @@ export const getPaymentGatewaySettingsData = async () => {
 		enable_paid_capture: settings.enable_paid_capture || CREDIT_CARD_DEFAULT_STATE.enable_paid_capture,
 		card_types: settings.card_types || CREDIT_CARD_DEFAULT_STATE.card_types,
 		tokenization: settings.tokenization || CREDIT_CARD_DEFAULT_STATE.tokenization,
+		debug_mode: settings.debug_mode || CREDIT_CARD_DEFAULT_STATE.debug_mode,
+		enable_customer_decline_messages: settings.enable_customer_decline_messages || CREDIT_CARD_DEFAULT_STATE.enable_customer_decline_messages,
 	};
 
 	const digitalWallet = {

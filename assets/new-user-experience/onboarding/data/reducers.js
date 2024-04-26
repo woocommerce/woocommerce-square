@@ -15,6 +15,8 @@ export const CREDIT_CARD_DEFAULT_STATE = {
 		'UNIONPAY',
 	],
 	tokenization: "no",
+	debug_mode: "off",
+	enable_customer_decline_messages: "no",
 };
 
 const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
@@ -53,6 +55,8 @@ const digitalWalletsReducer = ( state = DIGITAL_WALLETS_DEFAULT_STATE, action ) 
 
 export const GIFT_CARDS_DEFAULT_STATE = {
 	enabled: 'no',
+	title: 'Square Gift Cards',
+	description: 'Allow customers to purchase and redeem gift cards during checkout.',
 };
 
 const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {

@@ -8,11 +8,11 @@ import { usePaymentGatewaySettings } from '../onboarding/hooks';
 import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const PaymentGatewaySettingsApp = () => {
-	const usePaymentGatewaySettingsData = usePaymentGatewaySettings();
+	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 	const {
 		paymentGatewaySettingsLoaded,
 	} = usePaymentGatewaySettingsData;
-	
+
 	const style = {
 		width: '100%',
 		maxWidth: '780px',
