@@ -41,6 +41,9 @@ export const PaymentComplete = ( { setStep, usePaymentGatewaySettings }) => {
 								{ __( "Ready to see your store in action? Explore the front-end of your online shop. It's a great way to experience what your customers will see and ensure everything looks perfect.", 'woocommerce-square' ) }
 							</p>
 						</SectionDescription>
+						<Button variant="primary" href='/' >
+							{ __( 'Visit my Storefront', 'woocommerce-square' ) }
+						</Button>
 					</div>
 					<div className="woo-square-onbarding__payment-settings__center-icon">
 						<RightArrowInCircle />
