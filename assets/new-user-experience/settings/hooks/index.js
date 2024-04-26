@@ -5,38 +5,6 @@ import apiFetch from '@wordpress/api-fetch';
 import { getSquareSettings, filterBusinessLocations } from '../../utils';
 import store from '../../onboarding/data/store';
 
-export const useSettingsForm = ( initialState = {} ) => {
-	const defaultState = {
-		enable_sandbox: 'yes',
-		sandbox_application_id: '',
-		sandbox_token: '',
-		debug_logging_enabled: 'no',
-		sandbox_location_id: '',
-		system_of_record: 'disabled',
-		enable_inventory_sync: 'no',
-		override_product_images: 'no',
-		hide_missing_products: 'no',
-		sync_interval: '0.25',
-		is_connected: false,
-		disconnection_url: '',
-		connection_url: '',
-		connection_url_sandbox: '',
-		connection_url_wizard: '',
-		locations: [],
-	};
-
-	const [ formState, setFormState ] = useState( null === initialState ? defaultState : Object.assign( defaultState, initialState ) );
-
-	const setFieldValue = ( newValue ) => {
-		setFormState( prevState => ( {
-			...prevState,
-			...newValue
-		} ) );
-	};
-
-	return [ formState, setFieldValue ];
-};
-
 export const useSquareSettings = ( fromServer = false ) => {
 	const dispatch = useDispatch();
 	const [ squareSettingsLoaded, setSquareSettingsLoaded ] = useState( false );
