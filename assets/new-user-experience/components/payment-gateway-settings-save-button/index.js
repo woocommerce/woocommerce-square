@@ -9,8 +9,6 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes Saved' ),
-			nextStep,
-			setStep,
 			saveSettings = '',
 		} = props;
 
@@ -22,6 +20,7 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			savePaymentGatewaySettings,
 			saveGiftCardsSettings,
 			saveCashAppSettings,
+			setStep,
 		} = usePaymentGatewaySettings();
 
 		return (
@@ -33,22 +32,16 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ () => {
 					if ('gift-card' === saveSettings) {
-						saveGiftCardsSettings( giftCardsGatewaySettings ).then( () => {
-							if ( nextStep ) {
-								setStep( nextStep );
-							}
+						saveGiftCardsSettings().then( () => {
+							setStep( 'payment-complete' );
 						} );
 					} else if ('cash-app' === saveSettings) {
-						saveCashAppSettings( cashAppGatewaySettings ).then( () => {
-							if ( nextStep ) {
-								setStep( nextStep );
-							}
+						saveCashAppSettings().then( () => {
+							setStep( 'payment-complete' );
 						} );
 					} else {
-						savePaymentGatewaySettings( paymentGatewaySettings ).then( () => {
-							if ( nextStep ) {
-								setStep( nextStep );
-							}
+						savePaymentGatewaySettings().then( () => {
+							setStep( 'payment-complete' );
 						} );
 					}
 				} }

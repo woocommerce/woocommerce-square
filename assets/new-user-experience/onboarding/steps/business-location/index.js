@@ -12,11 +12,12 @@ import {
 	SquareSettingsSaveButton,
 } from '../../../components';
 
-export const BusinessLocation = ({ setStep, useSquareSettings }) => {
+export const BusinessLocation = ({ useSquareSettings }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
+		setStep,
 	} = useSquareSettings;
 
 	const {

@@ -9,14 +9,13 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes Saved' ),
-			nextStep,
-			setStep,
 			saveSettings = '',
 		} = props;
 
 		const {
 			isSquareSettingsSaving,
 			settings,
+			setStep,
 			saveSquareSettings,
 		} = useSquareSettings();
 
@@ -29,9 +28,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ async () => {
 					await saveSquareSettings( settings ).then( () => {
-						if ( nextStep ) {
-							setStep( nextStep );
-						}
+						setStep( 'payment-complete' );
 					} );
 				} }
 			>
@@ -42,4 +39,3 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 };
 
 export const SquareSettingsSaveButton = withSaveSquareSettingsButton( Button );
-

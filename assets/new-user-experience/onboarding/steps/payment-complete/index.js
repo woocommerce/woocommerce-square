@@ -19,7 +19,8 @@ import {
 } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 
-export const PaymentComplete = ( { setStep, usePaymentGatewaySettings }) => {
+export const PaymentComplete = ( { usePaymentGatewaySettings }) => {
+	const setStep = usePaymentGatewaySettings.setStep;
 	const creditCardEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enabled;
 	const digitalWalletsEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enable_digital_wallets;
 	const giftCardsEnabled = usePaymentGatewaySettings.giftCardsGatewaySettings.enabled;
