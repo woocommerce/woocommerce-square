@@ -170,33 +170,6 @@ export const CreditCardSetup = () => {
 							onChange={ ( tokenization ) => setCreditCardData( { tokenization: tokenization ? 'yes' : 'no' } ) }
 						/>
 					</InputWrapper>
-
-					<InputWrapper
-						label={ __( 'Debug Mode', 'woocommerce-square' ) }
-						>
-						<SelectControl
-							value={ debug_mode }
-							onChange={ ( debug_mode ) => setCreditCardData( { debug_mode } ) }
-							options={ [
-								{
-									label: __( 'Off', 'woocommerce-square' ),
-									value: 'off'
-								},
-								{
-									label: __( 'Show on Checkout Page', 'woocommerce-square' ),
-									value: 'checkout'
-								},
-								{
-									label: __( 'Save to Log', 'woocommerce-square' ),
-									value: 'log'
-								},
-								{
-									label: __( 'Both', 'woocommerce-square' ),
-									value: 'both'
-								}
-							] }
-						/>
-					</InputWrapper>
 				</div>
 			</Section>
 		</>

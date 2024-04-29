@@ -149,7 +149,6 @@ export const OnboardingApp = () => {
 							<BusinessLocation />
 							<SquareSettingsSaveButton afterSaveCallback={ () => {
 								setStep( 'payment-methods' );
-								setBackStep( 'business-location' );
 							} } />
 						</>
 					) ) ||

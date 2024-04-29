@@ -13,6 +13,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 
 		const {
 			afterSaveLabel,
+			afterSaveCallback,
 			...remainingProps
 		} = props;
 
@@ -37,7 +38,9 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 					( async () => {
 						await saveSquareSettings( settings );
 
-						setStep( 'payment-complete' );
+						if ( afterSaveCallback ) {
+							afterSaveCallback();
+						}
 					} )()
 				} }
 			>

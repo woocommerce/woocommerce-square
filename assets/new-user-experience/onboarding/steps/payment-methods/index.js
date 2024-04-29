@@ -19,6 +19,7 @@ export const PaymentMethods = () => {
 	const {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
+		isGiftCardsGatewaySettingsSaving,
 
 		paymentGatewaySettings,
 		cashAppGatewaySettings,
@@ -51,6 +52,12 @@ export const PaymentMethods = () => {
 	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
 	}
+
+	const isSavingState = [
+		isPaymentGatewaySettingsSaving,
+		isCashAppGatewaySettingsSaving,
+		isGiftCardsGatewaySettingsSaving,
+	].some( state => null === state );
 
 	return (
 		<div className="woo-square-onbarding__payment-settings">
@@ -123,8 +130,8 @@ export const PaymentMethods = () => {
 					<div className="woo-square-onbarding__payment-settings__toggles__next-btn">
 						<Button
 							variant="primary"
-							isBusy={ isPaymentGatewaySettingsSaving || isCashAppGatewaySettingsSaving }
-							disabled={ isPaymentGatewaySettingsSaving || isCashAppGatewaySettingsSaving }
+							isBusy={ isSavingState }
+							disabled={ isSavingState }
 							onClick={ () => {
 								( async () => {
 									await savePaymentGatewaySettings();
