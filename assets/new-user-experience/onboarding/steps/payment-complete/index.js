@@ -18,13 +18,18 @@ import {
 	SectionDescription,
 } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
+import { useSteps } from '../../hooks';
 
 export const PaymentComplete = ( { usePaymentGatewaySettings }) => {
-	const setStep = usePaymentGatewaySettings.setStep;
+	console.log(usePaymentGatewaySettings);
 	const creditCardEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enabled;
 	const digitalWalletsEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enable_digital_wallets;
 	const giftCardsEnabled = usePaymentGatewaySettings.giftCardsGatewaySettings.enabled;
 	const cashAppEnabled = usePaymentGatewaySettings.cashAppGatewaySettings.enabled;
+
+	const {
+		setStep,
+	} = useSteps();
 	
 	return (
 		<>

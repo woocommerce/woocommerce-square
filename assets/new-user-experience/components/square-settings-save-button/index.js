@@ -3,6 +3,7 @@ import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
 import { useSquareSettings } from '../../settings/hooks';
+import { useSteps } from '../../onboarding/hooks';
 
 const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
@@ -15,9 +16,12 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		const {
 			isSquareSettingsSaving,
 			settings,
-			setStep,
 			saveSquareSettings,
 		} = useSquareSettings();
+
+		const {
+			setStep,
+		} = useSteps();
 
 		return (
 			<WrappedComponent

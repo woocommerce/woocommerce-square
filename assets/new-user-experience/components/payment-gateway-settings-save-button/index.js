@@ -2,7 +2,7 @@ import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
-import { usePaymentGatewaySettings } from '../../onboarding/hooks';
+import { usePaymentGatewaySettings, useSteps } from '../../onboarding/hooks';
 
 const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
@@ -20,8 +20,11 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			savePaymentGatewaySettings,
 			saveGiftCardsSettings,
 			saveCashAppSettings,
-			setStep,
 		} = usePaymentGatewaySettings();
+
+		const {
+			setStep,
+		} = useSteps();
 
 		return (
 			<WrappedComponent

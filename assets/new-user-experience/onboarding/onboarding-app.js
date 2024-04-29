@@ -7,7 +7,7 @@ import { useEffect, useState } from '@wordpress/element';
  * Internal dependencies.
  */
 import { useSquareSettings } from '../settings/hooks';
-import { usePaymentGatewaySettings } from './hooks';
+import { usePaymentGatewaySettings, useSteps } from './hooks';
 import {
 	CashAppSetup,
 	ConnectSetup,
@@ -27,15 +27,23 @@ export const OnboardingApp = () => {
 	
 	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true ) ;
 	const {
-		stepData,
-		setStep,
-		setBackStep,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded
 	} = usePaymentGatewaySettingsData;
 
+	const {
+		stepData,
+		setStep,
+		setBackStep,
+	} = useSteps( true );
+
 	const { step, backStep } = stepData;
+	// const step = localStorage.getItem('step') || stepData.step;
+	// const backStep = localStorage.getItem('backStep') || stepData.backStep;
+	// console.log(step, backStep);
+	// console.log(stepData);5
+	// console.log(localStorage.getItem('step'));
 
 	const useSquareSettingsData = useSquareSettings( true );
 	const {

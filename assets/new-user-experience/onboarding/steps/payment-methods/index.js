@@ -13,6 +13,7 @@ import {
 	InputWrapper
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
+import { useSteps } from '../../../onboarding/hooks';
 
 export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
 	const {
@@ -29,7 +30,6 @@ export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
 		setDigitalWalletData,
 		setGiftCardData,
 		setCashAppData,
-		setStep,
 
 		savePaymentGatewaySettings,
 		saveCashAppSettings,
@@ -47,6 +47,10 @@ export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
 	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
 	}
+
+	const {
+		setStep,
+	} = useSteps();
 
 	return (
 		<div className="woo-square-onbarding__payment-settings">
