@@ -105,9 +105,9 @@ export const SettingsApp = () => {
 				</InputWrapper>
 			</Section> ) }
 
-			{ is_connected && <ConfigureSync indent={2} useSquareSettings={useSquareSettingsData} /> }
+			{ is_connected && <ConfigureSync indent={ 2 } /> }
 
-			<SandboxSettings useSquareSettings={useSquareSettingsData} />
+			<SandboxSettings />
 
 			<InputWrapper
 					label={ __( 'Connection', 'woocommerce-square' ) }
