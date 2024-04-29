@@ -14,13 +14,13 @@ import { __ } from '@wordpress/i18n';
  */
 import './index.scss';
 import { Back, Square, Close } from '../../icons';
-import { usePaymentGatewaySettings } from './../../onboarding/hooks';
+import { useSteps } from './../../onboarding/hooks';
 
 export const OnboardingHeader = () => {
     const {
 		setStep,
         getBackStep,        
-	} = usePaymentGatewaySettings();
+	} = useSteps();
 
     const backStep = getBackStep();
 

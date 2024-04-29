@@ -18,22 +18,27 @@ import {
 	InputWrapper,
 	SquareCheckboxControl,
 } from '../../../components';
+import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CashAppSetup = ( { usePaymentGatewaySettings } ) => {
-	const { setCashAppData, getCashAppData } = usePaymentGatewaySettings;
+export const CashAppSetup = () => {
+	const {
+		cashAppGatewaySettings,
+		setCashAppData,
+	} = usePaymentGatewaySettings();
+
 	const {
 		enabled,
 		title,
 		description,
 		transaction_type,
 		button_theme,
-        charge_virtual_orders,
-        enable_paid_capture,
+		charge_virtual_orders,
+		enable_paid_capture,
 		button_shape,
-        debug_mode,
-	} = getCashAppData();
+		debug_mode,
+	} = cashAppGatewaySettings;
 
-    const authorizationFields = 'authorization' === transaction_type && (
+	const authorizationFields = 'authorization' === transaction_type && (
 		<>
 			<InputWrapper
 				description={ __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ) }

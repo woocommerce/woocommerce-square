@@ -31,15 +31,11 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	const getCreditCardSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCreditCardSettingsSavingProcess( key ) );
 	const getCashAppSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCashAppSettingsSavingProcess( key ) );
 	const getGiftCardsSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getGiftCardsSettingsSavingProcess( key ) );
-	const getStep = ( key ) => useSelect( ( select ) => select( store ).getStep( key ) );
-	const getBackStep = ( key ) => useSelect( ( select ) => select( store ).getBackStep( key ) );
 
 	const setCreditCardData = ( data ) => dispatch( store ).setCreditCardData( data );
 	const setDigitalWalletData = ( data ) => dispatch( store ).setDigitalWalletData( data );
 	const setGiftCardData = ( data ) => dispatch( store ).setGiftCardData( data );
 	const setCashAppData = ( data ) => dispatch( store ).setCashAppData( data );
-	const setStep = ( data ) => dispatch( store ).setStep( data );
-	const setBackStep = ( data ) => dispatch( store ).setBackStep( data );
 
 	const setCreditCardSettingsSavingProcess = ( data ) => dispatch( store ).setCreditCardSettingsSavingProcess( data );
 	const setCashAppSettingsSavingProcess = ( data ) => dispatch( store ).setCashAppSettingsSavingProcess( data );
@@ -60,11 +56,6 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 
 	const cashAppGatewaySettings = {
 		...getCashAppData(),
-	};
-
-	const stepData = {
-		step: getStep(),
-		backStep: getBackStep(),
 	};
 
 	const savePaymentGatewaySettings = async () => {
@@ -162,7 +153,6 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 		paymentGatewaySettings,
 		cashAppGatewaySettings,
 		giftCardsGatewaySettings,
-		stepData,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded,
@@ -174,12 +164,45 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 		setDigitalWalletData,
 		setGiftCardData,
 		setCashAppData,
-		setStep,
-		setBackStep,
 		savePaymentGatewaySettings,
 		saveGiftCardsSettings,
 		saveCashAppSettings,
+	}
+};
+
+/**
+ * Getters / Setters for steps data store.
+ */
+export const useSteps = ( fromServer = false ) => {
+	const dispatch = useDispatch();
+
+	const getStep = ( key ) => useSelect( ( select ) => select( store ).getStep( key ) );
+	const getBackStep = ( key ) => useSelect( ( select ) => select( store ).getBackStep( key ) );
+
+	const setStep = ( data ) => dispatch( store ).setStep( data );
+	const setBackStep = ( data ) => dispatch( store ).setBackStep( data );
+
+	const stepData = {
+		// step: localStorage.getItem('step') || getStep(),
+		// backStep: localStorage.getItem('backStep') || getBackStep(),
+		step: getStep(),
+		backStep: getBackStep(),
+	};
+
+	useEffect( () => {
+		if ( ! fromServer ) {
+			return;
+		}
+
+		setStep( localStorage.getItem('step') || getStep() );
+		setBackStep( localStorage.getItem('backStep') || getBackStep() );
+	}, [ fromServer ] )
+
+	return {
+		stepData,
 		getStep,
 		getBackStep,
+		setStep,
+		setBackStep,
 	}
 };

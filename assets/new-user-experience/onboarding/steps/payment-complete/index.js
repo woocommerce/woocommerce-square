@@ -18,13 +18,24 @@ import {
 	SectionDescription,
 } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
+import { usePaymentGatewaySettings } from '../../hooks';
+import { useSteps } from '../../hooks';
 
-export const PaymentComplete = ( { usePaymentGatewaySettings }) => {
-	const setStep = usePaymentGatewaySettings.setStep;
-	const creditCardEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enabled;
-	const digitalWalletsEnabled = usePaymentGatewaySettings.paymentGatewaySettings.enable_digital_wallets;
-	const giftCardsEnabled = usePaymentGatewaySettings.giftCardsGatewaySettings.enabled;
-	const cashAppEnabled = usePaymentGatewaySettings.cashAppGatewaySettings.enabled;
+export const PaymentComplete = () => {
+	const {
+		paymentGatewaySettings,
+		giftCardsGatewaySettings,
+		cashAppGatewaySettings,
+	} = usePaymentGatewaySettings();
+
+	const creditCardEnabled = paymentGatewaySettings.enabled;
+	const digitalWalletsEnabled = paymentGatewaySettings.enable_digital_wallets;
+	const giftCardsEnabled = giftCardsGatewaySettings.enabled;
+	const cashAppEnabled = cashAppGatewaySettings.enabled;
+
+	const {
+		setStep,
+	} = useSteps();
 	
 	return (
 		<>

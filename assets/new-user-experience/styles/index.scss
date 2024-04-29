@@ -92,8 +92,7 @@ body {
 		width: 100%;
 	}
 
-	&.connect-square,
-	&.business-location {
+	&:not(.payment-methods):not(.payment-complete) {
 		position: absolute;
 		top: 0;
 		left: 0;
