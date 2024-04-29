@@ -102,14 +102,14 @@ export const OnboardingApp = () => {
 	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton afterSaveCallback={ () => setStep( 'payment-complete' ) } saveSettings={props.saveSettings} />
+			<PaymentGatewaySettingsSaveButton />
 		</>
 	);
 	
 	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<SquareSettingsSaveButton afterSaveCallback={ () => setStep( 'payment-complete' ) } />
+			<SquareSettingsSaveButton />
 		</>
 	);
 	
@@ -149,10 +149,10 @@ export const OnboardingApp = () => {
 					(step === 'payment-complete' && <PaymentComplete />) ||
 					(step === 'credit-card' && <WrapperCreditCardSetup />) ||
 					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup />) ||
-					(step === 'gift-card' && <WrapperGiftCardSetup saveSettings={'gift-card'} />) ||
-					(step === 'cash-app' && <WrapperCashAppSetup saveSettings={'cash-app'} />) ||
+					(step === 'gift-card' && <WrapperGiftCardSetup />) ||
+					(step === 'cash-app' && <WrapperCashAppSetup />) ||
 					(step === 'sync-settings' && <WrapperConfigureSyncSetup />) ||
-					(step === 'advanced-settings' && <WrapperAdvancedSettings furtherRefine={true} />) ||
+					(step === 'advanced-settings' && <WrapperAdvancedSettings />) ||
 					(step === 'sandbox-settings' && <WrapperSandboxSettings /> )
 				}
 			</div>

@@ -17,14 +17,20 @@ import {
 } from '../../components';
 import { DebugMode } from '../../modules';
 import { useSquareSettings } from '../../settings/hooks';
-import { usePaymentGatewaySettings } from '../../onboarding/hooks';
+import { usePaymentGatewaySettings, useSteps } from '../../onboarding/hooks';
 
-export const AdvancedSettings = ( { furtherRefine = false }) => {
+export const AdvancedSettings = () => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
 	} = useSquareSettings();
+
+	const {
+		stepData: {
+			step,
+		}
+	} = useSteps();
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -48,7 +54,7 @@ export const AdvancedSettings = ( { furtherRefine = false }) => {
 				<SectionDescription>
 					{ __( 'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.', 'woocommerce-square' ) }
 					{ <br /> }
-					{ furtherRefine && parse(
+					{ 'advanced-settings' === step && parse(
 						sprintf(
 							__( '%1sClick here%2s to further refine your settings in the traditional view.', 'woocommerce-square' ),
 							'<a target="_blank" href="/wp-admin/admin.php?page=wc-settings&tab=square">',
