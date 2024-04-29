@@ -2,6 +2,7 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
+import { useEffect } from '@wordpress/element';
 import parse from 'html-react-parser';
 import {
 	SelectControl,
@@ -19,10 +20,13 @@ import {
 	SquareSettingsSaveButton,
 	Loader,
 } from '../components';
-import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
+import {
+	ConfigureSync,
+	AdvancedSettings,
+	SandboxSettings,
+} from '../modules';
 import { useSquareSettings } from './hooks';
 import { connectToSquare, filterBusinessLocations } from '../utils';
-import { usePaymentGatewaySettings } from '../onboarding/hooks';
 
 export const SettingsApp = () => {
 	const useSquareSettingsData = useSquareSettings( true );
@@ -33,8 +37,6 @@ export const SettingsApp = () => {
 		setSquareSettingData,
 		saveSquareSettings,
 	} = useSquareSettingsData;
-
-	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 
 	const settingsWrapperStyle = {
 		width: '100%',
@@ -128,7 +130,7 @@ export const SettingsApp = () => {
 					</Button>
 			</InputWrapper>
 
-			<AdvancedSettings useSquareSettings={useSquareSettingsData} usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
+			<AdvancedSettings />
 
 			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } saveSettings={'credit-card'} />
 		</div>

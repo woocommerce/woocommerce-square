@@ -55,6 +55,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'override_product_images',
 			'hide_missing_products',
 			'sync_interval',
+			'debug_mode',
 			'is_connected',
 			'locations',
 		);
@@ -129,7 +130,12 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'sanitize_callback' => 'sanitize_text_field',
 					),
 					'sync_interval'  => array(
-						'description'       => __( 'Frequency for how regularly WooCommerce will sync products with Square..', 'woocommerce-square' ),
+						'description'       => __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'debug_mode'  => array(
+						'description'       => __( 'Type of debug mode.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
@@ -173,7 +179,14 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 */
 	public function save_settings( WP_REST_Request $request ) {
 		$settings     = array();
-		$keys_to_skip = array( 'is_connected', 'locations' );
+		$keys_to_skip = array(
+			'is_connected',
+			'locations',
+			'connection_url',
+			'connection_url_wizard',
+			'connection_url_sandbox',
+			'disconnection_url',
+		);
 
 		foreach ( $this->allowed_params as $index => $key ) {
 			if ( in_array( $key, $keys_to_skip, true ) ) {
