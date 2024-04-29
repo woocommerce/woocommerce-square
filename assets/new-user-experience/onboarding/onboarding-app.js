@@ -182,7 +182,7 @@ export const OnboardingApp = () => {
 					<>
 						<ConfigureSync />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }
@@ -190,7 +190,7 @@ export const OnboardingApp = () => {
 					<>
 						<AdvancedSettings />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }
@@ -198,7 +198,7 @@ export const OnboardingApp = () => {
 					<>
 						<SandboxSettings />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }
