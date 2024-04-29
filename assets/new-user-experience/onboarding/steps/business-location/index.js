@@ -99,9 +99,6 @@ export const BusinessLocation = () => {
 								/>
 							</InputWrapper>
 						</div>
-						<SquareSettingsSaveButton
-							label={buttonText}
-						/>
 					</>
 					))
 				}
