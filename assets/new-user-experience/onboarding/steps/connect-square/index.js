@@ -13,11 +13,10 @@ import {
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
+import { useSquareSettings } from '../../../settings/hooks';
 
-export const ConnectSetup = ( { useSquareSettings } ) => {
-	const {
-		settings,
-	} = useSquareSettings;
+export const ConnectSetup = () => {
+	const { settings } = useSquareSettings;
 
 	return (
 		<div className="woo-square-onbarding__connect-square">

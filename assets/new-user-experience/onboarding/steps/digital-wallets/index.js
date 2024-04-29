@@ -18,16 +18,22 @@ import {
 	InputWrapper,
 	SquareCheckboxControl,
 } from '../../../components';
+import { usePaymentGatewaySettings } from '../../hooks';
 
-export const DigitalWalletsSetup = ({ usePaymentGatewaySettings }) => {
-	const { setDigitalWalletData, getDigitalWalletData, paymentGatewaySettingsLoaded } = usePaymentGatewaySettings;
+export const DigitalWalletsSetup = () => {
+	const {
+		paymentGatewaySettingsLoaded,
+		paymentGatewaySettings,
+		setDigitalWalletData,
+	} = usePaymentGatewaySettings();
+
 	const {
 		enable_digital_wallets,
 		digital_wallets_button_type,
 		digital_wallets_apple_pay_button_color,
 		digital_wallets_google_pay_button_color,
 		digital_wallets_hide_button_options,
-	} = getDigitalWalletData();
+	} = paymentGatewaySettings;
 
 	if ( ! paymentGatewaySettingsLoaded ) {
 		return null;

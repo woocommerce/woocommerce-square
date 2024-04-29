@@ -11,14 +11,14 @@ import {
 	InputWrapper,
 	SquareSettingsSaveButton,
 } from '../../../components';
+import { useSquareSettings } from '../../../settings/hooks';
 
-export const BusinessLocation = ({ useSquareSettings }) => {
+export const BusinessLocation = () => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-		setStep,
-	} = useSquareSettings;
+	} = useSquareSettings();
 
 	const {
 		sandbox_location_id,
@@ -101,8 +101,6 @@ export const BusinessLocation = ({ useSquareSettings }) => {
 						</div>
 						<SquareSettingsSaveButton
 							label={buttonText}
-							nextStep={'payment-methods'}
-							setStep={setStep}
 						/>
 					</>
 					))

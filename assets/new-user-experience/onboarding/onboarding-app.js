@@ -114,7 +114,7 @@ export const OnboardingApp = () => {
 	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<SquareSettingsSaveButton saveSettings={props.usePaymentGatewaySettings ? 'credit-card' : ''} />
+			<SquareSettingsSaveButton afterSaveCallback={ () => setStep( 'payment-complete' ) } />
 		</>
 	);
 	
@@ -148,17 +148,17 @@ export const OnboardingApp = () => {
 			<OnboardingHeader />
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{
-					(step === 'connect-square' && <ConnectSetup useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'business-location' && <BusinessLocation useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'payment-methods' && <PaymentMethods usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
-					(step === 'payment-complete' && <PaymentComplete usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
-					(step === 'credit-card' && <WrapperCreditCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
-					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData}  />) ||
-					(step === 'gift-card' && <WrapperGiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'gift-card'} />) ||
-					(step === 'cash-app' && <WrapperCashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'cash-app'} />) ||
+					(step === 'connect-square' && <ConnectSetup />) ||
+					(step === 'business-location' && <BusinessLocation setStep={setStep} /> ) ||
+					(step === 'payment-methods' && <PaymentMethods setStep={setStep} /> ) ||
+					(step === 'payment-complete' && <PaymentComplete setStep={setStep} />) ||
+					(step === 'credit-card' && <WrapperCreditCardSetup />) ||
+					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup />) ||
+					(step === 'gift-card' && <WrapperGiftCardSetup saveSettings={'gift-card'} />) ||
+					(step === 'cash-app' && <WrapperCashAppSetup saveSettings={'cash-app'} />) ||
 					(step === 'sync-settings' && <WrapperConfigureSyncSetup />) ||
 					(step === 'advanced-settings' && <WrapperAdvancedSettings furtherRefine={true} />) ||
-					(step === 'sandbox-settings' && <WrapperSandboxSettings useSquareSettings={useSquareSettingsData} /> )
+					(step === 'sandbox-settings' && <WrapperSandboxSettings /> )
 				}
 			</div>
 		</>

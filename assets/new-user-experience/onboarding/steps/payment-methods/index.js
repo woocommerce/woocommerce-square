@@ -13,9 +13,9 @@ import {
 	InputWrapper
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
-import { useSteps } from '../../../onboarding/hooks';
+import { usePaymentGatewaySettings, useSteps } from '../../hooks';
 
-export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
+export const PaymentMethods = () => {
 	const {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
@@ -34,7 +34,7 @@ export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
 		savePaymentGatewaySettings,
 		saveCashAppSettings,
 		saveGiftCardsSettings,
-	} = usePaymentGatewaySettings;
+	} = usePaymentGatewaySettings();
 
 	const {
 		enabled,
