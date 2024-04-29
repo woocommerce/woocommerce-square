@@ -6,7 +6,7 @@
 
 #woocommerce-square-onboarding,
 #woocommerce-square-settings__container-general,
-[class*="woocommerce-square-payment-gateway-settings__container"] {
+[id*="woocommerce-square-payment-gateway-settings__container"] {
 	font-family: 'SF Pro', sans-serif;
 	font-size: 15px;
 	font-weight: 400;
@@ -15,6 +15,13 @@
 
 	.codeamp-components-multi-select-control__tokens-container {
 		padding: 15px;
+	}
+}
+
+#woocommerce-square-settings__container-general,
+[id*="woocommerce-square-payment-gateway-settings__container"] {
+	.components-button.is-primary {
+		max-width: fit-content;
 	}
 }
 
@@ -81,10 +88,9 @@ body {
 .woo-square-onboarding__cover {
 	width: 400px;
 	max-width: 100%;
-	// margin: 80px auto;
 	margin: 0;
 	text-align: center;
-	overflow: hidden;
+	overflow-x: hidden;
     position: relative;
 
 	&.payment-complete,
@@ -125,5 +131,15 @@ body {
 		height: 100px;
 		width: 100px;
 		z-index: 99999;
+	}
+}
+
+@media screen and (max-width: 1800px) {
+	.woo-square-onboarding__cover {
+		&:not(.payment-methods):not(.payment-complete) {
+			position: inherit;
+			margin-top: 60px;
+			max-height: inherit;
+		}
 	}
 }
