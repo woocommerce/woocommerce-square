@@ -157,3 +157,59 @@ body.woocommerce_page_woocommerce-square-onboarding {
 		width: 75%;
 	}
 }
+
+@media screen and (max-width: 1600px) {
+	.woo-square-onbarding__payment-settings {
+		&__toggles {
+			top: auto;
+			transform: none;
+		}
+
+		&__intro {
+			left: 40%;
+		}
+
+		.flexItem.contentBox {
+			margin-right: 20px;
+		}
+	}
+}
+
+@media screen and (max-width: 1400px) {
+	.woo-square-onboarding__cover {
+		margin-bottom: 30px;
+	}
+
+	.woo-square-onbarding__payment-settings {
+		display: block;
+		height: auto;
+
+		&__toggles {
+			left: 0;
+		}
+
+		&--left {
+			width: 100%;
+		}
+
+		&--right:before {
+			display: none;
+		}
+		
+		&__center-icon {
+			display: none;
+		}
+		
+		&__intro {
+			top: auto;
+			transform: none;
+			margin: 50px 0 30px;
+			left: 0;
+			max-width: 650px;
+		}
+		
+		&--right {
+			margin-bottom: 30px;
+		}		
+	}
+}

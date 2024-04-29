@@ -74,7 +74,7 @@
 }
 
 // Hide all elements after the react based settings container, hiding the native settings.
-[class*="woocommerce-square-payment-gateway-settings__container"] ~ *,
+[id*="woocommerce-square-payment-gateway-settings__container"] ~ *,
 #woocommerce-square-settings__container-general ~ * {
 	display: none;
 }
