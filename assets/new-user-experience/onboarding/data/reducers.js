@@ -97,7 +97,7 @@ const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
 	}
 };
 
-const SQUARE_SETTINGS_DEFAULT_STATE = {
+export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	enable_sandbox: 'yes',
 	sandbox_application_id: '',
 	sandbox_token: '',
@@ -114,6 +114,7 @@ const SQUARE_SETTINGS_DEFAULT_STATE = {
 	connection_url_wizard: '',
 	connection_url_sandbox: '',
 	locations: [],
+	debug_mode: 'off',
 }
 
 const squareSettingsReducer = ( state = SQUARE_SETTINGS_DEFAULT_STATE, action ) => {

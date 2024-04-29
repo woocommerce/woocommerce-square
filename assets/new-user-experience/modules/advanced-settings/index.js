@@ -15,6 +15,7 @@ import {
 	InputWrapper,
 	SquareCheckboxControl,
 } from '../../components';
+import { DebugMode } from '../../modules';
 import { useSquareSettings } from '../../settings/hooks';
 import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 
@@ -73,15 +74,14 @@ export const AdvancedSettings = ( { furtherRefine = false }) => {
 					<InputWrapper
 						label={ __( 'Enable Logging', 'woocommerce-square' ) }
 						variant="boxed"
-						description={
-							__( 'After enabling you’ll see a new Sandbox settings section with two fields; Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' )
-						}
 					>
 						<ToggleControl
 							checked={ 'yes' === debug_logging_enabled }
 							onChange={ ( enabled ) => setSquareSettingData( { debug_logging_enabled: enabled ? 'yes' : 'no' } ) }
 						/>
 					</InputWrapper>
+
+					<DebugMode />
 				</div>
 			</Section>
 		</>

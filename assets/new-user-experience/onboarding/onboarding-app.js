@@ -146,8 +146,8 @@ export const OnboardingApp = () => {
 					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData}  />) ||
 					(step === 'gift-card' && <WrapperGiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'gift-card'} />) ||
 					(step === 'cash-app' && <WrapperCashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'cash-app'} />) ||
-					(step === 'sync-settings' && <WrapperConfigureSyncSetup useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'advanced-settings' && <WrapperAdvancedSettings useSquareSettings={useSquareSettingsData} usePaymentGatewaySettings={usePaymentGatewaySettingsData} furtherRefine={true} />) ||
+					(step === 'sync-settings' && <WrapperConfigureSyncSetup />) ||
+					(step === 'advanced-settings' && <WrapperAdvancedSettings furtherRefine={true} />) ||
 					(step === 'sandbox-settings' && <WrapperSandboxSettings useSquareSettings={useSquareSettingsData} /> )
 				}
 			</div>

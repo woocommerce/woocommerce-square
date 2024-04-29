@@ -52,8 +52,7 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 			'button_theme',
 			'charge_virtual_orders',
 			'enable_paid_capture',
-			'button_shape',
-			'debug_mode',
+			'button_shape'
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -119,12 +118,7 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 						'description' => __( 'Button Shape.', 'woocommerce-square' ),
 						'type' => 'string',
 						'sanitize_callback' => '',
-					),
-					'debug_mode' => array(
-						'description' => __( 'Debug mode type.', 'woocommerce-square' ),
-						'type' => 'string',
-						'sanitize_callback' => '',
-					),
+					)
 				],
 			]
 		);
