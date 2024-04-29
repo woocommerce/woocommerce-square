@@ -112,14 +112,14 @@ export const OnboardingApp = () => {
 			<SquareSettingsSaveButton />
 		</>
 	);
-	
-	const WrapperCreditCardSetup = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
-	const WrapperDigitalWalletsSetup = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
-	const WrapperGiftCardSetup = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
-	const WrapperCashAppSetup = paymentGatwaySettingsWithSaveButton( CashAppSetup );
-	const WrapperConfigureSyncSetup = squareSettingsWithSaveButton( ConfigureSync );
-	const WrapperAdvancedSettings = squareSettingsWithSaveButton( AdvancedSettings );
-	const WrapperSandboxSettings = squareSettingsWithSaveButton( SandboxSettings );
+
+	const CreditCardSetupWithSave = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
+	const DigitalWalletsSetupWithSave = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
+	const GiftCardSetupWithSave = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
+	const CashAppSetupWithSave = paymentGatwaySettingsWithSaveButton( CashAppSetup );
+	const ConfigureSyncSetupWithSave = squareSettingsWithSaveButton( ConfigureSync );
+	const AdvancedSettingsWithSave = squareSettingsWithSaveButton( AdvancedSettings );
+	const SandboxSettingsWithSave = squareSettingsWithSaveButton( SandboxSettings );
 
 	// Redirect to the next page from the connect page when connection is successful.
 	if ( 'connect-square' === step && settings.is_connected ) {
@@ -144,16 +144,24 @@ export const OnboardingApp = () => {
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{
 					(step === 'connect-square' && <ConnectSetup />) ||
-					(step === 'business-location' && <BusinessLocation /> ) ||
+					(step === 'business-location' && (
+						<>
+							<BusinessLocation />
+							<SquareSettingsSaveButton afterSaveCallback={ () => {
+								setStep( 'payment-methods' );
+								setBackStep( 'business-location' );
+							} } />
+						</>
+					) ) ||
 					(step === 'payment-methods' && <PaymentMethods /> ) ||
 					(step === 'payment-complete' && <PaymentComplete />) ||
-					(step === 'credit-card' && <WrapperCreditCardSetup />) ||
-					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup />) ||
-					(step === 'gift-card' && <WrapperGiftCardSetup />) ||
-					(step === 'cash-app' && <WrapperCashAppSetup />) ||
-					(step === 'sync-settings' && <WrapperConfigureSyncSetup />) ||
-					(step === 'advanced-settings' && <WrapperAdvancedSettings />) ||
-					(step === 'sandbox-settings' && <WrapperSandboxSettings /> )
+					(step === 'credit-card' && <CreditCardSetupWithSave />) ||
+					(step === 'digital-wallets' && <DigitalWalletsSetupWithSave />) ||
+					(step === 'gift-card' && <GiftCardSetupWithSave />) ||
+					(step === 'cash-app' && <CashAppSetupWithSave />) ||
+					(step === 'sync-settings' && <ConfigureSyncSetupWithSave />) ||
+					(step === 'advanced-settings' && <AdvancedSettingsWithSave />) ||
+					(step === 'sandbox-settings' && <SandboxSettingsWithSave /> )
 				}
 			</div>
 		</>

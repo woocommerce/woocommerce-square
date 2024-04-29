@@ -37,6 +37,10 @@ export const PaymentMethods = () => {
 	} = usePaymentGatewaySettings();
 
 	const {
+		setStep,
+	} = useSteps();
+
+	const {
 		enabled,
 		enable_digital_wallets,
 	} = paymentGatewaySettings;
@@ -47,10 +51,6 @@ export const PaymentMethods = () => {
 	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
 	}
-
-	const {
-		setStep,
-	} = useSteps();
 
 	return (
 		<div className="woo-square-onbarding__payment-settings">

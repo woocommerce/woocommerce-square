@@ -194,8 +194,8 @@ export const useSteps = ( fromServer = false ) => {
 			return;
 		}
 
-		setStep( localStorage.getItem('step') || getStep() );
-		setBackStep( localStorage.getItem('backStep') || getBackStep() );
+		setStep( localStorage.getItem('step') || stepData.step );
+		setBackStep( localStorage.getItem('backStep') || stepData.stepData );
 	}, [ fromServer ] )
 
 	return {

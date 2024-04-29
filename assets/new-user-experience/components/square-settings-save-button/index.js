@@ -9,7 +9,11 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
-			afterSaveLabel = __( 'Changes Saved' ),
+		} = props;
+
+		const {
+			afterSaveLabel,
+			...remainingProps
 		} = props;
 
 		const {
@@ -24,7 +28,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 
 		return (
 			<WrappedComponent
-				{ ...props }
+				{ ...remainingProps }
 				{ ...( null === isSquareSettingsSaving && { icon: check } ) }
 				isBusy={ isSquareSettingsSaving }
 				disabled={ isSquareSettingsSaving }
