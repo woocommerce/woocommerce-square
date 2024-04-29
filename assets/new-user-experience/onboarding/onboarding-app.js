@@ -23,7 +23,7 @@ import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
 
 export const OnboardingApp = () => {
-	const [settingsLoaded, setSettingsLoaded ] = useState( false );
+	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -101,20 +101,6 @@ export const OnboardingApp = () => {
 	if ( ! squareSettingsLoaded ) {
 		return <Loader />;
 	}
-
-	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
-		<>
-			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton />
-		</>
-	);
-	
-	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
-		<>
-			<WrappedComponent { ...props } />
-			<SquareSettingsSaveButton />
-		</>
-	);
 
 	// Redirect to the next page from the connect page when connection is successful.
 	if ( 'connect-square' === step && settings.is_connected ) {
@@ -196,7 +182,7 @@ export const OnboardingApp = () => {
 					<>
 						<ConfigureSync />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }
@@ -204,7 +190,7 @@ export const OnboardingApp = () => {
 					<>
 						<AdvancedSettings />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }
@@ -212,7 +198,7 @@ export const OnboardingApp = () => {
 					<>
 						<SandboxSettings />
 						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
+							setStep( 'payment-complete' );
 						} } />
 					</>
 				) }

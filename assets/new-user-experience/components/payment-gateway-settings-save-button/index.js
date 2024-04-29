@@ -22,7 +22,7 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			isPaymentGatewaySettingsSaving,
 			isGiftCardsGatewaySettingsSaving,
 			isCashAppGatewaySettingsSaving,
-		].some( state => null === state || true === state );
+		].some( state => state );
 
 		return (
 			<WrappedComponent
@@ -33,7 +33,7 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ () => onClick() }
 			>
-				{ isSavingState ? afterSaveLabel : label }
+				{ null === isPaymentGatewaySettingsSaving ? afterSaveLabel : label }
 			</WrappedComponent>
 		)
 	};
