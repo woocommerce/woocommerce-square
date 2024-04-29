@@ -15,25 +15,28 @@ import {
 	InputWrapper,
 	SquareCheckboxControl,
 } from '../../components';
+import { useSquareSettings } from '../../settings/hooks';
+import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 
-export const AdvancedSettings = ( { useSquareSettings, usePaymentGatewaySettings, furtherRefine = false }) => {
+export const AdvancedSettings = ( { furtherRefine = false }) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings;
+	} = useSquareSettings();
 
 	const {
+		paymentGatewaySettingsLoaded,
 		paymentGatewaySettings,
 		setCreditCardData,
-	} = usePaymentGatewaySettings;
+	} = usePaymentGatewaySettings();
 	const enable_customer_decline_messages = paymentGatewaySettings?.enable_customer_decline_messages;
 
 	const {
 		debug_logging_enabled = 'no',
 	} = settings;
 
-	if ( ! squareSettingsLoaded ) {
+	if ( ! ( squareSettingsLoaded && paymentGatewaySettingsLoaded ) ) {
 		return null;
 	}
 
@@ -54,18 +57,18 @@ export const AdvancedSettings = ( { useSquareSettings, usePaymentGatewaySettings
 
 				</SectionDescription>
 
-                <div className='woo-square-wizard__fields'>
-                    <InputWrapper
-                        label={ __( 'Detailed Decline Messages', 'woocommerce-square' ) }
-                    >
-                        <SquareCheckboxControl
-                            checked={ 'yes' === enable_customer_decline_messages }
-                            onChange={ ( enabled ) => setCreditCardData( { enable_customer_decline_messages: enabled ? 'yes' : 'no' } ) }
-                            label={
-                                __( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' )
-                            }
-                        />
-                    </InputWrapper>
+				<div className='woo-square-wizard__fields'>
+					<InputWrapper
+						label={ __( 'Detailed Decline Messages', 'woocommerce-square' ) }
+					>
+						<SquareCheckboxControl
+							checked={ 'yes' === enable_customer_decline_messages }
+							onChange={ ( enabled ) => setCreditCardData( { enable_customer_decline_messages: enabled ? 'yes' : 'no' } ) }
+							label={
+								__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' )
+							}
+						/>
+					</InputWrapper>
 
 					<InputWrapper
 						label={ __( 'Enable Logging', 'woocommerce-square' ) }
@@ -79,7 +82,7 @@ export const AdvancedSettings = ( { useSquareSettings, usePaymentGatewaySettings
 							onChange={ ( enabled ) => setSquareSettingData( { debug_logging_enabled: enabled ? 'yes' : 'no' } ) }
 						/>
 					</InputWrapper>
-                </div>
+				</div>
 			</Section>
 		</>
 	)
