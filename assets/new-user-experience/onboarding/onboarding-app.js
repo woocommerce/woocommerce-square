@@ -39,11 +39,6 @@ export const OnboardingApp = () => {
 	} = useSteps( true );
 
 	const { step, backStep } = stepData;
-	// const step = localStorage.getItem('step') || stepData.step;
-	// const backStep = localStorage.getItem('backStep') || stepData.backStep;
-	// console.log(step, backStep);
-	// console.log(stepData);5
-	// console.log(localStorage.getItem('step'));
 
 	const useSquareSettingsData = useSquareSettings( true );
 	const {
@@ -107,7 +102,7 @@ export const OnboardingApp = () => {
 	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton saveSettings={props.saveSettings} />
+			<PaymentGatewaySettingsSaveButton afterSaveCallback={ () => setStep( 'payment-complete' ) } saveSettings={props.saveSettings} />
 		</>
 	);
 	
@@ -149,9 +144,9 @@ export const OnboardingApp = () => {
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{
 					(step === 'connect-square' && <ConnectSetup />) ||
-					(step === 'business-location' && <BusinessLocation setStep={setStep} /> ) ||
-					(step === 'payment-methods' && <PaymentMethods setStep={setStep} /> ) ||
-					(step === 'payment-complete' && <PaymentComplete setStep={setStep} />) ||
+					(step === 'business-location' && <BusinessLocation /> ) ||
+					(step === 'payment-methods' && <PaymentMethods /> ) ||
+					(step === 'payment-complete' && <PaymentComplete />) ||
 					(step === 'credit-card' && <WrapperCreditCardSetup />) ||
 					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup />) ||
 					(step === 'gift-card' && <WrapperGiftCardSetup saveSettings={'gift-card'} />) ||

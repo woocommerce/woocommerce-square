@@ -21,7 +21,7 @@ import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 import { usePaymentGatewaySettings } from '../../hooks';
 import { useSteps } from '../../hooks';
 
-export const PaymentComplete = ( { setStep }) => {
+export const PaymentComplete = () => {
 	const {
 		paymentGatewaySettings,
 		giftCardsGatewaySettings,
