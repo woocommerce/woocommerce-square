@@ -23,16 +23,17 @@ import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState( localStorage.getItem('step') || 'connect-square' );
-	const [backStep, setBackStep] = useState( localStorage.getItem('backStep') || '' );
 	const [settingsLoaded, setSettingsLoaded ] = useState( false );
 	
 	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true ) ;
 	const {
+		stepData,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded
 	} = usePaymentGatewaySettingsData;
+
+	const { step, backStep } = stepData;
 
 	const useSquareSettingsData = useSquareSettings( true );
 	const {

@@ -10,11 +10,16 @@ export const useSquareSettings = ( fromServer = false ) => {
 	const [ squareSettingsLoaded, setSquareSettingsLoaded ] = useState( false );
 	const getSquareSettingData = ( key ) => useSelect( ( select ) => select( store ).getSquareSettings( key ) );
 	const getSquareSettingsSavingProcess = () => useSelect( ( select ) => select( store ).getSquareSettingsSavingProcess() );
+	const getStep = ( key ) => useSelect( ( select ) => select( store ).getStep( key ) );
+	const getBackStep = ( key ) => useSelect( ( select ) => select( store ).getBackStep( key ) );
+
 	const setSquareSettingData = ( data ) => dispatch( store ).setSquareSettings( data );
 	const setSquareSettingsSavingProcess = ( data ) => dispatch( store ).setSquareSettingsSavingProcess( data );
 	const setBusinessLocation = ( locations = [] ) => {
 		setSquareSettingData( { locations: filterBusinessLocations( locations ) } );
 	};
+	const setStep = ( data ) => dispatch( store ).setStep( data );
+	const setBackStep = ( data ) => dispatch( store ).setBackStep( data );
 
 	const settings = getSquareSettingData();
 	const isSquareSettingsSaving = getSquareSettingsSavingProcess();
@@ -56,8 +61,12 @@ export const useSquareSettings = ( fromServer = false ) => {
 		squareSettingsLoaded,
 		isSquareSettingsSaving,
 		getSquareSettingData,
+		getStep,
+		getBackStep,
 		setSquareSettingData,
 		setBusinessLocation, // Extra utility to normalise locations data.
 		saveSquareSettings,
+		setStep,
+		setBackStep,
 	}
 };
