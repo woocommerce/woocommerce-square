@@ -132,7 +132,7 @@ export const SettingsApp = () => {
 
 			<AdvancedSettings />
 
-			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } saveSettings={'credit-card'} />
+			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
 		</div>
 	)
 };

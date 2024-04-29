@@ -102,7 +102,7 @@ export const OnboardingApp = () => {
 	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton saveSettings={props.saveSettings} />
+			<PaymentGatewaySettingsSaveButton />
 		</>
 	);
 	
@@ -157,10 +157,10 @@ export const OnboardingApp = () => {
 					(step === 'payment-complete' && <PaymentComplete />) ||
 					(step === 'credit-card' && <CreditCardSetupWithSave />) ||
 					(step === 'digital-wallets' && <DigitalWalletsSetupWithSave />) ||
-					(step === 'gift-card' && <GiftCardSetupWithSave saveSettings={'gift-card'} />) ||
-					(step === 'cash-app' && <CashAppSetupWithSave saveSettings={'cash-app'} />) ||
+					(step === 'gift-card' && <GiftCardSetupWithSave />) ||
+					(step === 'cash-app' && <CashAppSetupWithSave />) ||
 					(step === 'sync-settings' && <ConfigureSyncSetupWithSave />) ||
-					(step === 'advanced-settings' && <AdvancedSettingsWithSave furtherRefine={true} />) ||
+					(step === 'advanced-settings' && <AdvancedSettingsWithSave />) ||
 					(step === 'sandbox-settings' && <SandboxSettingsWithSave /> )
 				}
 			</div>

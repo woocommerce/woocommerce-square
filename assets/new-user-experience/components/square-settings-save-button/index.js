@@ -3,6 +3,7 @@ import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
 import { useSquareSettings } from '../../settings/hooks';
+import { useSteps } from '../../onboarding/hooks';
 
 const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
@@ -12,7 +13,6 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 
 		const {
 			afterSaveLabel,
-			afterSaveCallback,
 			...remainingProps
 		} = props;
 
@@ -21,6 +21,10 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 			settings,
 			saveSquareSettings,
 		} = useSquareSettings();
+
+		const {
+			setStep,
+		} = useSteps();
 
 		return (
 			<WrappedComponent
@@ -33,9 +37,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 					( async () => {
 						await saveSquareSettings( settings );
 
-						if ( afterSaveCallback ) {
-							afterSaveCallback();
-						}
+						setStep( 'payment-complete' );
 					} )()
 				} }
 			>

@@ -2,15 +2,13 @@ import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
-import { usePaymentGatewaySettings } from '../../onboarding/hooks';
+import { usePaymentGatewaySettings, useSteps } from '../../onboarding/hooks'
 
 const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes Saved' ),
-			afterSaveCallback = null,
-			saveSettings = '',
 		} = props;
 
 		const {
@@ -19,6 +17,13 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			saveGiftCardsSettings,
 			saveCashAppSettings,
 		} = usePaymentGatewaySettings();
+
+		const {
+			setStep,
+			stepData: {
+				step,
+			} = {}
+		} = useSteps();
 
 		return (
 			<WrappedComponent
@@ -29,17 +34,15 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ () => {
 					( async () => {
-						if ('gift-card' === saveSettings) {
-							saveGiftCardsSettings();
-						} else if ('cash-app' === saveSettings) {
-							saveCashAppSettings();
+						if ('gift-card' === step) {
+							await saveGiftCardsSettings();
+						} else if ('cash-app' === step) {
+							await saveCashAppSettings();
 						} else {
-							savePaymentGatewaySettings();
+							await savePaymentGatewaySettings();
 						}
 
-						if ( afterSaveCallback ) {
-							afterSaveCallback();
-						}
+						setStep( 'payment-complete' );
 					} )()
 				} }
 			>
