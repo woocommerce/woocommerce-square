@@ -61,6 +61,20 @@ const setGiftCardsSettingsSavingProcess = ( data ) => {
 	}
 }
 
+const setStep = ( data ) => {
+	return {
+		type: 'SET_STEP',
+		payload: data,
+	};
+};
+
+const setBackStep = ( data ) => {
+	return {
+		type: 'SET_BACK_STEP',
+		payload: data,
+	};
+}
+
 export default {
 	setCreditCardData,
 	setDigitalWalletData,
@@ -71,4 +85,6 @@ export default {
 	setCreditCardSettingsSavingProcess,
 	setCashAppSettingsSavingProcess,
 	setGiftCardsSettingsSavingProcess,
+	setStep,
+	setBackStep,
 };

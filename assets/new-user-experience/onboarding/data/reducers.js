@@ -168,6 +168,30 @@ const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => 
 	}
 };
 
+const STEP_DEFAULT_STATE = {
+	step: 'connect-square',
+	backStep: '',
+};
+
+const stepReducer = ( state = STEP_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
+		case 'SET_STEP':
+			return {
+				...state,
+				step: action.payload,
+			};
+
+		case 'SET_BACK_STEP':
+			return {
+				...state,
+				backStep: action.payload,
+			};
+
+		default:
+			return state;
+	}
+}
+
 export default { 
 	creditCard: creditCardReducer,
 	digitalWallet: digitalWalletsReducer,
@@ -175,4 +199,5 @@ export default {
 	cashApp: cashAppReducer,
 	squareSettings: squareSettingsReducer,
 	savingProcessStatus,
+	step: stepReducer,
 };

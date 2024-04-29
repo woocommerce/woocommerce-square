@@ -23,16 +23,19 @@ import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
 
 export const OnboardingApp = () => {
-	const [step, setStep] = useState( localStorage.getItem('step') || 'connect-square' );
-	const [backStep, setBackStep] = useState( localStorage.getItem('backStep') || '' );
 	const [settingsLoaded, setSettingsLoaded ] = useState( false );
 	
 	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true ) ;
 	const {
+		stepData,
+		setStep,
+		setBackStep,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded
 	} = usePaymentGatewaySettingsData;
+
+	const { step, backStep } = stepData;
 
 	const useSquareSettingsData = useSquareSettings( true );
 	const {
@@ -96,14 +99,14 @@ export const OnboardingApp = () => {
 	const paymentGatwaySettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<PaymentGatewaySettingsSaveButton setStep={setStep} nextStep={'payment-complete'} saveSettings={props.saveSettings} />
+			<PaymentGatewaySettingsSaveButton saveSettings={props.saveSettings} />
 		</>
 	);
 	
 	const squareSettingsWithSaveButton = ( WrappedComponent ) => ( props ) => (
 		<>
 			<WrappedComponent { ...props } />
-			<SquareSettingsSaveButton setStep={setStep} nextStep={'payment-complete'} saveSettings={props.usePaymentGatewaySettings ? 'credit-card' : ''} />
+			<SquareSettingsSaveButton saveSettings={props.usePaymentGatewaySettings ? 'credit-card' : ''} />
 		</>
 	);
 	
@@ -134,13 +137,13 @@ export const OnboardingApp = () => {
 
 	return (
 		<>
-			<OnboardingHeader backStep={backStep} setStep={setStep} />
+			<OnboardingHeader />
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{
 					(step === 'connect-square' && <ConnectSetup useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'business-location' && <BusinessLocation setStep={setStep} useSquareSettings={useSquareSettingsData} />) ||
-					(step === 'payment-methods' && <PaymentMethods setStep={setStep} usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
-					(step === 'payment-complete' && <PaymentComplete setStep={setStep} usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
+					(step === 'business-location' && <BusinessLocation useSquareSettings={useSquareSettingsData} />) ||
+					(step === 'payment-methods' && <PaymentMethods usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
+					(step === 'payment-complete' && <PaymentComplete usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
 					(step === 'credit-card' && <WrapperCreditCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />) ||
 					(step === 'digital-wallets' && <WrapperDigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData}  />) ||
 					(step === 'gift-card' && <WrapperGiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} saveSettings={'gift-card'} />) ||

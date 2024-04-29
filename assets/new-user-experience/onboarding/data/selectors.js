@@ -20,6 +20,10 @@ const getCashAppSettingsSavingProcess = ( state ) => state.savingProcessStatus.c
 
 const getGiftCardsSettingsSavingProcess = ( state ) => state.savingProcessStatus.giftCardsSettingsIsSaving;
 
+const getStep = ( state ) => state.step.step;
+
+const getBackStep = ( state ) => state.step.backStep;
+
 export default {
 	getCreditCardData,
 	getDigitalWalletData,
@@ -30,4 +34,6 @@ export default {
 	getCreditCardSettingsSavingProcess,
 	getCashAppSettingsSavingProcess,
 	getGiftCardsSettingsSavingProcess,
+	getStep,
+	getBackStep,
 };

@@ -14,7 +14,7 @@ import {
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
 
-export const PaymentMethods = ( { setStep, usePaymentGatewaySettings } ) => {
+export const PaymentMethods = ( { usePaymentGatewaySettings } ) => {
 	const {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
@@ -29,6 +29,7 @@ export const PaymentMethods = ( { setStep, usePaymentGatewaySettings } ) => {
 		setDigitalWalletData,
 		setGiftCardData,
 		setCashAppData,
+		setStep,
 
 		savePaymentGatewaySettings,
 		saveCashAppSettings,

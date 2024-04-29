@@ -14,8 +14,16 @@ import { __ } from '@wordpress/i18n';
  */
 import './index.scss';
 import { Back, Square, Close } from '../../icons';
+import { usePaymentGatewaySettings } from './../../onboarding/hooks';
 
-export const OnboardingHeader = ( { backStep, setStep } ) => {
+export const OnboardingHeader = () => {
+    const {
+		setStep,
+        getBackStep,        
+	} = usePaymentGatewaySettings();
+
+    const backStep = getBackStep();
+
     return (
         <div className="woo-square-onboarding__header">
             <Flex direction={[
