@@ -2,7 +2,6 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { useDispatch } from '@wordpress/data';
 import parse from 'html-react-parser';
 import {
 	SelectControl,
@@ -37,8 +36,6 @@ export const SettingsApp = () => {
 
 	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 
-	const { createSuccessNotice } = useDispatch( 'core/notices' );
-
 	const settingsWrapperStyle = {
 		width: '100%',
 		maxWidth: '780px',
@@ -66,10 +63,6 @@ export const SettingsApp = () => {
 		if ( ! response?.success ) {
 			return;
 		}
-
-		createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
-			type: 'snackbar',
-		} );
 
 		const businessLocations = await connectToSquare();
 
