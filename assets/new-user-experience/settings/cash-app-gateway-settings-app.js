@@ -7,18 +7,26 @@ import { useState } from '@wordpress/element';
 import { useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
 
-import { CashAppSetup } from '../../new-user-experience/onboarding/steps';
-import { useCashAppData } from '../onboarding/hooks';
-import { saveCashAppSettings } from '../utils';
+/**
+ * Internal dependencies.
+ */
+import { CashAppSetup } from '../onboarding/steps/';
+import { usePaymentGatewaySettings } from '../onboarding/hooks';
+import { Loader } from '../components';
 
 export const CashAppSettingsApp = () => {
-	const { cashAppData, settingsLoaded } = useCashAppData();
+	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
+	const { cashAppGatewaySettings, cashAppGatewaySettingsLoaded, saveCashAppSettings } = usePaymentGatewaySettingsData;
 	const [ saveInProgress, setSaveInProgress ] = useState( false );
 	const { createSuccessNotice } = useDispatch( noticesStore );
 
+	if ( ! cashAppGatewaySettingsLoaded ) {
+		return <Loader />;
+	}
+
 	const saveSettings = async () => {
 		setSaveInProgress( true );
-		const response = await saveCashAppSettings( cashAppData );
+		const response = await saveCashAppSettings( cashAppGatewaySettings );
 
 		if ( response.success ) {
 			createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
@@ -36,13 +44,9 @@ export const CashAppSettingsApp = () => {
 		marginLeft: '50px',
 	};
 
-	if ( ! settingsLoaded ) {
-		return null;
-	}
-
 	return (
 		<div style={ style }>
-			<CashAppSetup />
+			<CashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
 			<Button
 				variant='primary'
 				onClick={ () => saveSettings() }

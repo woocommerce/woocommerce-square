@@ -19,6 +19,8 @@ export const getPaymentGatewaySettingsData = async () => {
 		enable_paid_capture: settings.enable_paid_capture || CREDIT_CARD_DEFAULT_STATE.enable_paid_capture,
 		card_types: settings.card_types || CREDIT_CARD_DEFAULT_STATE.card_types,
 		tokenization: settings.tokenization || CREDIT_CARD_DEFAULT_STATE.tokenization,
+		debug_mode: settings.debug_mode || CREDIT_CARD_DEFAULT_STATE.debug_mode,
+		enable_customer_decline_messages: settings.enable_customer_decline_messages || CREDIT_CARD_DEFAULT_STATE.enable_customer_decline_messages,
 	};
 
 	const digitalWallet = {
@@ -29,11 +31,17 @@ export const getPaymentGatewaySettingsData = async () => {
 		digital_wallets_hide_button_options: settings.digital_wallets_hide_button_options || DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_hide_button_options,
 	};
 
+	return { creditCard, digitalWallet };
+};
+
+export const getGiftCardsSettingsData = async () => {
+	const settings = await apiFetch( { path: '/wc/v3/wc_square/gift_cards_settings' } );
+
 	const giftCard = {
-		enable_gift_cards: settings.enable_gift_cards || GIFT_CARDS_DEFAULT_STATE.enable_gift_cards,
+		enabled: settings.enabled || GIFT_CARDS_DEFAULT_STATE.enabled,
 	};
 
-	return { creditCard, digitalWallet, giftCard };
+	return { giftCard };
 };
 
 export const getCashAppSettingsData = async () => {
@@ -52,26 +60,6 @@ export const getCashAppSettingsData = async () => {
 	};
 
 	return { cashApp };
-};
-
-export const savePaymentGatewaySettings = async ( data ) => {
-	const response = await apiFetch( {
-		path: '/wc/v3/wc_square/payment_settings',
-		method: 'POST',
-		data,
-	} );
-
-	return response;
-};
-
-export const saveCashAppSettings = async ( data ) => {
-	const response = await apiFetch( {
-		path: '/wc/v3/wc_square/cash_app_settings',
-		method: 'POST',
-		data,
-	} );
-
-	return response;
 };
 
 export const connectToSquare = async () => {

@@ -2,8 +2,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: stretch;
-	width: 700px;
-	height: 100vh;
+	// height: 100vh;
 	z-index: 9999;
 	margin: auto;
 	max-width: 100%;
@@ -17,14 +16,14 @@
 		position: relative;
 		max-width: 650px;
 		width: 100%;
-		top: 50%;
+		top: 40%;
 		left: 50%;
 		transform: translate( -50%, -50% );
 	}
 
 	&__center-icon {
 		position: absolute;
-		top: 50%;
+		top: 40%;
 		left: calc( 50% - 94.5px );
 		z-index: 999;
 		transform: translate( 0, -50% );
@@ -38,10 +37,6 @@
 	&__intro--title {
 		display: flex;
 		align-items: center;
-		font-family: 'SF Pro', sans-serif;
-		font-size: 40px;
-		font-weight: 590;
-		line-height: 47.73px;
 		text-align: left;
 		margin-bottom: 24px;
 
@@ -57,7 +52,7 @@
 		background-color: #fff;
 		padding: 98px 110px 130px 110px;
 		border: 1px solid rgba(0, 0, 0, 0.25);
-		top: 50%;
+		top: 40%;
 		left: -50px;
 		transform: translate( 0, -50% );
 
@@ -74,13 +69,5 @@
 
 	.woo-square-setting__input-wrapper--boxed-bg {
 		background-color: rgba( 244, 244, 244, 0.5 );
-	}
-
-	.woo-square-setting__section-description {
-		font-size: 15px !important;
-
-		& > p {
-			font-size: 15px !important;
-		}
 	}
 }

@@ -15,6 +15,8 @@ export const CREDIT_CARD_DEFAULT_STATE = {
 		'UNIONPAY',
 	],
 	tokenization: "no",
+	debug_mode: "off",
+	enable_customer_decline_messages: "no",
 };
 
 const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
@@ -52,7 +54,9 @@ const digitalWalletsReducer = ( state = DIGITAL_WALLETS_DEFAULT_STATE, action ) 
 };
 
 export const GIFT_CARDS_DEFAULT_STATE = {
-	enable_gift_cards: 'no',
+	enabled: 'no',
+	title: 'Square Gift Cards',
+	description: 'Allow customers to purchase and redeem gift cards during checkout.',
 };
 
 const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
@@ -107,6 +111,8 @@ const SQUARE_SETTINGS_DEFAULT_STATE = {
 	is_connected: false,
 	disconnection_url: '',
 	connection_url: '',
+	connection_url_wizard: '',
+	connection_url_sandbox: '',
 	locations: [],
 }
 
@@ -127,6 +133,7 @@ const PROCESS_STATUS_DEFAULT_STATE = {
 	squareSettingsIsSaving: false,
 	creditCardSettingsIsSaving: false,
 	cashAppSettingsIsSaving: false,
+	giftCardsSettingsIsSaving: false,
 };
 
 const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => {
@@ -147,6 +154,12 @@ const savingProcessStatus = ( state = PROCESS_STATUS_DEFAULT_STATE, action ) => 
 			return {
 				...state,
 				cashAppSettingsIsSaving: action.payload,
+			};
+
+		case 'SET_GIFT_CARDS_PROCESS_STATUS':
+			return {
+				...state,
+				giftCardsSettingsIsSaving: action.payload,
 			};
 
 		default:

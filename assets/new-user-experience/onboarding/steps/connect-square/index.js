@@ -9,20 +9,20 @@ import { Button } from '@wordpress/components';
  */
 import './index.scss';
 import {
+	Section,
 	SectionTitle,
 	SectionDescription,
 } from '../../../components';
-import { useSquareSettings } from '../../../settings/hooks';
 
-export const ConnectSetup = ( {} ) => {
+export const ConnectSetup = ( { useSquareSettings } ) => {
 	const {
 		settings,
-	} = useSquareSettings( true );
+	} = useSquareSettings;
 
 	return (
 		<div className="woo-square-onbarding__connect-square">
-			<div className="woo-square-onbarding__connect-square--right">
-				<div className="woo-square-onbarding__connect-square__toggles">
+			<div className="woo-square-onbarding__connect-square--single">
+				<Section>
 					<SectionTitle title={ __( 'Thanks for installing WooCommerce Square!', 'woocommerce-square' ) } />
 					<SectionDescription>
 						{ __( "To get started, let's connect to your Square Account to complete the setup process.", 'woocommerce-square' ) }
@@ -30,13 +30,13 @@ export const ConnectSetup = ( {} ) => {
 
 					<Button
 							variant='primary'
-							href={settings.connection_url}
+							href={settings.connection_url_wizard}
 					>
 						{
-							__( 'Connect to Square', 'woocommerce-square' )
+							__( 'Connect with Square', 'woocommerce-square' )
 						}
 					</Button>
-				</div>
+				</Section>
 			</div>
 		</div>
 	);

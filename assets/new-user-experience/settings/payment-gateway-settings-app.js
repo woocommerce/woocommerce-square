@@ -2,20 +2,16 @@
  * External dependencies.
  */
 import { __ } from '@wordpress/i18n';
-import { Button } from '@wordpress/components';
-import { useState } from '@wordpress/element';
 
-import { CreditCardSetup, DigitalWalletsSetup, GiftCardSetup } from '../../new-user-experience/onboarding/steps';
+import { CreditCardSetup, DigitalWalletsSetup } from '../../new-user-experience/onboarding/steps';
 import { usePaymentGatewaySettings } from '../onboarding/hooks';
-import { PaymentGatewaySettingsSaveButton } from '../components';
+import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const PaymentGatewaySettingsApp = () => {
+	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 	const {
-		paymentGatewaySettings,
 		paymentGatewaySettingsLoaded,
-		savePaymentGatewaySettings,
-	} = usePaymentGatewaySettings( true );
-	const [ saveInProgress, setSaveInProgress ] = useState( false );
+	} = usePaymentGatewaySettingsData;
 
 	const style = {
 		width: '100%',
@@ -25,14 +21,13 @@ export const PaymentGatewaySettingsApp = () => {
 	};
 
 	if ( ! paymentGatewaySettingsLoaded ) {
-		return null;
+		return <Loader />;
 	}
 
 	return (
 		<div style={ style }>
-			<CreditCardSetup />
-			<DigitalWalletsSetup />
-			<GiftCardSetup />
+			<CreditCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
+			<DigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
 			<PaymentGatewaySettingsSaveButton />
 		</div>
 	)

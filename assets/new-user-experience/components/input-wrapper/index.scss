@@ -1,6 +1,6 @@
 .woo-square-setting__input-wrapper {
 	margin: 36px 0;
-	max-width: 450px;
+	max-width: 100%;
 
 	&--boxed {
 		max-width: 780px;
@@ -43,10 +43,6 @@
 }
 
 .woo-square-setting__input-label {
-	font-family: 'SF Pro', sans-serif;
-	font-size: 15px;
-	font-weight: 590;
-	line-height: 17.9px;
 	letter-spacing: -0.03em;
 	margin-bottom: 7px;
 }

@@ -13,16 +13,15 @@ import {
 	InputWrapper
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
-import { usePaymentGatewaySettings } from '../../hooks';
-import { savePaymentGatewaySettings } from '../../../utils';
 
-export const PaymentMethods = ( { setStep } ) => {
+export const PaymentMethods = ( { setStep, usePaymentGatewaySettings } ) => {
 	const {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
 
 		paymentGatewaySettings,
 		cashAppGatewaySettings,
+		giftCardsGatewaySettings,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 
@@ -33,17 +32,16 @@ export const PaymentMethods = ( { setStep } ) => {
 
 		savePaymentGatewaySettings,
 		saveCashAppSettings,
-	} = usePaymentGatewaySettings();
+		saveGiftCardsSettings,
+	} = usePaymentGatewaySettings;
 
 	const {
 		enabled,
 		enable_digital_wallets,
-		enable_gift_cards,
 	} = paymentGatewaySettings;
 
-	const {
-		enabled: enable_cash_app
-	} = cashAppGatewaySettings;
+	const enable_gift_cards = giftCardsGatewaySettings.enabled;
+	const enable_cash_app = cashAppGatewaySettings.enabled;
 
 	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
@@ -113,7 +111,7 @@ export const PaymentMethods = ( { setStep } ) => {
 					>
 						<ToggleControl
 							checked={ 'yes' === enable_gift_cards }
-							onChange={ ( enable_gift_cards ) => setGiftCardData( { enable_gift_cards: enable_gift_cards ? 'yes' : 'no' } ) }
+							onChange={ ( enable_gift_cards ) => setGiftCardData( { enabled: enable_gift_cards ? 'yes' : 'no' } ) }
 						/>
 					</InputWrapper>
 
@@ -126,6 +124,8 @@ export const PaymentMethods = ( { setStep } ) => {
 								( async () => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
+									await saveGiftCardsSettings();
+									setStep( 'payment-complete' );
 								} )()
 							} }
 						>

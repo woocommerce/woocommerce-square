@@ -141,6 +141,7 @@ class Settings extends \WC_Settings_API {
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller();
 		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Cash_App_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Gift_Cards_Settings_Controller();
 	}
 
 	/**
@@ -180,8 +181,10 @@ class Settings extends \WC_Settings_API {
 	 * @since x.x.x
 	 */
 	function render_square_settings_container() {
+		$section = wc_clean( isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? $_GET['section'] : 'general' );
+
 		printf(
-			'<div id="woocommerce-square-settings__container"></div>',
+			'<div id="woocommerce-square-settings__container-'. $section .'"></div>',
 		);
 	}
 
@@ -198,7 +201,7 @@ class Settings extends \WC_Settings_API {
 			return;
 		}
 
-		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section ) ) {
+		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section || 'gift_cards_pay' === $section ) ) {
 			return;
 		}
 
