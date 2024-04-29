@@ -8,10 +8,10 @@ import { usePaymentGatewaySettings } from '../onboarding/hooks';
 import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const PaymentGatewaySettingsApp = () => {
-	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 	const {
 		paymentGatewaySettingsLoaded,
-	} = usePaymentGatewaySettingsData;
+		savePaymentGatewaySettings,
+	} = usePaymentGatewaySettings( true );
 
 	const style = {
 		width: '100%',
@@ -26,9 +26,11 @@ export const PaymentGatewaySettingsApp = () => {
 
 	return (
 		<div style={ style }>
-			<CreditCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
-			<DigitalWalletsSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
-			<PaymentGatewaySettingsSaveButton />
+			<CreditCardSetup />
+			<DigitalWalletsSetup />
+			<PaymentGatewaySettingsSaveButton onClick={ () => {
+				savePaymentGatewaySettings();
+			} } />
 		</div>
 	)
 };
