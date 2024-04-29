@@ -19,9 +19,15 @@ import {
 	InputWrapper,
 	SquareCheckboxControl,
 } from '../../../components';
+import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CreditCardSetup = ( { usePaymentGatewaySettings = [] }) => {
-	const { setCreditCardData, getCreditCardData, paymentGatewaySettingsLoaded } = usePaymentGatewaySettings;
+export const CreditCardSetup = () => {
+	const {
+		paymentGatewaySettings,
+		paymentGatewaySettingsLoaded,
+		setCreditCardData,
+	} = usePaymentGatewaySettings();
+
 	const {
 		enabled,
 		title,
@@ -32,7 +38,7 @@ export const CreditCardSetup = ( { usePaymentGatewaySettings = [] }) => {
 		tokenization,
 		card_types,
 		debug_mode,
-	} = getCreditCardData();
+	} = paymentGatewaySettings;
 
 	if ( ! paymentGatewaySettingsLoaded ) {
 		return null;

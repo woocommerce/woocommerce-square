@@ -13,12 +13,16 @@ import {
 	SectionDescription,
 	InputWrapper,
 } from '../../../components';
+import { usePaymentGatewaySettings } from '../../hooks';
 
-export const GiftCardSetup = ( { usePaymentGatewaySettings } ) => {
-	const { setGiftCardData, getGiftCardData } = usePaymentGatewaySettings;
+export const GiftCardSetup = () => {
+	const {
+		giftCardsGatewaySettings,
+		setGiftCardData,
+	} = usePaymentGatewaySettings();
 	const {
 		enabled
-	} = getGiftCardData();
+	} = giftCardsGatewaySettings;
 
 	return (
 		<>
