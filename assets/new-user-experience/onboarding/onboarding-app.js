@@ -24,13 +24,15 @@ import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveB
 
 export const OnboardingApp = () => {
 	const [settingsLoaded, setSettingsLoaded ] = useState( false );
-	
-	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true ) ;
+
 	const {
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
-		giftCardsGatewaySettingsLoaded
-	} = usePaymentGatewaySettingsData;
+		giftCardsGatewaySettingsLoaded,
+		savePaymentGatewaySettings,
+		saveGiftCardsSettings,
+		saveCashAppSettings,
+	} = usePaymentGatewaySettings( true );
 
 	const {
 		stepData,
@@ -41,6 +43,7 @@ export const OnboardingApp = () => {
 	const { step, backStep } = stepData;
 
 	const useSquareSettingsData = useSquareSettings( true );
+
 	const {
 		settings,
 		squareSettingsLoaded
@@ -113,14 +116,6 @@ export const OnboardingApp = () => {
 		</>
 	);
 
-	const CreditCardSetupWithSave = paymentGatwaySettingsWithSaveButton( CreditCardSetup );
-	const DigitalWalletsSetupWithSave = paymentGatwaySettingsWithSaveButton( DigitalWalletsSetup );
-	const GiftCardSetupWithSave = paymentGatwaySettingsWithSaveButton( GiftCardSetup );
-	const CashAppSetupWithSave = paymentGatwaySettingsWithSaveButton( CashAppSetup );
-	const ConfigureSyncSetupWithSave = squareSettingsWithSaveButton( ConfigureSync );
-	const AdvancedSettingsWithSave = squareSettingsWithSaveButton( AdvancedSettings );
-	const SandboxSettingsWithSave = squareSettingsWithSaveButton( SandboxSettings );
-
 	// Redirect to the next page from the connect page when connection is successful.
 	if ( 'connect-square' === step && settings.is_connected ) {
 		setStep('business-location');
@@ -142,26 +137,85 @@ export const OnboardingApp = () => {
 		<>
 			<OnboardingHeader />
 			<div className={'woo-square-onboarding__cover ' + step}>
-				{
-					(step === 'connect-square' && <ConnectSetup />) ||
-					(step === 'business-location' && (
-						<>
-							<BusinessLocation />
-							<SquareSettingsSaveButton afterSaveCallback={ () => {
-								setStep( 'payment-methods' );
-							} } />
-						</>
-					) ) ||
-					(step === 'payment-methods' && <PaymentMethods /> ) ||
-					(step === 'payment-complete' && <PaymentComplete />) ||
-					(step === 'credit-card' && <CreditCardSetupWithSave />) ||
-					(step === 'digital-wallets' && <DigitalWalletsSetupWithSave />) ||
-					(step === 'gift-card' && <GiftCardSetupWithSave />) ||
-					(step === 'cash-app' && <CashAppSetupWithSave />) ||
-					(step === 'sync-settings' && <ConfigureSyncSetupWithSave />) ||
-					(step === 'advanced-settings' && <AdvancedSettingsWithSave />) ||
-					(step === 'sandbox-settings' && <SandboxSettingsWithSave /> )
-				}
+				{ step === 'connect-square' && <ConnectSetup /> }
+				{ step === 'business-location' && (
+					<>
+						<BusinessLocation />
+						<SquareSettingsSaveButton afterSaveCallback={ () => {
+							setStep( 'payment-methods' );
+						} } />
+					</>
+				) }
+				{ step === 'payment-methods' && <PaymentMethods /> }
+				{ step === 'payment-complete' && <PaymentComplete /> }
+				{ step === 'credit-card' && (
+					<>
+						<CreditCardSetup />
+						<PaymentGatewaySettingsSaveButton onClick={ () => {
+							( async () => {
+								await savePaymentGatewaySettings();
+								setStep( 'payment-complete' );
+							} )()
+						} } />
+					</>
+				) }
+				{ step === 'digital-wallets' && (
+					<>
+						<DigitalWalletsSetup />
+						<PaymentGatewaySettingsSaveButton onClick={ () => {
+							( async () => {
+								await savePaymentGatewaySettings();
+								setStep( 'payment-complete' );
+							} )()
+						} } />
+					</>
+				) }
+				{ step === 'gift-card' && (
+					<>
+						<GiftCardSetup />
+						<PaymentGatewaySettingsSaveButton onClick={ () => {
+							( async () => {
+								await saveGiftCardsSettings();
+								setStep( 'payment-complete' );
+							} )()
+						} } />
+					</>
+				) }
+				{ step === 'cash-app' && (
+					<>
+						<CashAppSetup />
+						<PaymentGatewaySettingsSaveButton onClick={ () => {
+							( async () => {
+								await saveCashAppSettings();
+								setStep( 'payment-complete' );
+							} )()
+						} } />
+					</>
+				) }
+				{ step === 'sync-settings' && (
+					<>
+						<ConfigureSync />
+						<SquareSettingsSaveButton afterSaveCallback={ () => {
+							setStep( 'payment-methods' );
+						} } />
+					</>
+				) }
+				{ step === 'advanced-settings' && (
+					<>
+						<AdvancedSettings />
+						<SquareSettingsSaveButton afterSaveCallback={ () => {
+							setStep( 'payment-methods' );
+						} } />
+					</>
+				) }
+				{ step === 'sandbox-settings' && (
+					<>
+						<SandboxSettings />
+						<SquareSettingsSaveButton afterSaveCallback={ () => {
+							setStep( 'payment-methods' );
+						} } />
+					</>
+				) }
 			</div>
 		</>
 	)

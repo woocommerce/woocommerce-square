@@ -35,7 +35,6 @@ export const CashAppSetup = () => {
 		charge_virtual_orders,
 		enable_paid_capture,
 		button_shape,
-		debug_mode,
 	} = cashAppGatewaySettings;
 
 	const authorizationFields = 'authorization' === transaction_type && (
@@ -47,7 +46,7 @@ export const CashAppSetup = () => {
 				<SquareCheckboxControl
 					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === charge_virtual_orders }
-					onChange={ ( charge_virtual_orders ) => setCreditCardData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
+					onChange={ ( charge_virtual_orders ) => setCashAppData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
 				/>
 			</InputWrapper>
 
@@ -58,7 +57,7 @@ export const CashAppSetup = () => {
 				<SquareCheckboxControl
 					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === enable_paid_capture }
-					onChange={ ( enable_paid_capture ) => setCreditCardData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }
+					onChange={ ( enable_paid_capture ) => setCashAppData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }
 				/>
 			</InputWrapper>
 		</>
@@ -149,33 +148,6 @@ export const CashAppSetup = () => {
 								{
 									label: __( 'Round', 'woocommerce-square' ),
 									value: 'round'
-								}
-							] }
-						/>
-					</InputWrapper>
-
-					<InputWrapper
-						label={ __( 'Debug Mode', 'woocommerce-square' ) }
-						>
-						<SelectControl
-							value={ debug_mode }
-							onChange={ ( debug_mode ) => setCashAppData( { debug_mode } ) }
-							options={ [
-								{
-									label: __( 'Off', 'woocommerce-square' ),
-									value: 'off'
-								},
-								{
-									label: __( 'Show on Checkout Page', 'woocommerce-square' ),
-									value: 'checkout'
-								},
-								{
-									label: __( 'Save to Log', 'woocommerce-square' ),
-									value: 'log'
-								},
-								{
-									label: __( 'Both', 'woocommerce-square' ),
-									value: 'both'
 								}
 							] }
 						/>

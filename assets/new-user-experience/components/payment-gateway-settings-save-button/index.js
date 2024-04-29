@@ -2,51 +2,38 @@ import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
-import { usePaymentGatewaySettings, useSteps } from '../../onboarding/hooks'
+import { usePaymentGatewaySettings } from '../../onboarding/hooks'
 
 const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes Saved' ),
+			onClick,
 		} = props;
 
 		const {
 			isPaymentGatewaySettingsSaving,
-			savePaymentGatewaySettings,
-			saveGiftCardsSettings,
-			saveCashAppSettings,
+			isGiftCardsGatewaySettingsSaving,
+			isCashAppGatewaySettingsSaving,
 		} = usePaymentGatewaySettings();
 
-		const {
-			setStep,
-			stepData: {
-				step,
-			} = {}
-		} = useSteps();
+		const isSavingState = [
+			isPaymentGatewaySettingsSaving,
+			isGiftCardsGatewaySettingsSaving,
+			isCashAppGatewaySettingsSaving,
+		].some( state => null === state || true === state );
 
 		return (
 			<WrappedComponent
 				{ ...props }
 				{ ...( null === isPaymentGatewaySettingsSaving && { icon: check } ) }
-				isBusy={ isPaymentGatewaySettingsSaving }
-				disabled={ isPaymentGatewaySettingsSaving }
+				isBusy={ isSavingState }
+				disabled={ isSavingState }
 				variant="primary"
-				onClick={ () => {
-					( async () => {
-						if ('gift-card' === step) {
-							await saveGiftCardsSettings();
-						} else if ('cash-app' === step) {
-							await saveCashAppSettings();
-						} else {
-							await savePaymentGatewaySettings();
-						}
-
-						setStep( 'payment-complete' );
-					} )()
-				} }
+				onClick={ () => onClick() }
 			>
-				{ null === isPaymentGatewaySettingsSaving ? afterSaveLabel : label }
+				{ isSavingState ? afterSaveLabel : label }
 			</WrappedComponent>
 		)
 	};

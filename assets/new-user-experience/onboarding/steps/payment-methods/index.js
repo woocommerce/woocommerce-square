@@ -57,7 +57,7 @@ export const PaymentMethods = () => {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
 		isGiftCardsGatewaySettingsSaving,
-	].some( state => null === state );
+	].some( state => null === state || true === state );
 
 	return (
 		<div className="woo-square-onbarding__payment-settings">
