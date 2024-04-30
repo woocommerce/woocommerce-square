@@ -137,7 +137,7 @@ export const OnboardingApp = () => {
 				{ step === 'credit-card' && (
 					<>
 						<CreditCardSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="credit-card-settings-save-button" onClick={ () => {
 							( async () => {
 								await savePaymentGatewaySettings();
 								setStep( 'payment-complete' );
@@ -148,7 +148,7 @@ export const OnboardingApp = () => {
 				{ step === 'digital-wallets' && (
 					<>
 						<DigitalWalletsSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="digital-wallets-settings-save-button" onClick={ () => {
 							( async () => {
 								await savePaymentGatewaySettings();
 								setStep( 'payment-complete' );
@@ -159,7 +159,7 @@ export const OnboardingApp = () => {
 				{ step === 'gift-card' && (
 					<>
 						<GiftCardSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="gift-card-settings-save-button" onClick={ () => {
 							( async () => {
 								await saveGiftCardsSettings();
 								setStep( 'payment-complete' );
@@ -170,7 +170,7 @@ export const OnboardingApp = () => {
 				{ step === 'cash-app' && (
 					<>
 						<CashAppSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="cash-app-settings-save-button" onClick={ () => {
 							( async () => {
 								await saveCashAppSettings();
 								setStep( 'payment-complete' );

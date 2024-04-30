@@ -133,6 +133,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 						}
 					>
 						<SelectControl
+							data-testid="sync-settings-field"
 							value={ system_of_record }
 							onChange={ ( system_of_record ) => setSquareSettingData( { system_of_record } ) }
 							options={ [
@@ -168,6 +169,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 								}
 							>
 								<SquareCheckboxControl
+									data-testid="push-inventory-field"
 									checked={ 'yes' === enable_inventory_sync }
 									onChange={ ( enable_inventory_sync ) => setSquareSettingData( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
 									label={ __( 'Enable to push inventory changes to Square', 'woocommerce-square' ) }
@@ -185,6 +187,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									description={ __( 'Inventory is fetched from Square periodically and updated in WooCommerce.', 'woocommerce-square' ) }
 								>
 									<SquareCheckboxControl
+										data-testid="pull-inventory-field"
 										checked={ 'yes' === enable_inventory_sync }
 										onChange={ ( enable_inventory_sync ) => setSquareSettingData( { enable_inventory_sync: enable_inventory_sync ? 'yes' : 'no' } ) }
 										label={ __( 'Enable to fetch inventory changes from Square', 'woocommerce-square' ) }
@@ -197,6 +200,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									description={ __( 'Product images that have been updated in Square will also be updated within WooCommerce during a sync.', 'woocommerce-square' ) }
 								>
 									<SquareCheckboxControl
+										data-testid="hide-images-field"
 										checked={ 'yes' === override_product_images }
 										onChange={ ( override_product_images ) => setSquareSettingData( { override_product_images: override_product_images ? 'yes' : 'no' } ) }
 										label={ __( 'Enable to override Product images from Square', 'woocommerce-square' ) }
@@ -209,6 +213,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									description={ __( 'Products not found in Square will be hidden in the WooCommerce product catalog.', 'woocommerce-square' ) }
 								>
 									<SquareCheckboxControl
+										data-testid="hide-missing-products-field"
 										checked={ 'yes' === hide_missing_products }
 										onChange={ ( hide_missing_products ) => setSquareSettingData( { hide_missing_products: hide_missing_products ? 'yes' : 'no' } ) }
 										label={ __( 'Hide synced products when not found in Square', 'woocommerce-square' ) }
@@ -226,6 +231,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 								indent = { indent }
 							>
 								<SelectControl
+									data-testid="sync-interval-field"
 									value={ sync_interval }
 									options={ sync_interval_options }
 									onChange={ ( sync_interval ) => setSquareSettingData( { sync_interval } ) }

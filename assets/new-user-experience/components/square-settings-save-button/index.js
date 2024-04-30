@@ -24,6 +24,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 
 		return (
 			<WrappedComponent
+				data-testid="square-settings-save-button"
 				{ ...remainingProps }
 				{ ...( null === isSquareSettingsSaving && { icon: check } ) }
 				isBusy={ isSquareSettingsSaving }

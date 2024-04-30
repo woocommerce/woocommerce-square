@@ -9,7 +9,6 @@ import {
 	SectionTitle,
 	SectionDescription,
 	InputWrapper,
-	SquareSettingsSaveButton,
 } from '../../../components';
 import { useSquareSettings } from '../../../settings/hooks';
 
@@ -88,6 +87,7 @@ export const BusinessLocation = () => {
 						<div className='woo-square-wizard__fields'>
 							<InputWrapper>
 								<SelectControl
+								data-testid="business-location-selector"
 								value={sandbox_location_id}
 								onChange={(sandbox_location_id) =>
 									setSquareSettingData({ sandbox_location_id })

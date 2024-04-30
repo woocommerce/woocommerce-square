@@ -92,6 +92,7 @@ export const PaymentMethods = () => {
 						variant="boxed"
 					>
 						<ToggleControl
+							className="payment-gateway-toggle__credit-card"
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setCreditCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>
@@ -102,6 +103,7 @@ export const PaymentMethods = () => {
 						variant="boxed"
 					>
 						<ToggleControl
+							className="payment-gateway-toggle__digital-wallet"
 							checked={ 'yes' === enable_digital_wallets }
 							onChange={ ( enable_digital_wallets ) => setDigitalWalletData( { enable_digital_wallets: enable_digital_wallets ? 'yes' : 'no' } ) }
 						/>
@@ -112,6 +114,7 @@ export const PaymentMethods = () => {
 						variant="boxed"
 					>
 						<ToggleControl
+							className="payment-gateway-toggle__cash-app"
 							checked={ 'yes' === enable_cash_app }
 							onChange={ ( enable_cash_app ) => setCashAppData( { enabled: enable_cash_app ? 'yes' : 'no' } ) }
 						/>
@@ -122,6 +125,7 @@ export const PaymentMethods = () => {
 						variant="boxed"
 					>
 						<ToggleControl
+							className="payment-gateway-toggle__gift-card"
 							checked={ 'yes' === enable_gift_cards }
 							onChange={ ( enable_gift_cards ) => setGiftCardData( { enabled: enable_gift_cards ? 'yes' : 'no' } ) }
 						/>
@@ -129,6 +133,7 @@ export const PaymentMethods = () => {
 
 					<div className="woo-square-onbarding__payment-settings__toggles__next-btn">
 						<Button
+							data-testid="next-step-button"
 							variant="primary"
 							isBusy={ isSavingState }
 							disabled={ isSavingState }

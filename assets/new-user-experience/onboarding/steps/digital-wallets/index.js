@@ -61,6 +61,7 @@ export const DigitalWalletsSetup = () => {
 						}
 						>
 						<SquareCheckboxControl
+							data-testid="digital-wallet-gateway-toggle-field"
 							label={ __( 'Enable digital wallets.', 'woocommerce-square' ) }
 							checked={ 'yes' === enable_digital_wallets }
 							onChange={ ( enable_digital_wallets ) => setDigitalWalletData( { enable_digital_wallets: enable_digital_wallets ? 'yes' : 'no' } ) }
@@ -69,6 +70,7 @@ export const DigitalWalletsSetup = () => {
 
 					<InputWrapper label={ __( 'Button Type', 'woocommerce-square' ) } >
 						<SelectControl
+							data-testid="digital-wallet-gatewaybutton-type-field"
 							value={ digital_wallets_button_type }
 							onChange={ ( digital_wallets_button_type ) => setDigitalWalletData( { digital_wallets_button_type } ) }
 							options={ [
@@ -90,6 +92,7 @@ export const DigitalWalletsSetup = () => {
 
 					<InputWrapper label={ __( 'Apple Pay Button Color', 'woocommerce-square' ) } >
 						<SelectControl
+							data-testid="digital-wallet-gatewayapple-pay-button-color-field"
 							value={ digital_wallets_apple_pay_button_color }
 							onChange={ ( digital_wallets_apple_pay_button_color ) => setDigitalWalletData( { digital_wallets_apple_pay_button_color } ) }
 							options={ [
@@ -111,6 +114,7 @@ export const DigitalWalletsSetup = () => {
 
 					<InputWrapper label={ __( 'Google Pay Button Color', 'woocommerce-square' ) } >
 						<SelectControl
+							data-testid="digital-wallet-gatewaygoogle-pay-button-color-field"
 							value={ digital_wallets_google_pay_button_color }
 							onChange={ ( digital_wallets_google_pay_button_color ) => setDigitalWalletData( { digital_wallets_google_pay_button_color } ) }
 							options={ [
@@ -128,6 +132,7 @@ export const DigitalWalletsSetup = () => {
 
 					<InputWrapper label={ __( 'Hide Digital Wallet Buttons', 'woocommerce-square' ) } >
 						<MultiSelectControl
+							data-testid="digital-wallet-gatewayhide-buttons-field"
 							label=""
 							__experimentalShowHowTo={ false }
 							value={ digital_wallets_hide_button_options }
