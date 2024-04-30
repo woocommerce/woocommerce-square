@@ -181,7 +181,7 @@ export const OnboardingApp = () => {
 				{ step === 'sync-settings' && (
 					<>
 						<ConfigureSync />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -189,7 +189,7 @@ export const OnboardingApp = () => {
 				{ step === 'advanced-settings' && (
 					<>
 						<AdvancedSettings />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -197,7 +197,7 @@ export const OnboardingApp = () => {
 				{ step === 'sandbox-settings' && (
 					<>
 						<SandboxSettings />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
