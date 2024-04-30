@@ -98,7 +98,14 @@ export const OnboardingApp = () => {
 		}
 	}, [step]);
 
-	if ( ! squareSettingsLoaded ) {
+	const isLoadingInProgress = [
+		squareSettingsLoaded,
+		paymentGatewaySettingsLoaded,
+		cashAppGatewaySettingsLoaded,
+		giftCardsGatewaySettingsLoaded,
+	].every( isLoading => isLoading );
+
+	if ( ! isLoadingInProgress ) {
 		return <Loader />;
 	}
 

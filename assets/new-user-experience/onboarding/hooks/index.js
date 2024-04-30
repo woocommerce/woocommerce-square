@@ -110,6 +110,8 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	useEffect( () => {
 		if ( ! fromServer ) {
 			setPaymentGatewaySettingsLoaded( true );
+			setGiftCardsGatewaySettingsLoaded( true );
+			setCashAppGatewaySettingsLoaded( true );
 			return;
 		}
 
@@ -144,7 +146,7 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 				setCashAppGatewaySettingsLoaded( true );
 			}
 		} )()
-	}, [ fromServer ] )
+	}, [ fromServer ] );
 
 	return {
 		isPaymentGatewaySettingsSaving,

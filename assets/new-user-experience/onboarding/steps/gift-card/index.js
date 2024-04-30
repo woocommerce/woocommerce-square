@@ -17,12 +17,18 @@ import { usePaymentGatewaySettings } from '../../hooks';
 
 export const GiftCardSetup = () => {
 	const {
+		giftCardsGatewaySettingsLoaded,
 		giftCardsGatewaySettings,
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
+
 	const {
 		enabled
 	} = giftCardsGatewaySettings;
+
+	if ( ! giftCardsGatewaySettingsLoaded ) {
+		return null;
+	}
 
 	return (
 		<>
@@ -38,6 +44,7 @@ export const GiftCardSetup = () => {
 						variant="boxed"
 					>
 						<ToggleControl
+							data-testid="gift-card-gateway-toggle-field"
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>
