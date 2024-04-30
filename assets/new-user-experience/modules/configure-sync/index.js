@@ -200,7 +200,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									description={ __( 'Product images that have been updated in Square will also be updated within WooCommerce during a sync.', 'woocommerce-square' ) }
 								>
 									<SquareCheckboxControl
-										data-testid="hide-images-field"
+										data-testid="override-images-field"
 										checked={ 'yes' === override_product_images }
 										onChange={ ( override_product_images ) => setSquareSettingData( { override_product_images: override_product_images ? 'yes' : 'no' } ) }
 										label={ __( 'Enable to override Product images from Square', 'woocommerce-square' ) }
@@ -247,6 +247,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									label={ __( 'Import Products', 'woocommerce-square' ) }
 								>
 									<Button
+										data-testid="import-products-button"
 										variant='secondary'
 										className='import-square-products-react'
 										onClick={ openModal }
