@@ -44,6 +44,7 @@ export const CashAppSetup = () => {
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
+					data-testid="cash-app-gateway-virtual-order-only-field"
 					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === charge_virtual_orders }
 					onChange={ ( charge_virtual_orders ) => setCashAppData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
@@ -55,6 +56,7 @@ export const CashAppSetup = () => {
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
+					data-testid="cash-app-gateway-capture-paid-orders-field"
 					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === enable_paid_capture }
 					onChange={ ( enable_paid_capture ) => setCashAppData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }

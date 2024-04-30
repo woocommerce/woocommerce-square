@@ -42,12 +42,10 @@ export const OnboardingApp = () => {
 
 	const { step, backStep } = stepData;
 
-	const useSquareSettingsData = useSquareSettings( true );
-
 	const {
 		settings,
-		squareSettingsLoaded
-	} = useSquareSettingsData;
+		squareSettingsLoaded,
+	} = useSquareSettings( true );
 
 	// Set info in local storage.
 	useEffect(() => {
@@ -134,9 +132,13 @@ export const OnboardingApp = () => {
 				{ step === 'business-location' && (
 					<>
 						<BusinessLocation />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
-						} } />
+						{
+							settings.locations.length ? (
+								<SquareSettingsSaveButton afterSaveCallback={ () => {
+									setStep( 'payment-methods' );
+								} } />
+							) : null
+						}
 					</>
 				) }
 				{ step === 'payment-methods' && <PaymentMethods /> }
