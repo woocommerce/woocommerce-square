@@ -474,8 +474,8 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 				),
 				$legacy_option,
 				$new_option
-				)
-			);
+			)
+		);
 
 		$legacy_settings = get_option( $legacy_option, array() );
 		$new_settings    = get_option( $new_option, array() );

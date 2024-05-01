@@ -184,7 +184,7 @@ class Settings extends \WC_Settings_API {
 		$section = isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : 'general'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		printf(
-			'<div id="woocommerce-square-settings__container-' . $section . '"></div>',
+			'<div id="woocommerce-square-settings__container-' . esc_html( $section ) . '"></div>',
 		);
 	}
 
@@ -194,9 +194,9 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function render_payments_settings_container() {
-		// Use wp_unslash() or similar (WordPress.Security.ValidatedSanitizedInput.MissingUnslash)
-		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : '';
-		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : ''; // WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : ''; // WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		if ( 'checkout' !== $tab ) {
 			return;
