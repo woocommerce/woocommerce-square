@@ -121,7 +121,7 @@ export const PaymentMethods = () => {
 					</InputWrapper>
 
 					<InputWrapper
-						label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
+						label={ __( 'Enable Square Gift Cards', 'woocommerce-square' ) }
 						variant="boxed"
 					>
 						<ToggleControl

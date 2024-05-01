@@ -172,7 +172,7 @@ class Gift_Card extends Payment_Gateway {
 				),
 				'type'        => 'checkbox',
 				'default'     => '',
-				'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
+				'label'       => esc_html__( 'Enable Square Gift Cards', 'woocommerce-square' ),
 			),
 
 			'title'       => array(

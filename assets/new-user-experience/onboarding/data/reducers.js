@@ -1,5 +1,5 @@
 export const CREDIT_CARD_DEFAULT_STATE = {
-	enabled: 'no',
+	enabled: 'yes',
 	title: 'Credit Card',
 	description: 'Pay securely using your credit card.',
 	transaction_type: 'charge',
