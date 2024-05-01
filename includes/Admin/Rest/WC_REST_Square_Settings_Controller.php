@@ -49,16 +49,17 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'enable_sandbox',
 			'sandbox_application_id',
 			'sandbox_token',
-			'debug_logging_enabled',
 			'sandbox_location_id',
 			'system_of_record',
 			'enable_inventory_sync',
 			'override_product_images',
 			'hide_missing_products',
 			'sync_interval',
-			'debug_mode',
 			'is_connected',
 			'locations',
+			'enable_customer_decline_messages',
+			'debug_mode',
+			'debug_logging_enabled',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -139,6 +140,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'description'       => __( 'Type of debug mode.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'enable_customer_decline_messages'    => array(
+						'description'       => __( 'Enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => '',
 					),
 				),
 			)

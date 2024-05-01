@@ -20,7 +20,6 @@ export const getPaymentGatewaySettingsData = async () => {
 		enable_paid_capture: settings.enable_paid_capture || CREDIT_CARD_DEFAULT_STATE.enable_paid_capture,
 		card_types: settings.card_types || CREDIT_CARD_DEFAULT_STATE.card_types,
 		tokenization: settings.tokenization || CREDIT_CARD_DEFAULT_STATE.tokenization,
-		enable_customer_decline_messages: settings.enable_customer_decline_messages || CREDIT_CARD_DEFAULT_STATE.enable_customer_decline_messages,
 	};
 
 	const digitalWallet = {
@@ -91,7 +90,6 @@ export const getSquareSettings = async () => {
 		enable_sandbox: settings.enable_sandbox || SQUARE_SETTINGS_DEFAULT_STATE.enable_sandbox,
 		sandbox_application_id: settings.sandbox_application_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_application_id,
 		sandbox_token: settings.sandbox_token || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_token,
-		debug_logging_enabled: settings.debug_logging_enabled || SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
 		sandbox_location_id: settings.sandbox_location_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_location_id,
 		system_of_record: settings.system_of_record || SQUARE_SETTINGS_DEFAULT_STATE.system_of_record,
 		enable_inventory_sync: settings.enable_inventory_sync || SQUARE_SETTINGS_DEFAULT_STATE.enable_inventory_sync,
@@ -104,7 +102,9 @@ export const getSquareSettings = async () => {
 		connection_url_wizard: settings.connection_url_wizard || SQUARE_SETTINGS_DEFAULT_STATE.connection_url_wizard,
 		connection_url_sandbox: settings.connection_url_sandbox || SQUARE_SETTINGS_DEFAULT_STATE.connection_url_sandbox,
 		locations: settings.locations || SQUARE_SETTINGS_DEFAULT_STATE.locations,
+		enable_customer_decline_messages: settings.enable_customer_decline_messages || SQUARE_SETTINGS_DEFAULT_STATE.enable_customer_decline_messages,
 		debug_mode: settings.debug_mode || SQUARE_SETTINGS_DEFAULT_STATE.debug_mode,
+		debug_logging_enabled: settings.debug_logging_enabled || SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
 	};
 
 	return squareSettings;

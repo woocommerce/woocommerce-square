@@ -23,6 +23,8 @@
 
 namespace WooCommerce\Square;
 
+use WooCommerce\Square\Framework\Square_Helper;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -58,6 +60,17 @@ class Settings extends \WC_Settings_API {
 	 */
 	const SYSTEM_OF_RECORD_DISABLED = 'disabled';
 
+	/** Debug mode log to file */
+	const DEBUG_MODE_LOG = 'log';
+
+	/** Debug mode display on checkout */
+	const DEBUG_MODE_CHECKOUT = 'checkout';
+
+	/** Debug mode log to file and display on checkout */
+	const DEBUG_MODE_BOTH = 'both';
+
+	/** Debug mode disabled */
+	const DEBUG_MODE_OFF = 'off';
 
 	/**
 	 * Refresh token
@@ -439,6 +452,29 @@ class Settings extends \WC_Settings_API {
 				)
 			);
 		}
+
+		$fields['enable_customer_decline_messages'] = array(
+			'title'   => esc_html__( 'Detailed Decline Messages', 'woocommerce-square' ),
+			'type'    => 'checkbox',
+			'label'   => esc_html__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
+			'default' => 'no',
+		);
+
+		$fields['debug_mode'] = array(
+			'title'   => esc_html__( 'Debug Mode', 'woocommerce-square' ),
+			'type'    => 'select',
+			'class'   => 'wc-enhanced-select',
+			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
+			'desc'    => sprintf( esc_html__( 'Show Detailed Error Messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . admin_url( 'admin.php?page=wc-status&tab=logs' ) . '">', '</a>' ),
+			'default' => self::DEBUG_MODE_OFF,
+			'options' => array(
+				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
+				self::DEBUG_MODE_CHECKOUT => esc_html__( 'Show on Checkout Page', 'woocommerce-square' ),
+				self::DEBUG_MODE_LOG      => esc_html__( 'Save to Log', 'woocommerce-square' ),
+				/* translators: show debugging information on both checkout page and in the log */
+				self::DEBUG_MODE_BOTH     => esc_html__( 'Both', 'woocommerce-square' ),
+			),
+		);
 
 		// Always display these fields.
 		$fields = array_merge(

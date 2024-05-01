@@ -301,6 +301,11 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	 */
 	protected function upgrade_to_4_7_0() {
 
+		// Skip if already upgraded.
+		if ( get_option( 'wc_square_updated_to_4_7_0' ) ) {
+			return;
+		}
+
 		// Migrate Gift Cards settings.
 		$this->migrate_gateway_settings_dynamically(
 			'woocommerce_square_credit_card_settings',
@@ -308,6 +313,17 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			array(
 				'enable_gift_cards' => 'enabled',
 			)
+		);
+
+
+		$this->migrate_gateway_settings_dynamically(
+			'woocommerce_square_credit_card_settings',
+			'wc_square_settings',
+			array(
+				'debug_mode' => 'debug_mode',
+				'enable_customer_decline_messages' => 'enable_customer_decline_messages',
+			),
+			false
 		);
 
 		// Mark upgrade complete.
@@ -464,7 +480,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	 *
 	 * @since 2.0.0
 	 */
-	private function migrate_gateway_settings_dynamically( $legacy_option, $new_option, $fields = array() ) {
+	private function migrate_gateway_settings_dynamically( $legacy_option, $new_option, $fields = array(), $bail = true ) {
 		$this->get_plugin()->log(
 			sprintf(
 				// translators: 1: legacy option name, 2: new option name.
@@ -481,7 +497,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		$new_settings    = get_option( $new_option, array() );
 
 		// Bail if they already have new settings present.
-		if ( ! empty( $new_settings ) ) {
+		if ( ! empty( $new_settings ) && $bail ) {
 			return;
 		}
 

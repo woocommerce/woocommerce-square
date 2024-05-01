@@ -15,8 +15,6 @@ export const CREDIT_CARD_DEFAULT_STATE = {
 		'UNIONPAY',
 	],
 	tokenization: "no",
-	debug_mode: "off",
-	enable_customer_decline_messages: "no",
 };
 
 const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
@@ -81,7 +79,6 @@ export const CASH_APP_DEFAULT_STATE = {
 	enable_paid_capture: 'no',
 	button_theme: 'dark',
 	button_shape: 'semiround',
-	debug_mode: 'semiround',
 };
 
 const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
@@ -101,7 +98,6 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	enable_sandbox: 'yes',
 	sandbox_application_id: '',
 	sandbox_token: '',
-	debug_logging_enabled: 'no',
 	sandbox_location_id: '',
 	system_of_record: 'disabled',
 	enable_inventory_sync: 'no',
@@ -114,7 +110,9 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	connection_url_wizard: '',
 	connection_url_sandbox: '',
 	locations: [],
+	enable_customer_decline_messages: "no",
 	debug_mode: 'off',
+	debug_logging_enabled: 'no',
 }
 
 const squareSettingsReducer = ( state = SQUARE_SETTINGS_DEFAULT_STATE, action ) => {

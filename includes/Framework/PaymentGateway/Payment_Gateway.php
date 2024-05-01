@@ -119,9 +119,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Gateway partial capture transaction feature */
 	const FEATURE_PARTIAL_CAPTURE = 'partial_capture';
 
-	/** Display detailed customer decline messages on checkout */
-	const FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES = 'customer_decline_messages';
-
 	/** Refunds feature */
 	const FEATURE_REFUNDS = 'refunds';
 
@@ -340,6 +337,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// default icon filter  @see WC_Payment_Gateway::$icon
 		$this->icon = apply_filters( 'wc_' . $this->get_id() . '_icon', '' );
+
+		$square_settings  = get_option( 'wc_square_settings', array() );
+		$this->debug_mode = isset( $square_settings['debug_mode'] ) ? $square_settings['debug_mode'] : 'off';
+
+		$this->enable_customer_decline_messages = isset( $square_settings['enable_customer_decline_messages'] ) ? $square_settings['enable_customer_decline_messages'] : 'no';
 
 		// Load the form fields
 		$this->init_form_fields();
@@ -1206,32 +1208,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( $this->supports_tokenization() ) {
 			$this->form_fields = $this->add_tokenization_form_fields( $this->form_fields );
 		}
-
-		// add "detailed customer decline messages" option if the feature is supported
-		if ( $this->supports( self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES ) ) {
-			$this->form_fields['enable_customer_decline_messages'] = array(
-				'title'   => esc_html__( 'Detailed Decline Messages', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'label'   => esc_html__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
-				'default' => 'no',
-			);
-		}
-
-		// debug mode
-		$this->form_fields['debug_mode'] = array(
-			'title'   => esc_html__( 'Debug Mode', 'woocommerce-square' ),
-			'type'    => 'select',
-			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-			'desc'    => sprintf( esc_html__( 'Show Detailed Error Messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
-			'default' => self::DEBUG_MODE_OFF,
-			'options' => array(
-				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
-				self::DEBUG_MODE_CHECKOUT => esc_html__( 'Show on Checkout Page', 'woocommerce-square' ),
-				self::DEBUG_MODE_LOG      => esc_html__( 'Save to Log', 'woocommerce-square' ),
-				/* translators: show debugging information on both checkout page and in the log */
-				self::DEBUG_MODE_BOTH     => esc_html__( 'Both', 'woocommerce-square' ),
-			),
-		);
 
 		// if there is more than just the production environment available
 		if ( count( $this->get_environments() ) > 1 ) {
