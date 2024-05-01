@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { visitOnboardingPage } from '../../utils/helper';
 
-test( 'Can configure cash app settings via Onboarding', async () => {
+test( 'Can configure cash app settings via Onboarding', async ( { page } ) => {
 	await visitOnboardingPage( page );
 
 	await page.getByTestId( 'cash-app-settings-button' ).click();
@@ -26,14 +26,13 @@ test( 'Can configure cash app settings via Onboarding', async () => {
 	// save settings.
 	await page.getByTestId( 'cash-app-settings-save-button' ).click();
 	await expect( await page.getByText( 'Your Payment Setup is Complete!' ) ).toBeVisible();
-
-	await page.getByTestId( 'cash-app-settings-button' ).click();
 	await page.reload();
 
+	await page.getByTestId( 'cash-app-settings-button' ).click();
 	await expect( await page.getByTestId( 'cash-app-gateway-virtual-order-only-field' ) ).toBeChecked();
 	await expect( await page.getByTestId( 'cash-app-gateway-capture-paid-orders-field' ) ).toBeChecked();
-	await expect( await page.getByTestId( 'cash-app-gateway-title-field' ) ).toHaveText( 'Cash App Pay + E2E' );
-	await expect( await page.getByTestId( 'cash-app-gateway-description-field' ) ).toHaveText( 'Pay securely using Cash App Pay + E2E' );
-	await expect( await page.getByTestId( 'cash-app-gateway-button-theme-field' ) ).toHaveText( 'Light' );
-	await expect( await page.getByTestId( 'cash-app-gateway-button-shape-field' ) ).toHaveText( 'Round' );
+	await expect( await page.getByTestId( 'cash-app-gateway-title-field' ) ).toHaveValue( 'Cash App Pay + E2E' );
+	await expect( await page.getByTestId( 'cash-app-gateway-description-field' ) ).toHaveValue( 'Pay securely using Cash App Pay + E2E' );
+	await expect( await page.getByTestId( 'cash-app-gateway-button-theme-field' ) ).toHaveValue( 'light' );
+	await expect( await page.getByTestId( 'cash-app-gateway-button-shape-field' ) ).toHaveValue( 'round' );
 } );

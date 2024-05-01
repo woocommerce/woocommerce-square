@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { visitOnboardingPage } from '../../utils/helper';
 
-test( 'Can configure credit card settings via Onboarding', async () => {
+test( 'Can configure credit card settings via Onboarding', async ( { page } ) => {
 	await visitOnboardingPage( page );
 
 	await page.getByTestId( 'credit-card-settings-button' ).click();
@@ -24,10 +24,9 @@ test( 'Can configure credit card settings via Onboarding', async () => {
 	// save settings.
 	await page.getByTestId( 'credit-card-settings-save-button' ).click();
 	await expect( await page.getByText( 'Your Payment Setup is Complete!' ) ).toBeVisible();
-
-	await page.getByTestId( 'credit-card-settings-button' ).click();
 	await page.reload();
 
+	await page.getByTestId( 'credit-card-settings-button' ).click();
 	await expect( await page.getByTestId( 'credit-card-gateway-virtual-order-only-field' ) ).toBeChecked();
 	await expect( await page.getByTestId( 'credit-card-gateway-capture-paid-orders-field' ) ).toBeChecked();
 	await expect( await page.getByTestId( 'credit-card-tokenization-field' ) ).toBeChecked();

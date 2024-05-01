@@ -1,16 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { visitOnboardingPage } from '../../utils/helper';
+import { visitOnboardingPage, isToggleChecked } from '../../utils/helper';
 
-test( 'Can configure gift card settings via Onboarding', async () => {
+test( 'Can configure gift card settings via Onboarding', async ( { page } ) => {
 	await visitOnboardingPage( page );
 
 	await page.getByTestId( 'gift-card-settings-button' ).click();
-	await page.locator( '.gift-card-gateway-toggle-field' ).first().click();
+	const isChecked = await isToggleChecked( page, '.gift-card-gateway-toggle-field' );
+
+	if ( ! isChecked ) {
+		await page.getByTestId( 'gift-card-settings-button' ).click();
+	}
 
 	// save settings.
 	await page.getByTestId( 'gift-card-settings-save-button' ).click();
 	await expect( await page.getByText( 'Your Payment Setup is Complete!' ) ).toBeVisible();
+	await page.reload();
 
 	await page.getByTestId( 'gift-card-settings-button' ).click();
-	await page.reload();
+	await expect( await isToggleChecked( page, '.gift-card-gateway-toggle-field' ) ).toBe( true );
 } );

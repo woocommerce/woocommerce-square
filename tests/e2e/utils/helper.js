@@ -506,3 +506,9 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 export async function visitOnboardingPage( page ) {
 	await page.goto( '/wp-admin/admin.php?page=woocommerce-square-onboarding' );
 }
+
+export async function isToggleChecked( page, selector ) {
+	return await page.$eval( `${selector} .components-form-toggle`, ( $el, className ) => {
+		return $el.classList.contains( className )
+	}, 'is-checked' );
+};
