@@ -22,6 +22,6 @@ class WC_Square_REST_Base_Controller extends WP_REST_Controller {
 	 * Override this method if custom permissions required.
 	 */
 	public function check_permission() {
-		return current_user_can( 'manage_woocommerce' );
+		return current_user_can( 'manage_woocommerce' ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
 	}
 }

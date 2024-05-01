@@ -97,7 +97,7 @@ class Connection {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended - Setting variable, nonce checked next line.
 		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
-		
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$from = isset( $_GET['from'] ) ? wc_clean( wp_unslash( $_GET['from'] ) ) : '';
 
@@ -452,7 +452,7 @@ class Connection {
 		$redirect_url = wp_nonce_url( add_query_arg( 'action', $action, admin_url() ), $action );
 
 		// Append all args.
-		foreach( $args as $key => $value ) {
+		foreach ( $args as $key => $value ) {
 			$redirect_url = add_query_arg( $key, $value, $redirect_url );
 		}
 

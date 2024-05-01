@@ -147,7 +147,7 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Redirect users to the templates screen on plugin activation.
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 */
 	public function square_onboarding_redirect() {
 		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
@@ -160,10 +160,10 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Registers square page(s).
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 */
 	public function register_pages() {
-		add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) );
+		add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
 	}
 
 	/**
@@ -178,24 +178,25 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Redirect users to the onboarding wizard screen on plugin activation.
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 */
-	function render_square_settings_container() {
-		$section = wc_clean( isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? $_GET['section'] : 'general' );
+	public function render_square_settings_container() {
+		$section = isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : 'general'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		printf(
-			'<div id="woocommerce-square-settings__container-'. $section .'"></div>',
+			'<div id="woocommerce-square-settings__container-' . $section . '"></div>',
 		);
 	}
 
 	/**
 	 * Redirect users to the onboarding wizard screen on plugin activation.
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 */
-	function render_payments_settings_container() {
-		$tab     = wc_clean( $_GET['tab'] ?? '' );
-		$section = wc_clean( $_GET['section'] ?? '' );
+	public function render_payments_settings_container() {
+		// Use wp_unslash() or similar (WordPress.Security.ValidatedSanitizedInput.MissingUnslash)
+		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : '';
+		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : '';
 
 		if ( 'checkout' !== $tab ) {
 			return;
@@ -206,7 +207,7 @@ class Settings extends \WC_Settings_API {
 		}
 
 		printf(
-			'<div id="woocommerce-square-payment-gateway-settings__container--' . $section . '"></div>',
+			'<div id="woocommerce-square-payment-gateway-settings__container--' . esc_html( $section ) . '"></div>',
 		);
 	}
 

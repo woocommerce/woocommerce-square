@@ -87,7 +87,7 @@ class AJAX {
 	 * Override this method if custom permissions required.
 	 */
 	public function check_permission() {
-		return current_user_can( 'manage_woocommerce' );
+		return current_user_can( 'manage_woocommerce' ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
 	}
 
 	/**
@@ -140,7 +140,7 @@ class AJAX {
 	public function import_products_from_square( $request = null ) {
 
 		$api_callback = $request ? $request->get_param( 'api_callback' ) : false;
-		
+
 		$update_during_import = $request
 			? $request->get_param( 'update_during_import' )
 			: ( ! empty( $_POST['update_during_import'] ) && 'true' === $_POST['update_during_import'] );
