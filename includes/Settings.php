@@ -106,7 +106,7 @@ class Settings extends \WC_Settings_API {
 		// remove some of our custom fields that shouldn't be saved.
 		add_action(
 			'woocommerce_settings_api_sanitized_fields_' . $this->id,
-			function( $fields ) {
+			function ( $fields ) {
 
 				unset( $fields['general'], $fields['connect'], $fields['import_products'] );
 
@@ -181,8 +181,7 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function render_square_settings_container() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$section = isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : 'general'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$section = isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : 'general'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 
 		printf(
 			'<div id="woocommerce-square-settings__container-' . esc_html( $section ) . '"></div>',
@@ -195,9 +194,8 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function render_payments_settings_container() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 
 		if ( 'checkout' !== $tab ) {
 			return;
@@ -1215,5 +1213,4 @@ class Settings extends \WC_Settings_API {
 			$this->plugin->get_sync_handler()->schedule_sync( true );
 		}
 	}
-
 }
