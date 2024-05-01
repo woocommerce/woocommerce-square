@@ -38,13 +38,6 @@ export const SettingsApp = () => {
 		saveSquareSettings,
 	} = useSquareSettingsData;
 
-	const settingsWrapperStyle = {
-		width: '100%',
-		maxWidth: '780px',
-		marginTop: '50px',
-		marginLeft: '50px',
-	};
-
 	const {
 		enable_sandbox = 'yes',
 		sandbox_location_id = '',
@@ -80,13 +73,13 @@ export const SettingsApp = () => {
 	}
 
 	return (
-		<div style={ settingsWrapperStyle }>
+		<>
 			{ is_connected && ( <Section>
 				<SectionTitle title={ __( 'Select your business location', 'woocommerce-square' ) } />
 				<SectionDescription>
 					{ parse(
 						sprintf(
-							__( 'Select a location to link to this site. Only active %1$slocations%2$s that support credit card processing in Square can be linked.' ),
+							__( 'Please select the location you wish to link with this WooCommerce store. Only active %1$slocations%2$s that support credit card processing in Square can be linked.' ),
 							'<a target="_blank" href="https://docs.woocommerce.com/document/woocommerce-square/#section-4">',
 							'</a>'
 						)
@@ -109,11 +102,12 @@ export const SettingsApp = () => {
 
 			{ is_connected && <ConfigureSync indent={ 2 } /> }
 
-			<SandboxSettings />
+			<SandboxSettings indent={ 2 } />
 
 			<InputWrapper
 					label={ __( 'Connection', 'woocommerce-square' ) }
 					variant="boxed"
+					className="square-settings__connection"
 				>
 					<Button
 						variant='primary'
@@ -133,6 +127,6 @@ export const SettingsApp = () => {
 			<AdvancedSettings />
 
 			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
-		</div>
+		</>
 	)
 };

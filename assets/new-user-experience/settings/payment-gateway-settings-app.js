@@ -13,24 +13,17 @@ export const PaymentGatewaySettingsApp = () => {
 		savePaymentGatewaySettings,
 	} = usePaymentGatewaySettings( true );
 
-	const style = {
-		width: '100%',
-		maxWidth: '780px',
-		marginTop: '50px',
-		marginLeft: '50px',
-	};
-
 	if ( ! paymentGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
 	return (
-		<div style={ style }>
+		<>
 			<CreditCardSetup />
 			<DigitalWalletsSetup />
 			<PaymentGatewaySettingsSaveButton onClick={ () => {
 				savePaymentGatewaySettings();
 			} } />
-		</div>
+		</>
 	)
 };

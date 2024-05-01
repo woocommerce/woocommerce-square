@@ -18,7 +18,7 @@ import {
 } from '../../components';
 import { useSquareSettings } from '../../settings/hooks';
 
-export const SandboxSettings = () => {
+export const SandboxSettings = ( { indent = 0 } ) => {
 	const {
 		settings,
 		squareSettingsLoaded,
@@ -60,7 +60,7 @@ export const SandboxSettings = () => {
 							<InputWrapper
 								label={ __( 'Sandbox Application ID', 'woocommerce-square' ) }
 								description={ __( 'Application ID for the Sandbox Application, see the details in the My Applications section.', 'woocommerce-square' ) }
-								indent={ 2 }
+								indent={ indent }
 							>
 								<TextControl
 									value={ sandbox_application_id }
@@ -71,7 +71,7 @@ export const SandboxSettings = () => {
 							<InputWrapper
 								label={ __( 'Sandbox Access Token', 'woocommerce-square' ) }
 								description={ __( 'Access Token for the Sandbox Test Account, see the details in the Sandbox Test Account section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ) }
-								indent={ 2 }
+								indent={ indent }
 							>
 								<TextControl
 									value={ sandbox_token }
