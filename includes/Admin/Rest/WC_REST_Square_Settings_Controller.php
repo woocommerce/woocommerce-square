@@ -86,62 +86,62 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 				'callback'            => array( $this, 'save_settings' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'args'                => array(
-					'enable_sandbox'          => array(
+					'enable_sandbox'                   => array(
 						'description'       => __( 'Application ID for the Sandbox Application.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'sandbox_application_id'  => array(
+					'sandbox_application_id'           => array(
 						'description'       => __( 'Access Token for the Sandbox Test Account.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'sandbox_token'           => array(
+					'sandbox_token'                    => array(
 						'description'       => __( 'Square sandbox ID.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'debug_logging_enabled'   => array(
+					'debug_logging_enabled'            => array(
 						'description'       => __( 'Log debug messages to the WooCommerce status log.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'sandbox_location_id'     => array(
+					'sandbox_location_id'              => array(
 						'description'       => __( 'Square location ID.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'system_of_record'        => array(
+					'system_of_record'                 => array(
 						'description'       => __( 'Choose where data will be updated for synced products.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'enable_inventory_sync'   => array(
+					'enable_inventory_sync'            => array(
 						'description'       => __( 'Enable to fetch inventory changes from Square.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'override_product_images' => array(
+					'override_product_images'          => array(
 						'description'       => __( 'Enable to override Product images from Square.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'hide_missing_products'   => array(
+					'hide_missing_products'            => array(
 						'description'       => __( 'Hide synced products when not found in Square.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'sync_interval'           => array(
+					'sync_interval'                    => array(
 						'description'       => __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'debug_mode'              => array(
+					'debug_mode'                       => array(
 						'description'       => __( 'Type of debug mode.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'enable_customer_decline_messages'    => array(
+					'enable_customer_decline_messages' => array(
 						'description'       => __( 'Enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',

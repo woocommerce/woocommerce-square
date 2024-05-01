@@ -315,12 +315,11 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			)
 		);
 
-
 		$this->migrate_gateway_settings_dynamically(
 			'woocommerce_square_credit_card_settings',
 			'wc_square_settings',
 			array(
-				'debug_mode' => 'debug_mode',
+				'debug_mode'                       => 'debug_mode',
 				'enable_customer_decline_messages' => 'enable_customer_decline_messages',
 			),
 			false
