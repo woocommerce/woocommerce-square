@@ -79,10 +79,14 @@ export const PaymentComplete = () => {
 							</FlexItem>
 							<FlexBlock className='flexItem contentBox'>
 								<b>{ __( 'Synchronize Your Inventory', 'woocommerce-square' ) }</b>
-								<p>{ __( 'Sync your products and inventory effortlessly. Ensure your online and offline sales channels are always up to date.', 'woocommerce-square' ) }</p>
+								<p>{ __( 'Sync your items and inventory effortlessly. Ensure your online and offline sales channels are always up to date.', 'woocommerce-square' ) }</p>
 							</FlexBlock>
 							<FlexItem>
-								<Button variant="secondary" onClick={ () => setStep( 'sync-settings' ) }>
+								<Button
+									data-testid="configure-sync-button"
+									variant="secondary"
+									onClick={ () => setStep( 'sync-settings' ) }
+								>
 									{ __( 'Configure Sync Settings', 'woocommerce-square' ) }
 								</Button>
 							</FlexItem>
@@ -105,22 +109,38 @@ export const PaymentComplete = () => {
 									</FlexBlock>
 									<FlexItem>
 										{ 'yes' === creditCardEnabled && 
-											<Button variant="secondary" onClick={ () => setStep( 'credit-card' ) }>
+											<Button
+												data-testid="credit-card-settings-button"
+												variant="secondary"
+												onClick={ () => setStep( 'credit-card' ) }
+											>
 												{ __( 'Credit Card Settings', 'woocommerce-square' ) }
 											</Button>
 										}
 										{ 'yes' === digitalWalletsEnabled &&
-											<Button variant="secondary" onClick={ () => setStep( 'digital-wallets' ) }>
+											<Button
+												data-testid="digital-wallet-settings-button"
+												variant="secondary"
+												onClick={ () => setStep( 'digital-wallets' ) }
+											>
 												{ __( 'Digital Wallet Settings', 'woocommerce-square' ) }
 											</Button>
 										}
 										{ 'yes' === cashAppEnabled &&
-											<Button variant="secondary" onClick={ () => setStep( 'cash-app' ) }>
+											<Button
+												data-testid="cash-app-settings-button"
+												variant="secondary"
+												onClick={ () => setStep( 'cash-app' ) }
+											>
 												{ __( 'Cash App Pay Settings', 'woocommerce-square' ) }
 											</Button>
 										}
 										{ 'yes' === giftCardsEnabled &&								
-											<Button variant="secondary" onClick={ () => setStep( 'gift-card' ) }>
+											<Button
+												data-testid="gift-card-settings-button"
+												variant="secondary"
+												onClick={ () => setStep( 'gift-card' ) }
+											>
 												{ __( 'Gift Cards Settings', 'woocommerce-square' ) }
 											</Button>
 										}
@@ -136,13 +156,21 @@ export const PaymentComplete = () => {
 							'row'
 						]}>
 							<FlexBlock>
-								<Button variant="link" onClick={ () => setStep( 'advanced-settings' ) }>
+								<Button
+									data-testid="advanced-settings-button"
+									variant="link"
+									onClick={ () => setStep( 'advanced-settings' ) }
+								>
 									{ __( 'Go to Advanced Settings', 'woocommerce-square' ) }
 								</Button>
 								<p>{ __( 'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.', 'woocommerce-square' ) }</p>
 							</FlexBlock>
 							<FlexBlock>
-								<Button variant="link" onClick={ () => setStep( 'sandbox-settings' ) }>
+								<Button
+									data-testid="sandbox-settings-button"
+									variant="link"
+									onClick={ () => setStep( 'sandbox-settings' ) }
+								>
 									{ __( 'Go to Sandbox Settings', 'woocommerce-square' ) }
 								</Button>
 								<p>{ __( 'Test new features and payment scenarios safely. Experiment in a risk-free environment to make sure everything is set up correctly before going live.', 'woocommerce-square' ) }</p>

@@ -98,7 +98,14 @@ export const OnboardingApp = () => {
 		}
 	}, [step]);
 
-	if ( ! squareSettingsLoaded ) {
+	const isLoadingInProgress = [
+		squareSettingsLoaded,
+		paymentGatewaySettingsLoaded,
+		cashAppGatewaySettingsLoaded,
+		giftCardsGatewaySettingsLoaded,
+	].every( isLoading => isLoading );
+
+	if ( ! isLoadingInProgress ) {
 		return <Loader />;
 	}
 
@@ -137,7 +144,7 @@ export const OnboardingApp = () => {
 				{ step === 'credit-card' && (
 					<>
 						<CreditCardSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="credit-card-settings-save-button" onClick={ () => {
 							( async () => {
 								await savePaymentGatewaySettings();
 								setStep( 'payment-complete' );
@@ -148,7 +155,7 @@ export const OnboardingApp = () => {
 				{ step === 'digital-wallets' && (
 					<>
 						<DigitalWalletsSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="digital-wallets-settings-save-button" onClick={ () => {
 							( async () => {
 								await savePaymentGatewaySettings();
 								setStep( 'payment-complete' );
@@ -159,7 +166,7 @@ export const OnboardingApp = () => {
 				{ step === 'gift-card' && (
 					<>
 						<GiftCardSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="gift-card-settings-save-button" onClick={ () => {
 							( async () => {
 								await saveGiftCardsSettings();
 								setStep( 'payment-complete' );
@@ -170,7 +177,7 @@ export const OnboardingApp = () => {
 				{ step === 'cash-app' && (
 					<>
 						<CashAppSetup />
-						<PaymentGatewaySettingsSaveButton onClick={ () => {
+						<PaymentGatewaySettingsSaveButton data-testid="cash-app-settings-save-button" onClick={ () => {
 							( async () => {
 								await saveCashAppSettings();
 								setStep( 'payment-complete' );
@@ -181,7 +188,7 @@ export const OnboardingApp = () => {
 				{ step === 'sync-settings' && (
 					<>
 						<ConfigureSync />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -189,7 +196,7 @@ export const OnboardingApp = () => {
 				{ step === 'advanced-settings' && (
 					<>
 						<AdvancedSettings />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -197,7 +204,7 @@ export const OnboardingApp = () => {
 				{ step === 'sandbox-settings' && (
 					<>
 						<SandboxSettings />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
+						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>

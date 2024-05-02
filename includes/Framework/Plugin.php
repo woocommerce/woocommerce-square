@@ -692,10 +692,9 @@ abstract class Plugin {
 	 *
 	 * @since 3.0.0
 	 * @see Plugin::get_settings_link()
-	 * @param string $step optional step identifier.
 	 * @return string plugin settings URL
 	 */
-	public function get_square_onboarding_url( $step = '' ) {
+	public function get_square_onboarding_url() {
 
 		// stub method
 		return '';

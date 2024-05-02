@@ -838,11 +838,11 @@ class Plugin extends Payment_Gateway_Plugin {
 		// nosemgrep audit.php.wp.security.xss.query-arg
 		return add_query_arg( $params, admin_url( 'admin.php' ) );
 	}
-	
+
 	/**
 	 * Gets the Setup Wizard URL.
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 *
 	 * @param string $step Step to go to.
 	 *

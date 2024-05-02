@@ -17,12 +17,18 @@ import { usePaymentGatewaySettings } from '../../hooks';
 
 export const GiftCardSetup = () => {
 	const {
+		giftCardsGatewaySettingsLoaded,
 		giftCardsGatewaySettings,
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
+
 	const {
 		enabled
 	} = giftCardsGatewaySettings;
+
+	if ( ! giftCardsGatewaySettingsLoaded ) {
+		return null;
+	}
 
 	return (
 		<>
@@ -34,10 +40,11 @@ export const GiftCardSetup = () => {
 
 				<div className='woo-square-wizard__fields'>
 					<InputWrapper
-						label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
+						label={ __( 'Enable Square Gift Cards', 'woocommerce-square' ) }
 						variant="boxed"
 					>
 						<ToggleControl
+							data-testid="gift-card-gateway-toggle-field"
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>

@@ -37,7 +37,6 @@ export const CreditCardSetup = () => {
 		transaction_type,
 		tokenization,
 		card_types,
-		debug_mode,
 	} = paymentGatewaySettings;
 
 	if ( ! paymentGatewaySettingsLoaded ) {
@@ -51,6 +50,7 @@ export const CreditCardSetup = () => {
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
+					data-testid="credit-card-gateway-virtual-order-only-field"
 					label={ __( 'Charge Virtual-Only Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === charge_virtual_orders }
 					onChange={ ( charge_virtual_orders ) => setCreditCardData( { charge_virtual_orders: charge_virtual_orders ? 'yes' : 'no' } ) }
@@ -62,6 +62,7 @@ export const CreditCardSetup = () => {
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
+					data-testid="credit-card-gateway-capture-paid-orders-field"
 					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
 					checked={ 'yes' === enable_paid_capture }
 					onChange={ ( enable_paid_capture ) => setCreditCardData( { enable_paid_capture: enable_paid_capture ? 'yes' : 'no' } ) }
@@ -83,6 +84,7 @@ export const CreditCardSetup = () => {
 						label={ __( 'Enable / Disable', 'woocommerce-square' ) }
 						>
 						<SquareCheckboxControl
+							data-testid="credit-card-gateway-toggle-field"
 							label={ __( 'Enable this gateway.', 'woocommerce-square' ) }
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setCreditCardData( { enabled: enabled ? 'yes' : 'no' } ) }
@@ -91,6 +93,7 @@ export const CreditCardSetup = () => {
 
 					<InputWrapper label={ __( 'Title', 'woocommerce-square' ) } >
 						<TextControl
+							data-testid="credit-card-gateway-title-field"
 							value={ title }
 							onChange={ ( title ) => setCreditCardData( { title } ) }
 						/>
@@ -98,6 +101,7 @@ export const CreditCardSetup = () => {
 
 					<InputWrapper label={ __( 'Description', 'woocommerce-square' ) } >
 						<TextareaControl
+							data-testid="credit-card-gateway-description-field"
 							value={ description }
 							onChange={ ( description ) => setCreditCardData( { description } ) }
 						/>
@@ -105,6 +109,7 @@ export const CreditCardSetup = () => {
 
 					<InputWrapper label={ __( 'Transaction Type', 'woocommerce-square' ) } >
 						<SelectControl
+							data-testid="credit-card-transaction-type-field"
 							value={ transaction_type }
 							onChange={ ( transaction_type ) => setCreditCardData( { transaction_type } ) }
 							options={ [
@@ -124,6 +129,7 @@ export const CreditCardSetup = () => {
 
 					<InputWrapper label={ __( 'Accepted Card Logos', 'woocommerce-square' ) } >
 						<MultiSelectControl
+							id="credit-card-gateway-card-logos-field"
 							label=""
 							__experimentalShowHowTo={ false }
 							value={ card_types }
@@ -165,6 +171,7 @@ export const CreditCardSetup = () => {
 						label={ __( 'Customer Profiles', 'woocommerce-square' ) }
 						>
 						<SquareCheckboxControl
+							data-testid="credit-card-tokenization-field"
 							label={ __( 'Check to enable tokenization and allow customers to securely save their payment details for future checkout.', 'woocommerce-square' ) }
 							checked={ 'yes' === tokenization }
 							onChange={ ( tokenization ) => setCreditCardData( { tokenization: tokenization ? 'yes' : 'no' } ) }

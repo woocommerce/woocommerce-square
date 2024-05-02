@@ -101,7 +101,7 @@ class Admin {
 		// load admin scripts.
 		add_action(
 			'admin_enqueue_scripts',
-			function() {
+			function () {
 				$this->load_scripts_styles();
 			}
 		);
@@ -218,7 +218,7 @@ class Admin {
 			if ( ! file_exists( $asset_file ) ) {
 				return;
 			}
-		
+
 			$asset = include $asset_file;
 
 			wp_enqueue_script(
@@ -243,9 +243,9 @@ class Admin {
 			if ( ! file_exists( $asset_file ) ) {
 				return;
 			}
-		
+
 			$asset = include $asset_file;
-		
+
 			wp_enqueue_script(
 				'woocommerce-square-onboarding-js',
 				WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',

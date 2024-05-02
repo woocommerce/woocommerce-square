@@ -76,6 +76,7 @@ export const CashAppSetup = () => {
 						label={ __( 'Enable / Disable', 'woocommerce-square' ) }
 						>
 						<SquareCheckboxControl
+							data-testid="cash-app-gateway-toggle-field"
 							label={ __( 'Enable this gateway.', 'woocommerce-square' ) }
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setCashAppData( { enabled: enabled ? 'yes' : 'no' } ) }
@@ -84,6 +85,7 @@ export const CashAppSetup = () => {
 
 					<InputWrapper label={ __( 'Title', 'woocommerce-square' ) } >
 						<TextControl
+							data-testid="cash-app-gateway-title-field"
 							value={ title }
 							onChange={ ( title ) => setCashAppData( { title } ) }
 						/>
@@ -91,6 +93,7 @@ export const CashAppSetup = () => {
 
 					<InputWrapper label={ __( 'Description', 'woocommerce-square' ) } >
 						<TextareaControl
+							data-testid="cash-app-gateway-description-field"
 							value={ description }
 							onChange={ ( description ) => setCashAppData( { description } ) }
 						/>
@@ -98,6 +101,7 @@ export const CashAppSetup = () => {
 
 					<InputWrapper label={ __( 'Transaction Type', 'woocommerce-square' ) } >
 						<SelectControl
+							data-testid="cash-app-gateway-transaction-type-field"
 							value={ transaction_type }
 							onChange={ ( transaction_type ) => setCashAppData( { transaction_type } ) }
 							options={ [
@@ -119,6 +123,7 @@ export const CashAppSetup = () => {
 						label={ __( 'Cash App Pay Button Theme', 'woocommerce-square' ) }
 						>
 						<SelectControl
+							data-testid="cash-app-gateway-button-theme-field"
 							value={ button_theme }
 							onChange={ ( button_theme ) => setCashAppData( { button_theme } ) }
 							options={ [
@@ -138,6 +143,7 @@ export const CashAppSetup = () => {
 						label={ __( 'Cash App Pay Button Shape', 'woocommerce-square' ) }
 						>
 						<SelectControl
+							data-testid="cash-app-gateway-button-shape-field"
 							value={ button_shape }
 							onChange={ ( button_shape ) => setCashAppData( { button_shape } ) }
 							options={ [

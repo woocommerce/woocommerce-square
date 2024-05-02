@@ -502,3 +502,7 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		.innerText();
 	return orderId;
 }
+
+export async function visitOnboardingPage( page ) {
+	await page.goto( '/wp-admin/admin.php?page=woocommerce-square-onboarding' );
+}

@@ -3,10 +3,10 @@
  */
 import './index.scss';
 
-export const InputWrapper = ( { label, children, description, variant, indent = 0 } ) => {
+export const InputWrapper = ( { label, children, description, variant, indent = 0, className = '' } ) => {
 	if ( 'boxed' === variant ) {
 		return (
-			<div className="woo-square-setting__input-wrapper woo-square-setting__input-wrapper--boxed">
+			<div className={'woo-square-setting__input-wrapper woo-square-setting__input-wrapper--boxed ' + className}>
 				<div className="woo-square-setting__input-wrapper--boxed-bg">
 					<div className="woo-square-setting__input-label">
 						{ label }
@@ -27,7 +27,7 @@ export const InputWrapper = ( { label, children, description, variant, indent = 
 	}
 
 	return (
-		<div className="woo-square-setting__input-wrapper" style={ style }>
+		<div className={'woo-square-setting__input-wrapper ' + className} style={ style }>
 			{ label && (
 				<div className="woo-square-setting__input-label">
 					{ label }
