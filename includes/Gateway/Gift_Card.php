@@ -63,7 +63,7 @@ class Gift_Card extends Payment_Gateway {
 		// Always false for Gift Cards to hide on the checkout page.
 		return false;
 	}
-	
+
 	/**
 	 * Gets the API instance.
 	 *
@@ -163,8 +163,9 @@ class Gift_Card extends Payment_Gateway {
 			'enabled'     => array(
 				'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
 				'description' => sprintf(
+					// translators: %1$s - opening anchor tag, %2$s - closing anchor tag.
 					esc_html__(
-						'Allow customers to pay with a gift card. Please note the Gift Card feature requires %sSquare Credit Card%s payment gateway to be enabled.',
+						'Allow customers to pay with a gift card. Please note the Gift Card feature requires %1$sSquare Credit Card%2$s payment gateway to be enabled.',
 						'woocommerce-square'
 					),
 					'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=square_credit_card' ) ) . '">',
@@ -172,7 +173,7 @@ class Gift_Card extends Payment_Gateway {
 				),
 				'type'        => 'checkbox',
 				'default'     => '',
-				'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
+				'label'       => esc_html__( 'Enable Square Gift Cards', 'woocommerce-square' ),
 			),
 
 			'title'       => array(

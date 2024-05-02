@@ -29,13 +29,6 @@ export const GiftCardsSettingsApp = () => {
 		return <Loader />;
 	}
 
-	const style = {
-		width: '100%',
-		maxWidth: '780px',
-		marginTop: '50px',
-		marginLeft: '50px',
-	};
-
     const saveSettings = async () => {
 		setSaveInProgress( true );
 		const response = await saveGiftCardsSettings( giftCardsGatewaySettings );
@@ -50,7 +43,7 @@ export const GiftCardsSettingsApp = () => {
 	};
 
 	return (
-		<div style={ style }>
+		<>
 			<GiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
 			<Button
 				variant='primary'
@@ -59,6 +52,6 @@ export const GiftCardsSettingsApp = () => {
 			>
 				{ __( 'Save Changes', 'woocommerce-square' ) }
 			</Button>
-		</div>
+		</>
 	)
 };

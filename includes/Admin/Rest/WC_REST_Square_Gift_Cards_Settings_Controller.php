@@ -4,6 +4,7 @@
  */
 
 namespace WooCommerce\Square\Admin\Rest;
+
 use WP_REST_Server;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -44,7 +45,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 	 * WC_REST_Square_Settings_Controller constructor.
 	 */
 	public function __construct() {
-		$this->allowed_params  = array(
+		$this->allowed_params = array(
 			'enabled',
 			'title',
 			'description',
@@ -60,37 +61,37 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
-			[
+			array(
 				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => [ $this, 'get_settings' ],
-				'permission_callback' => [ $this, 'check_permission' ],
-			]
+				'callback'            => array( $this, 'get_settings' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+			)
 		);
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
-			[
+			array(
 				'methods'             => WP_REST_Server::EDITABLE,
-				'callback'            => [ $this, 'save_settings' ],
-				'permission_callback' => [ $this, 'check_permission' ],
-				'args'                => [
-					'enabled' => array(
-						'description' => __( 'Enable Square payment gateway.', 'woocommerce-square' ),
-						'type' => 'string',
+				'callback'            => array( $this, 'save_settings' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+				'args'                => array(
+					'enabled'     => array(
+						'description'       => __( 'Enable Square payment gateway.', 'woocommerce-square' ),
+						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'title' => array(
-						'description' => __( 'Square payment gateway title.', 'woocommerce-square' ),
-						'type' => 'string',
+					'title'       => array(
+						'description'       => __( 'Square payment gateway title.', 'woocommerce-square' ),
+						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
 					'description' => array(
-						'description' => __( 'Square payment gateway description.', 'woocommerce-square' ),
-						'type' => 'string',
+						'description'       => __( 'Square payment gateway description.', 'woocommerce-square' ),
+						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-				],
-			]
+				),
+			)
 		);
 	}
 
@@ -100,7 +101,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 	 * @return WP_REST_Response
 	 */
 	public function get_settings() {
-		$square_settings   = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, [] );
+		$square_settings   = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$filtered_settings = array_intersect_key( $square_settings, array_flip( $this->allowed_params ) );
 
 		return new WP_REST_Response( $filtered_settings );

@@ -245,6 +245,8 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 							<>
 								<InputWrapper
 									label={ __( 'Import Products', 'woocommerce-square' ) }
+									indent = { indent }
+									className='import-products-wrapper'
 								>
 									<Button
 										data-testid="import-products-button"

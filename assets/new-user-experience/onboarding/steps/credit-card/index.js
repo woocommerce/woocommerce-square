@@ -37,7 +37,6 @@ export const CreditCardSetup = () => {
 		transaction_type,
 		tokenization,
 		card_types,
-		debug_mode,
 	} = paymentGatewaySettings;
 
 	if ( ! paymentGatewaySettingsLoaded ) {

@@ -79,7 +79,7 @@ export const PaymentComplete = () => {
 							</FlexItem>
 							<FlexBlock className='flexItem contentBox'>
 								<b>{ __( 'Synchronize Your Inventory', 'woocommerce-square' ) }</b>
-								<p>{ __( 'Sync your products and inventory effortlessly. Ensure your online and offline sales channels are always up to date.', 'woocommerce-square' ) }</p>
+								<p>{ __( 'Sync your items and inventory effortlessly. Ensure your online and offline sales channels are always up to date.', 'woocommerce-square' ) }</p>
 							</FlexBlock>
 							<FlexItem>
 								<Button

@@ -336,23 +336,6 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			'type'  => 'title',
 		);
 
-		// debug mode
-		$this->form_fields['debug_mode'] = array(
-			'title'   => esc_html__( 'Debug Mode', 'woocommerce-square' ),
-			'type'    => 'select',
-			'class'   => 'wc-enhanced-select',
-			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-			'desc'    => sprintf( esc_html__( 'Show detailed error messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
-			'default' => self::DEBUG_MODE_OFF,
-			'options' => array(
-				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
-				self::DEBUG_MODE_CHECKOUT => esc_html__( 'Show on Checkout Page', 'woocommerce-square' ),
-				self::DEBUG_MODE_LOG      => esc_html__( 'Save to Log', 'woocommerce-square' ),
-				/* translators: show debugging information on both checkout page and in the log */
-				self::DEBUG_MODE_BOTH     => esc_html__( 'Both', 'woocommerce-square' ),
-			),
-		);
-
 		// if there is more than just the production environment available
 		if ( count( $this->get_environments() ) > 1 ) {
 			$this->form_fields = $this->add_environment_form_fields( $this->form_fields );

@@ -4,6 +4,12 @@
 	src: url('./fonts/sf-pro/SFPRODISPLAYREGULAR.OTF') format('opentype');
 }
 
+// Hide all elements after the react based settings container, hiding the native settings.
+[id*="woocommerce-square-payment-gateway-settings__container"] ~ *,
+#woocommerce-square-settings__container-general ~ * {
+	display: none;
+}
+
 #woocommerce-square-onboarding,
 #woocommerce-square-settings__container-general,
 [id*="woocommerce-square-payment-gateway-settings__container"] {
@@ -16,12 +22,56 @@
 	.codeamp-components-multi-select-control__tokens-container {
 		padding: 15px;
 	}
+
+	a:not(.is-primary) {
+		color: #4B4B4B;		;
+	}
+
+	.components-form-toggle.is-checked .components-form-toggle__track {
+		background: #3858E9;
+		border-color: #3858E9;
+	}
+
+	.components-form-toggle .components-form-toggle__input:focus+.components-form-toggle__track {
+		outline: 2px solid #3858E9;
+		outline-offset: 2px;
+	}
+}
+
+.components-modal__content .components-button:not(.codeamp-components-multi-select-control__remove-token) {
+	width: auto;
+}
+
+.import-modal-cover button.is-primary {
+	float: right;
+}
+
+.import-modal-cover button.is-secondary {
+	float: left;
+}
+
+.import-modal-cover .import-buttons {
+	overflow: hidden;
+	margin-top: 30px;
 }
 
 #woocommerce-square-settings__container-general,
 [id*="woocommerce-square-payment-gateway-settings__container"] {
+	max-width: 779px;
+    margin: 50px 0 0 50px;
+
 	.components-button.is-primary {
 		max-width: fit-content;
+	}
+
+	.components-select-control,
+	.components-base-control,
+	.import-products-wrapper button {
+		max-width: 451px;
+	}
+
+	.woo-square-setting__section {
+		margin-bottom: 60px;
 	}
 }
 
@@ -80,7 +130,7 @@ body {
 	font-size: 32px;
 	font-weight: 600;
 	line-height: 40px;
-	color: #1E1E1E;
+	color: #000000;
 	text-align: center;
 	margin-bottom: 15px;
 }
@@ -96,6 +146,16 @@ body {
 	&.payment-complete,
 	&.payment-methods {
 		width: 100%;
+	}
+
+	&.credit-card {
+		max-height: 400px;
+	}
+
+	&.payment-methods {
+		.woo-square-onbarding__payment-settings__intro {
+			max-width: 592px;
+		}
 	}
 
 	&:not(.payment-methods):not(.payment-complete) {
@@ -138,7 +198,7 @@ body {
 	.woo-square-onboarding__cover {
 		&:not(.payment-methods):not(.payment-complete) {
 			position: inherit;
-			margin-top: 60px;
+			margin: 60px 0;
 			max-height: inherit;
 		}
 	}

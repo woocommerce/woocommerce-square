@@ -37,15 +37,8 @@ export const CashAppSettingsApp = () => {
 		setSaveInProgress( false );
 	};
 
-	const style = {
-		width: '100%',
-		maxWidth: '780px',
-		marginTop: '50px',
-		marginLeft: '50px',
-	};
-
 	return (
-		<div style={ style }>
+		<>
 			<CashAppSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
 			<Button
 				variant='primary'
@@ -54,6 +47,6 @@ export const CashAppSettingsApp = () => {
 			>
 				{ __( 'Save Changes', 'woocommerce-square' ) }
 			</Button>
-		</div>
+		</>
 	)
 };

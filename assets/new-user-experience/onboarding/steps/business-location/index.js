@@ -59,7 +59,7 @@ export const BusinessLocation = () => {
 					{ __( "Great, you're nearly there! We've detected your business location as listed in Square.", 'woocommerce-square' ) }
 				</p>
 				<p>
-					{ __( "Please confirm that this is the correct location where you'll be making sales", 'woocommerce-square' ) }
+					{ __( "Please confirm that this is the correct location where you'll be making sales:", 'woocommerce-square' ) }
 				</p>
 			</SectionDescription>
 		</>
@@ -85,7 +85,7 @@ export const BusinessLocation = () => {
 					<>
 						{intro}
 						<div className='woo-square-wizard__fields'>
-							<InputWrapper>
+							<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 								<SelectControl
 								data-testid="business-location-selector"
 								value={sandbox_location_id}

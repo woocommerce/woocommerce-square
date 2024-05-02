@@ -40,7 +40,7 @@ export const GiftCardSetup = () => {
 
 				<div className='woo-square-wizard__fields'>
 					<InputWrapper
-						label={ __( 'Enable Gift Cards', 'woocommerce-square' ) }
+						label={ __( 'Enable Square Gift Cards', 'woocommerce-square' ) }
 						variant="boxed"
 					>
 						<ToggleControl
