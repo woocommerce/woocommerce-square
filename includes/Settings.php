@@ -972,7 +972,8 @@ class Settings extends \WC_Settings_API {
 			$this->locations = array();
 
 			try {
-
+$a1 = $this->get_access_token();
+$a2 = $this->is_sandbox();
 				// cache the locations returned so they can be used elsewhere.
 				$this->locations = $this->get_plugin()->get_api( $this->get_access_token(), $this->is_sandbox() )->get_locations();
 				set_transient( $locations_transient_key, $this->locations, HOUR_IN_SECONDS );

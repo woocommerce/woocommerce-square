@@ -508,7 +508,18 @@ export async function visitOnboardingPage( page ) {
 }
 
 export async function isToggleChecked( page, selector ) {
-	return await page.$eval( `${selector} .components-form-toggle`, ( $el, className ) => {
-		return $el.classList.contains( className )
-	}, 'is-checked' );
-};
+
+	return await page
+		.locator( `${selector} .components-form-toggle` )
+		.evaluate( node => node.classList.contains( 'is-checked' ) );
+}
+
+export async function saveSquareSettings( page ) {
+	await page.getByTestId( 'square-settings-save-button' ).click();
+	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+}
+
+export async function savePaymentGatewaySettings( page ) {
+	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
+	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+}

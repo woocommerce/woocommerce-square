@@ -50,6 +50,7 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 						variant="boxed"
 					>
 						<ToggleControl
+							className='enable-sandbox-mode-field'
 							checked={ 'yes' === enable_sandbox }
 							onChange={ ( enable_sandbox ) => setSquareSettingData( { enable_sandbox: enable_sandbox ? 'yes' : 'no' } ) }
 						/>
@@ -63,6 +64,7 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 								indent={ indent }
 							>
 								<TextControl
+									data-testid="sandbox-application-id-field"
 									value={ sandbox_application_id }
 									onChange={ ( sandbox_application_id ) => setSquareSettingData( { sandbox_application_id } ) }
 								/>
@@ -74,6 +76,7 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 								indent={ indent }
 							>
 								<TextControl
+									data-testid="sandbox-token-field"
 									value={ sandbox_token }
 									onChange={ ( sandbox_token ) => setSquareSettingData( { sandbox_token } ) }
 								/>
