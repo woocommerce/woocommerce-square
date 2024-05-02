@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * This includes Live Publishable Key, Live Secret Key, Webhook Secret.
  *
- * @since 5.6.0
+ * @since 4.7.0
  */
 class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_REST_Base_Controller {
 

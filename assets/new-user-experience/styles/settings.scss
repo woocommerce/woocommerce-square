@@ -6,7 +6,8 @@
 	}
 }
 
-[id*="woocommerce-square-settings__container"] {
+[id*="woocommerce-square-settings__container"],
+[id*="woocommerce-square-payment-gateway-settings__container"] {
     position: relative;
     min-height: 400px;
 }

@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * An email sent to the recipient of the gift card.
  *
  * @class       Gift_Card_Sent
- * @version     4.7.0
+ * @version     x.x.x
  * @extends     WC_Email
  */
 class Gift_Card_Sent extends \WC_Email {

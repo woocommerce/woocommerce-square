@@ -133,6 +133,8 @@ class AJAX {
 	/**
 	 * Starts importing products from Square.
 	 *
+	 * @param \WP_REST_Request $request The REST request object.
+	 *
 	 * @internal
 	 *
 	 * @since 2.0.0

@@ -338,7 +338,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		// default icon filter  @see WC_Payment_Gateway::$icon
 		$this->icon = apply_filters( 'wc_' . $this->get_id() . '_icon', '' );
 
-		$square_settings  = get_option( 'wc_square_settings', array() );
+		$square_settings = get_option( 'wc_square_settings', array() );
+
 		$this->debug_mode = isset( $square_settings['debug_mode'] ) ? $square_settings['debug_mode'] : 'off';
 
 		$this->enable_customer_decline_messages = isset( $square_settings['enable_customer_decline_messages'] ) ? $square_settings['enable_customer_decline_messages'] : 'no';

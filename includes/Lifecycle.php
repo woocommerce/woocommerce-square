@@ -315,6 +315,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			)
 		);
 
+		// Migrate Gateway fields to the Square settings.
 		$this->migrate_gateway_settings_dynamically(
 			'woocommerce_square_credit_card_settings',
 			'wc_square_settings',
@@ -328,7 +329,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		// Mark upgrade complete.
 		update_option( 'wc_square_updated_to_4_7_0', true );
 
-		// Skip redirect existing users to the setup wizard on activation.
+		// Skip redirect existing users to the setup wizard on upgrade.
 		add_option( 'wc_square_show_wizard_on_activation', true );
 	}
 
@@ -477,7 +478,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	 * @param string $new_option    new option name.
 	 * @param array  $fields        fields to migrate.
 	 *
-	 * @since 2.0.0
+	 * @since 4.7.0
 	 */
 	private function migrate_gateway_settings_dynamically( $legacy_option, $new_option, $fields = array(), $bail = true ) {
 		$this->get_plugin()->log(
