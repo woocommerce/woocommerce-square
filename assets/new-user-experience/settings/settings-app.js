@@ -81,6 +81,7 @@ export const SettingsApp = () => {
 					className="square-settings__connection"
 				>
 					<Button
+						data-testid="connect-to-square-button"
 						variant='primary'
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
@@ -111,6 +112,7 @@ export const SettingsApp = () => {
 					label={ __( 'Business location', 'woocommerce-square' ) }
 				>
 					<SelectControl
+						data-testid="business-location-field"
 						value={ sandbox_location_id }
 						onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id } ) }
 						options={ [
@@ -125,7 +127,10 @@ export const SettingsApp = () => {
 
 			<AdvancedSettings />
 
-			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
+			<SquareSettingsSaveButton
+				label={ __( 'Save changes', 'woocommerce-square' ) }
+				afterSaveLabel={ __( 'Changes Saved', 'woocommerce-square' ) }
+			/>
 		</>
 	)
 };

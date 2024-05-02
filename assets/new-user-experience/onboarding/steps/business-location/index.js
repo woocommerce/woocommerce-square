@@ -87,7 +87,7 @@ export const BusinessLocation = () => {
 						<div className='woo-square-wizard__fields'>
 							<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 								<SelectControl
-								data-testid="business-location-selector"
+								data-testid="business-location-field"
 								value={sandbox_location_id}
 								onChange={(sandbox_location_id) =>
 									setSquareSettingData({ sandbox_location_id })
