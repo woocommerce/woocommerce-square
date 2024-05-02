@@ -29,14 +29,13 @@ import { useSquareSettings } from './hooks';
 import { connectToSquare, filterBusinessLocations } from '../utils';
 
 export const SettingsApp = () => {
-	const useSquareSettingsData = useSquareSettings( true );
 	const {
 		settings,
 		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
 		saveSquareSettings,
-	} = useSquareSettingsData;
+	} = useSquareSettings( true );
 
 	const {
 		enable_sandbox = 'yes',
@@ -48,12 +47,12 @@ export const SettingsApp = () => {
 	} = settings;
 
 	const initiateConnection = async () => {
+		let response = await saveSquareSettings();
+
 		if ( 'yes' !== enable_sandbox ) {
 			window.location.assign( connection_url );
 			return;
 		}
-
-		const response = await saveSquareSettings();
 
 		if ( ! response?.success ) {
 			return;
@@ -74,6 +73,28 @@ export const SettingsApp = () => {
 
 	return (
 		<>
+			<SandboxSettings indent={ 2 } />
+
+			<InputWrapper
+					label={ __( 'Connection', 'woocommerce-square' ) }
+					variant="boxed"
+					className="square-settings__connection"
+				>
+					<Button
+						variant='primary'
+						{ ...( is_connected && { href: disconnection_url } ) }
+						onClick={ () => initiateConnection() }
+						isBusy={ isSquareSettingsSaving }
+						disabled={ isSquareSettingsSaving }
+					>
+						{
+							is_connected
+							? __( 'Disconnect from Square', 'woocommerce-square' )
+							: __( 'Connect to Square', 'woocommerce-square' )
+						}
+					</Button>
+			</InputWrapper>
+
 			{ is_connected && ( <Section>
 				<SectionTitle title={ __( 'Select your business location', 'woocommerce-square' ) } />
 				<SectionDescription>
@@ -101,28 +122,6 @@ export const SettingsApp = () => {
 			</Section> ) }
 
 			{ is_connected && <ConfigureSync indent={ 2 } /> }
-
-			<SandboxSettings indent={ 2 } />
-
-			<InputWrapper
-					label={ __( 'Connection', 'woocommerce-square' ) }
-					variant="boxed"
-					className="square-settings__connection"
-				>
-					<Button
-						variant='primary'
-						{ ...( is_connected && { href: disconnection_url } ) }
-						onClick={ () => initiateConnection() }
-						isBusy={ isSquareSettingsSaving }
-						disabled={ isSquareSettingsSaving }
-					>
-						{
-							is_connected
-							? __( 'Disconnect from Square', 'woocommerce-square' )
-							: __( 'Connect to Square', 'woocommerce-square' )
-						}
-					</Button>
-			</InputWrapper>
 
 			<AdvancedSettings />
 
