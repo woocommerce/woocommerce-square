@@ -140,6 +140,8 @@ class Settings extends \WC_Settings_API {
 
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
 
+		add_action( 'admin_notices', array( $this, 'show_visit_wizard_notice' ) );
+
 		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations' ) );
 
 		add_action( 'admin_init', array( $this, 'square_onboarding_redirect' ) );
@@ -176,16 +178,50 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function register_pages() {
-		add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
+		$current_page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) || 'woocommerce-square-onboarding' === $current_page ) {
+			add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
+		}
 	}
 
 	/**
 	 * Output the Setup Wizard page(s).
 	 */
 	public function render_onboarding_page() {
+		// Set option the user visited on a wizard.
+		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) ) {
+			update_option( 'wc_square_onboarding_wizard_visited', true );
+		}
+
 		printf(
 			'<div class="wrap" id="woocommerce-square-onboarding"></div>'
 		);
+	}
+
+	/**
+	 * Show a notice to visit the wizard on plugin activation.
+	 *
+	 * @since 4.7.0
+	 */
+	public function show_visit_wizard_notice() {
+		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) ) {
+			wc_square()->get_admin_notice_handler()->add_admin_notice(
+				sprintf(
+					/* translators: %1$s - <a> tag, %2$s - </a> tag */
+					esc_html__(
+						'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
+						'woocommerce-square'
+					),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
+					'</a>'
+				),
+				'wc-square-welcome',
+				array(
+					'dismissible'  => false,
+					'notice_class' => 'notice-info',
+				)
+			);
+		}
 	}
 
 	/**

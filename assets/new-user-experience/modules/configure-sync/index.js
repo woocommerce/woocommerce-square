@@ -225,24 +225,20 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 
 					{
 						( 'woocommerce' === system_of_record || 'square' === system_of_record ) && (
-							<InputWrapper
-								label={ __( 'Sync interval', 'woocommerce-square' ) }
-								description={ __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ) }
-								indent = { indent }
-							>
-								<SelectControl
-									data-testid="sync-interval-field"
-									value={ sync_interval }
-									options={ sync_interval_options }
-									onChange={ ( sync_interval ) => setSquareSettingData( { sync_interval } ) }
-								/>
-							</InputWrapper>
-						)
-					}
-
-					{
-						( 'woocommerce' === system_of_record ) && (
 							<>
+								<InputWrapper
+									label={ __( 'Sync interval', 'woocommerce-square' ) }
+									description={ __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ) }
+									indent = { indent }
+								>
+									<SelectControl
+										data-testid="sync-interval-field"
+										value={ sync_interval }
+										options={ sync_interval_options }
+										onChange={ ( sync_interval ) => setSquareSettingData( { sync_interval } ) }
+									/>
+								</InputWrapper>
+
 								<InputWrapper
 									label={ __( 'Import Products', 'woocommerce-square' ) }
 									indent = { indent }

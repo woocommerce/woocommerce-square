@@ -668,7 +668,7 @@ abstract class Plugin {
 	 * Returns the "Configure" plugin action link to go directly to the plugin
 	 * settings page (if any)
 	 *
-	 * @since 3.0.0
+	 * @since 4.7.0
 	 * @see Plugin::get_settings_url()
 	 * @param string $step optional step identifier.
 	 *
@@ -690,7 +690,7 @@ abstract class Plugin {
 	/**
 	 * Gets the plugin configuration URL
 	 *
-	 * @since 3.0.0
+	 * @since 4.7.0
 	 * @see Plugin::get_settings_link()
 	 * @return string plugin settings URL
 	 */
