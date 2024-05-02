@@ -24,7 +24,7 @@ import {
 } from '../../components';
 import { useSquareSettings } from '../../settings/hooks';
 
-export const ConfigureSync = ( { indent = 0 } ) => {
+export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 	const {
 		settings,
 		squareSettingsLoaded,
@@ -254,9 +254,11 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 										className='import-square-products-react'
 										onClick={ openModal }
 										style={ { display: importDoneNotice ? 'none' : 'block' } }
+										disabled={ isDirty }
 									>
 										{ __( 'Import all Products from Square', 'woocommerce-square' ) }
 									</Button>
+									{ isDirty && <p>{ __( 'You have made changes to the settings. Please save the changes to enable the button.', 'woocommerce-square' ) }</p> }
 									<div className='import-notice notice notice-info is-dismissible' style={ { display: importDoneNotice ? 'block' : 'none', padding: '10px' } }>
 										{ importDoneNotice }
 									</div>
