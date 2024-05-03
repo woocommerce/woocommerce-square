@@ -274,6 +274,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 													}
 												</p>
 												<CheckboxControl
+													data-testid="update-during-import-field"
 													checked={ updateImport }
 													onChange={ ( updateImport ) => setUpdateImport( updateImport ) }
 													label={ __( 'Update existing products during import.', 'woocommerce-square' ) }
@@ -284,6 +285,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 													{__( 'Cancel', 'woocommerce-square' )}
 												</Button>
 												<Button
+													data-testid="import-products-button-confirm"
 													variant="primary"
 													onClick={ () => {
 														setIsImporting( true );

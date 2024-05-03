@@ -217,13 +217,13 @@ export async function clearSync( page ) {
  */
 export async function importProducts( page, update = false ) {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
-	await page.locator( '#wc_square_import_products' ).click();
+	await page.getByTestId( 'import-products-button' ).click();
 
 	if ( update ) {
-		await page.locator( '#wc-square-import-product-updates' ).check();
+		await page.getByTestId( 'update-during-import-field' ).check();
 	}
 
-	await page.locator( '#btn-ok' ).click();
+	await page.getByTestId( 'import-products-button-confirm' ).click();
 	await page.waitForTimeout( 2000 );
 }
 
