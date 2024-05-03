@@ -131,33 +131,6 @@ export const usePaymentForm = (
 	);
 
 	/**
-	 * Generates a verification buyer token
-	 *
-	 * @param {Object} payments     Instance of Square.payments().
-	 * @param {string} paymentToken Payment Token to verify
-	 *
-	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
-	 */
-	const verifyBuyer = useCallback(
-		async (payments, paymentToken) => {
-			let verificationResponse;
-			try {
-				verificationResponse = await payments.verifyBuyer(
-					paymentToken,
-					verificationDetails
-				);
-
-				return handleVerifyBuyerResponse(verificationResponse);
-			} catch (error) {
-				handleErrors([error]);
-			}
-
-			return false;
-		},
-		[verificationDetails, handleVerifyBuyerResponse]
-	);
-
-	/**
 	 * Handles the response from Payments.verifyBuyer() and resolves promise
 	 *
 	 * @param {Object} verificationResult Verify buyer result from Square
@@ -185,6 +158,33 @@ export const usePaymentForm = (
 
 		return response;
 	}, []);
+
+	/**
+	 * Generates a verification buyer token
+	 *
+	 * @param {Object} payments     Instance of Square.payments().
+	 * @param {string} paymentToken Payment Token to verify
+	 *
+	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
+	 */
+	const verifyBuyer = useCallback(
+		async (payments, paymentToken) => {
+			let verificationResponse;
+			try {
+				verificationResponse = await payments.verifyBuyer(
+					paymentToken,
+					verificationDetails
+				);
+
+				return handleVerifyBuyerResponse(verificationResponse);
+			} catch (error) {
+				handleErrors([error]);
+			}
+
+			return false;
+		},
+		[verificationDetails, handleVerifyBuyerResponse]
+	);
 
 	/**
 	 * When customers interact with the Square Payments iframe elements,
