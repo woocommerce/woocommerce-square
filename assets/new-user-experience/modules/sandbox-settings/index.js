@@ -26,7 +26,7 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 	} = useSquareSettings();
 
 	const {
-		enable_sandbox = 'yes',
+		enable_sandbox = 'no',
 		sandbox_application_id = '',
 		sandbox_token = '',
 	} = settings;

@@ -95,7 +95,7 @@ const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
 };
 
 export const SQUARE_SETTINGS_DEFAULT_STATE = {
-	enable_sandbox: 'yes',
+	enable_sandbox: 'no',
 	sandbox_application_id: '',
 	sandbox_token: '',
 	sandbox_location_id: '',

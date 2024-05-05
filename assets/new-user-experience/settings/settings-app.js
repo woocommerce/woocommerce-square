@@ -41,7 +41,7 @@ export const SettingsApp = () => {
 	const [ isFormDirty, setIsFormDirty ] = useState( false );
 
 	const {
-		enable_sandbox = 'yes',
+		enable_sandbox = 'no',
 		sandbox_location_id = '',
 		is_connected = false,
 		connection_url = '',
