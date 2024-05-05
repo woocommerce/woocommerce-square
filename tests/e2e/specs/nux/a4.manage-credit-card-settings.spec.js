@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { visitOnboardingPage } from '../../utils/helper';
+import { visitOnboardingPage, setStepsLocalStorage } from '../../utils/helper';
 
 test( 'Can configure credit card settings via Onboarding', async ( { page } ) => {
 	await visitOnboardingPage( page );
+	await setStepsLocalStorage( page );
 
 	await page.getByTestId( 'credit-card-settings-button' ).click();
 

@@ -516,3 +516,9 @@ export async function savePaymentGatewaySettings( page ) {
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
 }
+
+export async function setStepsLocalStorage( page ) {
+	await page.evaluate( ( val ) => localStorage.setItem( 'step', val ), 'payment-complete' );
+	await page.evaluate( ( val ) => localStorage.setItem( 'backStep', val ), 'payment-methods' );
+	await page.reload();
+}

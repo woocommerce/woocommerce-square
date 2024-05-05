@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { visitOnboardingPage } from '../../utils/helper';
+import { visitOnboardingPage, setStepsLocalStorage } from '../../utils/helper';
 
 test( 'Can configure digital wallet settings via Onboarding', async ( { page } ) => {
 	await visitOnboardingPage( page );
+	await setStepsLocalStorage( page );
 
 	await page.getByTestId( 'digital-wallet-settings-button' ).click();
 

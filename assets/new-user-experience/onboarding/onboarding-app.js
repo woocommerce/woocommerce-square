@@ -2,6 +2,7 @@
  * External dependencies.
  */
 import { useEffect, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies.
@@ -134,9 +135,12 @@ export const OnboardingApp = () => {
 						<BusinessLocation />
 						{
 							settings.locations.length ? (
-								<SquareSettingsSaveButton afterSaveCallback={ () => {
-									setStep( 'payment-methods' );
-								} } />
+								<SquareSettingsSaveButton
+									afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
+									afterSaveCallback={ () => {
+										setStep( 'payment-methods' );
+									} }
+								/>
 							) : null
 						}
 					</>
