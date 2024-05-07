@@ -985,13 +985,6 @@ class Settings extends \WC_Settings_API {
 	 * @return \Square\Models\Location[]
 	 */
 	public function get_locations() {
-
-		$is_ajax = wp_doing_ajax();
-
-		if ( $is_ajax ) {
-			check_ajax_referer( 'wc_square_settings', 'security' );
-		}
-
 		if ( is_array( $this->locations ) ) {
 			return $this->locations;
 		}
@@ -1045,17 +1038,18 @@ class Settings extends \WC_Settings_API {
 	 * @since x.x.x
 	 */
 	public function get_locations_ajax_callback() {
+		check_ajax_referer( 'wc_square_settings', 'security' );
+
 		$locations = array();
 
 		try {
 			$locations = $this->get_locations();
-		} catch( Exception $e ) {
+		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
 		}
 
 		wp_send_json_success( $locations );
 	}
-
 
 	/**
 	 * Gets the configured Sync setting.
