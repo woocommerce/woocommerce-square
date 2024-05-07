@@ -1,10 +1,10 @@
 === WooCommerce Square ===
-Contributors: woocommerce, automattic, royho, woothemes, bor0, mattdallan, menakas, chickenn00dle, jorgeatorres, jamesgallan, achyuthajoy
+Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 4.6.0
+Stable tag: 4.6.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.6.1 - 2024-04-10 =
+* Fix - Problem with connection to Square warning.
+* Update - Refreshed plugin marketing copy in readme file.
+* Update - Replace the middleware URL from `connect.woocommerce.com` to `api.woocommerce.com/integrations`.
 
 = 4.6.0 - 2024-03-27 =
 * Add - Support for buying a Square Gift Card using Cash App Pay.
