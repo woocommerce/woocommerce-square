@@ -23,6 +23,7 @@
 
 namespace WooCommerce\Square;
 
+use Exception;
 use WooCommerce\Square\Framework\Square_Helper;
 
 defined( 'ABSPATH' ) || exit;
@@ -142,7 +143,7 @@ class Settings extends \WC_Settings_API {
 
 		add_action( 'admin_notices', array( $this, 'show_visit_wizard_notice' ) );
 
-		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations' ) );
+		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations_ajax_callback' ) );
 
 		add_action( 'admin_init', array( $this, 'square_onboarding_redirect' ) );
 
@@ -992,11 +993,6 @@ class Settings extends \WC_Settings_API {
 		}
 
 		if ( is_array( $this->locations ) ) {
-
-			if ( $is_ajax ) {
-				wp_send_json_success( $this->locations );
-			}
-
 			return $this->locations;
 		}
 
@@ -1036,19 +1032,28 @@ class Settings extends \WC_Settings_API {
 					$this->clear_location_id();
 				}
 			} catch ( \Exception $exception ) {
-				if ( $is_ajax ) {
-					wp_send_json_error( __( 'Could not retrieve business locations.', 'woocommerce-square' ) );
-				}
-
 				$this->get_plugin()->log( 'Could not retrieve business locations.' );
 			}
 		}
 
-		if ( $is_ajax ) {
-			wp_send_json_success( $this->locations );
+		return $this->locations;
+	}
+
+	/**
+	 * Ajax callback for locations.
+	 *
+	 * @since x.x.x
+	 */
+	public function get_locations_ajax_callback() {
+		$locations = array();
+
+		try {
+			$locations = $this->get_locations();
+		} catch( Exception $e ) {
+			wp_send_json_error( $e->getMessage() );
 		}
 
-		return $this->locations;
+		wp_send_json_success( $locations );
 	}
 
 

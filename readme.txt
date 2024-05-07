@@ -1,5 +1,5 @@
 === WooCommerce Square ===
-Contributors: woocommerce, automattic, royho, woothemes, bor0, mattdallan, menakas, chickenn00dle, jorgeatorres, jamesgallan, achyuthajoy
+Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.3
 Tested up to: 6.5
