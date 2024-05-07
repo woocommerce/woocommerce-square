@@ -205,24 +205,26 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function show_visit_wizard_notice() {
-		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) ) {
-			wc_square()->get_admin_notice_handler()->add_admin_notice(
-				sprintf(
-					/* translators: %1$s - <a> tag, %2$s - </a> tag */
-					esc_html__(
-						'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
-						'woocommerce-square'
-					),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
-					'</a>'
-				),
-				'wc-square-welcome',
-				array(
-					'dismissible'  => false,
-					'notice_class' => 'notice-info',
-				)
-			);
+		if ( get_option( 'wc_square_onboarding_wizard_visited' ) ) {
+			return;
 		}
+
+		wc_square()->get_admin_notice_handler()->add_admin_notice(
+			sprintf(
+				/* translators: %1$s - <a> tag, %2$s - </a> tag */
+				esc_html__(
+					'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
+					'woocommerce-square'
+				),
+				'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
+				'</a>'
+			),
+			'wc-square-welcome',
+			array(
+				'dismissible'  => false,
+				'notice_class' => 'notice-info',
+			)
+		);
 	}
 
 	/**

@@ -46,7 +46,7 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 				<div className='woo-square-wizard__fields'>
 					<InputWrapper
 						label={ __( 'Enable Sandbox Mode', 'woocommerce-square' ) }
-						description={ __( "After enabling you'll see a new Sandbox settings section with two fields; Sandbox Application ID & Sandbox Access Token.", 'woocommerce-square' ) }
+						description={ __( 'After enabling you\'ll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' ) }
 						variant="boxed"
 					>
 						<ToggleControl

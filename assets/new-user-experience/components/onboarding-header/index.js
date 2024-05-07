@@ -17,39 +17,40 @@ import { Back, Square, Close } from '../../icons';
 import { useSteps } from './../../onboarding/hooks';
 
 export const OnboardingHeader = () => {
-    const {
+	const {
 		setStep,
-        getBackStep,        
+		getBackStep,
 	} = useSteps();
 
-    const backStep = getBackStep();
+	const backStep = getBackStep();
+	
 
-    return (
-        <div className="woo-square-onboarding__header">
-            <Flex direction={[
-                'column',
-                'row'
-            ]}>
-                <FlexItem className='flexItem backBtn'>
-                    { backStep && (
-                        <Button
-                            data-testid="previous-step-button"
-                            onClick={ () => setStep( backStep ) }
-                        >
-                            <Back />
-                            <span>{ __( 'Back', 'woocommerce-square' ) }</span>
-                        </Button>
-                    ) }
-                </FlexItem>
-                <FlexBlock className='wizardTitle'>
-                    <Square />
-                </FlexBlock>
-                <FlexItem className='flexItem closeWizard'>
-                    <Button href='/wp-admin/'>
-                        <Close />
-                    </Button>
-                </FlexItem>
-            </Flex>
-        </div>
-    );
+	return (
+		<div className="woo-square-onboarding__header">
+			<Flex direction={[
+				'column',
+				'row'
+			]}>
+				<FlexItem className='flexItem backBtn'>
+					{ backStep && (
+						<Button
+							data-testid="previous-step-button"
+							onClick={ () => setStep( backStep ) }
+						>
+							<Back />
+							<span>{ __( 'Back', 'woocommerce-square' ) }</span>
+						</Button>
+					) }
+				</FlexItem>
+				<FlexBlock className='wizardTitle'>
+					<Square />
+				</FlexBlock>
+				<FlexItem className='flexItem closeWizard'>
+					<Button href='/wp-admin/'>
+						<Close />
+					</Button>
+				</FlexItem>
+			</Flex>
+		</div>
+	);
 };

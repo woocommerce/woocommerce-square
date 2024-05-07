@@ -18,18 +18,18 @@ export const GiftCardsSettingsApp = () => {
 	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 	const {
 		giftCardsGatewaySettingsLoaded,
-        saveGiftCardsSettings,
-        giftCardsGatewaySettings
+		saveGiftCardsSettings,
+		giftCardsGatewaySettings
 	} = usePaymentGatewaySettingsData;
-    const [ saveInProgress, setSaveInProgress ] = useState( false );
-    const { createSuccessNotice } = useDispatch( noticesStore );
+	const [ saveInProgress, setSaveInProgress ] = useState( false );
+	const { createSuccessNotice } = useDispatch( noticesStore );
 
 
-    if ( ! giftCardsGatewaySettingsLoaded ) {
+	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
-    const saveSettings = async () => {
+	const saveSettings = async () => {
 		setSaveInProgress( true );
 		const response = await saveGiftCardsSettings( giftCardsGatewaySettings );
 

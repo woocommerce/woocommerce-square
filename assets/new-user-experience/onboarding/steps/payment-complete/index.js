@@ -43,14 +43,14 @@ export const PaymentComplete = () => {
 				<div className="woo-square-onbarding__payment-settings--left">
 					<div className="woo-square-onbarding__payment-settings__intro">
 						<div className="woo-square-onbarding__payment-settings__intro--title">
-							{ __( "Congratulations,", 'woocommerce-square' ) }
+							{ __( 'Congratulations,', 'woocommerce-square' ) }
 							<br />
-							{ __( "Your Payment Setup is Complete!", 'woocommerce-square' ) }
+							{ __( 'Your Payment Setup is Complete!', 'woocommerce-square' ) }
 						</div>
 						<SectionDescription>
-							{ __( "Your online store is now equipped to accept payments, making you ready to welcome customers and start generating sales.", 'woocommerce-square' ) }
+							{ __( 'Your online store is now equipped to accept payments, making you ready to welcome customers and start generating sales.', 'woocommerce-square' ) }
 							<p>
-								{ __( "Ready to see your store in action? Explore the front-end of your online shop. It's a great way to experience what your customers will see and ensure everything looks perfect.", 'woocommerce-square' ) }
+								{ __( 'Ready to see your store in action? Explore the front-end of your online shop. It\'s a great way to experience what your customers will see and ensure everything looks perfect.', 'woocommerce-square' ) }
 							</p>
 						</SectionDescription>
 						<Button variant="primary" href='/' >

@@ -24,7 +24,7 @@ export const ConnectSetup = () => {
 				<Section>
 					<SectionTitle title={ __( 'Thanks for installing WooCommerce Square!', 'woocommerce-square' ) } />
 					<SectionDescription>
-						{ __( "To get started, let's connect to your Square Account to complete the setup process.", 'woocommerce-square' ) }
+						{ __( 'To get started, let\'s connect to your Square Account to complete the setup process.', 'woocommerce-square' ) }
 					</SectionDescription>
 
 					<Button
