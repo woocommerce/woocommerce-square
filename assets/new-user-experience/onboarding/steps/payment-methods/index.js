@@ -64,15 +64,15 @@ export const PaymentMethods = () => {
 			<div className="woo-square-onbarding__payment-settings--left">
 				<div className="woo-square-onbarding__payment-settings__intro">
 					<div className="woo-square-onbarding__payment-settings__intro--title">
-						{ __( "You're connected to Square!", 'woocommerce-square' ) }
+						{ __( 'You\'re connected to Square!', 'woocommerce-square' ) }
 						<span className="woo-square-onbarding__payment-settings__intro--title-icon">
 							<Confetti />
 						</span>
 					</div>
 					<SectionDescription>
-						{ __( "Congratulations! You've successfully connected your Square account.", 'woocommerce-square' ) }
+						{ __( 'Congratulations! You\'ve successfully connected your Square account.', 'woocommerce-square' ) }
 						<p>
-							{ __( "Now, let's enable the payment methods you want to offer on your site. This is where you can tailor your checkout experience to meet your customers' needs.", 'woocommerce-square' ) }
+							{ __( 'Now, let\'s enable the payment methods you want to offer on your site. This is where you can tailor your checkout experience to meet your customers\' needs.', 'woocommerce-square' ) }
 						</p>
 					</SectionDescription>
 				</div>

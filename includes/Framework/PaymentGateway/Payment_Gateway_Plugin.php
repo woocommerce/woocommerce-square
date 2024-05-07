@@ -649,7 +649,7 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 
 			// Get the debug mode.
 			$square_settings = get_option( 'wc_square_settings', array() );
-			$debug_mode      = isset( $square_settings['debug_mode'] ) ? $square_settings['debug_mode'] : 'off';
+			$debug_mode      = $square_settings['debug_mode'] ?? 'off';
 
 			if ( $gateway->is_enabled() && $gateway->is_production_environment() && 'off' !== $debug_mode ) {
 

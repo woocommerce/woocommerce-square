@@ -295,7 +295,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	}
 
 	/**
-	 * Upgrades to version 2.3.0.
+	 * Upgrades to version 4.7.0.
 	 *
 	 * @since 4.7.0
 	 */

@@ -50,13 +50,13 @@ export const OnboardingApp = () => {
 	} = useSquareSettingsData;
 
 	// Set info in local storage.
-	useEffect(() => {
+	useEffect( () => {
 		localStorage.setItem('step', step);
 		localStorage.setItem('backStep', backStep);
 	}, [step, backStep]);
 
 	// Set the settings loaded value based on the step.
-	useEffect(() => {
+	useEffect( () => {
 		switch (step) {
 			case 'connect-square':
 				setSettingsLoaded(false);
@@ -80,7 +80,7 @@ export const OnboardingApp = () => {
 	}, [step, squareSettingsLoaded, paymentGatewaySettingsLoaded, cashAppGatewaySettingsLoaded, giftCardsGatewaySettingsLoaded]);
 
 	// Set the backStep value.
-	useEffect(() => {
+	useEffect( () => {
 		switch (step) {
 			case 'connect-square':
 			case 'business-location':

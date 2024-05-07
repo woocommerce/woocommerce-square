@@ -1,4 +1,4 @@
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
 	SelectControl,
@@ -38,7 +38,13 @@ export const BusinessLocation = () => {
 				<SectionTitle title={ __( 'Your Square account is missing a Business Location', 'woocommerce-square' ) } />
 				<SectionDescription>
 					<p>
-						{ __( 'Please go here or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ) }
+						{
+							sprintf(
+								__( 'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ),
+								'<a href="https://squareup.com/dashboard/locations" target="_blank">',
+								'</a>'
+							)
+						}
 					</p>
 				</SectionDescription>
 			</Section>
@@ -56,10 +62,10 @@ export const BusinessLocation = () => {
 			<SectionTitle title={ __( 'Confirm Your Business Location', 'woocommerce-square' ) } />
 			<SectionDescription>
 				<p>
-					{ __( "Great, you're nearly there! We've detected your business location as listed in Square.", 'woocommerce-square' ) }
+					{ __( 'Great, you\'re nearly there! We\'ve detected your business location as listed in Square.', 'woocommerce-square' ) }
 				</p>
 				<p>
-					{ __( "Please confirm that this is the correct location where you'll be making sales:", 'woocommerce-square' ) }
+					{ __( 'Please confirm that this is the correct location where you\'ll be making sales:', 'woocommerce-square' ) }
 				</p>
 			</SectionDescription>
 		</>
@@ -68,10 +74,10 @@ export const BusinessLocation = () => {
 			<SectionTitle title={ __( 'Select your business location', 'woocommerce-square' ) } />
 			<SectionDescription>
 				<p>
-					{ __( "You're on your way!  It looks like you have multiple business locations associated with your Square account.", 'woocommerce-square' ) }
+					{ __( 'You\'re on your way!  It looks like you have multiple business locations associated with your Square account.', 'woocommerce-square' ) }
 				</p>
 				<p>
-					{ __( "Please select the location you wish to link with this WooCommerce store", 'woocommerce-square' ) }
+					{ __( 'Please select the location you wish to link with this WooCommerce store', 'woocommerce-square' ) }
 				</p>
 			</SectionDescription>
 		</>
@@ -80,17 +86,17 @@ export const BusinessLocation = () => {
 	return (
 		<div>
 			<Section>
-				{(locationCount === 0 && noLocation) ||
-					(locationCount && (
+				{ ( locationCount === 0 && noLocation ) ||
+					( locationCount && (
 					<>
 						{intro}
 						<div className='woo-square-wizard__fields'>
 							<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 								<SelectControl
 								data-testid="business-location-selector"
-								value={sandbox_location_id}
-								onChange={(sandbox_location_id) =>
-									setSquareSettingData({ sandbox_location_id })
+								value={ sandbox_location_id }
+								onChange={ ( sandbox_location_id ) =>
+									setSquareSettingData( { sandbox_location_id } )
 								}
 								options={[
 									{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
@@ -100,7 +106,7 @@ export const BusinessLocation = () => {
 							</InputWrapper>
 						</div>
 					</>
-					))
+					) )
 				}
 			</Section>
 		</div>

@@ -6,7 +6,7 @@ import {
 } from '@wordpress/components';
 
 export const Loader = () => {
-    return (
+	return (
 		<div className="woo-square-loader">
 			<Spinner />
 		</div>
