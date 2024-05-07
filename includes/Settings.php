@@ -166,7 +166,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function square_onboarding_redirect() {
 		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
-			add_option( 'wc_square_show_wizard_on_activation', true );
+			add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
 			exit;
 		}
@@ -986,6 +986,10 @@ class Settings extends \WC_Settings_API {
 	public function get_locations() {
 
 		$is_ajax = wp_doing_ajax();
+
+		if ( $is_ajax ) {
+			check_ajax_referer( 'wc_square_settings', 'security' );
+		}
 
 		if ( is_array( $this->locations ) ) {
 
