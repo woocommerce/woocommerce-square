@@ -295,7 +295,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	}
 
 	/**
-	 * Upgrades to version 2.3.0.
+	 * Upgrades to version 4.7.0.
 	 *
 	 * @since 4.7.0
 	 */
@@ -330,7 +330,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		update_option( 'wc_square_updated_to_4_7_0', true );
 
 		// Skip redirect existing users to the setup wizard on upgrade.
-		add_option( 'wc_square_show_wizard_on_activation', true );
+		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 	}
 
 	/**

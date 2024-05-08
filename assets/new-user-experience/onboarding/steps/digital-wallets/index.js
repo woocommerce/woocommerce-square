@@ -44,7 +44,7 @@ export const DigitalWalletsSetup = () => {
 			<Section>
 				<SectionTitle title={ __( 'Manage Digital Wallet Settings', 'woocommerce-square' ) } />
 				<SectionDescription>
-					{ __( 'Accept payments with Apple Pay and Google Pay on your store, available in select countries. Enabling digital wallets adds payment buttons to Product, Cart, and Checkout pages.', 'woocommerce-square' ) }
+					{ __( 'Accept payments with Apple Pay and Google Pay on your store, available in select countries. Enabling digital wallets adds payment buttons to Product, Cart and Checkout pages.', 'woocommerce-square' ) }
 				</SectionDescription>
 
 				<div className='woo-square-wizard__fields'>

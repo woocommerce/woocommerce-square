@@ -80,7 +80,7 @@ class Products {
 
 		// Get gift card features status.
 		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
-		$this->gift_card_enabled = isset( $gift_card_settings['enabled'] ) ? $gift_card_settings['enabled'] : 'no';
+		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
 		// add hooks
 		$this->add_products_edit_screen_hooks();

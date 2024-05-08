@@ -23,7 +23,6 @@ export const GiftCardsSettingsApp = () => {
 	const [ saveInProgress, setSaveInProgress ] = useState( false );
 	const { createSuccessNotice } = useDispatch( noticesStore );
 
-
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return <Loader />;
 	}

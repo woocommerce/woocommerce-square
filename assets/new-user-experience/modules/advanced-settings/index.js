@@ -37,7 +37,7 @@ export const AdvancedSettings = () => {
 		debug_logging_enabled = 'no',
 	} = settings;
 
-	if ( ! ( squareSettingsLoaded ) ) {
+	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
 
@@ -66,7 +66,7 @@ export const AdvancedSettings = () => {
 							checked={ 'yes' === enable_customer_decline_messages }
 							onChange={ ( enabled ) => setSquareSettingData( { enable_customer_decline_messages: enabled ? 'yes' : 'no' } ) }
 							label={
-								__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' )
+								__( 'Show detailed decline messages to the customer during checkout rather than a generic decline message.', 'woocommerce-square' )
 							}
 						/>
 					</InputWrapper>
@@ -76,7 +76,7 @@ export const AdvancedSettings = () => {
 					<InputWrapper
 						label={ __( 'Enable Logging', 'woocommerce-square' ) }
 						variant="boxed"
-						description={ __( 'After enabling you’ll see a new Sandbox settings section with two fields; Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' )}
+						description={ __( 'After enabling you’ll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' )}
 					>
 						<ToggleControl
 							checked={ 'yes' === debug_logging_enabled }
