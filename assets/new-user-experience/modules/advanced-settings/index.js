@@ -76,7 +76,18 @@ export const AdvancedSettings = () => {
 					<InputWrapper
 						label={ __( 'Enable Logging', 'woocommerce-square' ) }
 						variant="boxed"
-						description={ __( 'After enabling you’ll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' )}
+						description={
+							parse(
+								sprintf (
+									__(
+										'Log debug messages to the %1$sWooCommerce status log%2$s',
+										'woocommerce-square'
+									),
+									'<a href="/wp-admin/admin.php?page=wc-status&tab=logs">',
+									'</a>'
+								)
+							)
+						}
 					>
 						<ToggleControl
 							checked={ 'yes' === debug_logging_enabled }
