@@ -22,6 +22,10 @@ body.woocommerce_page_woocommerce-square-onboarding {
 			color: #4B4B4B;
 		}
 
+		.is-primary {
+			margin-bottom: 50px;
+		}
+
 		&.is-secondary {
 			color: #000000;
 		}
@@ -45,6 +49,10 @@ body.woocommerce_page_woocommerce-square-onboarding {
 	.woo-square-setting__section-description {
 		margin: 30px 0;
 	}
+
+	.adv-settings-copy {
+		margin-right: 30px;
+	}
 }
 
 // Styles for Payment Methods and Payment Complete Steps.
@@ -53,7 +61,7 @@ body.woocommerce_page_woocommerce-square-onboarding {
 	justify-content: center;
 	align-items: stretch;
 	width: 100%;
-	height: 100vh;
+	height: auto;
 	z-index: 9999;
 	text-align: left;
 
@@ -85,8 +93,9 @@ body.woocommerce_page_woocommerce-square-onboarding {
 
 		&:before {
 			content: '';
-			width: 100%;
-			height: 100%;
+			width: 50%;
+			right: 0;
+			height: 120vh;
 			position: absolute;
 			display: block;
 			top: 0;
@@ -112,12 +121,13 @@ body.woocommerce_page_woocommerce-square-onboarding {
 		background-color: #fff;
 		padding: 98px 110px 130px 110px;
 		border: 1px solid rgba(0, 0, 0, 0.25);
-		top: 50%;
+		transform: none;
+    	top: 10%;
 		left: -50px;
-		transform: translate( 0, -50% );
 		max-width: 915px;
 		width: 100%;
 		box-sizing: border-box;
+		
 
 		&__next-btn {
 			position: absolute;
@@ -158,18 +168,25 @@ body.woocommerce_page_woocommerce-square-onboarding {
 }
 
 @media screen and (max-width: 1600px) {
-	.woo-square-onbarding__payment-settings {
-		&__toggles {
-			top: auto;
-			transform: none;
-		}
+	.woo-square-onboarding__cover.payment-methods {
+		.woo-square-onbarding__payment-settings {
+			&__toggles {
+				top: auto;
+				transform: none;
+			}
 
-		&__intro {
-			left: 40%;
-		}
+			&__intro {
+				transform: none;
+				left: 0;
+				top: 30%;
+				background: border-box;
+				max-width: 70%;
+				display: inline-block;
+			}
 
-		.flexItem.contentBox {
-			margin-right: 20px;
+			.flexItem.contentBox {
+				margin-right: 20px;
+			}
 		}
 	}
 }

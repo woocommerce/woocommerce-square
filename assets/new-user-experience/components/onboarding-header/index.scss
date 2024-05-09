@@ -21,7 +21,9 @@
 
     .wizardTitle {
         text-align: center;
-        margin-left: 70px;
+        position: absolute;
+        left: 0;
+        right: 0;
 
         svg {
             margin: 0 10px -7px;
