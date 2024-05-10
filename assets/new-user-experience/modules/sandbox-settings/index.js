@@ -61,9 +61,11 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 							<InputWrapper
 								label={ __( 'Sandbox Application ID', 'woocommerce-square' ) }
 								description={
-									sprintf( __( 'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.', 'woocommerce-square' ),
-										'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
-										'</a>'
+									parse(
+										sprintf( __( 'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.', 'woocommerce-square' ),
+											'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
+											'</a>'
+										)
 									)
 								}
 								indent={ indent }

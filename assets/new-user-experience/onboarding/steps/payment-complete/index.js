@@ -151,10 +151,13 @@ export const PaymentComplete = () => {
 
 						<Divider margin="10"/>
 
-						<Flex direction={[
-							'column',
-							'row'
-						]}>
+						<Flex
+							direction={[
+								'column',
+								'row'
+							]}
+							align='top'
+						>
 							<FlexBlock>
 								<Button
 									data-testid="advanced-settings-button"
