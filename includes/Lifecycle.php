@@ -330,7 +330,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		update_option( 'wc_square_updated_to_4_7_0', true );
 
 		// Skip redirect existing users to the setup wizard on upgrade.
-		add_option( 'wc_square_show_wizard_on_activation', true );
+		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 	}
 
 	/**

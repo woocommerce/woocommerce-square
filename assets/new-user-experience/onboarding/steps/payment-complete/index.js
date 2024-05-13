@@ -151,10 +151,13 @@ export const PaymentComplete = () => {
 
 						<Divider margin="10"/>
 
-						<Flex direction={[
-							'column',
-							'row'
-						]}>
+						<Flex
+							direction={[
+								'column',
+								'row'
+							]}
+							align='top'
+						>
 							<FlexBlock>
 								<Button
 									data-testid="advanced-settings-button"
@@ -163,7 +166,7 @@ export const PaymentComplete = () => {
 								>
 									{ __( 'Go to Advanced Settings', 'woocommerce-square' ) }
 								</Button>
-								<p>{ __( 'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.', 'woocommerce-square' ) }</p>
+								<p className='adv-settings-copy'>{ __( 'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.', 'woocommerce-square' ) }</p>
 							</FlexBlock>
 							<FlexBlock>
 								<Button

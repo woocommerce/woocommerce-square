@@ -132,12 +132,7 @@ export const OnboardingApp = () => {
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{ step === 'connect-square' && <ConnectSetup /> }
 				{ step === 'business-location' && (
-					<>
-						<BusinessLocation />
-						<SquareSettingsSaveButton afterSaveCallback={ () => {
-							setStep( 'payment-methods' );
-						} } />
-					</>
+					<BusinessLocation />
 				) }
 				{ step === 'payment-methods' && <PaymentMethods /> }
 				{ step === 'payment-complete' && <PaymentComplete /> }

@@ -1,7 +1,8 @@
 /**
  * External dependencies.
  */
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+import parse from 'html-react-parser';
 import {
 	TextControl,
 	ToggleControl,
@@ -59,7 +60,14 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 						<>
 							<InputWrapper
 								label={ __( 'Sandbox Application ID', 'woocommerce-square' ) }
-								description={ __( 'Application ID for the Sandbox Application, see the details in the My Applications section.', 'woocommerce-square' ) }
+								description={
+									parse(
+										sprintf( __( 'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.', 'woocommerce-square' ),
+											'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
+											'</a>'
+										)
+									)
+								}
 								indent={ indent }
 							>
 								<TextControl
@@ -70,7 +78,15 @@ export const SandboxSettings = ( { indent = 0 } ) => {
 
 							<InputWrapper
 								label={ __( 'Sandbox Access Token', 'woocommerce-square' ) }
-								description={ __( 'Access Token for the Sandbox Test Account, see the details in the Sandbox Test Account section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ) }
+								description={
+									parse(
+										sprintf(
+											__( 'Access Token for the Sandbox Test Account, see the details in the %1$sSandbox Test Account%2$s section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ),
+											'<a target="_blank" href="https://developer.squareup.com/console/en/sandbox-test-accounts">',
+											'</a>'
+										)
+									)
+								}
 								indent={ indent }
 							>
 								<TextControl

@@ -1,6 +1,6 @@
 @font-face {
 	font-family: 'SF Pro';
-	src: url('./fonts/sf-pro/SFPRODISPLAYREGULAR.OTF') format('opentype');
+	src: url('./fonts/sf-pro/SFPRODISPLAYREGULAR.woff2') format('opentype');
 }
 
 // Hide all elements after the react based settings container, hiding the native settings.
@@ -139,16 +139,11 @@ body {
 	max-width: 100%;
 	margin: 0;
 	text-align: center;
-	overflow-x: hidden;
-    position: relative;
+	position: relative;
 
 	&.payment-complete,
 	&.payment-methods {
 		width: 100%;
-	}
-
-	&.credit-card {
-		max-height: 400px;
 	}
 
 	&.payment-methods {
@@ -158,14 +153,7 @@ body {
 	}
 
 	&:not(.payment-methods):not(.payment-complete) {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		margin: auto;
-		max-height: 250px;
-		overflow: initial;
+		margin: 100px auto 50px;
 	}
 
 	.woo-square-wizard__fields {

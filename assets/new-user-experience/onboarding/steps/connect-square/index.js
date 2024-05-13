@@ -16,7 +16,7 @@ import {
 import { useSquareSettings } from '../../../settings/hooks';
 
 export const ConnectSetup = () => {
-	const { settings } = useSquareSettings;
+	const { settings } = useSquareSettings( true );
 
 	return (
 		<div className="woo-square-onbarding__connect-square">

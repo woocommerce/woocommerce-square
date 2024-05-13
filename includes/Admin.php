@@ -231,6 +231,14 @@ class Admin {
 				)
 			);
 
+			wp_localize_script(
+				'woocommerce-square-settings-js',
+				'wcSquareSettings',
+				array(
+					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+				)
+			);
+
 			wp_enqueue_style(
 				'woocommerce-square-settings-css',
 				WC_SQUARE_PLUGIN_URL . 'build/settings.css',

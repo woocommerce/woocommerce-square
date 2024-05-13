@@ -167,7 +167,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function square_onboarding_redirect() {
 		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
-			add_option( 'wc_square_show_wizard_on_activation', true );
+			add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
 			exit;
 		}
@@ -1038,17 +1038,18 @@ class Settings extends \WC_Settings_API {
 	 * @since x.x.x
 	 */
 	public function get_locations_ajax_callback() {
+		check_ajax_referer( 'wc_square_settings', 'security' );
+
 		$locations = array();
 
 		try {
 			$locations = $this->get_locations();
-		} catch( Exception $e ) {
+		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
 		}
 
 		wp_send_json_success( $locations );
 	}
-
 
 	/**
 	 * Gets the configured Sync setting.
