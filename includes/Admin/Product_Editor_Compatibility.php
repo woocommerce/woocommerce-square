@@ -151,7 +151,7 @@ class Product_Editor_Compatibility {
 						'<a href="' . admin_url( 'admin.php?page=wc-settings&tab=products&section=inventory' ) . '" target="_blank" rel="noreferrer">',
 						'</a>'
 					),
-				)
+				),
 			)
 		);
 
