@@ -38,7 +38,7 @@ export const SettingsApp = () => {
 	} = useSquareSettings( true );
 
 	const {
-		enable_sandbox = 'yes',
+		enable_sandbox = 'no',
 		sandbox_location_id = '',
 		is_connected = false,
 		connection_url = '',
