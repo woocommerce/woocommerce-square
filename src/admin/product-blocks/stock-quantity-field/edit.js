@@ -3,9 +3,7 @@
  */
 import { useWooBlockProps } from '@woocommerce/block-templates';
 import { useInstanceId } from '@wordpress/compose';
-import { useEntityProp } from '@wordpress/core-data';
-import { useSelect } from '@wordpress/data';
-import { createElement, useEffect, useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import {
 	BaseControl,
@@ -38,8 +36,6 @@ export function Edit( {
 	const [ sor ] = useProductEntityProp( 'sor', context.postType );
 	const [ fetchStockProgress, setFetchStockProgress ] = useState( false );
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
-	const isSavingPost = useSelect( ( __select ) => __select( 'core/editor' ).isSavingPost() );
-
 
 	const {
 		ref: stockQuantityRef,
@@ -68,7 +64,7 @@ export function Edit( {
 		return null;
 	}
 
-	async function fetchStockFromSquare() {
+	async function fetchStockFromSquare( enableQuantityField = false ) {
 		const fetchStockData = new FormData();
 
 		fetchStockData.append( 'action', 'wc_square_fetch_product_stock_with_square' );
@@ -87,7 +83,10 @@ export function Edit( {
 		if ( response.success ) {
 			const { quantity, manage_stock: manageStock } = response.data;
 
-			setIsQuantityDisabled( false );
+			if ( enableQuantityField ) {
+				setIsQuantityDisabled( false );
+			}
+
 			setStockQuantity( Number( quantity ) );
 		}
 
@@ -120,9 +119,14 @@ export function Edit( {
 						{
 							isSyncEnabled && isInventorySyncEnabled && isSquareSynced && manageStock && 'square' === sor && (
 								<p>
-									<a href="#">
+									<Button
+										variant='link'
+										href="#"
+										onClick={ () => fetchStockFromSquare() }
+										isBusy={ fetchStockProgress }
+									>
 										{ `${ __( 'Managed by Square', 'woocommerce-square' ) } (${ __( 'Sync stock from Square', 'woocommerce-square' ) })` }
-									</a>
+									</Button>
 								</p>
 							)
 						}
@@ -133,7 +137,7 @@ export function Edit( {
 									<Button
 										variant='link'
 										text={ __( 'Fetch stock from Square', 'woocommerce-square' ) }
-										onClick={ fetchStockFromSquare }
+										onClick={ () => fetchStockFromSquare( true ) }
 										isBusy={ fetchStockProgress }
 									/>
 								</p>
