@@ -108,9 +108,8 @@ class Product_Editor_Compatibility {
 	/**
 	 * Adds the sync with Square control to the product editor.
 	 *
-	 * @param Section $basic_details_field The basic details block.
 	 */
-	public function add_sync_with_square_control( Section $basic_details_field ) {
+	public function add_sync_with_square_control( $basic_details_field ) {
 		$basic_details_field->add_block(
 			array(
 				'id'             => '_wc_square_synced',

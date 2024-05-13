@@ -568,9 +568,12 @@ class Products {
 	 * @param \WC_Product $product product object
 	 */
 	public function maybe_adjust_square_stock( $product ) {
+		$is_new_product_editor_enabled = FeaturesUtil::feature_is_enabled( 'product_block_editor' );
 
 		// this is hooked in to general product object save, so scope to specifically saving products via the admin
-		if ( ! doing_action( 'wp_ajax_woocommerce_save_variations' ) && ! doing_action( 'woocommerce_admin_process_product_object' ) ) {
+		if ( $is_new_product_editor_enabled && ! wc_rest_is_from_product_editor() ) {
+			return;
+		} else if ( ! $is_new_product_editor_enabled && ! doing_action( 'wp_ajax_woocommerce_save_variations' ) && ! doing_action( 'woocommerce_admin_process_product_object' ) ) {
 			return;
 		}
 

@@ -26,13 +26,15 @@ export function Edit({ attributes, context: { postType } } ) {
 					onChange={ setIsSquareSynced }
 				/>
 			</BaseControl>
-			<p
-				style={ { color: '#a00' } }
-				dangerouslySetInnerHTML={ { __html: sprintf(
-					__( `Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.`, 'woocommerce-square' ),
-					editLink
-				) } }
-			/>
+			{ ! sku.length && (
+				<p
+					style={ { color: '#a00' } }
+					dangerouslySetInnerHTML={ { __html: sprintf(
+						__( `Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.`, 'woocommerce-square' ),
+						editLink
+					) } }
+				/>
+			) }
 		</div>
 	);
 }
