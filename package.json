@@ -11,7 +11,7 @@
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "main": "Gruntfile.js",
   "scripts": {
-    "build": "NODE_ENV=production grunt && NODE_ENV=production npm run build:webpack",
+    "build": "composer install --no-dev && NODE_ENV=production grunt && NODE_ENV=production npm run build:webpack && npm run archive",
     "build:dev": "composer install && grunt && npm run build:webpack",
     "build:webpack": "rimraf build/* && wp-scripts build",
     "build-watch:grunt": "grunt watch",
