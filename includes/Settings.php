@@ -167,7 +167,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function square_onboarding_redirect() {
 		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
-			add_option( 'wc_square_show_wizard_on_activation', true );
+			add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
 			exit;
 		}
@@ -205,24 +205,26 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function show_visit_wizard_notice() {
-		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) ) {
-			wc_square()->get_admin_notice_handler()->add_admin_notice(
-				sprintf(
-					/* translators: %1$s - <a> tag, %2$s - </a> tag */
-					esc_html__(
-						'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
-						'woocommerce-square'
-					),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
-					'</a>'
-				),
-				'wc-square-welcome',
-				array(
-					'dismissible'  => false,
-					'notice_class' => 'notice-info',
-				)
-			);
+		if ( get_option( 'wc_square_onboarding_wizard_visited' ) ) {
+			return;
 		}
+
+		wc_square()->get_admin_notice_handler()->add_admin_notice(
+			sprintf(
+				/* translators: %1$s - <a> tag, %2$s - </a> tag */
+				esc_html__(
+					'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
+					'woocommerce-square'
+				),
+				'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
+				'</a>'
+			),
+			'wc-square-welcome',
+			array(
+				'dismissible'  => false,
+				'notice_class' => 'notice-info',
+			)
+		);
 	}
 
 	/**
@@ -1036,17 +1038,18 @@ class Settings extends \WC_Settings_API {
 	 * @since x.x.x
 	 */
 	public function get_locations_ajax_callback() {
+		check_ajax_referer( 'wc_square_settings', 'security' );
+
 		$locations = array();
 
 		try {
 			$locations = $this->get_locations();
-		} catch( Exception $e ) {
+		} catch ( Exception $e ) {
 			wp_send_json_error( $e->getMessage() );
 		}
 
 		wp_send_json_success( $locations );
 	}
-
 
 	/**
 	 * Gets the configured Sync setting.

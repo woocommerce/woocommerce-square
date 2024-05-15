@@ -24,10 +24,10 @@ export const usePaymentGatewaySettings = ( fromServer = false ) => {
 	const [ paymentGatewaySettingsLoaded, setPaymentGatewaySettingsLoaded ] = useState( false );
 	const [ cashAppGatewaySettingsLoaded, setCashAppGatewaySettingsLoaded ] = useState( false );
 	const [ giftCardsGatewaySettingsLoaded, setGiftCardsGatewaySettingsLoaded ] = useState( false );
-	const getCreditCardData = ( key ) => useSelect( ( select ) => select( store ).getCreditCardData( key ));
-	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ));
-	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ));
-	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ));
+	const getCreditCardData = ( key ) => useSelect( ( select ) => select( store ).getCreditCardData( key ) );
+	const getDigitalWalletData = ( key ) => useSelect( ( select ) => select( store ).getDigitalWalletData( key ) );
+	const getGiftCardData = ( key ) => useSelect( ( select ) => select( store ).getGiftCardData( key ) );
+	const getCashAppData = ( key ) => useSelect( ( select ) => select( store ).getCashAppData( key ) );
 	const getCreditCardSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCreditCardSettingsSavingProcess( key ) );
 	const getCashAppSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getCashAppSettingsSavingProcess( key ) );
 	const getGiftCardsSettingsSavingProcess = ( key ) => useSelect( ( select ) => select( store ).getGiftCardsSettingsSavingProcess( key ) );
@@ -185,8 +185,6 @@ export const useSteps = ( fromServer = false ) => {
 	const setBackStep = ( data ) => dispatch( store ).setBackStep( data );
 
 	const stepData = {
-		// step: localStorage.getItem('step') || getStep(),
-		// backStep: localStorage.getItem('backStep') || getBackStep(),
 		step: getStep(),
 		backStep: getBackStep(),
 	};

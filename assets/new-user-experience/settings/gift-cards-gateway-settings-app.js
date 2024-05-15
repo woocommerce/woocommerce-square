@@ -18,28 +18,11 @@ export const GiftCardsSettingsApp = () => {
 	const {
 		giftCardsGatewaySettingsLoaded,
 		saveGiftCardsSettings,
-		giftCardsGatewaySettings
 	} = usePaymentGatewaySettings( true );
-	const [ saveInProgress, setSaveInProgress ] = useState( false );
-	const { createSuccessNotice } = useDispatch( noticesStore );
-
 
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
-
-	const saveSettings = async () => {
-		setSaveInProgress( true );
-		const response = await saveGiftCardsSettings( giftCardsGatewaySettings );
-
-		if ( response.success ) {
-			createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
-				type: 'snackbar',
-			} )
-		}
-
-		setSaveInProgress( false );
-	};
 
 	return (
 		<>

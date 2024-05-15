@@ -123,7 +123,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 						description={
 							parse(
 								sprintf(
-									__( "Choose where data will be updated for synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you're experiencing technical issues.", 'woocommerce-square' ),
+									__( 'Choose where data will be updated for synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you\'re experiencing technical issues.', 'woocommerce-square' ),
 									'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
 									'</a>',
 									'<a href="https://wordpress.org/support/plugin/woocommerce-square/" target="_blank">',

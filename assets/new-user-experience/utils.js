@@ -62,7 +62,15 @@ export const getCashAppSettingsData = async () => {
 
 export const connectToSquare = async () => {
 	try {
-		const response = await fetch( `${ ajaxurl }?action=wc_square_settings_get_locations` );
+		const _wpnonce = wcSquareSettings ? wcSquareSettings.nonce : '';
+
+		if ( '' === _wpnonce ) {
+			throw new Error( 'Invalid nonce.' );
+		}
+
+		const requestURL = `${ ajaxurl }?action=wc_square_settings_get_locations&_wpnonce=${ _wpnonce }`;
+
+		const response = await fetch( requestURL );
 
 		if ( ! response.ok ) {
 			throw new Error( 'Failed to fetch business locations.' );

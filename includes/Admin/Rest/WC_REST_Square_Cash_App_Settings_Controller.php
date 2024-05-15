@@ -1,6 +1,6 @@
 <?php
 /**
- * Class WC_REST_Square_Settings_Controller
+ * Class WC_REST_Square_Cash_App_Settings_Controller file.
  */
 
 namespace WooCommerce\Square\Admin\Rest;
@@ -12,9 +12,7 @@ use WP_REST_Response;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * REST controller for saving Square's test/live account keys.
- *
- * This includes Live Publishable Key, Live Secret Key, Webhook Secret.
+ * Class WC_REST_Square_Cash_App_Settings_Controller.
  *
  * @since 4.7.0
  */
@@ -42,7 +40,7 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 	private $allowed_params;
 
 	/**
-	 * WC_REST_Square_Settings_Controller constructor.
+	 * Constructor.
 	 */
 	public function __construct() {
 		$this->allowed_params = array(
@@ -126,7 +124,7 @@ class WC_REST_Square_Cash_App_Settings_Controller extends WC_Square_REST_Base_Co
 	}
 
 	/**
-	 * Retrieve flag status.
+	 * Get the data.
 	 *
 	 * @return WP_REST_Response
 	 */
