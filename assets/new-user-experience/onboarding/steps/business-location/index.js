@@ -11,6 +11,7 @@ import {
 	InputWrapper,
 } from '../../../components';
 import { useSquareSettings } from '../../../settings/hooks';
+import { useSteps } from '../../hooks';
 
 export const BusinessLocation = () => {
 	const {
@@ -18,6 +19,10 @@ export const BusinessLocation = () => {
 		squareSettingsLoaded,
 		setSquareSettingData,
 	} = useSquareSettings();
+
+	const {
+		setStep,
+	} = useSteps();
 
 	const {
 		sandbox_location_id,
@@ -88,24 +93,24 @@ export const BusinessLocation = () => {
 			<Section>
 				{ ( locationCount === 0 && noLocation ) ||
 					( locationCount && (
-					<>
-						{intro}
-						<div className='woo-square-wizard__fields'>
-							<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
-								<SelectControl
-								data-testid="business-location-field"
-								value={ sandbox_location_id }
-								onChange={ ( sandbox_location_id ) =>
-									setSquareSettingData( { sandbox_location_id } )
-								}
-								options={[
-									{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
-									...locations
-								]}
-								/>
-							</InputWrapper>
-						</div>
-					</>
+						<>
+							{intro}
+							<div className='woo-square-wizard__fields'>
+								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
+									<SelectControl
+									data-testid="business-location-field"
+									value={ sandbox_location_id }
+									onChange={ ( sandbox_location_id ) =>
+										setSquareSettingData( { sandbox_location_id } )
+									}
+									options={[
+										{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
+										...locations
+									]}
+									/>
+								</InputWrapper>
+							</div>
+						</>
 					) )
 				}
 			</Section>

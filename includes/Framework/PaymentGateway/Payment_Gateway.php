@@ -254,6 +254,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string whether apple pay domain registration was attempted. */
 	protected $apple_pay_domain_registration_attempted;
 
+	/** @var string Gift Card settings. */
+	protected $gift_card_settings;
+
 	/**
 	 * Initialize the gateway
 	 *
