@@ -24,7 +24,7 @@ import {
 } from '../../components';
 import { useSquareSettings } from '../../settings/hooks';
 
-export const ConfigureSync = ( { indent = 0 } ) => {
+export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 	const {
 		settings,
 		squareSettingsLoaded,
@@ -200,7 +200,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									description={ __( 'Product images that have been updated in Square will also be updated within WooCommerce during a sync.', 'woocommerce-square' ) }
 								>
 									<SquareCheckboxControl
-										data-testid="hide-images-field"
+										data-testid="override-images-field"
 										checked={ 'yes' === override_product_images }
 										onChange={ ( override_product_images ) => setSquareSettingData( { override_product_images: override_product_images ? 'yes' : 'no' } ) }
 										label={ __( 'Enable to override Product images from Square', 'woocommerce-square' ) }
@@ -245,13 +245,16 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 									className='import-products-wrapper'
 								>
 									<Button
+										data-testid="import-products-button"
 										variant='secondary'
 										className='import-square-products-react'
 										onClick={ openModal }
 										style={ { display: importDoneNotice ? 'none' : 'block' } }
+										disabled={ isDirty }
 									>
 										{ __( 'Import all Products from Square', 'woocommerce-square' ) }
 									</Button>
+									{ isDirty && <p>{ __( 'You have made changes to the settings. Please save the changes to enable the button.', 'woocommerce-square' ) }</p> }
 									<div className='import-notice notice notice-info is-dismissible' style={ { display: importDoneNotice ? 'block' : 'none', padding: '10px' } }>
 										{ importDoneNotice }
 									</div>
@@ -271,6 +274,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 													}
 												</p>
 												<CheckboxControl
+													data-testid="update-during-import-field"
 													checked={ updateImport }
 													onChange={ ( updateImport ) => setUpdateImport( updateImport ) }
 													label={ __( 'Update existing products during import.', 'woocommerce-square' ) }
@@ -281,6 +285,7 @@ export const ConfigureSync = ( { indent = 0 } ) => {
 													{__( 'Cancel', 'woocommerce-square' )}
 												</Button>
 												<Button
+													data-testid="import-products-button-confirm"
 													variant="primary"
 													onClick={ () => {
 														setIsImporting( true );

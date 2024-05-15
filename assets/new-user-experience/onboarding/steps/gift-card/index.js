@@ -44,7 +44,7 @@ export const GiftCardSetup = () => {
 						variant="boxed"
 					>
 						<ToggleControl
-							data-testid="gift-card-gateway-toggle-field"
+							className="gift-card-gateway-toggle-field"
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>

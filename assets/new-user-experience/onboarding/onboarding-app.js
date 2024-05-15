@@ -2,6 +2,7 @@
  * External dependencies.
  */
 import { useEffect, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies.
@@ -42,12 +43,10 @@ export const OnboardingApp = () => {
 
 	const { step, backStep } = stepData;
 
-	const useSquareSettingsData = useSquareSettings( true );
-
 	const {
 		settings,
-		squareSettingsLoaded
-	} = useSquareSettingsData;
+		squareSettingsLoaded,
+	} = useSquareSettings( true );
 
 	// Set info in local storage.
 	useEffect( () => {
@@ -132,7 +131,19 @@ export const OnboardingApp = () => {
 			<div className={'woo-square-onboarding__cover ' + step}>
 				{ step === 'connect-square' && <ConnectSetup /> }
 				{ step === 'business-location' && (
-					<BusinessLocation />
+					<>
+						<BusinessLocation />
+						{
+							settings.locations.length ? (
+								<SquareSettingsSaveButton
+									afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
+									afterSaveCallback={ () => {
+										setStep( 'payment-methods' );
+									} }
+								/>
+							) : null
+						}
+					</>
 				) }
 				{ step === 'payment-methods' && <PaymentMethods /> }
 				{ step === 'payment-complete' && <PaymentComplete /> }

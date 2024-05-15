@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import {
 	doesProductExist,
 	deleteAllProducts,
+	saveSquareSettings,
 } from '../utils/helper';
 import {
 	deleteAllCatalogItems,
@@ -28,9 +29,8 @@ test.beforeAll( 'Setup', async () => {
 	await clearSync( page );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
-	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'Square' } );
-	await page.locator( '.woocommerce-save-button' ).click();
-	await expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
+	await saveSquareSettings( page );
 
 	await browser.close();
 } );
@@ -71,9 +71,10 @@ test( 'Handle missing products', async ( { page } ) => {
 	await deleteAllCatalogItems();
 	await clearSync( page );
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
-	await page.locator( '#wc_square_hide_missing_products' ).check();
-	await page.locator( '.woocommerce-save-button' ).click();
-	await expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
+	await page.getByTestId( 'hide-missing-products-field' ).check();
+	await saveSquareSettings( page );
+
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 	await page.locator( '#wc-square-sync' ).click();
 	await page.locator( '#btn-ok' ).click();

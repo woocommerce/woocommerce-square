@@ -155,6 +155,10 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 * @return WP_REST_Response
 	 */
 	public function get_settings() {
+		// Need to reload the new settings as the settings are cached
+		// and won't refresh until the next page load.
+		wc_square()->get_settings_handler()->init_settings();
+
 		$square_settings   = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 		$filtered_settings = array_intersect_key( $square_settings, array_flip( $this->allowed_params ) );
 
@@ -205,11 +209,15 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ) ?? '' );
 		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ) ?? '' );
 
+		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
+
+		// Need to reload the new settings as the settings are cached
+		// and won't refresh until the next page load.
+		wc_square()->get_settings_handler()->init_settings();
+
 		if ( 'yes' === $is_sandbox && ! empty( $sandbox_token ) ) {
 			wc_square()->get_settings_handler()->update_access_token( $sandbox_token );
 		}
-
-		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
 		wp_send_json_success();
 	}

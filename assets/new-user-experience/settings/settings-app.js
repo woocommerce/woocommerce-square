@@ -2,7 +2,7 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { useEffect } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import parse from 'html-react-parser';
 import {
 	SelectControl,
@@ -37,6 +37,9 @@ export const SettingsApp = () => {
 		saveSquareSettings,
 	} = useSquareSettings( true );
 
+	const [ initialState, setInitialState ] = useState( false );
+	const [ isFormDirty, setIsFormDirty ] = useState( false );
+
 	const {
 		enable_sandbox = 'no',
 		sandbox_location_id = '',
@@ -45,6 +48,35 @@ export const SettingsApp = () => {
 		disconnection_url = '',
 		locations = [],
 	} = settings;
+
+	// Set the initial state.
+	useEffect( () => {
+		if ( ! squareSettingsLoaded ) {
+			return;
+		}
+
+		setInitialState( settings );
+	}, [ squareSettingsLoaded ] );
+
+	// We set the state for `isFormDirty` here.
+	useEffect( () => {
+		if ( false === initialState ) {
+			return;
+		}
+
+		setIsFormDirty( ! Object.keys( initialState ).every( key => initialState[ key ] === settings[ key ] ) );
+	}, [ settings ] );
+
+	// We disable the "Import products" button when the form is dirty
+	// and re-enable it when we form is submitted / saved.
+	useEffect( () => {
+		if ( null !== isSquareSettingsSaving ) {
+			return;
+		}
+
+		setInitialState( settings );
+		setIsFormDirty( false );
+	}, [ isSquareSettingsSaving ] );
 
 	const initiateConnection = async () => {
 		let response = await saveSquareSettings();
@@ -81,6 +113,7 @@ export const SettingsApp = () => {
 					className="square-settings__connection"
 				>
 					<Button
+						data-testid="connect-to-square-button"
 						variant='primary'
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
@@ -111,6 +144,7 @@ export const SettingsApp = () => {
 					label={ __( 'Business location', 'woocommerce-square' ) }
 				>
 					<SelectControl
+						data-testid="business-location-field"
 						value={ sandbox_location_id }
 						onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id } ) }
 						options={ [
@@ -121,11 +155,14 @@ export const SettingsApp = () => {
 				</InputWrapper>
 			</Section> ) }
 
-			{ is_connected && <ConfigureSync indent={ 2 } /> }
+			{ is_connected && <ConfigureSync indent={ 2 } isDirty={ isFormDirty } /> }
 
 			<AdvancedSettings />
 
-			<SquareSettingsSaveButton label={ __( 'Save changes', 'woocommerce-square' ) } />
+			<SquareSettingsSaveButton
+				label={ __( 'Save changes', 'woocommerce-square' ) }
+				afterSaveLabel={ __( 'Changes Saved', 'woocommerce-square' ) }
+			/>
 		</>
 	)
 };

@@ -129,6 +129,7 @@ export const CreditCardSetup = () => {
 
 					<InputWrapper label={ __( 'Accepted Card Logos', 'woocommerce-square' ) } >
 						<MultiSelectControl
+							className="credit-card-gateway-card-logos-field"
 							id="credit-card-gateway-card-logos-field"
 							label=""
 							__experimentalShowHowTo={ false }
