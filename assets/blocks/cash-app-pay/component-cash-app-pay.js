@@ -70,6 +70,8 @@ export const ComponentCashAppPay = (props) => {
 		emitResponse.responseTypes.ERROR,
 		onPaymentSetup,
 		paymentNonce,
+		gatewayIdDasherized,
+		generalError,
 	]);
 
 	// Initialize the Square Cash App Pay Button.
@@ -151,7 +153,15 @@ export const ComponentCashAppPay = (props) => {
 					window.wcSquareCashAppPay = null;
 				}
 			})();
-	}, [cartTotal.value, currency.code]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [
+		cartTotal.value,
+		currency.code,
+		applicationId,
+		locationId,
+		generalError,
+		referenceId,
+	]);
 
 	// Disable the place order button when Cash App Pay is active. TODO: find a better way to do this.
 	useEffect(() => {

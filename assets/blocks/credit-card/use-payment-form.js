@@ -108,7 +108,7 @@ export const usePaymentForm = (
 
 			return data;
 		},
-		[cardType, shouldSavePayment, token]
+		[cardType, shouldSavePayment, token] // eslint-disable-line react-hooks/exhaustive-deps
 	);
 
 	/**
