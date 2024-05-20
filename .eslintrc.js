@@ -17,9 +17,15 @@ module.exports = {
 			'@wordpress/i18n',
 			'@wordpress/element',
 		],
+		'import/resolver': {
+			node: {
+				extensions: [ '.js', '.jsx', '.ts', '.tsx' ],
+			},
+		},
 	},
 	rules: {
 		'no-console': 'off',
+		'react/react-in-jsx-scope': 'off',
 	},
 	overrides: [
 		{
