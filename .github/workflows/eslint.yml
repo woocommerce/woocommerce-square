@@ -1,10 +1,6 @@
 name: ESLint
 
-on:
-  push:
-    branches:
-      - trunk
-  pull_request:
+on: pull_request
 
 jobs:
   eslint:
@@ -19,9 +15,6 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-    - name: Install Node dependencies
-      run: npm ci
-
     - name: Get updated JS files
       id: changed-files
       uses: tj-actions/changed-files@v44
@@ -30,10 +23,10 @@ jobs:
             **/*.js
             **/*.json
 
+    - name: Install Node dependencies
+      if: steps.changed-files.outputs.any_changed == 'true'
+      run: npm ci
+
     - name: Run ESLint
-      run: |
-        if [[ "${{ steps.changed-files.outputs.any_changed }}" == 'true' && "${{ github.event_name }}" == "pull_request" ]]; then
-          npx wp-scripts lint-js ${{ steps.changed-files.outputs.all_changed_files }}
-        elif [[ "${{ github.event_name }}" == "push" ]]; then
-          npm run lint:js
-        fi
+      if: steps.changed-files.outputs.any_changed == 'true'
+      run: npx wp-scripts lint-js ${{ steps.changed-files.outputs.all_changed_files }}
