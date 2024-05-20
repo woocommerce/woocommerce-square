@@ -4,6 +4,9 @@
 import { getSetting } from '@woocommerce/settings';
 import { dispatch } from '@wordpress/data';
 
+/**
+ * Internal dependencies
+ */
 const { PAYMENT_STORE_KEY } = window.wc.wcBlocksData;
 import { PAYMENT_METHOD_ID } from './constants';
 let cachedSquareCashAppData = null;
@@ -11,7 +14,7 @@ let cachedSquareCashAppData = null;
 /**
  * Square settings that comes from the server
  *
- * @return {SquareServerData} Square server data.
+ * @return {Object} Square server data.
  */
 export const getSquareCashAppPayServerData = () => {
 	if (cachedSquareCashAppData !== null) {
@@ -105,12 +108,15 @@ export const createPaymentRequest = async (payments) => {
 
 /**
  * Set continuation session to select the cash app payment method after the redirect back from the cash app.
+ *
+ * @param {boolean} clear Clear the continuation session.
+ * @return {Promise<Object>} Response from the server.
  */
 export const setContinuationSession = (clear = false) => {
 	return new Promise((resolve, reject) => {
 		const data = {
 			security: getSquareCashAppPayServerData().continuationSessionNonce,
-			clear: clear,
+			clear,
 		};
 
 		jQuery.post(
