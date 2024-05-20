@@ -55,7 +55,10 @@ const ButtonComponent = () => {
 
 				if (!applePayBtn) {
 					applePay = await payments.applePay(paymentRequest);
-					await applePay.attach(applePaybuttonRef.current);
+					/*
+					 * Apple Pay doesn't need to be attached.
+					 * https://developer.squareup.com/docs/web-payments/apple-pay#:~:text=Note%3A%20You%20do%20not%20need%20to%20%60attach%60%20applePay.
+					 */
 					setApplePayBtn(applePay);
 				}
 			} catch (e) {
