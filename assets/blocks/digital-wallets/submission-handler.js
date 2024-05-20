@@ -99,8 +99,8 @@ export const buildVerificationDetails = (billing) => {
 /**
  * Verifies a buyer.
  *
- * @param {Object} payments Square payments object.
- * @param {string} token Square payment token.
+ * @param {Object} payments            Square payments object.
+ * @param {string} token               Square payment token.
  * @param {Object} verificationDetails Buyer verification data object.
  *
  * @return {Object} Verification details
@@ -190,9 +190,9 @@ const recalculateTotals = async (data) => {
 /**
  * Initiates checkout.
  *
- * @param {Object} payments Square payments object.
+ * @param {Object} payments            Square payments object.
  * @param {Object} verificationDetails Verification details object.
- * @param {Object} button Instance of the GPay|Apple Pay button that is clicked.
+ * @param {Object} button              Instance of the GPay|Apple Pay button that is clicked.
  * @return {Object} Response object.
  */
 export const initiateCheckout = async (

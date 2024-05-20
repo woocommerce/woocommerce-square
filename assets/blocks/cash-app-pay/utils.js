@@ -4,7 +4,6 @@
 import { getSetting } from '@woocommerce/settings';
 import { dispatch } from '@wordpress/data';
 
-
 const { PAYMENT_STORE_KEY } = window.wc.wcBlocksData;
 import { PAYMENT_METHOD_ID } from './constants';
 let cachedSquareCashAppData = null;

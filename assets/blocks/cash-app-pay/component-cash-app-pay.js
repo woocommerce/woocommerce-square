@@ -87,7 +87,7 @@ export const ComponentCashAppPay = (props) => {
 			return;
 		}
 
-		async function setupIntegration(){
+		async function setupIntegration() {
 			setIsLoaded(false);
 			try {
 				const paymentRequest = await createPaymentRequest(payments);
@@ -98,7 +98,7 @@ export const ComponentCashAppPay = (props) => {
 
 				const cashAppPay = await payments.cashAppPay(paymentRequest, {
 					redirectURL: window.location.href,
-					referenceId: referenceId,
+					referenceId,
 				});
 				await cashAppPay.attach(`#${buttonId}`, buttonStyles);
 
