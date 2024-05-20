@@ -125,6 +125,7 @@ const ButtonComponent = () => {
 					tabIndex={0}
 					role="button"
 					ref={applePaybuttonRef}
+					id="apple-pay-button"
 					onClick={() => {
 						setClickedButton(applePayBtn);
 						handleSubmission();
