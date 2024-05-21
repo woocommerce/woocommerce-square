@@ -21,10 +21,6 @@ export const BusinessLocation = () => {
 	} = useSquareSettings();
 
 	const {
-		setStep,
-	} = useSteps();
-
-	const {
 		sandbox_location_id,
 		locations
 	} = settings;
@@ -35,27 +31,24 @@ export const BusinessLocation = () => {
 
 	// Check if no locations found.
 	const locationCount = locations.length;
-	const buttonText = 1 === locationCount ? __( 'Confirm', 'woocommerce-square' ) : __( 'Next', 'woocommerce-square' );
 
 	const noLocation = (
 		<>
 			<Section>
 				<SectionTitle title={ __( 'Your Square account is missing a Business Location', 'woocommerce-square' ) } />
 				<SectionDescription>
-					<p>
-						{
-							sprintf(
-								__( 'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ),
-								'<a href="https://squareup.com/dashboard/locations" target="_blank">',
-								'</a>'
-							)
-						}
-					</p>
+					<p dangerouslySetInnerHTML={ {
+						__html: sprintf(
+							__( 'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ),
+							'<a href="https://squareup.com/dashboard/locations/" target="_blank">',
+							'</a>'
+						)
+					} } />
 				</SectionDescription>
 			</Section>
 			<Button
 				variant="primary"
-				onClick={ () => window.open( 'https://squareup.com/', '_blank' ) }
+				onClick={ () => window.open( 'https://squareup.com/dashboard/locations/', '_blank' ) }
 			>
 				{ __( 'Create a Business Location', 'woocommerce-square' ) }
 			</Button>
