@@ -9,6 +9,7 @@ import {
 	createProduct,
 	placeOrder,
 	deleteAllPaymentMethods,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -28,10 +29,12 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await page.goto(
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
+
 	await page
-		.locator( '#woocommerce_square_credit_card_tokenization' )
+		.getByTestId( 'credit-card-tokenization-field' )
 		.check();
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	await savePaymentGatewaySettings( page );
 	await browser.close();
 } );
 

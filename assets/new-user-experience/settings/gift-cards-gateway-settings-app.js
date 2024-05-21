@@ -12,46 +12,24 @@ import { store as noticesStore } from '@wordpress/notices';
  */
 import { GiftCardSetup } from '../../new-user-experience/onboarding/steps';
 import { usePaymentGatewaySettings } from '../onboarding/hooks';
-import { Loader } from '../components';
+import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const GiftCardsSettingsApp = () => {
-	const usePaymentGatewaySettingsData = usePaymentGatewaySettings( true );
 	const {
 		giftCardsGatewaySettingsLoaded,
 		saveGiftCardsSettings,
-		giftCardsGatewaySettings
-	} = usePaymentGatewaySettingsData;
-	const [ saveInProgress, setSaveInProgress ] = useState( false );
-	const { createSuccessNotice } = useDispatch( noticesStore );
-
+	} = usePaymentGatewaySettings( true );
 
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
-	const saveSettings = async () => {
-		setSaveInProgress( true );
-		const response = await saveGiftCardsSettings( giftCardsGatewaySettings );
-
-		if ( response.success ) {
-			createSuccessNotice( __( 'Settings saved!', 'woocommerce-square' ), {
-				type: 'snackbar',
-			} )
-		}
-
-		setSaveInProgress( false );
-	};
-
 	return (
 		<>
-			<GiftCardSetup usePaymentGatewaySettings={usePaymentGatewaySettingsData} />
-			<Button
-				variant='primary'
-				onClick={ () => saveSettings() }
-				isBusy={ saveInProgress }
-			>
-				{ __( 'Save Changes', 'woocommerce-square' ) }
-			</Button>
+			<GiftCardSetup />
+			<PaymentGatewaySettingsSaveButton onClick={ () => {
+				saveGiftCardsSettings();
+			} } />
 		</>
 	)
 };

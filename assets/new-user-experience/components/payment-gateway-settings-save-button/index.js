@@ -18,6 +18,10 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			isCashAppGatewaySettingsSaving,
 		} = usePaymentGatewaySettings();
 
+		const isAtleastOneSaving = ( null === isPaymentGatewaySettingsSaving )
+			|| ( null === isGiftCardsGatewaySettingsSaving )
+			|| ( null === isCashAppGatewaySettingsSaving );
+
 		const isSavingState = [
 			isPaymentGatewaySettingsSaving,
 			isGiftCardsGatewaySettingsSaving,
@@ -26,14 +30,15 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 
 		return (
 			<WrappedComponent
+				data-testid="payment-gateway-settings-save-button"
 				{ ...props }
-				{ ...( null === isPaymentGatewaySettingsSaving && { icon: check } ) }
+				{ ...( isAtleastOneSaving && { icon: check } ) }
 				isBusy={ isSavingState }
 				disabled={ isSavingState }
 				variant="primary"
 				onClick={ () => onClick() }
 			>
-				{ null === isPaymentGatewaySettingsSaving ? afterSaveLabel : label }
+				{ isAtleastOneSaving ? afterSaveLabel : label }
 			</WrappedComponent>
 		)
 	};
