@@ -140,7 +140,7 @@ abstract class Background_Job_Handler {
 		// add a random artificial delay to prevent a race condition if 2 or more processes are trying to
 		// process the job queue at the very same moment in time and neither of them have yet set the lock
 		// before the others are calling this method
-		usleep( rand( 100000, 300000 ) );
+		usleep( wp_rand( 100000, 300000 ) );
 
 		return (bool) get_transient( "{$this->identifier}_process_lock" );
 	}
@@ -420,15 +420,15 @@ abstract class Background_Job_Handler {
 		$orderby = sanitize_key( $args['orderby'] );
 
 		// put it all together now
-		$query = $wpdb->prepare( "
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Data is already sanitized to direct use.
+		$results = $wpdb->get_col( $wpdb->prepare( "
 			SELECT option_value
 			FROM {$wpdb->options}
 			WHERE option_name LIKE %s
 			{$status_query}
 			ORDER BY {$orderby} {$order}
-		", $replacements );
-
-		$results = $wpdb->get_col( $query );
+		", $replacements ) );
+		// phpcs:enable
 
 		if ( empty( $results ) ) {
 			return null;
@@ -444,7 +444,7 @@ abstract class Background_Job_Handler {
 				$job->{$key} = $value;
 			}
 
-			/** This filter is documented above */
+			/* This filter is documented above. */
 			$job = apply_filters( "{$this->identifier}_returned_job", $job );
 
 			$jobs[] = $job;
