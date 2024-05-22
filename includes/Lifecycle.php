@@ -331,6 +331,9 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 
 		// Skip redirect existing users to the setup wizard on upgrade.
 		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
+
+		// Mark the onboarding wizard as visited for existing users.
+		add_option( 'wc_square_onboarding_wizard_visited', true, '', 'no' );
 	}
 
 	/**
