@@ -1648,7 +1648,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$order->customer_id = '';
 
 		// logged in customer?
-		if ( 0 !== $order->get_user_id() && false !== ( $customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) ) ) ) {
+		$customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) );
+		if ( 0 !== $order->get_user_id() && false !== $customer_id ) {
 			$order->customer_id = $customer_id;
 		}
 

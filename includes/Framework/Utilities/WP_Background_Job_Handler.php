@@ -421,13 +421,16 @@ abstract class Background_Job_Handler {
 
 		// put it all together now
 		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Data is already sanitized to direct use.
-		$results = $wpdb->get_col( $wpdb->prepare( "
-			SELECT option_value
-			FROM {$wpdb->options}
-			WHERE option_name LIKE %s
-			{$status_query}
-			ORDER BY {$orderby} {$order}
-		", $replacements ) );
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_value
+				FROM {$wpdb->options}
+				WHERE option_name LIKE %s
+				{$status_query}
+				ORDER BY {$orderby} {$order}",
+				$replacements
+			)
+		);
 		// phpcs:enable
 
 		if ( empty( $results ) ) {

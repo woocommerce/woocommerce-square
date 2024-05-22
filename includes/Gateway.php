@@ -195,6 +195,7 @@ class Gateway extends Payment_Gateway_Direct {
 
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true );
 		}
 

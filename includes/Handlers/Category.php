@@ -216,19 +216,19 @@ class Category {
 	public static function get_category_id_by_square_id( $square_id ) {
 		global $wpdb;
 
-		return $wpdb->get_var( $wpdb->prepare(
-			"
-			SELECT t.term_id FROM {$wpdb->prefix}terms AS t
-			LEFT JOIN {$wpdb->prefix}term_taxonomy AS tt ON t.term_id = tt.term_id
-			LEFT JOIN {$wpdb->prefix}termmeta AS tm ON t.term_id = tm.term_id
-			WHERE tt.taxonomy = 'product_cat'
-			AND tm.meta_key = %s
-			AND tm.meta_value = %s
-			",
-			self::SQUARE_ID_META_KEY,
-			$square_id
-		) );
+		return $wpdb->get_var(
+			$wpdb->prepare(
+				"
+				SELECT t.term_id FROM {$wpdb->prefix}terms AS t
+				LEFT JOIN {$wpdb->prefix}term_taxonomy AS tt ON t.term_id = tt.term_id
+				LEFT JOIN {$wpdb->prefix}termmeta AS tm ON t.term_id = tm.term_id
+				WHERE tt.taxonomy = 'product_cat'
+				AND tm.meta_key = %s
+				AND tm.meta_value = %s
+				",
+				self::SQUARE_ID_META_KEY,
+				$square_id
+			)
+		);
 	}
-
-
 }

@@ -170,7 +170,7 @@ class Connection {
 		// remove the refresh fail flag if previously set
 		delete_option( 'wc_square_refresh_failed' );
 
-        $nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
 		// check the user role & nonce
 		if ( ! current_user_can( 'manage_woocommerce' ) || ! wp_verify_nonce( $nonce, 'wc_square_disconnect' ) ) {
