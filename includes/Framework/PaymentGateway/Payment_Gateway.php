@@ -3921,23 +3921,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Safely get and trim data from $_REQUEST
-	 *
-	 * @since 3.0.0
-	 * @param string $key array key to get from $_REQUEST array
-	 * @return string value from $_REQUEST or blank string if $_REQUEST[ $key ] is not set
-	 */
-	protected function get_request( $key ) {
-
-		if ( isset( $_REQUEST[ $key ] ) ) {
-			return trim( $_REQUEST[ $key ] );
-		}
-
-		return '';
-	}
-
-
-	/**
 	 * Add API request logging for the gateway. The main plugin class typically handles this, but the payment
 	 * gateway plugin class no-ops the method so each gateway's requests can be logged individually (e.g. credit card)
 	 * and make use of the payment gateway-specific add_debug_message() method
