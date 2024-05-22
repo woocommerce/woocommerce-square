@@ -150,7 +150,7 @@ class Payment_Gateway_Apple_Pay_AJAX {
 			// if a contact is passed, set the customer address data
 			if ( isset( $_REQUEST['contact'] ) && is_array( $_REQUEST['contact'] ) ) {
 
-				$contact = wp_parse_args( wc_clean( $_REQUEST['contact'] ), array(
+				$contact = wp_parse_args( wc_clean( wp_unslash( $_REQUEST['contact'] ) ), array(
 					'administrativeArea' => null,
 					'countryCode'        => null,
 					'locality'           => null,
