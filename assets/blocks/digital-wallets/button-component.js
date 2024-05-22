@@ -55,6 +55,20 @@ const ButtonComponent = () => {
 
 				if (!applePayBtn) {
 					applePay = await payments.applePay(paymentRequest);
+
+					const applePayButtonContainer = document.getElementById('apple-pay-button');
+					const color = getSquareServerData().applePayColor || 'black';
+					const type = getSquareServerData().applePayButtonType || 'buy';
+
+					// TODO: We need to get the value of this text from the server. It isn't returned in getSquareServerData right now so this will always use `buy` as the text.
+					applePayButtonContainer.querySelector('.text').innerText = `${type} with`;
+					applePayButtonContainer.classList.add('wc-square-wallet-button-with-text');
+					applePayButtonContainer.style.cssText += `-apple-pay-button-type: ${type};`;
+
+					applePayButtonContainer.classList.add(`wc-square-wallet-button-${color}`);
+					applePayButtonContainer.style.cssText += `-apple-pay-button-style: ${color};`;
+					applePayButtonContainer.style.display = 'block';
+
 					/*
 					 * Apple Pay doesn't need to be attached.
 					 * https://developer.squareup.com/docs/web-payments/apple-pay#:~:text=Note%3A%20You%20do%20not%20need%20to%20%60attach%60%20applePay.
@@ -126,6 +140,7 @@ const ButtonComponent = () => {
 					role="button"
 					ref={applePaybuttonRef}
 					id="apple-pay-button"
+					className="apple-pay-button wc-square-wallet-buttons"
 					onClick={() => {
 						setClickedButton(applePayBtn);
 						handleSubmission();
@@ -134,7 +149,10 @@ const ButtonComponent = () => {
 						setClickedButton(applePayBtn);
 						handleSubmission();
 					}}
-				></div>
+				>
+					<span class="text"></span>
+					<span class="logo"></span>
+				</div>
 			)}
 		</>
 	);
