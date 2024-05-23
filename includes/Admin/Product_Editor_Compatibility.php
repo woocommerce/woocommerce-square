@@ -61,7 +61,7 @@ class Product_Editor_Compatibility {
 	}
 
 	/**
-	 * Adds pre-orders meta to the product response.
+	 * Adds Square product meta to the product response.
 	 *
 	 * @param \WP_REST_Response $response The response object.
 	 * @param \WC_Product       $product  The product object.
@@ -174,8 +174,15 @@ class Product_Editor_Compatibility {
 			'product-track-stock',
 		);
 
+		/* Square classic product editor modifies a few core product meta fields functionaity.
+		 * For example, conditionally disabling, hiding and even modifying the core product meta fields.
+		 *
+		 * This is not possible with the current block editor implementation. However, the new product editor
+		 * allows to replace core blocks with custom implementation. This is not the best way to do it,
+		 * but it's a workaround.
+		 */
 		if ( in_array( $block->get_id(), $blocks_to_remove, true ) ) {
-			$block->remove(); // This is a workaround and is not recommended by Woo.
+			$block->remove();
 		}
 	}
 }
