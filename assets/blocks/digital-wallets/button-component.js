@@ -150,8 +150,8 @@ const ButtonComponent = () => {
 						handleSubmission();
 					}}
 				>
-					<span class="text"></span>
-					<span class="logo"></span>
+					<span className="text"></span>
+					<span className="logo"></span>
 				</div>
 			)}
 		</>
