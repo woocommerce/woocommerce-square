@@ -92,7 +92,6 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
 		await new Promise( ( resolve ) => {
 			const inventoryIntervalId = setInterval( async () => {
 				inventory = await retrieveInventoryCount( variations[ 0 ].id );
-				console.log( inventory );
 				if ( inventory.counts ) {
 					clearInterval( inventoryIntervalId );
 					resolve();
@@ -103,4 +102,58 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
 
 	expect( inventory ).toHaveProperty( 'counts' );
 	expect( inventory ).toHaveProperty( 'counts[0].quantity', '62' );
+} );
+
+test( 'Update inventory from Woo to Square', async ( { page } ) => {
+	await page.goto( '/wp-admin/edit.php?post_type=product' );
+	await page
+		.locator( 'a.row-title' )
+		.filter( { hasText: 'OnePlus 8' } )
+		.click();
+
+	await page.locator( '#woocommerce-product-tab__inventory' ).click();
+	await expect( await page.locator( '[name="stock_quantity"]' ) ).toBeDisabled();
+
+	await page
+		.locator( 'button.components-button' )
+		.filter( { hasText: 'Fetch stock from Square' } )
+		.click();
+
+	await expect( await page.locator( '[name="stock_quantity"]' ) ).toBeEnabled();
+	await page.locator( '[name="stock_quantity"]' ).fill( '84' );
+
+	await page
+		.locator( '.woocommerce-button-with-dropdown-menu .components-button' )
+		.filter( { hasText: 'Update' } )
+		.click();
+
+	// await expect( await page.getByText( 'Product updated.' ) ).toBeVisible();
+
+	const result = await new Promise( ( resolve ) => {
+		let intervalId = setInterval( async () => {
+			const __result = await listCatalog();
+			if ( __result.objects ) {
+				clearInterval( intervalId );
+				resolve( __result );
+			}
+		}, 3000 );
+	} );
+
+	const { variations } = extractCatalogInfo( result.objects[0] );
+	let inventory = await retrieveInventoryCount( variations[ 0 ].id );
+
+	if ( ! inventory.counts ) {
+		await new Promise( ( resolve ) => {
+			const inventoryIntervalId = setInterval( async () => {
+				inventory = await retrieveInventoryCount( variations[ 0 ].id );
+				if ( inventory.counts ) {
+					clearInterval( inventoryIntervalId );
+					resolve();
+				}
+			}, 4000 );
+		} );
+	}
+
+	expect( inventory ).toHaveProperty( 'counts' );
+	expect( inventory ).toHaveProperty( 'counts[0].quantity', '84' );
 } );
