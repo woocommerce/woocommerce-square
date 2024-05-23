@@ -37,6 +37,7 @@ export function Edit({ attributes, context: { postType } } ) {
 		}
 
 		if ( 'variable' !== product_type ) {
+			setSkuError( '' );
 			return;
 		}
 

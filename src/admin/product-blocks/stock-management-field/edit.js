@@ -41,7 +41,10 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 
 	return (
 		<>
-			<BaseControl label={ __( 'Stock management', 'woocommerce-square' ) }>
+			<BaseControl
+				label={ __( 'Stock management', 'woocommerce-square' ) }
+				className='wc-square-track-quantity'
+			>
 				<ToggleControl
 					label={ label }
 					disabled={ disabled || ( isSquareSynced && isInventorySyncEnabled && isSyncEnabled && sku.length ) }

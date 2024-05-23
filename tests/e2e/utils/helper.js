@@ -57,16 +57,49 @@ export async function visitCheckout( page, isBlock = true ) {
  * @param {Object} product Product object.
  * @param {Boolean} save Indicates if the product should be published.
  */
-export async function createProduct( page, product, save = true ) {
-	await page.goto( '/wp-admin/post-new.php?post_type=product' );
-	await page.locator( '#title' ).fill( product.name );
-	await page.locator( '#_regular_price' ).fill( product.regularPrice );
-	await page.locator( '.inventory_options' ).click();
-	await page.locator( '#_sku' ).fill( product.sku );
+export async function createProduct( page, product, save = true, newEditor = false ) {
+	if ( newEditor ) {
+		await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=advanced&section=features' );
+		await page.locator( '#woocommerce_feature_product_block_editor_enabled' ).check();
+		await page.locator( '.woocommerce-save-button' ).click();
+		await expect( await page.getByText( 'Your settings have been saved' ) ).toBeVisible();
 
-	if ( save ) {
-		await page.waitForTimeout( 2000 );
-		await page.locator( '#publish' ).click();
+		await page.goto( '/wp-admin/admin.php?page=wc-admin&path=%2Fadd-product' );
+
+		await page.locator( '#woocommerce-product-tab__general' ).click();
+
+		await page.locator( '[data-template-block-id="product-name"] input[name="name"]' ).fill( product.name );
+
+		await page.locator( '#woocommerce-product-tab__pricing' ).click();
+		await page.locator( 'input[name="regular_price"]' ).fill( product.regularPrice );
+
+		await page.locator( '#woocommerce-product-tab__inventory' ).click();
+		await page.locator( 'input[name="woocommerce-product-sku"]' ).fill( product.sku );
+
+		if ( save ) {
+			await page
+				.locator( '.woocommerce-product-header__actions .components-button' )
+				.filter( { hasText: 'Publish' } )
+				.click();
+
+			await page
+				.locator( '.woocommerce-product-publish-panel__header .components-button' )
+				.filter( { hasText: 'Publish' } )
+				.click();
+
+			await expect( await page.getByText( 'Product published.' ) ).toBeVisible();
+		}
+	} else {
+		await page.goto( '/wp-admin/post-new.php?post_type=product' );
+		await page.locator( '#title' ).fill( product.name );
+		await page.locator( '#_regular_price' ).fill( product.regularPrice );
+		await page.locator( '.inventory_options' ).click();
+		await page.locator( '#_sku' ).fill( product.sku );
+
+		if ( save ) {
+			await page.waitForTimeout( 2000 );
+			await page.locator( '#publish' ).click();
+		}
 	}
 }
 
