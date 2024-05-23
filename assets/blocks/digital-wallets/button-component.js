@@ -112,14 +112,14 @@ const ButtonComponent = () => {
 		return null;
 	}
 
-	const isGooglePayEnabled =
+	const isGooglePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('google');
-	const isApplePayEnabled =
+	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
 	return (
 		<>
-			{!isGooglePayEnabled && (
+			{!isGooglePayDisabled && (
 				<div
 					tabIndex={0}
 					role="button"
@@ -134,7 +134,7 @@ const ButtonComponent = () => {
 					}}
 				></div>
 			)}
-			{!isApplePayEnabled && (
+			{!isApplePayDisabled && (
 				<div
 					tabIndex={0}
 					role="button"
