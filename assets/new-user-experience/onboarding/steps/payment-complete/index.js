@@ -20,6 +20,7 @@ import {
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 import { usePaymentGatewaySettings } from '../../hooks';
 import { useSteps } from '../../hooks';
+import { recordEvent, queueRecordEvent, ONBOARDING_TRACK_EVENTS } from '../../../../tracks';
 
 export const PaymentComplete = () => {
 	const {
@@ -53,7 +54,15 @@ export const PaymentComplete = () => {
 								{ __( 'Ready to see your store in action? Explore the front-end of your online shop. It\'s a great way to experience what your customers will see and ensure everything looks perfect.', 'woocommerce-square' ) }
 							</p>
 						</SectionDescription>
-						<Button variant="primary" href='/' >
+						<Button
+							variant="primary"
+							onClick={ () => {
+								queueRecordEvent(
+									ONBOARDING_TRACK_EVENTS.VISIT_STOREFRONT_CLICKED
+								);
+								window.location.href = window.wcSettings.homeUrl;
+							} }
+						>
 							{ __( 'Visit my Storefront', 'woocommerce-square' ) }
 						</Button>
 					</div>
@@ -85,7 +94,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="configure-sync-button"
 									variant="secondary"
-									onClick={ () => setStep( 'sync-settings' ) }
+									onClick={ () => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_SYNC_SETTINGS_CLICKED
+										);
+										setStep( 'sync-settings' )
+									} }
 								>
 									{ __( 'Configure Sync Settings', 'woocommerce-square' ) }
 								</Button>
@@ -112,7 +126,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="credit-card-settings-button"
 												variant="secondary"
-												onClick={ () => setStep( 'credit-card' ) }
+												onClick={ () => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_CREDIT_CARD_SETTINGS_CLICKED
+													);
+													setStep( 'credit-card' )
+												} }
 											>
 												{ __( 'Credit Card Settings', 'woocommerce-square' ) }
 											</Button>
@@ -121,7 +140,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="digital-wallet-settings-button"
 												variant="secondary"
-												onClick={ () => setStep( 'digital-wallets' ) }
+												onClick={ () => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_DIGITAL_WALLET_SETTINGS_CLICKED
+													);
+													setStep( 'digital-wallets' )
+												} }
 											>
 												{ __( 'Digital Wallet Settings', 'woocommerce-square' ) }
 											</Button>
@@ -130,7 +154,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="cash-app-settings-button"
 												variant="secondary"
-												onClick={ () => setStep( 'cash-app' ) }
+												onClick={ () => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_CASH_APP_SETTINGS_CLICKED
+													);
+													setStep( 'cash-app' )
+												} }
 											>
 												{ __( 'Cash App Pay Settings', 'woocommerce-square' ) }
 											</Button>
@@ -139,7 +168,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="gift-card-settings-button"
 												variant="secondary"
-												onClick={ () => setStep( 'gift-card' ) }
+												onClick={ () => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_GIFT_CARD_SETTINGS_CLICKED
+													);
+													setStep( 'gift-card' )
+												} }
 											>
 												{ __( 'Gift Cards Settings', 'woocommerce-square' ) }
 											</Button>
@@ -162,7 +196,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="advanced-settings-button"
 									variant="link"
-									onClick={ () => setStep( 'advanced-settings' ) }
+									onClick={ () => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_ADVANCED_SETTINGS_CLICKED
+										);
+										setStep( 'advanced-settings' )
+									} }
 								>
 									{ __( 'Go to Advanced Settings', 'woocommerce-square' ) }
 								</Button>
@@ -172,7 +211,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="sandbox-settings-button"
 									variant="link"
-									onClick={ () => setStep( 'sandbox-settings' ) }
+									onClick={ () => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_SANDBOX_SETTINGS_CLICKED
+										);
+										setStep( 'sandbox-settings' )
+									} }
 								>
 									{ __( 'Go to Sandbox Settings', 'woocommerce-square' ) }
 								</Button>

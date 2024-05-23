@@ -270,6 +270,14 @@ class Admin {
 				array(),
 				$asset['version'],
 			);
+
+			wp_localize_script(
+				'woocommerce-square-onboarding-js',
+				'wcSquareOnboarding',
+				array(
+					'plugin_version' => WC_SQUARE_PLUGIN_VERSION,
+				)
+			);
 		}
 
 		wp_enqueue_style( 'wp-components' );

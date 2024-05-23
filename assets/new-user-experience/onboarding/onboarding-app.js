@@ -20,8 +20,8 @@ import {
 	PaymentComplete,
 } from './steps';
 import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
-
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
+import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../tracks';
 
 export const OnboardingApp = () => {
 	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
@@ -30,6 +30,7 @@ export const OnboardingApp = () => {
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded,
+		paymentGatewaySettings,
 		savePaymentGatewaySettings,
 		saveGiftCardsSettings,
 		saveCashAppSettings,
@@ -47,6 +48,18 @@ export const OnboardingApp = () => {
 		settings,
 		squareSettingsLoaded,
 	} = useSquareSettings( true );
+
+	const {
+		system_of_record,
+		enable_inventory_sync,
+		override_product_images,
+		hide_missing_products,
+		sync_interval,
+		enable_customer_decline_messages,
+		debug_mode,
+		debug_logging_enabled,
+		enable_sandbox,
+	} = settings;
 
 	// Set info in local storage.
 	useEffect( () => {
@@ -138,6 +151,12 @@ export const OnboardingApp = () => {
 								<SquareSettingsSaveButton
 									afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
 									afterSaveCallback={ () => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.SAVE_BUSINESS_LOCATION,
+											{
+												number_of_locations: settings.locations.length
+											}
+										);
 										setStep( 'payment-methods' );
 									} }
 								/>
@@ -164,6 +183,12 @@ export const OnboardingApp = () => {
 						<PaymentGatewaySettingsSaveButton data-testid="digital-wallets-settings-save-button" onClick={ () => {
 							( async () => {
 								await savePaymentGatewaySettings();
+								recordEvent(
+									ONBOARDING_TRACK_EVENTS.SAVE_DIGITAL_WALLET_SETTINGS,
+									{
+										digital_wallets_hide_button_options: paymentGatewaySettings.digital_wallets_hide_button_options
+									}
+								);
 								setStep( 'payment-complete' );
 							} )()
 						} } />
@@ -195,6 +220,34 @@ export const OnboardingApp = () => {
 					<>
 						<ConfigureSync />
 						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
+							let trackingProperties = {};
+
+							if ( 'square' === system_of_record ) {
+								trackingProperties = {
+									system_of_record,
+									enable_inventory_sync,
+									override_product_images,
+									hide_missing_products,
+									sync_interval,
+								}
+							} else if ( 'woocommerce' === system_of_record ) {
+								trackingProperties = {
+									system_of_record,
+									enable_inventory_sync,
+									sync_interval,
+								}
+							} else {
+								trackingProperties = {
+									system_of_record,
+								}
+							}
+
+							recordEvent(
+								ONBOARDING_TRACK_EVENTS.SAVE_SYNC_SETTINGS,
+								{
+									...trackingProperties
+								}
+							);
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -203,6 +256,14 @@ export const OnboardingApp = () => {
 					<>
 						<AdvancedSettings />
 						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
+							recordEvent(
+								ONBOARDING_TRACK_EVENTS.SAVE_ADVANCED_SETTINGS,
+								{
+									enable_customer_decline_messages,
+									debug_mode,
+									debug_logging_enabled,
+								}
+							);
 							setStep( 'payment-complete' );
 						} } />
 					</>
@@ -211,6 +272,12 @@ export const OnboardingApp = () => {
 					<>
 						<SandboxSettings />
 						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
+							recordEvent(
+								ONBOARDING_TRACK_EVENTS.SAVE_SANDBOX_SETTINGS,
+								{
+									enable_sandbox
+								}
+							);
 							setStep( 'payment-complete' );
 						} } />
 					</>
