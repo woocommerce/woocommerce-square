@@ -599,6 +599,27 @@ abstract class Base {
 	abstract protected function get_plugin();
 
 	/**
+	 * Set the Content-Type request header
+	 *
+	 * @since x.x.x
+	 * @param string $content_type
+	 */
+	protected function set_request_content_type_header( $content_type ) {
+		$this->request_headers['content-type'] = $content_type;
+	}
+
+
+	/**
+	 * Set the Accept request header
+	 *
+	 * @since x.x.x
+	 * @param string $type the request accept type
+	 */
+	protected function set_request_accept_header( $type ) {
+		$this->request_headers['accept'] = $type;
+	}
+
+	/**
 	 * Set the response handler class name. This class will be instantiated
 	 * to parse the response for the request.
 	 *
