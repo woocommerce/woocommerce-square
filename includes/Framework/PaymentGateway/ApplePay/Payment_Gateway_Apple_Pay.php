@@ -231,12 +231,12 @@ class Payment_Gateway_Apple_Pay {
 		}
 
 		// no subscription products
-		if ( $this->get_plugin()->is_subscriptions_active() && \WC_Subscriptions_Product::is_subscription( $product ) ) {
+		if ( $this->get_plugin()->is_subscriptions_active() && \WC_Subscriptions_Product::is_subscription( $product ) ) { // @phpstan-ignore-line
 			throw new \Exception( __( 'Not available for subscription products.', 'woocommerce-square' ) );
 		}
 
 		// no pre-order "charge upon release" products
-		if ( $this->get_plugin()->is_pre_orders_active() && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
+		if ( $this->get_plugin()->is_pre_orders_active() && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) { // @phpstan-ignore-line
 			throw new \Exception( __( 'Not available for pre-order products that are set to charge upon release.', 'woocommerce-square' ) );
 		}
 
@@ -292,11 +292,11 @@ class Payment_Gateway_Apple_Pay {
 	 */
 	public function get_cart_payment_request( \WC_Cart $cart ) {
 
-		if ( $this->get_plugin()->is_subscriptions_active() && \WC_Subscriptions_Cart::cart_contains_subscription() ) {
+		if ( $this->get_plugin()->is_subscriptions_active() && \WC_Subscriptions_Cart::cart_contains_subscription() ) { // @phpstan-ignore-line
 			throw new \Exception( __( 'Cart contains subscriptions.', 'woocommerce-square' ) );
 		}
 
-		if ( $this->get_plugin()->is_pre_orders_active() && \WC_Pre_Orders_Cart::cart_contains_pre_order() ) {
+		if ( $this->get_plugin()->is_pre_orders_active() && \WC_Pre_Orders_Cart::cart_contains_pre_order() ) { // @phpstan-ignore-line
 			throw new \Exception( __( 'Cart contains pre-orders.', 'woocommerce-square' ) );
 		}
 
