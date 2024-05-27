@@ -1295,14 +1295,12 @@ class Digital_Wallet {
 		}
 
 		// Trial subscriptions with shipping are not supported
-		// @phpstan-ignore-next-line
-		if ( class_exists( 'WC_Subscriptions_Order' ) && $product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
+		if ( class_exists( 'WC_Subscriptions_Product' ) && $product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
 			return false;
 		}
 
 		// Pre Orders charge upon release not supported.
-		// @phpstan-ignore-next-line
-		if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
+		if ( class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
 			return false;
 		}
 
@@ -1342,14 +1340,12 @@ class Digital_Wallet {
 			}
 
 			// Trial subscriptions with shipping are not supported
-			// @phpstan-ignore-next-line
-			if ( class_exists( 'WC_Subscriptions_Order' ) && \WC_Subscriptions_Cart::cart_contains_subscription() && $_product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $_product ) > 0 ) {
+			if ( class_exists( 'WC_Subscriptions_Cart' ) && class_exists( 'WC_Subscriptions_Product' ) && \WC_Subscriptions_Cart::cart_contains_subscription() && $_product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $_product ) > 0 ) {
 				return false;
 			}
 
-			// Pre Orders compatbility where we don't support charge upon release.
-			// @phpstan-ignore-next-line
-			if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) {
+			// Pre Orders compatibility where we don't support charge upon release.
+			if ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) {
 				return false;
 			}
 		}
