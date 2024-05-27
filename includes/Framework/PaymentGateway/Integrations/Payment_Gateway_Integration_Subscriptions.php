@@ -148,23 +148,23 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 
 		// pay page with subscription?
 		$pay_page_subscription      = false;
-		$is_manual_renewal_required = \WCS_Manual_Renewal_Manager::is_manual_renewal_required(); // @phpstan-ignore-line
+		$is_manual_renewal_required = class_exists( 'WCS_Manual_Renewal_Manager' ) && \WCS_Manual_Renewal_Manager::is_manual_renewal_required();
 
 		if ( $this->get_gateway()->is_pay_page_gateway() ) {
 
 			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
 			if ( $order_id ) {
-				$pay_page_subscription = wcs_order_contains_subscription( $order_id ); // @phpstan-ignore-line
+				$pay_page_subscription = function_exists( 'wcs_order_contains_subscription' ) && wcs_order_contains_subscription( $order_id );
 			}
 		}
 
 		if ( $is_manual_renewal_required ) {
 			$force_tokenization = false;
 		} elseif (
-			\WC_Subscriptions_Cart::cart_contains_subscription() || // @phpstan-ignore-line
-			wcs_cart_contains_renewal() || // @phpstan-ignore-line
-			\WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment || // @phpstan-ignore-line
+			( class_exists( 'WC_Subscriptions_Cart' ) && \WC_Subscriptions_Cart::cart_contains_subscription() ) ||
+			( function_exists( 'wcs_cart_contains_renewal' ) && wcs_cart_contains_renewal() ) ||
+			( class_exists( 'WC_Subscriptions_Change_Payment_Gateway' ) && \WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment ) ||
 			$pay_page_subscription
 		) {
 			$force_tokenization = true;
@@ -183,9 +183,11 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	 * @param \WC_Order $order order
 	 */
 	public function save_payment_meta( $order ) {
+		if ( ! function_exists( 'wcs_get_subscriptions_for_order' ) ) {
+			return;
+		}
 
 		// a single order can contain multiple subscriptions
-		// @phpstan-ignore-next-line
 		$subscriptions = wcs_get_subscriptions_for_order(
 			Order_Compatibility::get_prop( $order, 'id' ),
 			array(
@@ -354,7 +356,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	public function process_change_payment( $result, $order_id, $gateway ) {
 
 		// if this is not a subscription and not changing payment, bail for normal order processing
-		if ( ! wcs_is_subscription( $order_id ) || ! did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) { // @phpstan-ignore-line
+		if ( ! function_exists( 'wcs_is_subscription' ) || ! wcs_is_subscription( $order_id ) || ! did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) {
 			return $result;
 		}
 
@@ -639,7 +641,11 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	 */
 	protected function get_payment_token_subscriptions( $user_id, $token ) {
 
-		$subscriptions = wcs_get_users_subscriptions( $user_id ); // @phpstan-ignore-line
+		if ( ! function_exists( 'wcs_get_users_subscriptions' ) ) {
+			return array();
+		}
+
+		$subscriptions = wcs_get_users_subscriptions( $user_id );
 
 		foreach ( $subscriptions as $key => $subscription ) {
 
