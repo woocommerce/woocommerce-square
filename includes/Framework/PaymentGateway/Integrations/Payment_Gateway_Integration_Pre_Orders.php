@@ -99,7 +99,7 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 			}
 		}
 
-		if ( ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) &&  \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
+		if ( ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
 			$pay_page_pre_order ) {
 
 			// always tokenize the card for pre-orders that are charged upon release
