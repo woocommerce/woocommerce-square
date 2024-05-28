@@ -1675,7 +1675,7 @@ class Product {
 	 *
 	 * @since 4.2.0
 	 *
-	 * @param WC_Product $product WooCommerce product.
+	 * @param \WC_Product $product WooCommerce product.
 	 *
 	 * @return bool
 	 */
