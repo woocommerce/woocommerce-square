@@ -1072,7 +1072,6 @@ class Digital_Wallet {
 	 * If the store has been registered, keep verifying the registration of the current connected account and domain every hour.
 	 *
 	 * @since 2.3
-	 * @return void
 	 */
 	public function apple_pay_domain_registration() {
 		// Only register the store url with Apple Pay if the gateway and digital wallets are enable (check POST data to account for the page load when settings are being saved).
