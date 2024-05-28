@@ -7,7 +7,10 @@ const getEventRecordParams = ( e = '', properties = {} ) => {
 	const prefix = 'woocommerce_square_';
 
 	const eventName = `${ prefix }${ e }`;
-	const baseProperties = { plugin_version: wcSquareOnboarding.plugin_version }
+	const baseProperties = {
+		plugin_version: wcSquareOnboarding.plugin_version,
+		is_mobile: wcSquareOnboarding.is_mobile,
+	}
 	const allProperties = { ...properties, ...baseProperties };
 
 	return {

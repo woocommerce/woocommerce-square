@@ -278,6 +278,7 @@ class Admin {
 				'wcSquareOnboarding',
 				array(
 					'plugin_version' => WC_SQUARE_PLUGIN_VERSION,
+					'is_mobile'      => wp_is_mobile(),
 				)
 			);
 		}
