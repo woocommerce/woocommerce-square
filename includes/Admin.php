@@ -101,8 +101,8 @@ class Admin {
 		// load admin scripts.
 		add_action(
 			'admin_enqueue_scripts',
-			function () {
-				$this->load_scripts_styles();
+			function ( $hook ) {
+				$this->load_scripts_styles( $hook );
 			}
 		);
 	}
@@ -111,9 +111,11 @@ class Admin {
 	/**
 	 * Loads and enqueues admin scripts and styles.
 	 *
+	 * @param string $hook The current admin page.
+	 *
 	 * @since 2.0.0
 	 */
-	private function load_scripts_styles() {
+	private function load_scripts_styles( $hook ) {
 		global $typenow;
 
 		if ( 'product' === $typenow ) {
@@ -245,7 +247,7 @@ class Admin {
 				array(),
 				$asset['version'],
 			);
-		} else {
+		} elseif ( 'woocommerce_page_woocommerce-square-onboarding' === $hook ) {
 			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
 
 			if ( ! file_exists( $asset_file ) ) {

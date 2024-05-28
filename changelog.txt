@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 4.6.2 - 2024-05-23 =
+* Dev - Bump WooCommerce "tested up to" version 8.9.
+* Dev - Bump WooCommerce minimum supported version to 8.7.
+* Fix - Update the Apple Pay domain verification file.
+
 = 4.6.1 - 2024-04-10 =
 * Fix - Problem with connection to Square warning.
 * Update - Refreshed plugin marketing copy in readme file.
