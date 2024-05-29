@@ -345,11 +345,13 @@ class WooCommerce_Square_Loader {
 	 * @return bool
 	 */
 	public function is_environment_compatible() {
+		$is_wc_compatible        = $this->is_wc_compatible();
+		$is_wp_compatible        = $this->is_wp_compatible();
 		$is_php_valid            = $this->is_php_version_valid();
 		$is_opcache_config_valid = $this->is_opcache_save_message_enabled();
 		$error_message           = '';
 
-		if ( ! $is_php_valid || ! $is_opcache_config_valid ) {
+		if ( ! $is_php_valid || ! $is_opcache_config_valid || ! $is_wc_compatible || ! $is_wp_compatible ) {
 			$error_message .= sprintf(
 				// translators: plugin name
 				__( '<strong>All features in %1$s have been disabled</strong> due to unsupported settings:<br>', 'woocommerce-square' ),
@@ -374,6 +376,38 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
+		if ( ! $is_wc_compatible ) {
+			if ( ! defined( 'WC_VERSION' ) ) {
+				$error_message .= sprintf(
+					// translators: 1: Minimum required WooCommerce version.
+					__( '&bull;&nbsp;<strong>WooCommerce is not installed: </strong>The plugin requires WooCommerce version %1$s or later be installed.<br>', 'woocommerce-square' ),
+					self::MINIMUM_WC_VERSION
+				);
+			} else {
+				$error_message .= sprintf(
+					// translators: 1: Plugin name, 2: Minimum required WooCommerce version, 3: Opening link to upgrade screen, 4: Closing link, 5: Opening link to download page, 6: Closing link.
+					'&bull;&nbsp;%1$s requires WooCommerce version %2$s or higher. Please %3$supdate WooCommerce%4$s to the latest version, or %5$sdownload the minimum required version &raquo;%6$s<br>',
+					'<strong>' . self::PLUGIN_NAME . '</strong>',
+					self::MINIMUM_WC_VERSION,
+					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
+					'</a>',
+					'<a href="' . esc_url( 'https://downloads.wordpress.org/plugin/woocommerce.' . self::MINIMUM_WC_VERSION . '.zip' ) . '">',
+					'</a>'
+				);
+			}
+		}
+
+		if ( ! $is_wp_compatible ) {
+			$error_message .= sprintf(
+				// translators: 1: Plugin name, 2: Minimum required WordPress version, 3: Opening link to upgrade screen, 4: Closing link.
+				'&bull;&nbsp;%s requires WordPress version %s or higher. Please %supdate WordPress &raquo;%s<br>',
+				'<strong>' . self::PLUGIN_NAME . '</strong>',
+				self::MINIMUM_WP_VERSION,
+				'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
+				'</a>'
+			);
+		}
+
 		if ( ! empty( $error_message ) ) {
 			$this->add_admin_notice(
 				'bad_environment',
@@ -382,7 +416,7 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
-		return $is_php_valid && $is_opcache_config_valid;
+		return $is_php_valid && $is_opcache_config_valid && $is_wc_compatible && $is_wp_compatible;
 	}
 
 	/**
