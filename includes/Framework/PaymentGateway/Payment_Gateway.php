@@ -4636,7 +4636,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return float
 	 */
 	public function get_partial_total_on_credit_card() {
-		wc_deprecated_function( __METHOD__, 'x.x.x', __CLASS__ . '::get_partial_total_on_other_gateway()' );
+		wc_deprecated_function( __METHOD__, '4.6.0', __CLASS__ . '::get_partial_total_on_other_gateway()' );
 
 		return $this->get_partial_total_on_other_gateway();
 	}
