@@ -20,7 +20,7 @@ const ButtonComponent = () => {
 	const [googlePayBtn, setGooglePayBtn] = useState(null);
 	const [applePayBtn, setApplePayBtn] = useState(null);
 	const [clickedButton, setClickedButton] = useState(null);
-	const { billing, onClick, onSubmit, eventRegistration, paymentStatus } =
+	const { billing, onClick, onSubmit, onClose, eventRegistration, paymentStatus } =
 		props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
@@ -85,9 +85,16 @@ const ButtonComponent = () => {
 		}
 
 		const verificationDetails = buildVerificationDetails(billing);
-		const unsubscribe = onPaymentSetup(() =>
-			initiateCheckout(payments, verificationDetails, clickedButton)
-		);
+		const unsubscribe = onPaymentSetup(() => {
+			const checkout = initiateCheckout(payments, verificationDetails, clickedButton)
+			checkout.then((response) => {
+				if ( response.type === 'failure' ) {
+					setClickedButton(null);
+					onClose();
+				}
+			});
+			return checkout;
+		} );
 		return unsubscribe;
 	}, [googlePayBtn, applePayBtn, onPaymentSetup, paymentStatus.isStarted]);
 
