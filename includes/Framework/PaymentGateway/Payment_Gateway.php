@@ -1680,7 +1680,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Performs a transaction for the given order and returns the result.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param WC_Order_Square     $order the order object
 	 * @param Create_Payment|null $response optional gateway transaction response
@@ -2116,7 +2116,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 *
 	 * This method cancels gift card payment, and adds a relevant order note.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @param Payment_Gateway_API_Response $response response object
@@ -3461,7 +3461,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns true if gateway supports authorization transactions
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean true if the gateway supports authorization
 	 */
 	public function supports_authorization() {
@@ -3472,7 +3472,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns true if gateway supports charge transactions
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean true if the gateway supports charges
 	 */
 	public function supports_charge() {
@@ -3483,7 +3483,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Determines if gateway supports charging virtual-only orders.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return bool
 	 */
 	public function supports_charge_virtual() {
@@ -3494,7 +3494,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns true if the gateway supports capturing a charge
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean true if the gateway supports capturing a charge
 	 */
 	public function supports_capture() {
@@ -3505,7 +3505,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Determines if the gateway supports capturing a partial charge.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @return bool
 	 */
@@ -3654,7 +3654,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Determines if a gateway transaction should result in a charge.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order Optional. The order being charged
 	 * @return bool
@@ -3672,7 +3672,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		/**
 		 * Filters whether a gateway transaction should result in a charge.
 		 *
-		 * @since x.x.x
+		 * @since 4.6.0
 		 *
 		 * @param bool $perform whether the transaction should result in a charge
 		 * @param \WC_Order|null $order the order being charged
@@ -3685,7 +3685,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Determines if a gateway transaction should result in an authorization.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order Optional. The order being authorized
 	 * @return bool
@@ -4579,7 +4579,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns true if this is a Cash App Pay gateway
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 * @return boolean true if this is a Cash App Pay gateway
 	 */
 	public function is_cash_app_pay_gateway() {
@@ -4636,7 +4636,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return float
 	 */
 	public function get_partial_total_on_credit_card() {
-		wc_deprecated_function( __METHOD__, 'x.x.x', __CLASS__ . '::get_partial_total_on_other_gateway()' );
+		wc_deprecated_function( __METHOD__, '4.6.0', __CLASS__ . '::get_partial_total_on_other_gateway()' );
 
 		return $this->get_partial_total_on_other_gateway();
 	}

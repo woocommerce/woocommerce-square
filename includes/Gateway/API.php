@@ -109,7 +109,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Performs a capture for a given authorized order.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\API\Response
@@ -166,7 +166,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Performs a cash app pay authorization for the given order.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param \WC_Order $order order object
 	 * @return \WooCommerce\Square\Gateway\API\Responses\Create_Payment
@@ -659,7 +659,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Cancel authorized payment.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param string $payment_id transaction ID
 	 * @return API\Responses\Create_Payment

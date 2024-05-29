@@ -452,7 +452,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Performs a credit card transaction for the given order and returns the result.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.0
 	 *
 	 * @param WC_Order_Square     $order the order object
 	 * @param Create_Payment|null $response optional credit card transaction response
@@ -1186,11 +1186,14 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return array
 	 */
 	public function filter_available_gateways( $gateways ) {
-		$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
+		$location_id  = $this->get_plugin()->get_settings_handler()->get_location_id();
+		$is_connected = $this->get_plugin()->get_settings_handler()->is_connected();
 
-		foreach ( $this->get_plugin()->get_settings_handler()->get_locations() as $location ) {
-			if ( $location_id === $location->getId() && get_woocommerce_currency() !== $location->getCurrency() ) {
-				unset( $gateways[ Plugin::GATEWAY_ID ] );
+		if ( $is_connected ) {
+			foreach ( $this->get_plugin()->get_settings_handler()->get_locations() as $location ) {
+				if ( $location_id === $location->getId() && get_woocommerce_currency() !== $location->getCurrency() ) {
+					unset( $gateways[ Plugin::GATEWAY_ID ] );
+				}
 			}
 		}
 

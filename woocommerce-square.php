@@ -2,14 +2,14 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 4.5.1
+ * Version: 4.6.2
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.3
  * Tested up to: 6.5
  * Requires PHP: 7.4
  * PHP tested up to: 8.3
  *
- * Description: Adds ability to sync inventory between WooCommerce and Square POS. In addition, you can also make purchases through the Square payment gateway.
+ * Description: Securely accept payments, synchronize sales, and seamlessly manage inventory and product data between WooCommerce and Square POS.
  * Author: WooCommerce
  * Author URI: https://www.woocommerce.com/
  * Text Domain: woocommerce-square
@@ -22,14 +22,14 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 8.5
- * WC tested up to: 8.7
+ * WC requires at least: 8.7
+ * WC tested up to: 8.9
  */
 
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '4.5.1' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '4.6.2' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
@@ -55,7 +55,7 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_WP_VERSION = '6.3';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '8.5';
+	const MINIMUM_WC_VERSION = '8.7';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
