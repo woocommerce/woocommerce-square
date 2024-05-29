@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "66f30362edd404bffa525b60dfe344dd",
+    "content-hash": "2e0e6bd0e47d65dd6a287e220456fc81",
     "packages": [
         {
             "name": "apimatic/core",
@@ -279,16 +279,16 @@
         },
         {
             "name": "square/square",
-            "version": "29.0.0.20230720",
+            "version": "35.1.0.20240320",
             "source": {
                 "type": "git",
                 "url": "https://github.com/square/square-php-sdk.git",
-                "reference": "6b8fab31298e785c5c41a39e877b5480679fcc9f"
+                "reference": "c58dd0cb96e20821d5f4516c08b96f93798b58ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/square/square-php-sdk/zipball/6b8fab31298e785c5c41a39e877b5480679fcc9f",
-                "reference": "6b8fab31298e785c5c41a39e877b5480679fcc9f",
+                "url": "https://api.github.com/repos/square/square-php-sdk/zipball/c58dd0cb96e20821d5f4516c08b96f93798b58ea",
+                "reference": "c58dd0cb96e20821d5f4516c08b96f93798b58ea",
                 "shasum": ""
             },
             "require": {
@@ -329,9 +329,9 @@
             ],
             "support": {
                 "issues": "https://github.com/square/square-php-sdk/issues",
-                "source": "https://github.com/square/square-php-sdk/tree/29.0.0.20230720"
+                "source": "https://github.com/square/square-php-sdk/tree/35.1.0.20240320"
             },
-            "time": "2023-07-19T21:18:52+00:00"
+            "time": "2024-03-20T17:08:02+00:00"
         }
     ],
     "packages-dev": [
@@ -952,5 +952,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
