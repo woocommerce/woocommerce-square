@@ -1418,7 +1418,7 @@ class Products {
 	/**
 	 * Product has options.
 	 * This will change the add to card button link to product page.
-	 * 
+	 *
 	 * @param boolean     $has_options Whether the product has options.
 	 * @param \WC_Product $product     Product object.
 	 */
