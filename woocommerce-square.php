@@ -122,7 +122,7 @@ class WooCommerce_Square_Loader {
 	 */
 	public function init_plugin() {
 
-		if ( ! $this->plugins_compatible() ) {
+		if ( ! $this->is_environment_compatible() ) {
 			return;
 		}
 
