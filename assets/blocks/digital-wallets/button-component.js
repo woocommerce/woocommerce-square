@@ -73,7 +73,7 @@ const ButtonComponent = () => {
 					await applePayBtn.destroy();
 				}
 			})();
-	}, [payments]);
+	}, [payments]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if (!googlePayBtn) {
@@ -89,7 +89,7 @@ const ButtonComponent = () => {
 			initiateCheckout(payments, verificationDetails, clickedButton)
 		);
 		return unsubscribe;
-	}, [googlePayBtn, applePayBtn, onPaymentSetup, paymentStatus.isStarted]);
+	}, [googlePayBtn, applePayBtn, onPaymentSetup, paymentStatus.isStarted]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	if (!payments) {
 		return null;
