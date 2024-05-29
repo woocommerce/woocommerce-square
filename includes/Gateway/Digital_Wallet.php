@@ -426,7 +426,7 @@ class Digital_Wallet {
 
 		if ( ! is_a( $product, 'WC_Product' ) ) {
 			/* translators: product ID */
-			throw new \Exception( sprintf( __( 'Product with the ID (%d) cannot be found.', 'woocommerce-square' ), $product_id ) );
+			throw new \Exception( sprintf( esc_html__( 'Product with the ID (%d) cannot be found.', 'woocommerce-square' ), absint( $product_id ) ) );
 		}
 
 		$quantity = $product->is_sold_individually() ? 1 : $quantity;
@@ -442,12 +442,12 @@ class Digital_Wallet {
 
 		if ( ! $product->has_enough_stock( $quantity ) ) {
 			/* translators: 1: product name 2: quantity in stock */
-			throw new \Exception( sprintf( __( 'You cannot add that amount of "%1$s"; to the cart because there is not enough stock (%2$s remaining).', 'woocommerce-square' ), $product->get_name(), wc_format_stock_quantity_for_display( $product->get_stock_quantity(), $product ) ) );
+			throw new \Exception( sprintf( esc_html__( 'You cannot add that amount of "%1$s"; to the cart because there is not enough stock (%2$s remaining).', 'woocommerce-square' ), esc_html( $product->get_name() ), esc_html( wc_format_stock_quantity_for_display( $product->get_stock_quantity(), $product ) ) ) );
 		}
 
 		if ( ! $product->is_purchasable() ) {
 			/* translators: 1: product name */
-			throw new \Exception( sprintf( __( 'You cannot purchase "%1$s" because it is currently not available.', 'woocommerce-square' ), $product->get_name() ) );
+			throw new \Exception( sprintf( esc_html__( 'You cannot purchase "%1$s" because it is currently not available.', 'woocommerce-square' ), esc_html( $product->get_name() ) ) );
 		}
 
 		if ( $add_to_cart ) {
@@ -527,7 +527,7 @@ class Digital_Wallet {
 		}
 
 		if ( count( WC()->shipping->get_packages() ) > 1 ) {
-			throw new \Exception( __( 'This payment method cannot be used for multiple shipments.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'This payment method cannot be used for multiple shipments.', 'woocommerce-square' ) );
 		}
 
 		if ( ! isset( $data['lineItems'] ) ) {
@@ -1130,7 +1130,7 @@ class Digital_Wallet {
 		}
 
 		if ( empty( $access_token ) ) {
-			throw new \Exception( __( 'Unable to verify domain with Apple Pay - missing access token.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Unable to verify domain with Apple Pay - missing access token.', 'woocommerce-square' ) );
 		}
 
 		$response = wp_remote_post(
@@ -1151,14 +1151,14 @@ class Digital_Wallet {
 
 		if ( is_wp_error( $response ) ) {
 			/* translators: error message */
-			throw new \Exception( sprintf( 'Unable to verify domain %s - %s', $domain_name, $response->get_error_message() ) );
+			throw new \Exception( sprintf( 'Unable to verify domain %s - %s', esc_html( $domain_name ), esc_html( $response->get_error_message() ) ) );
 		}
 
 		$parsed_response = json_decode( $response['body'], true );
 
 		if ( 200 !== $response['response']['code'] || empty( $parsed_response['status'] ) || 'VERIFIED' !== $parsed_response['status'] ) {
 			/* translators: error message */
-			throw new \Exception( sprintf( 'Unable to verify domain %s - response = %s', $domain_name, print_r( $parsed_response, true ) ) ); //phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+			throw new \Exception( sprintf( 'Unable to verify domain %s - response = %s', esc_html( $domain_name ), esc_html( print_r( $parsed_response, true ) ) ) ); //phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 	}
 

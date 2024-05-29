@@ -27,7 +27,7 @@ use WooCommerce\Square\Framework\Compatibility\Order_Compatibility;
 use WooCommerce\Square\Framework\Addresses\Customer_Address;
 use WooCommerce\Square\Framework\PaymentGateway\Api\Payment_Gateway_API_Response_Interface;
 use \WooCommerce\Square\Framework\PaymentGateway\Api\Payment_Gateway_API_Response;
-use WooCommerce\Square\Gateway\API\Responses\Create_Payment as Create_Payment;
+use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\WC_Order_Square;
