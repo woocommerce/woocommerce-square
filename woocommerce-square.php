@@ -80,7 +80,6 @@ class WooCommerce_Square_Loader {
 	 * @since 2.0.0
 	 */
 	protected function __construct() {
-		add_action( 'admin_init', array( $this, 'add_plugin_notices' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 
 		// if the environment check fails, don't initialize the plugin.
@@ -182,41 +181,11 @@ class WooCommerce_Square_Loader {
 	 * Adds notices for out-of-date WordPress and/or WooCommerce versions.
 	 *
 	 * @since 2.0.0
+	 * @deprecated x.x.x Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 */
 	public function add_plugin_notices() {
-
-		if ( ! $this->is_wp_compatible() ) {
-
-			$this->add_admin_notice(
-				'update_wordpress',
-				'error',
-				sprintf(
-					'%s requires WordPress version %s or higher. Please %supdate WordPress &raquo;%s',
-					'<strong>' . self::PLUGIN_NAME .
-					'</strong>',
-					self::MINIMUM_WP_VERSION,
-					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
-					'</a>'
-				)
-			);
-		}
-
-		if ( ! $this->is_wc_compatible() ) {
-
-			$this->add_admin_notice(
-				'update_woocommerce',
-				'error',
-				sprintf(
-					'%1$s requires WooCommerce version %2$s or higher. Please %3$supdate WooCommerce%4$s to the latest version, or %5$sdownload the minimum required version &raquo;%6$s',
-					'<strong>' . self::PLUGIN_NAME . '</strong>',
-					self::MINIMUM_WC_VERSION,
-					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
-					'</a>',
-					'<a href="' . esc_url( 'https://downloads.wordpress.org/plugin/woocommerce.' . self::MINIMUM_WC_VERSION . '.zip' ) . '">',
-					'</a>'
-				)
-			);
-		}
+		_deprecated_function( __METHOD__, 'x.x.x', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		$this->is_environment_compatible();
 	}
 
 
@@ -224,12 +193,13 @@ class WooCommerce_Square_Loader {
 	 * Determines if the required plugins are compatible.
 	 *
 	 * @since 2.0.0
+	 * @deprecated x.x.x Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 *
 	 * @return bool
 	 */
 	protected function plugins_compatible() {
-
-		return $this->is_wp_compatible() && $this->is_wc_compatible();
+		_deprecated_function( __METHOD__, 'x.x.x', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		return $this->is_environment_compatible();
 	}
 
 
