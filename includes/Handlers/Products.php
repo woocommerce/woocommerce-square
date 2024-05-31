@@ -1416,7 +1416,8 @@ class Products {
 	}
 
 	/**
-	 * Product has options.
+	 * Determine if the Product has options.
+	 *
 	 * This will change the add to card button link to product page.
 	 *
 	 * @param boolean     $has_options Whether the product has options.
@@ -1435,7 +1436,8 @@ class Products {
 	}
 
 	/**
-	 * Product supports.
+	 * Determine if the Product supports a feature.
+	 *
 	 * Disable AJAX add to cart for gift card products.
 	 *
 	 * @param boolean     $supports Whether the product supports a feature.
