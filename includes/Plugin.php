@@ -251,6 +251,10 @@ class Plugin extends Payment_Gateway_Plugin {
 			$this->admin_handler = new Admin( $this );
 		}
 
+		// WooPayments compatibility.
+		$wcpay_compatibility = new WC_Payments_Compatibility();
+		$wcpay_compatibility->init();
+
 		/**
 		 * @see wc_square_initialized
 		 * @since 2.0.0
