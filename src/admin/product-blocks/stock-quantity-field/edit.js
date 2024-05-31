@@ -36,6 +36,7 @@ export function Edit( {
 	const [ sor ] = useProductEntityProp( 'sor', context.postType );
 	const [ fetchStockProgress, setFetchStockProgress ] = useState( false );
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
+	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
 
 	const {
 		ref: stockQuantityRef,
@@ -60,9 +61,9 @@ export function Edit( {
 		}
 	}, [ manageStock, stockQuantity ] );
 
-	if ( ! manageStock ) {
-		return null;
-	}
+	useEffect( () => {
+		setIsQuantityNull( null === stockQuantity );
+	}, [ stockQuantity ] );
 
 	async function fetchStockFromSquare( enableQuantityField = false ) {
 		const fetchStockData = new FormData();
@@ -87,10 +88,23 @@ export function Edit( {
 				setIsQuantityDisabled( false );
 			}
 
-			setStockQuantity( Number( quantity ) );
+			if ( null !== quantity ) {
+				setStockQuantity( Number( quantity ) );
+				setIsQuantityNull( false );
+			} else {
+				setIsQuantityNull( true );
+			}
 		}
 
 		setFetchStockProgress( false );
+	}
+
+	if ( ! manageStock ) {
+		return null;
+	}
+
+	if ( isSquareSynced && isQuantityNull ) {
+		return null;
 	}
 
 	return (

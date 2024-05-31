@@ -139,6 +139,12 @@ class Product_Editor_Compatibility {
 		 */
 		$parent = $sku_field->get_parent();
 
+		$is_inventiry_sync_enabled = wc_square()->get_settings_handler()->is_inventory_sync_enabled();
+
+		if ( ! $is_inventiry_sync_enabled ) {
+			return;
+		}
+
 		$parent->add_block(
 			array(
 				'id'         => '_wc_square_stock_management_field',
@@ -169,10 +175,12 @@ class Product_Editor_Compatibility {
 	 * @param ProductBlock $block Core product blocks.
 	 */
 	public function remove_core_blocks( $block ) {
-		$blocks_to_remove = array(
-			'product-inventory-quantity',
-			'product-track-stock',
-		);
+		$blocks_to_remove = array();
+
+		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+			$blocks_to_remove[] = 'product-inventory-quantity';
+			$blocks_to_remove[] = 'product-track-stock';
+		}
 
 		/* Square classic product editor modifies a few core product meta fields functionaity.
 		 * For example, conditionally disabling, hiding and even modifying the core product meta fields.
