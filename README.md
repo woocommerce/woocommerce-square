@@ -57,6 +57,10 @@ TBD - Travis Integration
 TBD - Unit Testing
 TBD - E2E Testing
 
+## Compatibility with WooPayments
+
+This extension is compatible with the WooPayments extension.
+
 ## Contribution
 Contribution can be done in many ways. We appreciate it.
 * If you test this extension and find a bug/have a question, do log an issue.
