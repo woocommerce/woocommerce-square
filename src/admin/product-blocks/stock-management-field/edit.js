@@ -40,12 +40,6 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 		helpText = parse( disabledCopy );
 	}
 
-	let shouldManageStock = manageStock;
-
-	if ( isSquareSynced && 'square' === sor || false === manageStock ) {
-		shouldManageStock = false;
-	}
-
 	let canManageStock = true;
 
 	if ( disabled || ( isSquareSynced && isSyncEnabled && sku.length ) ) {
@@ -68,7 +62,7 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 					label={ label }
 					disabled={ ! canManageStock }
 					help={ helpText }
-					checked={ shouldManageStock }
+					checked={ manageStock }
 					onChange={ setManageStock }
 				/>
 			</BaseControl>
