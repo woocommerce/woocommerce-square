@@ -31,12 +31,13 @@ export function Edit( {
 	const [ productId ] = useProductEntityProp( 'id', context.postType );
 	const [ isSquareSynced ] = useProductEntityProp( 'is_square_synced', context.postType );
 	const [ isSyncEnabled ] = useProductEntityProp( 'is_sync_enabled', context.postType );
-	const [ isInventorySyncEnabled ] = useProductEntityProp( 'is_inventory_sync_enabled', context.postType );
+	const [ isInventorySyncEnabled, setIsInventorySyncEnabled ] = useProductEntityProp( 'is_inventory_sync_enabled', context.postType );
 	const [ fetchStockNonce ] = useProductEntityProp( 'fetch_stock_nonce', context.postType );
 	const [ sor ] = useProductEntityProp( 'sor', context.postType );
 	const [ fetchStockProgress, setFetchStockProgress ] = useState( false );
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
 	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
+	const [ canManageStockInSquare, setCanManageStockInSquare ] = useState( null );
 
 	const {
 		ref: stockQuantityRef,
@@ -73,6 +74,7 @@ export function Edit( {
 		fetchStockData.append( 'product_id', productId );
 
 		setFetchStockProgress( true );
+		setCanManageStockInSquare( null );
 
 		let response = await fetch( window.ajaxurl, {
 			method: 'POST',
@@ -82,10 +84,17 @@ export function Edit( {
 		response = await response.json();
 
 		if ( response.success ) {
-			const { quantity, manage_stock: manageStock } = response.data;
+			const { quantity, manage_stock } = response.data;
 
 			if ( enableQuantityField ) {
 				setIsQuantityDisabled( false );
+			}
+
+			setCanManageStockInSquare( manage_stock );
+
+			if ( false === manage_stock ) {
+				setIsInventorySyncEnabled( false );
+				setIsQuantityDisabled( true );
 			}
 
 			if ( null !== quantity ) {
@@ -97,6 +106,16 @@ export function Edit( {
 		}
 
 		setFetchStockProgress( false );
+	}
+
+	if ( isSquareSynced && false === canManageStockInSquare ) {
+		return (
+			<div { ...blockProps }>
+				<div style={ { color: '#a00' } }>
+					{ __( 'Inventory tracking is disabled for this product. Enable it from the Square dashboard.', 'woocommerce-square' ) }
+				</div>
+			</div>
+		);
 	}
 
 	if ( ! manageStock ) {

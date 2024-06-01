@@ -20,6 +20,7 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 	const [ isInventorySyncEnabled ] = useProductEntityProp( 'is_inventory_sync_enabled', { postType } );
 	const [ isSyncEnabled ] = useProductEntityProp( 'is_sync_enabled', { postType } );
 	const [ sku ] = useProductEntityProp( 'sku', { postType } );
+	const [ sor ] = useProductEntityProp( 'sor', { postType } );
 	let label = __( 'Track quantity for this product', 'woocommerce' );
 	let helpText = '';
 
@@ -39,6 +40,24 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 		helpText = parse( disabledCopy );
 	}
 
+	let shouldManageStock = manageStock;
+
+	if ( isSquareSynced && 'square' === sor || false === manageStock ) {
+		shouldManageStock = false;
+	}
+
+	let canManageStock = true;
+
+	if ( disabled || ( isSquareSynced && isSyncEnabled && sku.length ) ) {
+		if ( ! isInventorySyncEnabled || 'square' === sor ) {
+			canManageStock = false;
+		} else if ( ! ( disabled || ( isSquareSynced && isSyncEnabled && sku.length ) ) ) {
+			canManageStock = true;
+		} else {
+			canManageStock = false;
+		}
+	}
+
 	return (
 		<>
 			<BaseControl
@@ -47,9 +66,9 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 			>
 				<ToggleControl
 					label={ label }
-					disabled={ disabled || ( isSquareSynced && isInventorySyncEnabled && isSyncEnabled && sku.length ) }
+					disabled={ ! canManageStock }
 					help={ helpText }
-					checked={ manageStock }
+					checked={ shouldManageStock }
 					onChange={ setManageStock }
 				/>
 			</BaseControl>
