@@ -34,10 +34,12 @@ export function Edit( {
 	const [ isInventorySyncEnabled, setIsInventorySyncEnabled ] = useProductEntityProp( 'is_inventory_sync_enabled', context.postType );
 	const [ fetchStockNonce ] = useProductEntityProp( 'fetch_stock_nonce', context.postType );
 	const [ sor ] = useProductEntityProp( 'sor', context.postType );
+	const [ productStatus ] = useProductEntityProp( 'status', context.postType );
 	const [ fetchStockProgress, setFetchStockProgress ] = useState( false );
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
 	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
 	const [ canManageStockInSquare, setCanManageStockInSquare ] = useState( null );
+	const isPublished = 'publish' === productStatus;
 
 	const {
 		ref: stockQuantityRef,
@@ -150,7 +152,7 @@ export function Edit( {
 							disabled={ isSquareSynced && manageStock && isQuantityDisabled }
 						/>
 						{
-							isSyncEnabled && isInventorySyncEnabled && isSquareSynced && manageStock && 'square' === sor && (
+							isPublished && isSyncEnabled && isInventorySyncEnabled && isSquareSynced && manageStock && 'square' === sor && (
 								<p>
 									<Button
 										variant='link'
@@ -165,7 +167,7 @@ export function Edit( {
 						}
 
 						{
-							isSyncEnabled && isInventorySyncEnabled && isSquareSynced && manageStock && 'woocommerce' === sor && (
+							isPublished && isSyncEnabled && isInventorySyncEnabled && isSquareSynced && manageStock && 'woocommerce' === sor && (
 								<p>
 									<Button
 										variant='link'
