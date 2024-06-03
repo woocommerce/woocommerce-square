@@ -82,12 +82,13 @@ class WooCommerce_Square_Loader {
 	protected function __construct() {
 		add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
-
-		// if the environment check fails, don't initialize the plugin.
-		if ( $this->is_environment_compatible() ) {
-			add_action( 'plugins_loaded', array( $this, 'init_plugin' ) );
-			add_action( 'woocommerce_blocks_payment_method_type_registration', array( $this, 'register_payment_method_block_integrations' ), 5, 1 );
-		}
+		/*
+		 * Bootstrap the extension on plugins_loaded.
+		 *
+		 * This ensures that the extension is loaded after WooCommerce Core and to
+		 * ensure the WC_VERSION constant is defined prior to checking for compatibility.
+		 */
+		add_action( 'plugins_loaded', array( $this, 'init_plugin' ) );
 	}
 
 
@@ -138,6 +139,8 @@ class WooCommerce_Square_Loader {
 
 		// fire it up!
 		wc_square();
+
+		add_action( 'woocommerce_blocks_payment_method_type_registration', array( $this, 'register_payment_method_block_integrations' ), 5, 1 );
 	}
 
 
