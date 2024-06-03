@@ -93,7 +93,7 @@ const ButtonComponent = () => {
 	}, [payments]);
 
 	useEffect(() => {
-		if (!googlePayBtn) {
+		if (!googlePayBtn && !applePayBtn) {
 			return;
 		}
 
