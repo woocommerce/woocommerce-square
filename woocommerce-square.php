@@ -364,7 +364,7 @@ class WooCommerce_Square_Loader {
 					self::MINIMUM_WC_VERSION,
 					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
 					'</a>',
-					'<a href="' . esc_url( 'https://downloads.wordpress.org/plugin/woocommerce.' . self::MINIMUM_WC_VERSION . '.zip' ) . '">',
+					'<a href="' . esc_url( $this->get_woocommerce_download_link( 'minimum' ) ) . '">',
 					'</a>'
 				);
 			}
@@ -390,6 +390,55 @@ class WooCommerce_Square_Loader {
 		}
 
 		return $is_php_valid && $is_opcache_config_valid && $is_wc_compatible && $is_wp_compatible;
+	}
+
+	/**
+	 * Get the WooCommerce download link for a specific version.
+	 *
+	 * Ensures the download link is correct for major versions of WooCommerce by
+	 * ensuring that specific download links match the tagged version and include
+	 * three parts in the version number.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string|int|float $version The version of WooCommerce to get the download link for.
+	 *                                  Accepts a version number in the forms of 'x', 'x.x' or 'x.x.x'.
+	 *                                  Accepts the strings 'minimum' and 'latest'.
+	 *                                  Defaults to 'latest'.
+	 * @return string The download link for the WooCommerce version.
+	 */
+	public function get_woocommerce_download_link( $version = 'latest' ) {
+		$version = (string) $version;
+		$version = strtolower( $version );
+
+		if ( preg_match( '/^(\d+\.)*(\d+)$/', $version ) || 'minimum' === $version ) {
+			if ( 'minimum' === $version ) {
+				$version_download_string = self::MINIMUM_WC_VERSION;
+			} else {
+				$version_download_string = $version;
+			}
+			$version_parts = explode( '.', $version_download_string );
+			/*
+			 * Ensure the version string has at least 3 parts.
+			 *
+			 * Publicly major versions are listed as two parts, eg 6.7, but the
+			 * tag published to the WordPress.org repository uses three parts,
+			 * eg 6.7.0.
+			 *
+			 * This is to ensure the download link is correct.
+			 */
+			$version_part_count = count( $version_parts ); // Coding standards don't allow for count() in the while condition.
+			while ( $version_part_count < 3 ) {
+				$version_parts[]    = '0';
+				$version_part_count = count( $version_parts );
+			}
+			$version_download_string = implode( '.', $version_parts );
+		} else {
+			// Default to latest version.
+			$version_download_string = 'latest-stable';
+		}
+
+		return "https://downloads.wordpress.org/plugin/woocommerce.{$version_download_string}.zip";
 	}
 
 	/**
