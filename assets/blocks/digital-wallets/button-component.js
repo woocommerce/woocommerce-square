@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useContext, useRef, useEffect, useState } from '@wordpress/element';
+import { useContext, useRef, useEffect, useLayoutEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -92,8 +92,8 @@ const ButtonComponent = () => {
 			})();
 	}, [payments]);
 
-	useEffect(() => {
-		if (!googlePayBtn && !applePayBtn) {
+	useLayoutEffect(() => {
+		if (!clickedButton) {
 			return;
 		}
 
@@ -106,7 +106,7 @@ const ButtonComponent = () => {
 			initiateCheckout(payments, verificationDetails, clickedButton)
 		);
 		return unsubscribe;
-	}, [googlePayBtn, applePayBtn, onPaymentSetup, paymentStatus.isStarted]);
+	}, [clickedButton, onPaymentSetup, paymentStatus.isStarted]);
 
 	if (!payments) {
 		return null;
