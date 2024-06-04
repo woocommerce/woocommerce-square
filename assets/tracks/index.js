@@ -48,6 +48,7 @@ export const ONBOARDING_TRACK_EVENTS = {
 	VISIT_CASH_APP_SETTINGS_CLICKED: 'visit_cash_app_settings_clicked',
 	VISIT_ADVANCED_SETTINGS_CLICKED: 'visit_advanced_settings_clicked',
 	VISIT_SANDBOX_SETTINGS_CLICKED: 'visit_sandbox_settings_clicked',
+	PRODUCT_IMPORT_STARTED: 'product_import_started',
 	SAVE_SYNC_SETTINGS: 'save_sync_settings',
 	SAVE_DIGITAL_WALLET_SETTINGS: 'save_digital_wallet_settings',
 	SAVE_SANDBOX_SETTINGS: 'save_sandbox_settings',
