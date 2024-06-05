@@ -24,7 +24,6 @@ const ButtonComponent = () => {
 		props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
-	const applePaybuttonRef = useRef();
 
 	const handleSubmission = async () => {
 		onClick();
@@ -138,7 +137,6 @@ const ButtonComponent = () => {
 				<div
 					tabIndex={0}
 					role="button"
-					ref={applePaybuttonRef}
 					id="apple-pay-button"
 					className="apple-pay-button wc-square-wallet-buttons"
 					onClick={() => {
