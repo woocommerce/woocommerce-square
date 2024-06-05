@@ -187,6 +187,10 @@ body {
 	}
 }
 
+.required-error {
+    border-color: red !important;
+}
+
 @media screen and (max-width: 1800px) {
 	.woo-square-onboarding__cover {
 		&:not(.payment-methods):not(.payment-complete) {

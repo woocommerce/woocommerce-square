@@ -32,6 +32,23 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				variant="primary"
 				onClick={ () => {
 					( async () => {
+						// Check of required fields.
+						const requiredFields = document.querySelectorAll( '[required]' );
+						let isValid = true;
+
+						requiredFields.forEach( ( field ) => {
+							if ( ! field.value ) {
+								field.classList.add( 'required-error' );
+								isValid = false;
+							} else {
+								field.classList.remove( 'required-error' );
+							}
+						} );
+
+						if ( ! isValid ) {
+							return;
+						}
+
 						await saveSquareSettings( settings );
 
 						if ( afterSaveCallback ) {
