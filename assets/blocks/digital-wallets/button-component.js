@@ -119,21 +119,6 @@ const ButtonComponent = () => {
 
 	return (
 		<>
-			{!isGooglePayDisabled && (
-				<div
-					tabIndex={0}
-					role="button"
-					ref={googlePaybuttonRef}
-					onClick={() => {
-						setClickedButton(googlePayBtn);
-						handleSubmission();
-					}}
-					onKeyDown={() => {
-						setClickedButton(googlePayBtn);
-						handleSubmission();
-					}}
-				></div>
-			)}
 			{!isApplePayDisabled && (
 				<div
 					tabIndex={0}
@@ -152,6 +137,21 @@ const ButtonComponent = () => {
 					<span className="text"></span>
 					<span className="logo"></span>
 				</div>
+			)}
+			{!isGooglePayDisabled && (
+				<div
+					tabIndex={0}
+					role="button"
+					ref={googlePaybuttonRef}
+					onClick={() => {
+						setClickedButton(googlePayBtn);
+						handleSubmission();
+					}}
+					onKeyDown={() => {
+						setClickedButton(googlePayBtn);
+						handleSubmission();
+					}}
+				></div>
 			)}
 		</>
 	);
