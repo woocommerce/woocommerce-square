@@ -210,7 +210,10 @@ export const OnboardingApp = () => {
 				{ step === 'sandbox-settings' && (
 					<>
 						<SandboxSettings />
-						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
+						<SquareSettingsSaveButton
+							data-testid="square-settings-save-button"
+							afterSaveLabel={ __( 'Connected to Sandbox!', 'woocommerce-square' ) }
+							afterSaveCallback={ () => {
 							setStep( 'payment-complete' );
 						} } />
 					</>
