@@ -8,7 +8,7 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
-			afterSaveLabel = __( 'Changes Saved' ),
+			afterSaveLabel = __( 'Changes Saved!' ),
 			onClick,
 		} = props;
 

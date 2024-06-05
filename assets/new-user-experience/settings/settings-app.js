@@ -161,7 +161,7 @@ export const SettingsApp = () => {
 
 			<SquareSettingsSaveButton
 				label={ __( 'Save changes', 'woocommerce-square' ) }
-				afterSaveLabel={ __( 'Changes Saved', 'woocommerce-square' ) }
+				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
 			/>
 		</>
 	)

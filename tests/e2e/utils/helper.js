@@ -411,7 +411,7 @@ export async function saveCashAppPaySettings(page, options) {
 		.selectOption(settings.buttonShape);
 
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 /**
@@ -509,12 +509,12 @@ export async function isToggleChecked( page, selector ) {
 
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 export async function savePaymentGatewaySettings( page ) {
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 export async function setStepsLocalStorage( page ) {
