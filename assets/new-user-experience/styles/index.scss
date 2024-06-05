@@ -181,6 +181,12 @@ body {
 	}
 }
 
+.import-modal-content {
+	label {
+		font-size: 15px;
+	}
+}
+
 @media screen and (max-width: 1800px) {
 	.woo-square-onboarding__cover {
 		&:not(.payment-methods):not(.payment-complete) {
