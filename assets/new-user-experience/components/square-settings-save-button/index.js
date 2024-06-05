@@ -11,7 +11,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		} = props;
 
 		const {
-			afterSaveLabel,
+			afterSaveLabel = __( 'Changes Saved!' ),
 			afterSaveCallback,
 			...remainingProps
 		} = props;
