@@ -56,17 +56,18 @@ const ButtonComponent = () => {
 					applePay = await payments.applePay(paymentRequest);
 
 					const applePayButtonContainer = document.getElementById('apple-pay-button');
-					const color = getSquareServerData().applePayColor || 'black';
-					const type = getSquareServerData().applePayButtonType || 'buy';
+					const color = getSquareServerData().applePayColor;
+					const type = getSquareServerData().applePayType;
 
-					// TODO: We need to get the value of this text from the server. It isn't returned in getSquareServerData right now so this will always use `buy` as the text.
-					applePayButtonContainer.querySelector('.text').innerText = `${type} with`;
-					applePayButtonContainer.classList.add('wc-square-wallet-button-with-text');
+					if ('plain' !== type) {
+						applePayButtonContainer.querySelector('.text').innerText = `${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
+						applePayButtonContainer.classList.add('wc-square-wallet-button-with-text');
+					}
+
 					applePayButtonContainer.style.cssText += `-apple-pay-button-type: ${type};`;
-
-					applePayButtonContainer.classList.add(`wc-square-wallet-button-${color}`);
 					applePayButtonContainer.style.cssText += `-apple-pay-button-style: ${color};`;
 					applePayButtonContainer.style.display = 'block';
+					applePayButtonContainer.classList.add(`wc-square-wallet-button-${color}`);
 
 					/*
 					 * Apple Pay doesn't need to be attached.
