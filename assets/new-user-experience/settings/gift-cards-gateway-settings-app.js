@@ -26,7 +26,7 @@ export const GiftCardsSettingsApp = () => {
 
 	return (
 		<>
-			<GiftCardSetup />
+			<GiftCardSetup origin="settings" />
 			<PaymentGatewaySettingsSaveButton onClick={ () => {
 				saveGiftCardsSettings();
 			} } />

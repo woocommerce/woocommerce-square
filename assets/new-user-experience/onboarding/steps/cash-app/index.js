@@ -7,6 +7,7 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import parse from 'html-react-parser';
 
 /**
  * Internal dependencies.
@@ -20,7 +21,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CashAppSetup = () => {
+export const CashAppSetup = ( { origin = '' } ) => {
 	const {
 		cashAppGatewaySettings,
 		setCashAppData,
@@ -68,7 +69,14 @@ export const CashAppSetup = () => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Manage Cash App Pay Settings', 'woocommerce-square' ) } />
+				<SectionTitle title={
+					parse(
+						sprintf(
+							__( 'Manage Cash App Pay Settings %s', 'woocommerce-square' ),
+							'settings' === origin ? '<small className="wc-admin-breadcrumb"><a href="/wp-admin/admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>' : ''
+						)
+					)
+				} />
 				<SectionDescription>
 					{ __( 'Cash App Pay is an innovative payment solution that offers your customers a quick and secure way to check out. With just a few settings, you can tailor how Cash App Pay appears and operates on your site.', 'woocommerce-square' ) }
 				</SectionDescription>

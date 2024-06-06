@@ -3,6 +3,7 @@
  */
 import { __ } from '@wordpress/i18n';
 import { ToggleControl } from '@wordpress/components';
+import parse from 'html-react-parser';
 
 /**
  * Internal dependencies.
@@ -15,7 +16,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const GiftCardSetup = () => {
+export const GiftCardSetup = ( { origin = '' } ) => {
 	const {
 		giftCardsGatewaySettingsLoaded,
 		giftCardsGatewaySettings,
@@ -33,7 +34,14 @@ export const GiftCardSetup = () => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Gift Cards', 'woocommerce-square' ) } />
+				<SectionTitle title={
+					parse(
+						sprintf(
+							__( 'Gift Cards %s', 'woocommerce-square' ),
+							'settings' === origin ? '<small className="wc-admin-breadcrumb"><a href="/wp-admin/admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>' : ''
+						)
+					)
+				} />
 				<SectionDescription>
 					{ __( 'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.', 'woocommerce-square' ) }
 				</SectionDescription>

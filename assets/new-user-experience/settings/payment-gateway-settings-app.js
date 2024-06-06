@@ -19,7 +19,7 @@ export const PaymentGatewaySettingsApp = () => {
 
 	return (
 		<>
-			<CreditCardSetup />
+			<CreditCardSetup origin="settings" />
 			<DigitalWalletsSetup />
 			<PaymentGatewaySettingsSaveButton onClick={ () => {
 				savePaymentGatewaySettings();

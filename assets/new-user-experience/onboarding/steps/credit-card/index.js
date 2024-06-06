@@ -8,6 +8,7 @@ import {
 } from '@wordpress/components';
 import { MultiSelectControl } from '@codeamp/block-components';
 import { __ } from '@wordpress/i18n';
+import parse from 'html-react-parser';
 
 /**
  * Internal dependencies.
@@ -21,7 +22,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CreditCardSetup = () => {
+export const CreditCardSetup = ( { origin = '' } ) => {
 	const {
 		paymentGatewaySettings,
 		paymentGatewaySettingsLoaded,
@@ -74,7 +75,14 @@ export const CreditCardSetup = () => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Manage Credit Card Payment Settings', 'woocommerce-square' ) } />
+				<SectionTitle title={
+					parse(
+						sprintf(
+							__( 'Manage Credit Card Payment Settings %s', 'woocommerce-square' ),
+							'settings' === origin ? '<small className="wc-admin-breadcrumb"><a href="/wp-admin/admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>' : ''
+						)
+					)
+				} />
 				<SectionDescription>
 					{ __( 'Here you can fine-tune the details of how credit card payments are processed, ensuring a secure and smooth transaction for every customer.', 'woocommerce-square' ) }
 				</SectionDescription>
