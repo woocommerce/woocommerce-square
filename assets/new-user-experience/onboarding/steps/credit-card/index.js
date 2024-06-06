@@ -93,7 +93,7 @@ export const CreditCardSetup = ( { origin = '' } ) => {
 						>
 						<SquareCheckboxControl
 							data-testid="credit-card-gateway-toggle-field"
-							label={ __( 'Enable this gateway.', 'woocommerce-square' ) }
+							label={ __( 'Enable this payment method.', 'woocommerce-square' ) }
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setCreditCardData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>

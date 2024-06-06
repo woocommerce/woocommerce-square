@@ -87,7 +87,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 						>
 						<SquareCheckboxControl
 							data-testid="cash-app-gateway-toggle-field"
-							label={ __( 'Enable this gateway.', 'woocommerce-square' ) }
+							label={ __( 'Enable this payment method.', 'woocommerce-square' ) }
 							checked={ 'yes' === enabled }
 							onChange={ ( enabled ) => setCashAppData( { enabled: enabled ? 'yes' : 'no' } ) }
 						/>
