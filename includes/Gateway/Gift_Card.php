@@ -158,50 +158,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
-		// Common top form fields.
-		$this->form_fields = array(
-			'enabled'     => array(
-				'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-				'description' => sprintf(
-					// translators: %1$s - opening anchor tag, %2$s - closing anchor tag.
-					esc_html__(
-						'Allow customers to pay with a gift card. Please note the Gift Card feature requires %1$sSquare Credit Card%2$s payment gateway to be enabled.',
-						'woocommerce-square'
-					),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=square_credit_card' ) ) . '">',
-					'</a>'
-				),
-				'type'        => 'checkbox',
-				'default'     => '',
-				'label'       => esc_html__( 'Enable Square Gift Cards', 'woocommerce-square' ),
-			),
-
-			'title'       => array(
-				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
-				'type'     => 'text',
-				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_title(),
-			),
-
-			'description' => array(
-				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
-				'type'     => 'textarea',
-				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_description(),
-			),
-		);
-
-		/**
-		 * Payment Gateway Form Fields Filter.
-		 *
-		 * Actors can use this to add, remove, or tweak gateway form fields
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param array $form_fields array of form fields in format required by WC_Settings_API
-		 * @param Payment_Gateway $this gateway instance
-		 */
-		$this->form_fields = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_form_fields', $this->form_fields, $this );
+		$this->form_fields = array();
 	}
 
 	/**
