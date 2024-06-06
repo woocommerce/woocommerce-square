@@ -32,6 +32,20 @@ export const BusinessLocation = () => {
 	// Check if no locations found.
 	const locationCount = locations.length;
 
+	const locationsList = [
+		{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
+		...locations
+	]
+
+	if ( 1 === locationCount) {
+		// Remove the label, to make the only location selected.
+		locationsList.shift();
+		
+		// Set the first location value in data.
+		const first_location_id = locations[0].value;
+		setSquareSettingData( { sandbox_location_id: first_location_id } )
+	}
+
 	const noLocation = (
 		<>
 			<Section>
@@ -96,10 +110,7 @@ export const BusinessLocation = () => {
 									onChange={ ( sandbox_location_id ) =>
 										setSquareSettingData( { sandbox_location_id } )
 									}
-									options={[
-										{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
-										...locations
-									]}
+									options={ locationsList }
 									/>
 								</InputWrapper>
 							</div>
