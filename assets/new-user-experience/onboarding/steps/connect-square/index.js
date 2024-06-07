@@ -28,7 +28,8 @@ export const ConnectSetup = () => {
 					</SectionDescription>
 
 					<Button
-							variant='primary'
+							variant="button-primary"
+							className="button-primary"
 							href={settings.connection_url_wizard}
 					>
 						{

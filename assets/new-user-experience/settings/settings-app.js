@@ -114,7 +114,8 @@ export const SettingsApp = () => {
 				>
 					<Button
 						data-testid="connect-to-square-button"
-						variant='primary'
+						variant="button-primary"
+						className="button-primary"
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
 						isBusy={ isSquareSettingsSaving }

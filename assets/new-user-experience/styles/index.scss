@@ -25,10 +25,10 @@
 	a:not(.button-primary) {
 		color: #4B4B4B;		;
 	}
-}
 
-.components-modal__content .components-button:not(.codeamp-components-multi-select-control__remove-token) {
-	width: auto;
+	.components-modal__content .components-button:not(.codeamp-components-multi-select-control__remove-token) {
+		width: auto;
+	}
 }
 
 .import-modal-cover button.button-primary {
@@ -65,38 +65,42 @@
 }
 
 body {
-	p {
-		font-size: 15px;
-		font-weight: 400;
-		line-height: 17.9px;
-	}
-
-	// Adding under body to gain high priority.
-	.components-button:not(.codeamp-components-multi-select-control__remove-token) {
-		font-family: 'SF Pro', sans-serif;
-		min-width: 70px;
-		font-size: 15px;
-		font-weight: 400;
-		line-height: 17.9px;
-		width: 100%;
-		text-align: center;
-		display: block;
-		padding: 15px;
-		min-height: 46px;
-
-		&.button-primary {
-			color: #fff;
+	#woocommerce-square-onboarding,
+	#woocommerce-square-settings__container-general,
+	[id*="woocommerce-square-payment-gateway-settings__container"] {
+		p {
+			font-size: 15px;
+			font-weight: 400;
+			line-height: 17.9px;
 		}
-
-		&.is-link {
-			text-align: left;
-			padding: 0;
-		}
-
-		&.has-icon svg {
-			margin: 0 0 -10px 0;
-			position: relative;
-			top: -4px;
+	
+		// Adding under body to gain high priority.
+		.components-button:not(.codeamp-components-multi-select-control__remove-token) {
+			font-family: 'SF Pro', sans-serif;
+			min-width: 70px;
+			font-size: 15px;
+			font-weight: 400;
+			line-height: 17.9px;
+			width: 100%;
+			text-align: center;
+			display: block;
+			padding: 12px 15px;
+			min-height: 46px;
+	
+			&.button-primary {
+				color: #fff;
+			}
+	
+			&.is-link {
+				text-align: left;
+				padding: 0;
+			}
+	
+			&.has-icon svg {
+				margin: 0 0 -10px 0;
+				position: relative;
+				top: -4px;
+			}
 		}
 	}
 }
