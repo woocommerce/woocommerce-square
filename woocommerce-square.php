@@ -4,7 +4,7 @@
  * Requires Plugins: woocommerce
  * Version: 4.6.2
  * Plugin URI: https://woocommerce.com/products/square/
- * Requires at least: 6.3
+ * Requires at least: 6.4
  * Tested up to: 6.5
  * Requires PHP: 7.4
  * PHP tested up to: 8.3
@@ -22,8 +22,8 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 8.7
- * WC tested up to: 8.9
+ * WC requires at least: 8.8.0
+ * WC tested up to: 9.0.0
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -52,10 +52,10 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_PHP_VERSION = '7.4.0';
 
 	/** minimum WordPress version required by this plugin */
-	const MINIMUM_WP_VERSION = '6.3';
+	const MINIMUM_WP_VERSION = '6.4';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '8.7';
+	const MINIMUM_WC_VERSION = '8.8.0';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
