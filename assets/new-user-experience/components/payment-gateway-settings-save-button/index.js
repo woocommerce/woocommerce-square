@@ -35,7 +35,8 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				{ ...( isAtleastOneSaving && { icon: check } ) }
 				isBusy={ isSavingState }
 				disabled={ isSavingState }
-				variant="primary"
+				variant="button-primary"
+				className="button-primary"
 				onClick={ () => onClick() }
 			>
 				{ isAtleastOneSaving ? afterSaveLabel : label }

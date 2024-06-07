@@ -286,7 +286,8 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 												</Button>
 												<Button
 													data-testid="import-products-button-confirm"
-													variant="primary"
+													variant="button-primary"
+													className="button-primary"
 													onClick={ () => {
 														setIsImporting( true );
 														importProducts();

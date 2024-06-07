@@ -29,7 +29,8 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				{ ...( null === isSquareSettingsSaving && { icon: check } ) }
 				isBusy={ isSquareSettingsSaving }
 				disabled={ isSquareSettingsSaving }
-				variant="primary"
+				variant="button-primary"
+				className="button-primary"
 				onClick={ () => {
 					( async () => {
 						// Check of required fields.

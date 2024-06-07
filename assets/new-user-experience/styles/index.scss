@@ -22,18 +22,8 @@
 		padding: 15px;
 	}
 
-	a:not(.is-primary) {
+	a:not(.button-primary) {
 		color: #4B4B4B;		;
-	}
-
-	.components-form-toggle.is-checked .components-form-toggle__track {
-		background: #3858E9;
-		border-color: #3858E9;
-	}
-
-	.components-form-toggle .components-form-toggle__input:focus+.components-form-toggle__track {
-		outline: 2px solid #3858E9;
-		outline-offset: 2px;
 	}
 }
 
@@ -41,7 +31,7 @@
 	width: auto;
 }
 
-.import-modal-cover button.is-primary {
+.import-modal-cover button.button-primary {
 	float: right;
 }
 
@@ -59,7 +49,7 @@
 	max-width: 779px;
     margin: 50px 0 0 50px;
 
-	.components-button.is-primary {
+	.components-button.button-primary {
 		max-width: fit-content;
 	}
 
@@ -94,19 +84,8 @@ body {
 		padding: 15px;
 		min-height: 46px;
 
-		&.is-primary {
-			background-color: #3858E9;
+		&.button-primary {
 			color: #fff;
-
-			&:hover:not(:disabled) {
-				background-color: #2F4DBF;
-			}
-
-			&.is-busy,
-			&.is-busy:disabled,
-			&.is-busy[aria-disabled=true] {
-				background-image: linear-gradient(-45deg, #3858E9 33%, #193feb 33%, #1d3fd6 70%, #3858E9 70%);
-			}
 		}
 
 		&.is-link {

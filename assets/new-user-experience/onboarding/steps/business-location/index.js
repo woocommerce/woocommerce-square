@@ -61,7 +61,8 @@ export const BusinessLocation = () => {
 				</SectionDescription>
 			</Section>
 			<Button
-				variant="primary"
+				variant="button-primary"
+				className="button-primary"
 				onClick={ () => window.open( 'https://squareup.com/dashboard/locations/', '_blank' ) }
 			>
 				{ __( 'Create a Business Location', 'woocommerce-square' ) }

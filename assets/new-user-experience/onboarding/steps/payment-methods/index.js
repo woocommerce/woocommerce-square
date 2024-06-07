@@ -134,7 +134,8 @@ export const PaymentMethods = () => {
 					<div className="woo-square-onbarding__payment-settings__toggles__next-btn">
 						<Button
 							data-testid="next-step-button"
-							variant="primary"
+							variant="button-primary"
+							className="button-primary"
 							isBusy={ isSavingState }
 							disabled={ isSavingState }
 							onClick={ () => {
