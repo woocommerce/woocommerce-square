@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Spinner } from '@wordpress/components';
 
 /**
  * Internal dependencies.
@@ -22,9 +23,12 @@ import {
 import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 
 import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
+import { connectToSquare } from '../utils';
 
 export const OnboardingApp = () => {
 	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
+	const [ sandboxConnectLabel, setSandboxConnectLabel ] = useState( '' );
+	const [ isVerifyingConnection, setIsVerifyingConnection ] = useState( false );
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -212,10 +216,29 @@ export const OnboardingApp = () => {
 						<SandboxSettings />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
-							afterSaveLabel={ __( 'Connected to Sandbox!', 'woocommerce-square' ) }
+							afterSaveLabel={ '' }
 							afterSaveCallback={ () => {
-							setStep( 'payment-complete' );
-						} } />
+								( async() => {
+									setSandboxConnectLabel( __( 'Verifying connection ...', 'woocommerce-square' ) );
+									setIsVerifyingConnection( true );
+									const { data: locations } = await connectToSquare();
+
+									if ( locations.length ) {
+										setSandboxConnectLabel( __( 'Connected to sandbox!', 'woocommerce-square' ) );
+										await new Promise( setTimeout, 1000 );
+										setStep( 'payment-complete' );
+									} else {
+										setSandboxConnectLabel( __( 'Connection to sandbox failed.', 'woocommerce-square' ) )
+									}
+
+									setIsVerifyingConnection( false )
+								} )()
+							} }
+						/>
+						<p>
+							{ sandboxConnectLabel }
+							{ isVerifyingConnection && <Spinner /> }
+						</p>
 					</>
 				) }
 			</div>

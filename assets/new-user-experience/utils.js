@@ -79,7 +79,7 @@ export const connectToSquare = async () => {
 		const data = await response.json();
 		return data;
 	} catch ( e ) {
-		console.error( 'Error fetching business locations:', error );
+		console.error( 'Error fetching business locations:', e );
 	}
 
 	return {};

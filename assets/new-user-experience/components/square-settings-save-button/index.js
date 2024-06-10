@@ -13,6 +13,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		const {
 			afterSaveLabel = __( 'Changes Saved!' ),
 			afterSaveCallback,
+			icon = check,
 			...remainingProps
 		} = props;
 
@@ -25,8 +26,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 		return (
 			<WrappedComponent
 				data-testid="square-settings-save-button"
-				{ ...remainingProps }
-				{ ...( null === isSquareSettingsSaving && { icon: check } ) }
+				{ ...( null === isSquareSettingsSaving && { icon } ) }
 				isBusy={ isSquareSettingsSaving }
 				disabled={ isSquareSettingsSaving }
 				variant="button-primary"
@@ -57,6 +57,7 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 						}
 					} )()
 				} }
+				{ ...remainingProps }
 			>
 				{ null === isSquareSettingsSaving ? afterSaveLabel : label }
 			</WrappedComponent>

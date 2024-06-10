@@ -769,9 +769,11 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @since 2.0.0
 	 *
+	 * @param bool $force whether to force a refetch of the locations.
+	 *
 	 * @return \Square\Models\Location[]
 	 */
-	public function get_locations() {
+	public function get_locations( $force = false ) {
 		if ( is_array( $this->locations ) ) {
 			return $this->locations;
 		}
@@ -780,8 +782,7 @@ class Settings extends \WC_Settings_API {
 
 		$section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : false;  // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		// don't always need to refetch when not on Settings screen.
-		if ( ! $this->is_admin_settings_screen() || ( $this->is_admin_settings_screen() && 'update' === $section ) ) {
+		if ( ! ( $this->is_admin_settings_screen() || ( $this->is_admin_settings_screen() && 'update' !== $section ) || $force ) ) {
 			$this->locations = get_transient( $locations_transient_key );
 		}
 
@@ -827,13 +828,7 @@ class Settings extends \WC_Settings_API {
 	public function get_locations_ajax_callback() {
 		check_ajax_referer( 'wc_square_settings', 'security' );
 
-		$locations = array();
-
-		try {
-			$locations = $this->get_locations();
-		} catch ( Exception $e ) {
-			wp_send_json_error( $e->getMessage() );
-		}
+		$locations = $this->get_locations( true );
 
 		wp_send_json_success( $locations );
 	}

@@ -266,6 +266,14 @@ class Admin {
 				)
 			);
 
+			wp_localize_script(
+				'woocommerce-square-onboarding-js',
+				'wcSquareSettings',
+				array(
+					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+				)
+			);
+
 			wp_enqueue_style(
 				'woocommerce-square-onboarding-css',
 				WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
