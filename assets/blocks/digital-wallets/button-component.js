@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useContext, useRef, useEffect, useState } from '@wordpress/element';
+import { useContext, useRef, useEffect, useLayoutEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -24,7 +24,6 @@ const ButtonComponent = () => {
 		props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
-	const applePaybuttonRef = useRef();
 
 	const handleSubmission = async () => {
 		onClick();
@@ -55,7 +54,25 @@ const ButtonComponent = () => {
 
 				if (!applePayBtn) {
 					applePay = await payments.applePay(paymentRequest);
-					await applePay.attach(applePaybuttonRef.current);
+
+					const applePayButtonContainer = document.getElementById('apple-pay-button');
+					const color = getSquareServerData().applePayColor;
+					const type = getSquareServerData().applePayType;
+
+					if ('plain' !== type) {
+						applePayButtonContainer.querySelector('.text').innerText = `${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
+						applePayButtonContainer.classList.add('wc-square-wallet-button-with-text');
+					}
+
+					applePayButtonContainer.style.cssText += `-apple-pay-button-type: ${type};`;
+					applePayButtonContainer.style.cssText += `-apple-pay-button-style: ${color};`;
+					applePayButtonContainer.style.display = 'block';
+					applePayButtonContainer.classList.add(`wc-square-wallet-button-${color}`);
+
+					/*
+					 * Apple Pay doesn't need to be attached.
+					 * https://developer.squareup.com/docs/web-payments/apple-pay#:~:text=Note%3A%20You%20do%20not%20need%20to%20%60attach%60%20applePay.
+					 */
 					setApplePayBtn(applePay);
 				}
 			} catch (e) {
@@ -75,8 +92,8 @@ const ButtonComponent = () => {
 			})();
 	}, [payments]); // eslint-disable-line react-hooks/exhaustive-deps
 
-	useEffect(() => {
-		if (!googlePayBtn) {
+	useLayoutEffect(() => {
+		if (!clickedButton) {
 			return;
 		}
 
@@ -89,20 +106,39 @@ const ButtonComponent = () => {
 			initiateCheckout(payments, verificationDetails, clickedButton)
 		);
 		return unsubscribe;
-	}, [googlePayBtn, applePayBtn, onPaymentSetup, paymentStatus.isStarted]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [clickedButton, onPaymentSetup, paymentStatus.isStarted]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	if (!payments) {
 		return null;
 	}
 
-	const isGooglePayEnabled =
+	const isGooglePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('google');
-	const isApplePayEnabled =
+	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
 	return (
 		<>
-			{!isGooglePayEnabled && (
+			{!isApplePayDisabled && (
+				<div
+					tabIndex={0}
+					role="button"
+					id="apple-pay-button"
+					className="apple-pay-button wc-square-wallet-buttons"
+					onClick={() => {
+						setClickedButton(applePayBtn);
+						handleSubmission();
+					}}
+					onKeyDown={() => {
+						setClickedButton(applePayBtn);
+						handleSubmission();
+					}}
+				>
+					<span className="text"></span>
+					<span className="logo"></span>
+				</div>
+			)}
+			{!isGooglePayDisabled && (
 				<div
 					tabIndex={0}
 					role="button"
@@ -113,21 +149,6 @@ const ButtonComponent = () => {
 					}}
 					onKeyDown={() => {
 						setClickedButton(googlePayBtn);
-						handleSubmission();
-					}}
-				></div>
-			)}
-			{!isApplePayEnabled && (
-				<div
-					tabIndex={0}
-					role="button"
-					ref={applePaybuttonRef}
-					onClick={() => {
-						setClickedButton(applePayBtn);
-						handleSubmission();
-					}}
-					onKeyDown={() => {
-						setClickedButton(applePayBtn);
 						handleSubmission();
 					}}
 				></div>

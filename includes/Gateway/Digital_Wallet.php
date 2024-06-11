@@ -152,6 +152,7 @@ class Digital_Wallet {
 				'hide_button_options'      => $this->get_hidden_button_options(),
 				'google_pay_color'         => $this->gateway->get_option( 'digital_wallets_google_pay_button_color', 'black' ),
 				'apple_pay_color'          => $this->gateway->get_option( 'digital_wallets_apple_pay_button_color', 'black' ),
+				'apple_pay_type'           => $this->gateway->get_option( 'digital_wallets_button_type', 'buy' ),
 			);
 		}
 
