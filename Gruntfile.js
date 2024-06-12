@@ -167,7 +167,8 @@ module.exports = function( grunt ) {
 					'!node_modules/**', // Exclude node_modules/
 					'!tests/**',        // Exclude tests/
 					'!vendor/**',       // Exclude vendor/
-					'!tmp/**'           // Exclude tmp/
+					'!tmp/**',          // Exclude tmp/
+					'!test-plugins/**'  // Exclude test-plugins/
 				],
 				expand: true
 			}
