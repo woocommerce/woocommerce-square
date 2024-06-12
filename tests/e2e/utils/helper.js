@@ -500,3 +500,81 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		.innerText();
 	return orderId;
 }
+
+/**
+ * Create Pre-Order Product.
+ *
+ * @param {Page}   page    Playwright page object
+ * @param {Object} options Product options
+ *
+ * @returns {number} Product ID
+ */
+export async function createPreOrderProduct(page, options = {}) {
+	await page.goto('/wp-admin/post-new.php?post_type=product');
+	const product = {
+		regularPrice: '10',
+		preOrderFee: '5',
+		whenToCharge: 'upon_release',
+		availabilityDate: getNextDay(),
+		...options,
+	};
+
+	// Set product title.
+	await page.locator('#title').fill('Pre-Order Product');
+	await page.locator('#title').blur();
+	await page.locator('#sample-permalink').waitFor();
+
+	// Set product data.
+	await page.locator('.wc-tabs > li > a', { hasText: 'General' }).click();
+	await page.locator('#_regular_price').fill(product.regularPrice);
+
+	// Enable Deposits.
+	await page.locator('.wc-tabs > li > a', { hasText: 'Pre-orders' }).click();
+	await page.locator('#_wc_pre_orders_enabled').check();
+	await page
+		.locator('#_wc_pre_orders_availability_datetime')
+		.fill(product.availabilityDate);
+	await page.locator('#_wc_pre_orders_fee').fill(product.preOrderFee);
+	await page
+		.locator('#_wc_pre_orders_when_to_charge')
+		.selectOption(product.whenToCharge);
+
+	await page.locator('#publish').waitFor();
+	await page.locator('#publish').click();
+	await expect(
+		page.getByText('Product published. View Product')
+	).toBeVisible();
+	const productId = await page.locator('#post_ID').inputValue();
+	return productId;
+}
+
+/**
+ * Get next day date.
+ */
+function getNextDay() {
+	const date = new Date();
+	date.setDate(date.getDate() + 1);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+	return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+/**
+ * Complete the Pre-Order.
+ *
+ * @param {Page}   page    Playwright page object
+ * @param {string} orderId Order ID
+ */
+export async function completePreOrder(page, orderId) {
+	await page.goto(`/wp-admin/admin.php?page=wc_pre_orders`);
+	await page
+		.locator(
+			`#the-list th.check-column input[name="order_id[]"][value="${orderId}"]`
+		)
+		.check();
+	await page.locator('#bulk-action-selector-top').selectOption('complete');
+	await page.locator('#doaction').click();
+}
