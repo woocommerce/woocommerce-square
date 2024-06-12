@@ -578,3 +578,18 @@ export async function completePreOrder(page, orderId) {
 	await page.locator('#bulk-action-selector-top').selectOption('complete');
 	await page.locator('#doaction').click();
 }
+
+/**
+ * Subscription renewal.
+ * 
+ * @param {Page} page Playwright page object.
+ */
+export async function renewSubscription(page) {
+	await page.on('dialog', (dialog) => dialog.accept());
+	await page.locator("select[name='wc_order_action']").selectOption('wcs_process_renewal');
+	await page.locator('#actions button.wc-reload').click();
+	await expect(
+		page.locator('#message.updated.notice.notice-success').first()
+	).toContainText('Subscription updated.');
+	await expect(page.locator('#order_status')).toHaveValue('wc-active');
+}

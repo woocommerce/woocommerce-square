@@ -40,7 +40,7 @@ test.describe('Pre-Orders Tests', () => {
 		});
 	});
 
-	test('[Charge upon release] Square Credit Card should work with Pre-Orders - @foundational', async ({
+	test('[Charge upon release] Square Credit Card should work with Pre-Orders', async ({
         page,
 	}) => {
         const isBlock = true;
@@ -93,7 +93,7 @@ test.describe('Pre-Orders Tests', () => {
 		).toBeVisible();
 	});
 
-	test('[Upfront Charge] Square Credit Card should work with Pre-Orders - @foundational', async ({
+	test('[Upfront Charge] Square Credit Card should work with Pre-Orders', async ({
 		page,
 	}) => {
         const isBlock = true;
@@ -139,7 +139,7 @@ test.describe('Pre-Orders Tests', () => {
 		).toEqual('wc-processing');
 	});
 
-	test('[Upfront Charge] Square Cash App Pay should work with Pre-Orders - @foundational', async ({
+	test('[Upfront Charge] Square Cash App Pay should work with Pre-Orders', async ({
 		browser,
 		page: adminPage,
 	}) => {
