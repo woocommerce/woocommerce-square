@@ -61,7 +61,7 @@ test( 'Gift card - Partial payment', async ( { page } ) => {
 	);
 	
 	await selectPaymentMethod(page, 'square_credit_card', false);
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 
 	await page.locator( '#place_order' ).click();
 	await expect(

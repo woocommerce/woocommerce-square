@@ -64,7 +64,7 @@ for ( const isBlock of isBlockCheckout ) {
 
 		await visitCheckout( page, isBlock );
 		await fillAddressFields( page, isBlock );
-		await fillCreditCardFields( page, null, isBlock );
+		await fillCreditCardFields( page, true, isBlock );
 		await placeOrder( page, isBlock );
 
 		await expect(

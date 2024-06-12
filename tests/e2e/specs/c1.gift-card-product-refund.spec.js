@@ -70,7 +70,7 @@ test( 'Purchase Gift card product', async ( { page } ) => {
 	await page.goto( '/checkout-old' );
 
 	await fillAddressFields( page, false );
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 	await waitForUnBlock( page );
 	await placeOrder(page, false);
 

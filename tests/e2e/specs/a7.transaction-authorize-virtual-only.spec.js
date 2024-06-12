@@ -56,7 +56,7 @@ test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only', async
 
 	await visitCheckout( page, false );
 	await fillAddressFields( page, false );
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 	await placeOrder( page, false );
 
 	await expect(
