@@ -122,7 +122,6 @@ export const SettingsApp = () => {
 						{ ...( is_connected && { href: disconnection_url } ) }
 						onClick={ () => initiateConnection() }
 						isBusy={ isSquareSettingsSaving }
-						disabled={ isSquareSettingsSaving }
 					>
 						{
 							is_connected

@@ -28,7 +28,6 @@ const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 				data-testid="square-settings-save-button"
 				{ ...( null === isSquareSettingsSaving && { icon } ) }
 				isBusy={ isSquareSettingsSaving }
-				disabled={ isSquareSettingsSaving }
 				variant="button-primary"
 				className="button-primary"
 				onClick={ () => {

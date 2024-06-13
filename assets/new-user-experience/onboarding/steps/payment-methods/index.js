@@ -137,9 +137,8 @@ export const PaymentMethods = () => {
 							variant="button-primary"
 							className="button-primary"
 							isBusy={ isSavingState }
-							disabled={ isSavingState }
-							onClick={ () => {
-								( async () => {
+							onClick={ (e) => {
+								( async (e) => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
 									await saveGiftCardsSettings();
