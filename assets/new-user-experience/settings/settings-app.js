@@ -43,11 +43,14 @@ export const SettingsApp = () => {
 	const {
 		enable_sandbox = 'no',
 		sandbox_location_id = '',
+		production_location_id = '',
 		is_connected = false,
 		connection_url = '',
 		disconnection_url = '',
 		locations = [],
 	} = settings;
+
+	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
 
 	// Set the initial state.
 	useEffect( () => {
@@ -146,8 +149,14 @@ export const SettingsApp = () => {
 				>
 					<SelectControl
 						data-testid="business-location-field"
-						value={ sandbox_location_id }
-						onChange={ ( sandbox_location_id ) => setSquareSettingData( { sandbox_location_id } ) }
+						value={ _location_id }
+						onChange={ ( _location_id ) => {
+							if ( 'yes' === enable_sandbox ) {
+								setSquareSettingData( { sandbox_location_id: _location_id } )
+							} else {
+								setSquareSettingData( { production_location_id: _location_id } )
+							}
+						} }
 						options={ [
 							{ label: __( 'Please choose a location', 'woocommerce-square' ), value: '' },
 							...locations

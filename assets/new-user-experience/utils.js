@@ -98,6 +98,7 @@ export const getSquareSettings = async () => {
 		enable_sandbox: settings.enable_sandbox || SQUARE_SETTINGS_DEFAULT_STATE.enable_sandbox,
 		sandbox_application_id: settings.sandbox_application_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_application_id,
 		sandbox_token: settings.sandbox_token || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_token,
+		production_location_id: settings.production_location_id || SQUARE_SETTINGS_DEFAULT_STATE.production_location_id,
 		sandbox_location_id: settings.sandbox_location_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_location_id,
 		system_of_record: settings.system_of_record || SQUARE_SETTINGS_DEFAULT_STATE.system_of_record,
 		enable_inventory_sync: settings.enable_inventory_sync || SQUARE_SETTINGS_DEFAULT_STATE.enable_inventory_sync,

@@ -101,6 +101,7 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	sandbox_application_id: '',
 	sandbox_token: '',
 	sandbox_location_id: '',
+	production_location_id: '',
 	system_of_record: 'disabled',
 	enable_inventory_sync: 'no',
 	override_product_images: 'no',

@@ -21,13 +21,17 @@ export const BusinessLocation = () => {
 	} = useSquareSettings();
 
 	const {
+		enable_sandbox = 'no',
 		sandbox_location_id,
+		production_location_id,
 		locations
 	} = settings;
 
 	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
+
+	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
 
 	// Check if no locations found.
 	const locationCount = locations.length;
@@ -43,7 +47,12 @@ export const BusinessLocation = () => {
 		
 		// Set the first location value in data.
 		const first_location_id = locations[0].value;
-		setSquareSettingData( { sandbox_location_id: first_location_id } )
+		
+		if ( 'yes' === enable_sandbox ) {
+			setSquareSettingData( { sandbox_location_id: first_location_id } )
+		} else {
+			setSquareSettingData( { production_location_id: first_location_id } )
+		}
 	}
 
 	const noLocation = (
@@ -106,11 +115,15 @@ export const BusinessLocation = () => {
 							<div className='woo-square-wizard__fields'>
 								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 									<SelectControl
-									data-testid="business-location-field"
-									value={ sandbox_location_id }
-									onChange={ ( sandbox_location_id ) =>
-										setSquareSettingData( { sandbox_location_id } )
-									}
+									data-testid="business-location-field-prod"
+									value={ _location_id }
+									onChange={ ( _location_id ) => {
+										if ( 'yes' === enable_sandbox ) {
+											setSquareSettingData( { sandbox_location_id: _location_id } )
+										} else {
+											setSquareSettingData( { production_location_id: _location_id } )
+										}
+									} }
 									options={ locationsList }
 									/>
 								</InputWrapper>

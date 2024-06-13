@@ -48,6 +48,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'sandbox_application_id',
 			'sandbox_token',
 			'sandbox_location_id',
+			'production_location_id',
 			'system_of_record',
 			'enable_inventory_sync',
 			'override_product_images',
@@ -105,6 +106,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'sanitize_callback' => 'sanitize_text_field',
 					),
 					'sandbox_location_id'              => array(
+						'description'       => __( 'Square location ID. (Sandbox)', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'production_location_id'           => array(
 						'description'       => __( 'Square location ID.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
