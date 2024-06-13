@@ -11,7 +11,7 @@ import {
 	InputWrapper,
 } from '../../../components';
 import { useSquareSettings } from '../../../settings/hooks';
-import { useSteps } from '../../hooks';
+import { useEffect } from '@wordpress/element';
 
 export const BusinessLocation = () => {
 	const {
@@ -27,33 +27,35 @@ export const BusinessLocation = () => {
 		locations
 	} = settings;
 
-	if ( ! squareSettingsLoaded ) {
-		return null;
-	}
-
-	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
-
-	// Check if no locations found.
-	const locationCount = locations.length;
-
 	const locationsList = [
 		{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
 		...locations
 	]
 
-	if ( 1 === locationCount) {
-		// Remove the label, to make the only location selected.
-		locationsList.shift();
-		
-		// Set the first location value in data.
-		const first_location_id = locations[0].value;
-		
-		if ( 'yes' === enable_sandbox ) {
-			setSquareSettingData( { sandbox_location_id: first_location_id } )
-		} else {
-			setSquareSettingData( { production_location_id: first_location_id } )
+	// Check if no locations found.
+	const locationCount = locations.length;
+
+	useEffect( () => {
+		if ( 1 !== locationCount) {
+			// Remove the label, to make the only location selected.
+			locationsList.shift();
+			
+			// Set the first location value in data.
+			const first_location_id = locations[0].value;
+			
+			if ( 'yes' === enable_sandbox ) {
+				setSquareSettingData( { sandbox_location_id: first_location_id } )
+			} else {
+				setSquareSettingData( { production_location_id: first_location_id } )
+			}
 		}
+	} );
+
+	if ( ! squareSettingsLoaded ) {
+		return null;
 	}
+
+	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
 
 	const noLocation = (
 		<>
@@ -116,6 +118,7 @@ export const BusinessLocation = () => {
 								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 									<SelectControl
 									data-testid="business-location-field"
+									required
 									value={ _location_id }
 									onChange={ ( _location_id ) => {
 										if ( 'yes' === enable_sandbox ) {
