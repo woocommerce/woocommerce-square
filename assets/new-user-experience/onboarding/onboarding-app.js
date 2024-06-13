@@ -216,7 +216,6 @@ export const OnboardingApp = () => {
 						<SandboxSettings />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
-							afterSaveLabel={ '' }
 							afterSaveCallback={ () => {
 								( async() => {
 									setSandboxConnectLabel( __( 'Verifying connection ...', 'woocommerce-square' ) );
