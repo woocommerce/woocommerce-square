@@ -90,7 +90,7 @@ const ButtonComponent = () => {
 					await applePayBtn.destroy();
 				}
 			})();
-	}, [payments]);
+	}, [payments]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useLayoutEffect(() => {
 		if (!clickedButton) {
@@ -113,7 +113,7 @@ const ButtonComponent = () => {
 			return checkout;
 		} );
 		return unsubscribe;
-	}, [clickedButton, onPaymentSetup, paymentStatus.isStarted]);
+	}, [clickedButton, onPaymentSetup, paymentStatus.isStarted]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	if (!payments) {
 		return null;

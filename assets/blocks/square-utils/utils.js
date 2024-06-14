@@ -56,7 +56,7 @@ const getSquareServerData = () => {
 /**
  * Handles errors received from Square requests
  *
- * @param {Array} errors
+ * @param {Array}  errors
  * @param {Object} response
  */
 const handleErrors = (errors, response = { logs: [], notices: [] }) => {
