@@ -578,7 +578,7 @@ abstract class Background_Job_Handler {
 	 * @since 3.0.0
 	 *
 	 * @param \stdClass|object|string $job Job instance or ID
-	 * @return false on failure
+	 * @return bool|void returns false on failure
 	 */
 	public function delete_job( $job ) {
 		global $wpdb;

@@ -257,6 +257,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string whether apple pay domain registration was attempted. */
 	protected $apple_pay_domain_registration_attempted;
 
+	/** @var string order note for the voided order. */
+	protected $voided_order_message;
+
 	/**
 	 * Initialize the gateway
 	 *
@@ -4663,7 +4666,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * direct communication
 	 *
 	 * @since 3.0.0
-	 * @return \WooCommerce\Square\Gateway\API the payment gateway API instance
+	 * @return \WooCommerce\Square\Gateway\API|void the payment gateway API instance
 	 */
 	public function get_api() {
 

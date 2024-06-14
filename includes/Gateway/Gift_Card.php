@@ -168,7 +168,7 @@ class Gift_Card {
 	 * @return boolean
 	 */
 	public static function cart_contains_upon_release_pre_order() {
-		if ( ! class_exists( '\WC_Pre_Orders_Cart' ) ) {
+		if ( ! class_exists( '\WC_Pre_Orders_Cart' ) || ! class_exists( '\WC_Pre_Orders_Product' ) ) {
 			return false;
 		}
 
