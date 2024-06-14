@@ -77,6 +77,10 @@ class WC_Payments_Compatibility {
 	 * @return bool Modified support status.
 	 */
 	public function platform_checkout_button_are_cart_items_supported( $is_supported ) {
+		if ( ! WC()->cart ) {
+			return $is_supported;
+		}
+
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 			$product = $cart_item['data'];
 
