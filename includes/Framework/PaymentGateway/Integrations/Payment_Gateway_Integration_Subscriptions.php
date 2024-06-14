@@ -702,13 +702,13 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 		// payment token
 		if ( empty( $meta['post_meta'][ $prefix . 'payment_token' ]['value'] ) ) {
 			// translators: %1$s payment token label.
-			throw new \Exception( sprintf( esc_html__( '%s is required.', 'woocommerce-square' ), $meta['post_meta'][ $prefix . 'payment_token' ]['label'] ) );
+			throw new \Exception( sprintf( esc_html__( '%s is required.', 'woocommerce-square' ), esc_html( $meta['post_meta'][ $prefix . 'payment_token' ]['label'] ) ) );
 		}
 
 		// customer ID - optional for some gateways so check if it's set first
 		if ( isset( $meta['post_meta'][ $prefix . 'customer_id' ] ) && empty( $meta['post_meta'][ $prefix . 'customer_id' ]['value'] ) ) {
 			// translators: %1$s customer label.
-			throw new \Exception( sprintf( esc_html__( '%s is required.', 'woocommerce-square' ), $meta['post_meta'][ $prefix . 'customer_id' ]['label'] ) );
+			throw new \Exception( sprintf( esc_html__( '%s is required.', 'woocommerce-square' ), esc_html( $meta['post_meta'][ $prefix . 'customer_id' ]['label'] ) ) );
 		}
 	}
 

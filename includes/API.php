@@ -350,7 +350,7 @@ class API extends Base {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			throw new \Exception( $response->get_error_message() );
+			throw new \Exception( esc_html( $response->get_error_message() ) );
 		}
 
 		$body = wp_remote_retrieve_body( $response );
@@ -368,7 +368,7 @@ class API extends Base {
 				$message = 'Unknown error';
 			}
 
-			throw new \Exception( $message );
+			throw new \Exception( esc_html( $message ) );
 		}
 
 		return $body['image']['id'];
@@ -845,7 +845,7 @@ class API extends Base {
 		}
 
 		// At this point we could not validate the response and assume a failed attempt.
-		throw new \Exception( implode( ' | ', $errors ) );
+		throw new \Exception( esc_html( implode( ' | ', $errors ) ) );
 	}
 
 	/**
