@@ -23,6 +23,7 @@
     "archive": "composer archive --file=$npm_package_name --format=zip",
     "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
     "woorelease": "npm run build",
+    "env": "wp-env",
     "test:env:start": "wp-env start",
     "test:env:stop": "wp-env stop",
     "test:env:clean": "wp-env clean",

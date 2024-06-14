@@ -178,7 +178,7 @@ class Payment_Gateway_Apple_Pay_Orders {
 
 			if ( is_wp_error( $order ) ) {
 				/* translators: Placeholders: %s - error code when order creation fails */
-				throw new \Exception( sprintf( __( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 522 ) );
+				throw new \Exception( sprintf( esc_html__( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 522 ) );
 			} else {
 				$order->remove_order_items();
 			}
@@ -188,10 +188,10 @@ class Payment_Gateway_Apple_Pay_Orders {
 
 			if ( is_wp_error( $order ) ) {
 				/* translators: Placeholders: %s - error code when order creation fails */
-				throw new \Exception( sprintf( __( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 520 ) );
+				throw new \Exception( sprintf( esc_html__( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 520 ) );
 			} elseif ( false === $order ) {
 				/* translators: Placeholders: %s - error code when order creation fails */
-				throw new \Exception( sprintf( __( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 521 ) );
+				throw new \Exception( sprintf( esc_html__( 'Error %d: Unable to create order. Please try again.', 'woocommerce-square' ), 521 ) );
 			}
 
 			// set the new order ID so it can be resumed in case of failure

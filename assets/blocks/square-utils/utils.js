@@ -46,6 +46,7 @@ const getSquareServerData = () => {
 		paymentRequestNonce: squareData.payment_request_nonce || '',
 		googlePayColor: squareData.google_pay_color || 'black',
 		applePayColor: squareData.apple_pay_color || 'black',
+		applePayType: squareData.apple_pay_type || 'buy',
 		hideButtonOptions: squareData.hide_button_options || [],
 	};
 
