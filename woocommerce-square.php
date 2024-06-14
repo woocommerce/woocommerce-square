@@ -184,10 +184,10 @@ class WooCommerce_Square_Loader {
 	 * Adds notices for out-of-date WordPress and/or WooCommerce versions.
 	 *
 	 * @since 2.0.0
-	 * @deprecated x.x.x Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
+	 * @deprecated 4.6.3 Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 */
 	public function add_plugin_notices() {
-		_deprecated_function( __METHOD__, 'x.x.x', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		_deprecated_function( __METHOD__, '4.6.3', '\WooCommerce_Square_Loader::is_environment_compatible()' );
 		$this->is_environment_compatible();
 	}
 
@@ -196,12 +196,12 @@ class WooCommerce_Square_Loader {
 	 * Determines if the required plugins are compatible.
 	 *
 	 * @since 2.0.0
-	 * @deprecated x.x.x Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
+	 * @deprecated 4.6.3 Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 *
 	 * @return bool
 	 */
 	protected function plugins_compatible() {
-		_deprecated_function( __METHOD__, 'x.x.x', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		_deprecated_function( __METHOD__, '4.6.3', '\WooCommerce_Square_Loader::is_environment_compatible()' );
 		return $this->is_environment_compatible();
 	}
 
@@ -399,7 +399,7 @@ class WooCommerce_Square_Loader {
 	 * ensuring that specific download links match the tagged version and include
 	 * three parts in the version number.
 	 *
-	 * @since x.x.x
+	 * @since 4.6.3
 	 *
 	 * @param string|int|float $version The version of WooCommerce to get the download link for.
 	 *                                  Accepts a version number in the forms of 'x', 'x.x' or 'x.x.x'.
