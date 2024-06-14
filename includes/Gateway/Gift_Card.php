@@ -318,7 +318,7 @@ class Gift_Card {
 			<tbody>
 				<tr>
 					<td><?php esc_html_e( 'Gift card', 'woocommerce-square' ); ?></td>
-					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); ?></td>
+					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wc_price is already escaped ?></td>
 				</tr>
 				<tr>
 					<td>
@@ -330,7 +330,7 @@ class Gift_Card {
 						}
 						?>
 					</td>
-					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); ?></td>
+					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wc_price is already escaped ?></td>
 				</tr>
 			</tbody>
 		</table>
@@ -353,12 +353,12 @@ class Gift_Card {
 					if ( $response['is_error'] ) {
 						printf( esc_html__( 'There was an error while applying the gift card.', 'woocommerce-square' ) );
 					} else {
-						printf(
-							wp_kses_post(
+						echo wp_kses_post(
+							sprintf(
 								/* translators: %s - amount to be charged on the gift card. */
-								__( '%s will be applied from the gift card.', 'woocommerce-square' )
-							),
-							wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
+								__( '%s will be applied from the gift card.', 'woocommerce-square' ),
+								wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
+							)
 						);
 					}
 					?>
@@ -367,21 +367,21 @@ class Gift_Card {
 					<?php
 					if ( ! $response['is_error'] ) {
 						if ( $response['has_balance'] ) {
-							printf(
-								wp_kses_post(
+							echo wp_kses_post(
+								sprintf(
 									/* translators: %s - balance amount in the gift card after placing the order. */
-									__( 'The remaining gift card balance after placing this order will be <strong>%s</strong>', 'woocommerce-square' )
-								),
-								wc_price( $response['post_balance'], array( 'currency' => get_woocommerce_currency() ) )
+									__( 'The remaining gift card balance after placing this order will be <strong>%s</strong>', 'woocommerce-square' ),
+									wc_price( $response['post_balance'], array( 'currency' => get_woocommerce_currency() ) )
+								)
 							);
 						} else {
-							printf(
-								wp_kses_post(
+							echo wp_kses_post(
+								sprintf(
 									/* translators: %1$s - remaining amount to be paid using the credit card or cash app pay; %2$s - payment method. */
-									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%1\$s</strong> would need to be paid with a %2\$s.", 'woocommerce-square' )
+									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%1\$s</strong> would need to be paid with a %2\$s.", 'woocommerce-square' ),
+									wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
+									$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ),
 								),
-								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
-								$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 							);
 						}
 					}

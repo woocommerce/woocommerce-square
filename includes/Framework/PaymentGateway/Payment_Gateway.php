@@ -1651,7 +1651,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$order->customer_id = '';
 
 		// logged in customer?
-		if ( 0 != $order->get_user_id() && false !== ( $customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) ) ) ) {
+		$customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) );
+		if ( 0 !== $order->get_user_id() && false !== $customer_id ) {
 			$order->customer_id = $customer_id;
 		}
 
@@ -2396,7 +2397,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order WooCommerce order.
 	 */
 	public function maybe_refund_gift_card( $order ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled in WooCommerce core.
 		$line_item_qtys   = isset( $_POST['line_item_qtys'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_qtys'] ) ), true ) : array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled in WooCommerce core.
 		$line_item_totals = isset( $_POST['line_item_totals'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_totals'] ) ), true ) : array();
 		$line_items       = array();
 		$item_ids         = array_unique( array_merge( array_keys( $line_item_qtys ), array_keys( $line_item_totals ) ) );
@@ -2692,7 +2695,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	protected function process_void( \WC_Order $order ) {
 
 		// partial voids are not supported
-		if ( $order->refund->amount != $order->get_total() ) {
+		if ( $order->refund->amount !== $order->get_total() ) {
 			return new \WP_Error( 'wc_' . $this->get_id() . '_void_error', esc_html__( 'Oops, you cannot partially void this order. Please use the full order amount.', 'woocommerce-square' ), 500 );
 		}
 
@@ -3047,7 +3050,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$this->update_order_meta( $order, 'customer_id', $customer_id );
 
 		// update the user
-		if ( 0 != $user_id ) {
+		if ( 0 !== $user_id ) {
 			$this->update_customer_id( $user_id, $customer_id );
 		}
 	}
@@ -3098,7 +3101,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( ! empty( $order->payment->exp_month ) && ! empty( $order->payment->exp_year ) ) {
 
 			$message .= ' ' . sprintf(
-				/** translators: Placeholders: %s - credit card expiry date */
+				/* translators: Placeholders: %s - credit card expiry date */
 				esc_html__( '(expires %s)', 'woocommerce-square' ),
 				$order->payment->exp_month . '/' . substr( $order->payment->exp_year, -2 )
 			);
@@ -3920,23 +3923,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		return $form_fields;
 	}
-
-	/**
-	 * Safely get and trim data from $_REQUEST
-	 *
-	 * @since 3.0.0
-	 * @param string $key array key to get from $_REQUEST array
-	 * @return string value from $_REQUEST or blank string if $_REQUEST[ $key ] is not set
-	 */
-	protected function get_request( $key ) {
-
-		if ( isset( $_REQUEST[ $key ] ) ) {
-			return trim( $_REQUEST[ $key ] );
-		}
-
-		return '';
-	}
-
 
 	/**
 	 * Add API request logging for the gateway. The main plugin class typically handles this, but the payment

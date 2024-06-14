@@ -197,7 +197,7 @@ class Payment_Gateway_Payment_Tokens_Handler {
 				$message .= ' ' . sprintf( esc_html__( 'Transaction ID %s', 'woocommerce-square' ), $response->get_transaction_id() );
 			}
 
-			throw new \Exception( $message );
+			throw new \Exception( esc_html( $message ) );
 		}
 
 		return $order;

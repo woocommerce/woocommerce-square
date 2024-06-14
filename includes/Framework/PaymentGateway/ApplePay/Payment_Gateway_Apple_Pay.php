@@ -232,22 +232,22 @@ class Payment_Gateway_Apple_Pay {
 
 		// no subscription products
 		if ( $this->get_plugin()->is_subscriptions_active() && class_exists( 'WC_Subscriptions_Product' ) && \WC_Subscriptions_Product::is_subscription( $product ) ) {
-			throw new \Exception( __( 'Not available for subscription products.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Not available for subscription products.', 'woocommerce-square' ) );
 		}
 
 		// no pre-order "charge upon release" products
 		if ( $this->get_plugin()->is_pre_orders_active() && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
-			throw new \Exception( __( 'Not available for pre-order products that are set to charge upon release.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Not available for pre-order products that are set to charge upon release.', 'woocommerce-square' ) );
 		}
 
 		// only simple products
 		if ( ! $product->is_type( 'simple' ) ) {
-			throw new \Exception( __( 'Buy Now is only available for simple products', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Buy Now is only available for simple products', 'woocommerce-square' ) );
 		}
 
 		// if this product can't be purchased, bail
 		if ( ! $product->is_purchasable() || ! $product->is_in_stock() || ! $product->has_enough_stock( 1 ) ) {
-			throw new \Exception( __( 'Product is not available for purchase.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Product is not available for purchase.', 'woocommerce-square' ) );
 		}
 
 		if ( $in_cart ) {
@@ -293,17 +293,17 @@ class Payment_Gateway_Apple_Pay {
 	public function get_cart_payment_request( \WC_Cart $cart ) {
 
 		if ( $this->get_plugin()->is_subscriptions_active() && class_exists( 'WC_Subscriptions_Cart' ) && \WC_Subscriptions_Cart::cart_contains_subscription() ) {
-			throw new \Exception( __( 'Cart contains subscriptions.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Cart contains subscriptions.', 'woocommerce-square' ) );
 		}
 
 		if ( $this->get_plugin()->is_pre_orders_active() && class_exists( 'WC_Pre_Orders_Cart' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() ) {
-			throw new \Exception( __( 'Cart contains pre-orders.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Cart contains pre-orders.', 'woocommerce-square' ) );
 		}
 
 		$cart->calculate_totals();
 
 		if ( count( WC()->shipping->get_packages() ) > 1 ) {
-			throw new \Exception( __( 'Apple Pay cannot be used for multiple shipments.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Apple Pay cannot be used for multiple shipments.', 'woocommerce-square' ) );
 		}
 
 		$args = array(
@@ -338,7 +338,7 @@ class Payment_Gateway_Apple_Pay {
 		$payment_request = $this->get_stored_payment_request();
 
 		if ( empty( $payment_request ) ) {
-			throw new \Exception( __( 'Payment request data is missing.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Payment request data is missing.', 'woocommerce-square' ) );
 		}
 
 		// if this is a single product request, make sure the cart gets populated
@@ -347,7 +347,7 @@ class Payment_Gateway_Apple_Pay {
 		}
 
 		if ( ! WC()->cart ) {
-			throw new \Exception( __( 'Cart data is missing.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Cart data is missing.', 'woocommerce-square' ) );
 		}
 
 		$totals = $this->get_cart_totals( WC()->cart );

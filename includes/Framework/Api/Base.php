@@ -144,7 +144,7 @@ abstract class Base {
 
 		// check for WP HTTP API specific errors (network timeout, etc)
 		if ( is_wp_error( $response ) ) {
-			throw new \Exception( $response->get_error_message(), (int) $response->get_error_code() );
+			throw new \Exception( esc_html( $response->get_error_message() ), (int) $response->get_error_code() );
 		}
 
 		// set response data
