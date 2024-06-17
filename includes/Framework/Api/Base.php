@@ -144,7 +144,7 @@ abstract class Base {
 
 		// check for WP HTTP API specific errors (network timeout, etc)
 		if ( is_wp_error( $response ) ) {
-			throw new \Exception( $response->get_error_message(), (int) $response->get_error_code() );
+			throw new \Exception( esc_html( $response->get_error_message() ), (int) $response->get_error_code() );
 		}
 
 		// set response data
@@ -597,6 +597,27 @@ abstract class Base {
 	 * @return WooCommerce\Square\Framework\Plugin
 	 */
 	abstract protected function get_plugin();
+
+	/**
+	 * Set the Content-Type request header
+	 *
+	 * @since x.x.x
+	 * @param string $content_type The request content type.
+	 */
+	protected function set_request_content_type_header( $content_type ) {
+		$this->request_headers['content-type'] = $content_type;
+	}
+
+
+	/**
+	 * Set the Accept request header
+	 *
+	 * @since x.x.x
+	 * @param string $type The request accept type.
+	 */
+	protected function set_request_accept_header( $type ) {
+		$this->request_headers['accept'] = $type;
+	}
 
 	/**
 	 * Set the response handler class name. This class will be instantiated

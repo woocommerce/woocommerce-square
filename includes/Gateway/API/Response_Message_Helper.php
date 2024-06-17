@@ -94,9 +94,7 @@ class Response_Message_Helper {
 			'INSUFFICIENT_PERMISSIONS'            => esc_html__( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
 			'INSUFFICIENT_FUNDS'                  => esc_html__( 'The payment source has insufficient funds to cover the payment.', 'woocommerce-square' ),
 			'INVALID_LOCATION'                    => esc_html__( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
-			'TRANSACTION_LIMIT'                   => esc_html__( 'The card issuer has determined the payment amount is too high or too low.', 'woocommerce-square' ),
 			'CARD_EXPIRED'                        => esc_html__( 'The card issuer declined the request because the card is expired.', 'woocommerce-square' ),
-			'CVV_FAILURE'                         => esc_html__( 'The card issuer declined the request because the CVV value is invalid.', 'woocommerce-square' ),
 			'ADDRESS_VERIFICATION_FAILURE'        => esc_html__( 'The card issuer declined the request because the postal code is invalid.', 'woocommerce-square' ),
 			'TEMPORARY_ERROR'                     => esc_html__( 'A temporary internal error occurred. You can safely retry the payment.', 'woocommerce-square' ),
 			'PAN_FAILURE'                         => esc_html__( 'The specified card number is invalid.', 'woocommerce-square' ),
@@ -106,9 +104,6 @@ class Response_Message_Helper {
 			'PAYMENT_LIMIT_EXCEEDED'              => esc_html__( 'Square declined the request because the payment amount exceeded the processing limit for this seller.', 'woocommerce-square' ),
 			'REFUND_DECLINED'                     => esc_html__( 'The card issuer declined the refund.', 'woocommerce-square' ),
 			'GENERIC_DECLINE'                     => esc_html__( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
-
-			// ErrorCodes not listed under Square Docs
-			'INVALID_EXPIRATION'                  => esc_html__( 'The card expiration date is invalid or indicates that the card is expired.', 'woocommerce-square' ),
 
 			// ErrorCodes from SV Framework - https://github.com/skyverge/wc-plugin-framework/blob/master/woocommerce/payment-gateway/api/class-sv-wc-payment-gateway-api-response-message-helper.php
 			'ERROR'                               => esc_html__( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),

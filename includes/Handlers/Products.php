@@ -1053,7 +1053,7 @@ class Products {
 			switch ( $coupon->get_discount_type() ) {
 				case 'fixed_cart':
 					if ( Gift_Card::cart_contains_gift_card() ) {
-						throw new Exception( __( 'Sorry, this coupon is not applicable to gift card products.', 'woocommerce-square' ) );
+						throw new Exception( esc_html__( 'Sorry, this coupon is not applicable to gift card products.', 'woocommerce-square' ) );
 					}
 					break;
 			}
@@ -1108,7 +1108,7 @@ class Products {
 		// Add gift card number.
 		if ( Gift_Card::is_load() && isset( $_POST['square-gift-card-gan'] ) ) {
 			if ( empty( $_POST['square-gift-card-gan'] ) ) {
-				throw new Exception( __( 'The gift card number field is empty.', 'woocommerce-square' ) );
+				throw new Exception( esc_html__( 'The gift card number field is empty.', 'woocommerce-square' ) );
 			}
 
 			$cart_item_data['square-gift-card-gan'] = wc_clean( wp_unslash( $_POST['square-gift-card-gan'] ) );
@@ -1116,7 +1116,7 @@ class Products {
 			$response = $this->get_plugin()->get_gateway()->get_api()->retrieve_gift_card_by_gan( $cart_item_data['square-gift-card-gan'] );
 
 			if ( ! $response->get_data() instanceof \Square\Models\RetrieveGiftCardFromGANResponse ) {
-				throw new Exception( __( 'The gift card number is either invalid or does not exist.', 'woocommerce-square' ) );
+				throw new Exception( esc_html__( 'The gift card number is either invalid or does not exist.', 'woocommerce-square' ) );
 			}
 		}
 
@@ -1294,7 +1294,7 @@ class Products {
 		if ( Product::is_gift_card( $product ) && Gift_Card::cart_contains_gift_card() ) {
 			$message         = esc_html__( 'You can only add 1 gift card product to your cart per order.', 'woocommerce-square' );
 			$wp_button_class = wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '';
-			throw new Exception( sprintf( '<a href="%s" class="button wc-forward%s">%s</a> %s', wc_get_cart_url(), esc_attr( $wp_button_class ), __( 'View cart', 'woocommerce-square' ), $message ) );
+			throw new Exception( sprintf( '<a href="%s" class="button wc-forward%s">%s</a> %s', esc_url( wc_get_cart_url() ), esc_attr( $wp_button_class ), esc_html__( 'View cart', 'woocommerce-square' ), esc_html( $message ) ) );
 		}
 
 		return $found_in_cart;

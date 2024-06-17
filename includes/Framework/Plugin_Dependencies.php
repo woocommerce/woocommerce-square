@@ -191,7 +191,7 @@ class Plugin_Dependencies {
 	 */
 	public function add_php_settings_notices() {
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended - Nonce none required, only showing a notice.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce none required, only showing a notice.
 		if ( isset( $_GET['page'] ) && 'wc-settings' === $_GET['page'] ) {
 
 			$bad_settings = $this->get_incompatible_php_settings();

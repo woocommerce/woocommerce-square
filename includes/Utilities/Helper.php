@@ -34,9 +34,11 @@ class Helper {
 	 * @return string value from $_POST or blank string if $_POST[ $key ] is not set
 	 */
 	public static function get_post( $key ) {
+		wc_deprecated_function( __METHOD__, 'x.x.x', 'Square_Helper::get_post' );
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is not required here as this is a helper function
 		if ( isset( $_POST[ $key ] ) ) {
-			return trim( $_POST[ $key ] );
+			return trim( wc_clean( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		}
 
 		return '';
