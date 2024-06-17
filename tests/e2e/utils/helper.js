@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+const { promisify } = require('util');
+const execAsync = promisify(require('child_process').exec);
 
 /**
  * Wait for blockUI to disappear.
@@ -592,4 +594,21 @@ export async function renewSubscription(page) {
 		page.locator('#message.updated.notice.notice-success').first()
 	).toContainText('Subscription updated.');
 	await expect(page.locator('#order_status')).toHaveValue('wc-active');
+}
+
+/**
+ * Run WP CLI command.
+ *
+ * @param {string} command
+ */
+export async function runWpCliCommand(command) {
+	const { stdout, stderr } = await execAsync(
+		`npm --silent run env run tests-cli -- ${command}`
+	);
+
+	if (!stderr) {
+		return true;
+	}
+	console.error(stderr);
+	return false;
 }

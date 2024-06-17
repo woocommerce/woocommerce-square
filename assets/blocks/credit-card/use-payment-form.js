@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useState, useCallback, useMemo, useRef } from '@wordpress/element';
+import { useState, useCallback, useMemo } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -36,7 +36,6 @@ export const usePaymentForm = (
 ) => {
 	const [isLoaded, setLoaded] = useState(false);
 	const [cardType, setCardType] = useState('');
-	const resolveCreateNonce = useRef(null);
 
 	const verificationDetails = useMemo(() => {
 		const intent = shouldSavePayment && !token ? 'STORE' : 'CHARGE';
@@ -109,13 +108,13 @@ export const usePaymentForm = (
 
 			return data;
 		},
-		[cardType, shouldSavePayment, token]
+		[cardType, shouldSavePayment, token] // eslint-disable-line react-hooks/exhaustive-deps
 	);
 
 	/**
 	 * Generates a payment nonce
 	 *
-	 * @param {object} card Instance of Payments.card().
+	 * @param {Object} card Instance of Payments.card().
 	 *
 	 * @return {Promise} Returns Promise<TokenResult>
 	 */
@@ -128,33 +127,6 @@ export const usePaymentForm = (
 			return token;
 		},
 		[token]
-	);
-
-	/**
-	 * Generates a verification buyer token
-	 *
-	 * @param {Object} payments     Instance of Square.payments().
-	 * @param {string} paymentToken Payment Token to verify
-	 *
-	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
-	 */
-	const verifyBuyer = useCallback(
-		async (payments, paymentToken) => {
-			let verificationResponse;
-			try {
-				verificationResponse = await payments.verifyBuyer(
-					paymentToken,
-					verificationDetails
-				);
-
-				return handleVerifyBuyerResponse(verificationResponse);
-			} catch (error) {
-				handleErrors([error]);
-			}
-
-			return false;
-		},
-		[verificationDetails, handleVerifyBuyerResponse]
 	);
 
 	/**
@@ -185,6 +157,33 @@ export const usePaymentForm = (
 
 		return response;
 	}, []);
+
+	/**
+	 * Generates a verification buyer token
+	 *
+	 * @param {Object} payments     Instance of Square.payments().
+	 * @param {string} paymentToken Payment Token to verify
+	 *
+	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
+	 */
+	const verifyBuyer = useCallback(
+		async (payments, paymentToken) => {
+			let verificationResponse;
+			try {
+				verificationResponse = await payments.verifyBuyer(
+					paymentToken,
+					verificationDetails
+				);
+
+				return handleVerifyBuyerResponse(verificationResponse);
+			} catch (error) {
+				handleErrors([error]);
+			}
+
+			return false;
+		},
+		[verificationDetails, handleVerifyBuyerResponse]
+	);
 
 	/**
 	 * When customers interact with the Square Payments iframe elements,
