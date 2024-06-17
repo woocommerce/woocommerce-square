@@ -5,7 +5,7 @@
 		"https://downloads.wordpress.org/plugin/email-log.zip",
 		".",
 		"./test-plugins/woocommerce-subscriptions",
-    	"./test-plugins/woocommerce-pre-orders"
+		"./test-plugins/woocommerce-pre-orders"
 	],
 	"themes": [ "https://downloads.wordpress.org/theme/storefront.zip" ],
 	"env": {
