@@ -96,15 +96,15 @@ class Encryption_Utility {
 
 		// sanity check to ensure encryption can happen
 		if ( ! $this->get_cipher_method() ) {
-			throw new \Exception( __( 'No encryption method available', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'No encryption method available', 'woocommerce-square' ) );
 		}
 
 		if ( empty( $data ) || ( ! is_string( $data ) && ! is_array( $data ) ) ) {
-			throw new \Exception( __( 'Data must be a non-empty string or array', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Data must be a non-empty string or array', 'woocommerce-square' ) );
 		}
 
 		if ( ! is_string( $key ) ) {
-			throw new \Exception( __( 'Encryption key must be a string', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Encryption key must be a string', 'woocommerce-square' ) );
 		}
 
 		// default to the WP salt
@@ -116,11 +116,12 @@ class Encryption_Utility {
 
 		// bail if a strong vector wasn't generated
 		if ( false === $vector || false === $crypto_strong ) {
-			throw new \Exception( __( 'Could not generate encryption vector.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Could not generate encryption vector.', 'woocommerce-square' ) );
 		}
 
 		$encrypted_data = openssl_encrypt( wp_json_encode( $data ), $this->get_cipher_method(), $key, 0, $vector );
 
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		return base64_encode( $vector . $encrypted_data );
 	}
 
@@ -139,15 +140,15 @@ class Encryption_Utility {
 
 		// sanity check to ensure decryption can happen
 		if ( ! $this->get_cipher_method() ) {
-			throw new \Exception( __( 'No decryption method available', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'No decryption method available', 'woocommerce-square' ) );
 		}
 
 		if ( empty( $data ) || ! is_string( $data ) ) {
-			throw new \Exception( __( 'Data must be a non-empty string', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Data must be a non-empty string', 'woocommerce-square' ) );
 		}
 
 		if ( ! is_string( $key ) ) {
-			throw new \Exception( __( 'Encryption key must be a string', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Encryption key must be a string', 'woocommerce-square' ) );
 		}
 
 		// default to the WP salt

@@ -15,11 +15,13 @@ printf(
 
 echo "\n\n----------\n\n";
 
-printf(
-	/* translators: %1$s - Gift card account number, %2$s - Gift card balance */
-	esc_html__( 'Your gift card with the number %1$s is loaded with an amount of %2$s.', 'woocommerce-square' ),
-	esc_html( $gift_card_number ),
-	wc_price( $gift_card_balance )
+echo esc_html(
+	sprintf(
+		/* translators: %1$s - Gift card account number, %2$s - Gift card balance */
+		__( 'Your gift card with the number %1$s is loaded with an amount of %2$s.', 'woocommerce-square' ),
+		esc_html( $gift_card_number ),
+		wc_price( $gift_card_balance ),
+	)
 );
 
 echo "\n\n----------\n\n";

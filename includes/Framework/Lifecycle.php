@@ -144,6 +144,21 @@ class Lifecycle {
 		}
 	}
 
+	/**
+	 * Performs plugin installation.
+	 *
+	 * @since 2.0.0
+	 */
+	protected function install() {
+		/**
+		 * Fires upon plugin installed.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param string $version plugin version (available from v2.0.0)
+		 */
+		do_action( 'wc_square_installed', WooCommerce\Square\Plugin::VERSION );
+	}
 
 	/**
 	 * Triggers plugin activation.

@@ -1,0 +1,31 @@
+name: ESLint
+
+on: pull_request
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup node and npm cache
+      uses: actions/setup-node@v4
+      with:
+          node-version-file: .nvmrc
+          cache: npm
+
+    - name: Get updated JS files
+      id: changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+          files: |
+            **/*.js
+
+    - name: Install Node dependencies
+      if: steps.changed-files.outputs.any_changed == 'true'
+      run: npm ci
+
+    - name: Run ESLint
+      if: steps.changed-files.outputs.any_changed == 'true'
+      run: npx wp-scripts lint-js ${{ steps.changed-files.outputs.all_changed_files }}

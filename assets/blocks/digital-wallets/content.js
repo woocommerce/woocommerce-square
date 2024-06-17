@@ -41,7 +41,7 @@ const Content = (props) => {
 		});
 
 		return unsubscribeOnCheckoutFail;
-	}, [onCheckoutFail]);
+	}, [onCheckoutFail]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<>
