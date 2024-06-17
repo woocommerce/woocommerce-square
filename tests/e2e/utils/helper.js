@@ -264,10 +264,11 @@ export async function deleteAllPaymentMethods( page ) {
 	await page.goto( '/my-account/payment-methods/' );
 
 	if ( await page.locator( '.woocommerce-MyAccount-paymentMethods' ).isVisible() ) {
-		const removeBtns = await page.$$( '.payment-method-actions .delete' );
+		const rows = await page.locator(".payment-method-actions .delete");
+		const count = await rows.count();
 
-		for ( const button of removeBtns ) {
-			await button.click();
+		for (let i = 0; i < count; i++) {
+			await rows.nth(0).click();
 			await expect( await page.getByText( 'Payment method deleted.' ) ).toBeVisible();
 		}
 	}

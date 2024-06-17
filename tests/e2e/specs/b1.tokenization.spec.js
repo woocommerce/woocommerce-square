@@ -41,6 +41,7 @@ for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
 	test( title + 'Payment Gateway - Customer Profiles', async ( { page } ) => {
+		await deleteAllPaymentMethods( page );
 		await page.goto( '/product/simple-product' );
 		await page.locator( '.single_add_to_cart_button' ).click();
 		await visitCheckout( page, isBlock );
