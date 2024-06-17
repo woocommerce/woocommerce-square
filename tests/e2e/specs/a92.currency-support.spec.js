@@ -23,7 +23,6 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	}
 } );
 
-
 test( 'Square credit card should available only for the supported currencies', async ( { page } ) => {
 	// Update currency to INR
 	await runWpCliCommand('wp option update woocommerce_currency "INR"');
