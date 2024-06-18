@@ -82,6 +82,8 @@ class Products {
 		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
 		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
+		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
+
 		// add hooks
 		$this->add_products_edit_screen_hooks();
 		$this->add_product_edit_screen_hooks();
@@ -173,6 +175,40 @@ class Products {
 		// Sync product inventory when a product is added to the cart.
 		add_action( 'woocommerce_add_to_cart', array( $this, 'maybe_stage_products_for_sync_inventory' ), 10, 4 );
 		add_action( 'shutdown', array( $this, 'maybe_sync_product_inventory' ) );
+	}
+
+	/**
+	 * Add help tabs.
+	 *
+	 * @since 4.7.0
+	 */
+	public function add_tabs() {
+		if ( ! function_exists( 'wc_get_screen_ids' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || ! in_array( $screen->id, wc_get_screen_ids() ) ) {
+			return;
+		}
+
+		$help_tabs = $screen->get_help_tabs();
+		if ( ! isset( $help_tabs['woocommerce_onboard_tab'] ) ) {
+			return;
+		}
+
+		$updated_help_tab = $help_tabs['woocommerce_onboard_tab'];
+
+		$square_text = '<h2>' . __( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
+		$square_text .= '<p>' . __( 'If you need to access the Square onboarding setup wizard again, please click on the button below.', 'woocommerce-square' ) . '</p>' .
+			'<p><a href="' . admin_url( 'admin.php?page=woocommerce-square-onboarding' ) . '" class="button button-primary">' . __( 'Setup wizard', 'woocommerce-square' ) . '</a></p>';
+		
+		$updated_help_tab['content'] .= $square_text;
+
+		// Remove the old help tab and add the new one.
+		$screen->remove_help_tab( 'woocommerce_onboard_tab' );
+		$screen->add_help_tab( $updated_help_tab );
 	}
 
 	/**
