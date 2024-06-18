@@ -135,7 +135,8 @@ body {
 		width: 100%;
 	}
 
-	&.payment-methods {
+	&.payment-methods,
+	&.payment-complete {
 		.woo-square-onbarding__payment-settings__intro {
 			max-width: 592px;
 		}

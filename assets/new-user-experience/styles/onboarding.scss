@@ -249,11 +249,13 @@ body.admin-color-sunrise {
 }
 
 @media screen and (max-width: 1600px) {
-	.woo-square-onboarding__cover.payment-methods {
+	.woo-square-onboarding__cover.payment-methods,
+	.woo-square-onboarding__cover.payment-complete {
 		.woo-square-onbarding__payment-settings {
 			&__toggles {
 				top: auto;
 				transform: none;
+				padding: 50px 70px 40px;
 			}
 
 			&__intro {
@@ -269,6 +271,10 @@ body.admin-color-sunrise {
 				margin-right: 20px;
 			}
 		}
+	}
+
+	.woo-square-onboarding__cover.payment-complete .woo-square-onbarding__payment-settings__intro {
+		top: 20%;
 	}
 }
 
