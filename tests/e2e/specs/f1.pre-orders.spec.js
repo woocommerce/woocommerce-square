@@ -7,8 +7,8 @@ const { test, expect, devices, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
-	clearCart,
     createPreOrderProduct,
+	deleteSessions,
 	fillAddressFields,
     fillCreditCardFields,
     placeOrder,
@@ -22,7 +22,7 @@ import {
 const iPhone = devices['iPhone 14 Pro Max'];
 
 test.describe('Pre-Orders Tests', () => {
-	test.beforeAll('Setup', async ({ baseURL }) => {
+	test.beforeAll('Setup', async () => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
 
@@ -38,12 +38,29 @@ test.describe('Pre-Orders Tests', () => {
 			.check();
 		await page.locator( '.woocommerce-save-button' ).click();
 		await page.waitForEvent( 'load' );
-		await clearCart( page );
 
 		// Set authorization transaction type.
 		await saveCashAppPaySettings(page, {
 			transactionType: 'charge',
 		});
+	});
+
+	test.afterAll(async () => {
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+		// Disable tokenization.
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+		);
+		await page
+			.locator( '#woocommerce_square_credit_card_tokenization' )
+			.uncheck();
+		await page.locator( '.woocommerce-save-button' ).click();
+		await page.waitForEvent( 'load' );
+	});
+
+	test.beforeEach(async ({ page }) => {
+		await deleteSessions( page );
 	});
 
 	test('[Charge upon release] Square Credit Card should work with Pre-Orders', async ({

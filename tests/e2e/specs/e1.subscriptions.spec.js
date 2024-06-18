@@ -7,7 +7,7 @@ const { test, expect, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
-	clearCart,
+	deleteSessions,
     fillAddressFields,
     fillCreditCardFields,
     placeOrder,
@@ -34,7 +34,24 @@ test.describe('Subscriptions Tests', () => {
 			.check();
 		await page.locator( '.woocommerce-save-button' ).click();
 		await page.waitForEvent( 'load' );
-		await clearCart( page );
+	});
+
+	test.beforeEach(async ({ page }) => {
+		await deleteSessions( page );
+	});
+
+	test.afterAll(async () => {
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+		// Disable tokenization.
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+		);
+		await page
+			.locator( '#woocommerce_square_credit_card_tokenization' )
+			.uncheck();
+		await page.locator( '.woocommerce-save-button' ).click();
+		await page.waitForEvent( 'load' );
 	});
 
 	test('Customer can sign up to subscription using Square CreditCard payment gateway', async ({
