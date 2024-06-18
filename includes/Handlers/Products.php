@@ -189,7 +189,7 @@ class Products {
 
 		$screen = get_current_screen();
 
-		if ( ! $screen || ! in_array( $screen->id, wc_get_screen_ids() ) ) {
+		if ( ! $screen || ! in_array( $screen->id, wc_get_screen_ids(), true ) ) {
 			return;
 		}
 
@@ -200,10 +200,10 @@ class Products {
 
 		$updated_help_tab = $help_tabs['woocommerce_onboard_tab'];
 
-		$square_text = '<h2>' . __( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
+		$square_text  = '<h2>' . __( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
 		$square_text .= '<p>' . __( 'If you need to access the Square onboarding setup wizard again, please click on the button below.', 'woocommerce-square' ) . '</p>' .
 			'<p><a href="' . admin_url( 'admin.php?page=woocommerce-square-onboarding' ) . '" class="button button-primary">' . __( 'Setup wizard', 'woocommerce-square' ) . '</a></p>';
-		
+
 		$updated_help_tab['content'] .= $square_text;
 
 		// Remove the old help tab and add the new one.
