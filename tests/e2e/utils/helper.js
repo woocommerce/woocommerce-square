@@ -445,7 +445,10 @@ export async function selectPaymentMethod(
 				`label[for="radio-control-wc-payment-method-options-${paymentMethod}"]`
 			)
 			.click();
-		await page.locator('.wc-block-components-loading-mask').first().waitFor({ state: 'detached' });
+		await page
+			.locator('.wc-block-components-loading-mask')
+			.first()
+			.waitFor({ state: 'detached' });
 		return;
 	}
 	// Wait for overlay to disappear
