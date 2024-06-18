@@ -57,6 +57,7 @@ test.describe('Pre-Orders Tests', () => {
 			.uncheck();
 		await page.locator( '.woocommerce-save-button' ).click();
 		await page.waitForEvent( 'load' );
+		browser.close();
 	});
 
 	test.beforeEach(async ({ page }) => {

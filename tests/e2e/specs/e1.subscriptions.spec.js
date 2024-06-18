@@ -52,6 +52,7 @@ test.describe('Subscriptions Tests', () => {
 			.uncheck();
 		await page.locator( '.woocommerce-save-button' ).click();
 		await page.waitForEvent( 'load' );
+		browser.close();
 	});
 
 	test('Customer can sign up to subscription using Square CreditCard payment gateway', async ({
