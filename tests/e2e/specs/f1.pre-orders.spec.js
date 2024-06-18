@@ -32,7 +32,12 @@ test.describe('Pre-Orders Tests', () => {
 		await page
 			.locator( '#woocommerce_square_credit_card_transaction_type' )
 			.selectOption( { label: 'Charge' } );
+		await page
+			.locator( '#woocommerce_square_credit_card_tokenization' )
+			.check();
 		await page.locator( '.woocommerce-save-button' ).click();
+		await page.waitForEvent( 'load' );
+		await clearCart( page );
 
 		// Set authorization transaction type.
 		await saveCashAppPaySettings(page, {

@@ -7,6 +7,7 @@ const { test, expect, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
+	clearCart,
     fillAddressFields,
     fillCreditCardFields,
     placeOrder,
@@ -28,7 +29,12 @@ test.describe('Subscriptions Tests', () => {
 		await page
 			.locator( '#woocommerce_square_credit_card_transaction_type' )
 			.selectOption( { label: 'Charge' } );
+		await page
+			.locator( '#woocommerce_square_credit_card_tokenization' )
+			.check();
 		await page.locator( '.woocommerce-save-button' ).click();
+		await page.waitForEvent( 'load' );
+		await clearCart( page );
 	});
 
 	test('Customer can sign up to subscription using Square CreditCard payment gateway', async ({
@@ -135,7 +141,7 @@ test.describe('Subscriptions Tests', () => {
 		await expect(
 			page.getByRole('heading', { name: 'Order received' })
 		).toBeVisible();
-		
+
 		await page.goto('my-account/view-subscription/'+subscriptionId.replace('#', ''));
 		await expect(page.locator('table.subscription_details tr').first().locator('td').last()).toHaveText('Active');
 	});
