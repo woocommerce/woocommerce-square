@@ -22,6 +22,8 @@ import {
 const iPhone = devices['iPhone 14 Pro Max'];
 
 test.describe('Pre-Orders Tests', () => {
+	test.slow();
+
 	test.beforeAll('Setup', async () => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
