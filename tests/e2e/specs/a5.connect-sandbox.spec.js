@@ -7,10 +7,12 @@ test( 'Connect a Square account', async ( { page } ) => {
 	await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 
 	// Skip test if already connected to sandbox.
-	test.skip( await isToggleChecked( page, '.enable-sandbox-mode-field' ) );
+	test.skip( await page.getByTestId( 'environment-selection-field' ).hasAttribute( 'value', 'yes' ) );
 
-	if ( ! await isToggleChecked( page, '.enable-sandbox-mode-field' ) ) {
-		await page.locator( '.enable-sandbox-mode-field' ).click();
+	if ( ! await page.getByTestId( 'environment-selection-field' ).hasAttribute( 'value', 'yes' ) ) {
+		await page
+		.getByTestId( 'environment-selection-field' )
+		.selectOption( { label: 'Sandbox' } );
 	}
 
 	await page

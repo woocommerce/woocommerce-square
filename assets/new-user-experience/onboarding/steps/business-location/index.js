@@ -108,7 +108,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 	);
 
 	const reselect = (
-		<div style={ { textAlign: 'left', margin: '-15px 0', fontSize: '14px' } }>
+		<div style={ { textAlign: 'left', margin: '-15px 0', fontSize: '15px' } }>
 			<SectionDescription>
 				<p>
 					{ __( 'Please select the location you wish to link with this WooCommerce store', 'woocommerce-square' ) }
