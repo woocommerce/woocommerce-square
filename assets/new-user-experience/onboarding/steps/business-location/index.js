@@ -127,17 +127,17 @@ export const BusinessLocation = ( { loadData = false } ) => {
 							<div className='woo-square-wizard__fields'>
 								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 									<SelectControl
-									data-testid="business-location-field"
-									required
-									value={ _location_id }
-									onChange={ ( _location_id ) => {
-										if ( 'yes' === enable_sandbox ) {
-											setSquareSettingData( { sandbox_location_id: _location_id } )
-										} else {
-											setSquareSettingData( { production_location_id: _location_id } )
-										}
-									} }
-									options={ locationsList }
+										data-testid="business-location-field"
+										required
+										value={ _location_id }
+										onChange={ ( _location_id ) => {
+											if ( 'yes' === enable_sandbox ) {
+												setSquareSettingData( { sandbox_location_id: _location_id } )
+											} else {
+												setSquareSettingData( { production_location_id: _location_id } )
+											}
+										} }
+										options={ locationsList }
 									/>
 								</InputWrapper>
 							</div>

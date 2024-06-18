@@ -249,32 +249,49 @@ body.admin-color-sunrise {
 }
 
 @media screen and (max-width: 1600px) {
-	.woo-square-onboarding__cover.payment-methods,
-	.woo-square-onboarding__cover.payment-complete {
-		.woo-square-onbarding__payment-settings {
-			&__toggles {
-				top: auto;
-				transform: none;
-				padding: 50px 70px 40px;
-			}
+	.woo-square-onboarding__cover {
+		&.payment-methods,
+		&.payment-complete {
+			.woo-square-onbarding__payment-settings {
+				&__toggles {
+					top: auto;
+					transform: none;
+					padding: 50px 70px 40px;
+				}
 
-			&__intro {
-				transform: none;
-				left: 0;
-				top: 30%;
-				background: border-box;
-				max-width: 70%;
-				display: inline-block;
-			}
+				&__intro {
+					transform: none;
+					left: 0;
+					top: 30%;
+					background: border-box;
+					max-width: 70%;
+					display: inline-block;
 
-			.flexItem.contentBox {
-				margin-right: 20px;
+					@media screen and (max-width: 1400px) {
+						max-width: 90%;
+					}
+				}
+
+				.flexItem.contentBox {
+					margin-right: 20px;
+				}
 			}
 		}
-	}
 
-	.woo-square-onboarding__cover.payment-complete .woo-square-onbarding__payment-settings__intro {
-		top: 20%;
+		&.payment-complete {
+			.woo-square-onbarding__payment-settings__intro {
+				text-align: center;
+			}
+
+			.woo-square-onbarding__payment-settings__intro--title {
+				text-align: center;
+				display: inline-block;
+			}
+		}
+
+		&.payment-complete .woo-square-onbarding__payment-settings__intro {
+			top: 20%;
+		}
 	}
 }
 

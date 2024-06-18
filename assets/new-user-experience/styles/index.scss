@@ -139,6 +139,11 @@ body {
 	&.payment-complete {
 		.woo-square-onbarding__payment-settings__intro {
 			max-width: 592px;
+
+			@media screen and (max-width: 1800px) {
+				max-width: 80%;
+				left: 40%;
+			}
 		}
 	}
 
