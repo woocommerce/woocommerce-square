@@ -93,6 +93,9 @@ export async function fillAddressFields( page, isBlock = true ) {
 
 	if ( isBlock ) {
 		await page.waitForTimeout( 1500 );
+		if ( await page.locator( '.wc-block-components-address-card__edit' ).isVisible() ) {
+			await page.locator( '.wc-block-components-address-card__edit' ).click();
+		}
 		await page
 			.locator( '#email' )
 			.fill( customer.email );
