@@ -13,12 +13,12 @@ import {
 import { useSquareSettings } from '../../../settings/hooks';
 import { useEffect } from '@wordpress/element';
 
-export const BusinessLocation = () => {
+export const BusinessLocation = ( { loadData = false } ) => {
 	const {
 		settings,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings();
+	} = useSquareSettings( loadData );
 
 	const {
 		enable_sandbox = 'no',
@@ -36,7 +36,7 @@ export const BusinessLocation = () => {
 	const locationCount = locations.length;
 
 	useEffect( () => {
-		if ( 1 !== locationCount) {
+		if ( 1 === locationCount) {
 			// Remove the label, to make the only location selected.
 			locationsList.shift();
 			
@@ -107,13 +107,23 @@ export const BusinessLocation = () => {
 		</>
 	);
 
+	const reselect = (
+		<div style={ { textAlign: 'left', margin: '-15px 0', fontSize: '14px' } }>
+			<SectionDescription>
+				<p>
+					{ __( 'Please select the location you wish to link with this WooCommerce store', 'woocommerce-square' ) }
+				</p>
+			</SectionDescription>
+		</div>
+	);
+
 	return (
 		<div>
 			<Section>
 				{ ( locationCount === 0 && noLocation ) ||
 					( locationCount && (
 						<>
-							{intro}
+							{loadData ? reselect : intro}
 							<div className='woo-square-wizard__fields'>
 								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
 									<SelectControl

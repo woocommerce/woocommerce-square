@@ -29,6 +29,8 @@ export const OnboardingApp = () => {
 	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
 	const [ sandboxConnectLabel, setSandboxConnectLabel ] = useState( '' );
 	const [ isVerifyingConnection, setIsVerifyingConnection ] = useState( false );
+	const [ sandboxConnected, setSandboxConnected ] = useState( false );
+	const [ businessLocationLoaded, setBusinessLocationLoaded ] = useState( false );
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -213,11 +215,22 @@ export const OnboardingApp = () => {
 				) }
 				{ step === 'sandbox-settings' && (
 					<>
-						<SandboxSettings />
+						<SandboxSettings />						
+						{
+							sandboxConnected
+							&& (businessLocationLoaded || setBusinessLocationLoaded(true))
+							&& settings.enable_sandbox === 'yes'
+							&& <BusinessLocation loadData={true} />
+						}
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
 							afterSaveCallback={ () => {
 								( async() => {
+									if ( businessLocationLoaded || settings.enable_sandbox !== 'yes' ) {
+										setStep( 'payment-complete' );
+										return;
+									}
+
 									setSandboxConnectLabel( __( 'Verifying connection ...', 'woocommerce-square' ) );
 									setIsVerifyingConnection( true );
 									const { data: locations } = await connectToSquare();
@@ -225,9 +238,9 @@ export const OnboardingApp = () => {
 									if ( locations.length ) {
 										setSandboxConnectLabel( __( 'Connected to sandbox!', 'woocommerce-square' ) );
 										await new Promise( setTimeout, 1000 );
-										setStep( 'payment-complete' );
+										setSandboxConnected( true );
 									} else {
-										setSandboxConnectLabel( __( 'Connection to sandbox failed.', 'woocommerce-square' ) )
+										setSandboxConnectLabel( __( 'Connection to sandbox failed.', 'woocommerce-square' ) );
 									}
 
 									setIsVerifyingConnection( false )
