@@ -278,17 +278,6 @@ body.admin-color-sunrise {
 			}
 		}
 
-		&.payment-complete {
-			.woo-square-onbarding__payment-settings__intro {
-				text-align: center;
-			}
-
-			.woo-square-onbarding__payment-settings__intro--title {
-				text-align: center;
-				display: inline-block;
-			}
-		}
-
 		&.payment-complete .woo-square-onbarding__payment-settings__intro {
 			top: 20%;
 		}
@@ -331,5 +320,18 @@ body.admin-color-sunrise {
 		&--right {
 			margin-bottom: 30px;
 		}		
+	}
+
+	.woo-square-onboarding__cover {
+		&.payment-complete {
+			.woo-square-onbarding__payment-settings__intro {
+				text-align: center;
+			}
+
+			.woo-square-onbarding__payment-settings__intro--title {
+				text-align: center;
+				display: inline-block;
+			}
+		}
 	}
 }

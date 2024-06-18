@@ -13,9 +13,10 @@
 #woocommerce-square-settings__container-general,
 [id*="woocommerce-square-payment-gateway-settings__container"] {
 	font-family: 'SF Pro', sans-serif;
-	font-size: 15px;
+	font-size: 16px;
+	line-height: normal;
 	font-weight: 400;
-	line-height: 17.9px;
+	letter-spacing: 0.3px;
 	color: #4B4B4B;
 
 	.codeamp-components-multi-select-control__tokens-container {
@@ -69,9 +70,9 @@ body {
 	#woocommerce-square-settings__container-general,
 	[id*="woocommerce-square-payment-gateway-settings__container"] {
 		p {
-			font-size: 15px;
+			font-size: 16px;
 			font-weight: 400;
-			line-height: 17.9px;
+			line-height: normal;
 		}
 
 		.button-primary.is-busy {
@@ -84,9 +85,9 @@ body {
 		.components-button:not(.codeamp-components-multi-select-control__remove-token) {
 			font-family: 'SF Pro', sans-serif;
 			min-width: 70px;
-			font-size: 15px;
+			font-size: 16px;
 			font-weight: 400;
-			line-height: 17.9px;
+			line-height: 18.9px;
 			width: 100%;
 			text-align: center;
 			display: block;
@@ -178,7 +179,7 @@ body {
 
 .import-modal-content {
 	label {
-		font-size: 15px;
+		font-size: 16px;
 	}
 }
 
