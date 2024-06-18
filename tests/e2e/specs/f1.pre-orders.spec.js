@@ -7,6 +7,7 @@ const { test, expect, devices, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
+	clearCart,
     createPreOrderProduct,
 	fillAddressFields,
     fillCreditCardFields,
