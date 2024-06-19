@@ -7,7 +7,7 @@ const { test, expect, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
-	deleteSessions,
+	clearCart,
     fillAddressFields,
     fillCreditCardFields,
     placeOrder,
@@ -91,11 +91,19 @@ test.describe('Subscriptions Tests', () => {
 			).toBeVisible();
 			await visitCheckout(page, isBlock);
 
-			await page
-				.locator( '.wc-block-checkout__payment-method .wc-block-components-radio-control' )
-				.locator( 'input.wc-block-components-radio-control__input' )
-				.first()
-				.check();
+			if ( isBlock ) {
+				await page
+					.locator( '.wc-block-checkout__payment-method .wc-block-components-radio-control' )
+					.locator( 'input.wc-block-components-radio-control__input' )
+					.first()
+					.check();
+			} else {
+				await page
+					.locator( '.wc_payment_methods' )
+					.locator( 'input.js-wc-square-credit-card-payment-token' )
+					.first()
+					.check();
+			}
 			await placeOrder(page, isBlock);
 
 			// verify order received page
