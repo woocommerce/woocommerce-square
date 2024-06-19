@@ -32,12 +32,9 @@ test.describe('Subscriptions Tests', () => {
 		await page
 			.locator( '#woocommerce_square_credit_card_tokenization' )
 			.check();
+		const settingsSaved = page.waitForResponse( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
 		await page.locator( '.woocommerce-save-button' ).click();
-		await page.waitForEvent( 'load' );
-	});
-
-	test.beforeEach(async ({ page }) => {
-		await deleteSessions( page );
+		await settingsSaved;
 	});
 
 	const isBlockCheckout = [ true, false ];

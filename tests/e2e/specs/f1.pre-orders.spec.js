@@ -47,10 +47,6 @@ test.describe('Pre-Orders Tests', () => {
 		});
 	});
 
-	test.beforeEach(async ({ page }) => {
-		await deleteSessions( page );
-	});
-
 	test('[Charge upon release] Square Credit Card should work with Pre-Orders', async ({
         page,
 	}) => {
