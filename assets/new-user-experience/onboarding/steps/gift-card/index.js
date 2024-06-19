@@ -39,7 +39,7 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 					parse(
 						sprintf(
 							__( 'Gift Cards %s', 'woocommerce-square' ),
-							'settings' === origin ? '<small className="wc-admin-breadcrumb"><a href="/wp-admin/admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>' : ''
+							'settings' === origin ? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` : ''
 						)
 					)
 				} />

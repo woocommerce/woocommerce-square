@@ -238,6 +238,7 @@ class Admin {
 				'wcSquareSettings',
 				array(
 					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+					'adminUrl' => admin_url(),
 				)
 			);
 
@@ -271,6 +272,7 @@ class Admin {
 				'wcSquareSettings',
 				array(
 					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+					'adminUrl' => admin_url(),
 				)
 			);
 

@@ -46,7 +46,7 @@ export const OnboardingHeader = () => {
 					<Square />
 				</FlexBlock>
 				<FlexItem className='flexItem closeWizard'>
-					<Button href='/wp-admin/'>
+					<Button href={wcSquareSettings.adminUrl}>
 						<Close />
 					</Button>
 				</FlexItem>

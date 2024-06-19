@@ -73,7 +73,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 					parse(
 						sprintf(
 							__( 'Manage Cash App Pay Settings %s', 'woocommerce-square' ),
-							'settings' === origin ? '<small className="wc-admin-breadcrumb"><a href="/wp-admin/admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>' : ''
+							'settings' === origin ? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` : ''
 						)
 					)
 				} />

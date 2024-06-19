@@ -51,7 +51,7 @@ export const AdvancedSettings = () => {
 					{ 'advanced-settings' === step && parse(
 						sprintf(
 							__( '%1sClick here%2s to further refine your settings in the traditional view.', 'woocommerce-square' ),
-							'<a href="/wp-admin/admin.php?page=wc-settings&tab=square">',
+							`<a href='${wcSquareSettings.adminUrl}admin.php?page=wc-settings&tab=square'>`,
 							'</a>',
 						)
 					) }
@@ -83,7 +83,7 @@ export const AdvancedSettings = () => {
 										'Log debug messages to the %1$sWooCommerce status log%2$s',
 										'woocommerce-square'
 									),
-									'<a href="/wp-admin/admin.php?page=wc-status&tab=logs">',
+									`<a href="${wcSquareSettings.adminUrl}admin.php?page=wc-status&tab=logs">`,
 									'</a>'
 								)
 							)
