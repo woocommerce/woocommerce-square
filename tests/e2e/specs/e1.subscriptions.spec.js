@@ -7,13 +7,11 @@ const { test, expect, chromium } = require('@playwright/test');
  * Internal dependencies
  */
 import {
-	clearCart,
     fillAddressFields,
     fillCreditCardFields,
     placeOrder,
 	visitCheckout,
 	gotoOrderEditPage,
-	saveCashAppPaySettings,
 	renewSubscription,
 } from '../utils/helper';
 

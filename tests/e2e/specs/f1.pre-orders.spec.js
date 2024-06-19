@@ -8,7 +8,6 @@ const { test, expect, devices, chromium } = require('@playwright/test');
  */
 import {
     createPreOrderProduct,
-	deleteSessions,
 	fillAddressFields,
     fillCreditCardFields,
     placeOrder,
