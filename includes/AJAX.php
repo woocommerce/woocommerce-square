@@ -79,7 +79,7 @@ class AJAX {
 				'permission_callback' => array( $this, 'check_permission' ),
 			)
 		);
-		
+
 		register_rest_route(
 			'wc/v3',
 			'wc_square/connected_page_visited',
@@ -180,11 +180,9 @@ class AJAX {
 	 * This will be used to show a message to visit the onboarding
 	 * wizard and the onboarding wizard submenu until found `true`.
 	 *
-	 * @param WP_REST_Request $request Full data about the request.
-	 *
 	 * @since 4.7.0
 	 */
-	public function update_connected_page_visited( $request = null ) {
+	public function update_connected_page_visited() {
 		update_option( 'wc_square_connected_page_visited', true );
 		wp_send_json_success();
 	}
