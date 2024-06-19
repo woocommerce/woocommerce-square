@@ -194,7 +194,9 @@ class Payment_Gateway_Admin_User_Handler {
 				continue;
 			}
 
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled by WordPress
 			if ( isset( $_POST[ $gateway->get_customer_id_user_meta_name() ] ) ) {
+				// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled by WordPress
 				$gateway_customer_id = sanitize_text_field( wp_unslash( $_POST[ $gateway->get_customer_id_user_meta_name() ] ) );
 				$gateway->update_customer_id( $user_id, trim( $gateway_customer_id ) );
 			}

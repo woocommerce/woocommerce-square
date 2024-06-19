@@ -22,8 +22,8 @@ namespace WooCommerce\Square\Gateway;
 defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
-use Automattic\WooCommerce\Blocks\Payments\PaymentResult;
-use Automattic\WooCommerce\Blocks\Payments\PaymentContext;
+use Automattic\WooCommerce\StoreApi\Payments\PaymentContext;
+use Automattic\WooCommerce\StoreApi\Payments\PaymentResult;
 use Automattic\WooCommerce\Blocks\Package;
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
