@@ -19,7 +19,7 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
  * @see https://playwright.dev/docs/test-configuration
  */
 module.exports = defineConfig({
-  testDir: '../specs',
+  testDir: '../temp-specs',
   /* Maximum time one test can run for. */
   timeout: 80 * 1000,
   globalSetup: './global-setup',
