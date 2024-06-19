@@ -237,7 +237,7 @@ class Admin {
 				'woocommerce-square-settings-js',
 				'wcSquareSettings',
 				array(
-					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
 					'adminUrl' => admin_url(),
 				)
 			);
@@ -271,7 +271,7 @@ class Admin {
 				'woocommerce-square-onboarding-js',
 				'wcSquareSettings',
 				array(
-					'nonce' => wp_create_nonce( 'wc_square_settings' ),
+					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
 					'adminUrl' => admin_url(),
 				)
 			);
