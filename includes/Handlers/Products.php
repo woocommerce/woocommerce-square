@@ -200,9 +200,9 @@ class Products {
 
 		$updated_help_tab = $help_tabs['woocommerce_onboard_tab'];
 
-		$square_text  = '<h2>' . __( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
-		$square_text .= '<p>' . __( 'If you need to access the Square onboarding setup wizard again, please click on the button below.', 'woocommerce-square' ) . '</p>' .
-			'<p><a href="' . admin_url( 'admin.php?page=woocommerce-square-onboarding' ) . '" class="button button-primary">' . __( 'Setup wizard', 'woocommerce-square' ) . '</a></p>';
+		$square_text  = '<h2>' . esc_html__( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
+		$square_text .= '<p>' . esc_html__( 'If you need to access the Square onboarding setup wizard again, please click on the button below.', 'woocommerce-square' ) . '</p>' .
+			'<p><a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '" class="button button-primary">' . esc_html__( 'Setup wizard', 'woocommerce-square' ) . '</a></p>';
 
 		$updated_help_tab['content'] .= $square_text;
 

@@ -49,8 +49,6 @@ export const SettingsApp = () => {
 		locations = [],
 	} = settings;
 
-	console.log(locations);
-
 	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
 
 	// Set the initial state.

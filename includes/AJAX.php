@@ -183,7 +183,7 @@ class AJAX {
 	 * @since 4.7.0
 	 */
 	public function update_connected_page_visited() {
-		update_option( 'wc_square_connected_page_visited', true );
+		update_option( 'wc_square_connected_page_visited', true, false );
 		wp_send_json_success();
 	}
 
