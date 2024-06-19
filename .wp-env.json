@@ -18,8 +18,5 @@
 	"config": {
 		"WP_ALLOW_MULTISITE": true,
 		"ALTERNATE_WP_CRON": true
-	},
-	"lifecycleScripts": {
-		"afterStart": "bash ./tests/e2e/config/env-post-setup.sh"
 	}
 }
