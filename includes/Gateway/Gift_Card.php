@@ -37,7 +37,7 @@ class Gift_Card extends Payment_Gateway {
 			Plugin::GIFT_CARD_PAY_GATEWAY_ID,
 			wc_square(),
 			array(
-				'method_title'       => __( 'Gift Cards', 'woocommerce-square' ),
+				'method_title'       => __( 'Gift Cards (Square)', 'woocommerce-square' ),
 				'method_description' => $this->get_default_description(),
 				'payment_type'       => self::PAYMENT_TYPE_GIFT_CARD_PAY,
 			)
