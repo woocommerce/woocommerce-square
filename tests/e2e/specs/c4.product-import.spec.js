@@ -15,6 +15,7 @@ import {
 } from '../utils/square-sandbox';
 
 let itemId = 0;
+test.describe.configure({ mode: 'serial' });
 
 test.beforeAll( 'Setup', async () => {
 	const browser = await chromium.launch();
