@@ -40,21 +40,6 @@ test.describe('Subscriptions Tests', () => {
 		await deleteSessions( page );
 	});
 
-	test.afterAll(async () => {
-		const browser = await chromium.launch();
-		const page = await browser.newPage();
-		// Disable tokenization.
-		await page.goto(
-			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
-		);
-		await page
-			.locator( '#woocommerce_square_credit_card_tokenization' )
-			.uncheck();
-		await page.locator( '.woocommerce-save-button' ).click();
-		await page.waitForEvent( 'load' );
-		browser.close();
-	});
-
 	const isBlockCheckout = [ true, false ];
 
 	for ( const isBlock of isBlockCheckout ) {
