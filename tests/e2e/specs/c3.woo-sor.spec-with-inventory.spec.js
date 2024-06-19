@@ -15,8 +15,6 @@ import {
 	deleteAllProducts,
 } from '../utils/square-sandbox';
 
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
