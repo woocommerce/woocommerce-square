@@ -12,6 +12,7 @@ import {
 	retrieveInventoryCount,
 	extractCatalogInfo,
 	clearSync,
+	deleteAllProducts,
 } from '../utils/square-sandbox';
 
 test.describe.configure({ mode: 'serial' });
@@ -44,6 +45,17 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		await page.waitForTimeout( 2000 );
 		await page.locator( '#publish' ).click();
 	}
+
+	await browser.close();
+} );
+
+test.afterAll( async () => {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+
+	await clearSync( page );
+	await deleteAllProducts( page );
+	await deleteAllCatalogItems();
 
 	await browser.close();
 } );
