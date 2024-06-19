@@ -4,6 +4,7 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Spinner } from '@wordpress/components';
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal dependencies.
@@ -72,6 +73,10 @@ export const OnboardingApp = () => {
 			case 'gift-card':
 			case 'payment-methods':
 				setSettingsLoaded(giftCardsGatewaySettingsLoaded);
+				apiFetch( {
+					path: '/wc/v3/wc_square/connected_page_visited',
+					method: 'POST',
+				} );
 				break;
 			case 'sync-settings':
 			case 'advanced-settings':

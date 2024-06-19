@@ -180,7 +180,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function register_pages() {
 		$current_page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
-		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) || 'woocommerce-square-onboarding' === $current_page ) {
+		if ( ! get_option( 'wc_square_connected_page_visited' ) || 'woocommerce-square-onboarding' === $current_page ) {
 			add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
 		}
 	}
@@ -189,11 +189,6 @@ class Settings extends \WC_Settings_API {
 	 * Output the Setup Wizard page(s).
 	 */
 	public function render_onboarding_page() {
-		// Set option the user visited on a wizard.
-		if ( ! get_option( 'wc_square_onboarding_wizard_visited' ) ) {
-			update_option( 'wc_square_onboarding_wizard_visited', true );
-		}
-
 		printf(
 			'<div class="wrap" id="woocommerce-square-onboarding"></div>'
 		);
@@ -205,7 +200,7 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function show_visit_wizard_notice() {
-		if ( get_option( 'wc_square_onboarding_wizard_visited' ) ) {
+		if ( get_option( 'wc_square_connected_page_visited' ) ) {
 			return;
 		}
 
