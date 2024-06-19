@@ -31,12 +31,12 @@ class Plugin_Compatibility {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param string $function function used
+	 * @param string $func    function used
 	 * @param string $message message to log
 	 * @param string $version version the message was added in
 	 */
-	public static function wc_doing_it_wrong( $function, $message, $version ) {
-		wc_doing_it_wrong( $function, $message, $version );
+	public static function wc_doing_it_wrong( $func, $message, $version ) {
+		wc_doing_it_wrong( $func, $message, $version );
 	}
 
 	/**

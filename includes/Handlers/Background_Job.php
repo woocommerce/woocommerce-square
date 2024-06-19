@@ -181,7 +181,7 @@ class Background_Job extends Background_Job_Handler {
 		if ( $job instanceof Job ) {
 			$current_user_id = get_current_user_id();
 			$job             = $job->run();
-			wp_set_current_user( $current_user_id );
+			wp_set_current_user( $current_user_id ); // phpcs:ignore Generic.PHP.ForbiddenFunctions.Discouraged -- required for background job processing
 		}
 
 		return $job;

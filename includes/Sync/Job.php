@@ -133,7 +133,7 @@ class Job {
 	 * @return \stdClass the job object
 	 */
 	public function run() {
-		wp_set_current_user( $this->get_attr( 'created_by' ) );
+		wp_set_current_user( $this->get_attr( 'created_by' ) ); // phpcs:ignore Generic.PHP.ForbiddenFunctions.Discouraged -- required for background job processing
 
 		if ( ! defined( 'DOING_SQUARE_SYNC' ) || false === DOING_SQUARE_SYNC ) {
 			define( 'DOING_SQUARE_SYNC', true );

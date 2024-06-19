@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+const { promisify } = require('util');
+const execAsync = promisify(require('child_process').exec);
 
 /**
  * Wait for blockUI to disappear.
@@ -202,12 +204,12 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 			const paymentMethod = await page.locator(
 				'ul.wc_payment_methods li.payment_method_square_credit_card'
 			);
-	
+
 			// Check if we already have a saved payment method, then check new payment method.
 			const visible = await paymentMethod
 				.locator('input#wc-square-credit-card-use-new-payment-method')
 				.isVisible();
-	
+
 			if (visible) {
 				await paymentMethod
 					.locator('input#wc-square-credit-card-use-new-payment-method')
@@ -406,7 +408,7 @@ export async function saveCashAppPaySettings(page, options) {
 	await page
 		.locator('#woocommerce_square_cash_app_pay_debug_mode')
 		.selectOption(settings.debugMode);
-	
+
 	// Button customization
 	await page
 		.locator('#woocommerce_square_cash_app_pay_button_theme')
@@ -439,7 +441,10 @@ export async function selectPaymentMethod(
 				`label[for="radio-control-wc-payment-method-options-${paymentMethod}"]`
 			)
 			.click();
-		await page.locator('.wc-block-components-loading-mask').first().waitFor({ state: 'detached' });
+		await page
+			.locator('.wc-block-components-loading-mask')
+			.first()
+			.waitFor({ state: 'detached' });
 		return;
 	}
 	// Wait for overlay to disappear
@@ -477,7 +482,7 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		await page.locator('#wc-square-cash-app-pay').getByTestId('cap-btn').click();
 	} else {
 		await page.locator('#wc-square-cash-app').getByTestId('cap-btn').click();
-	}	
+	}
 	await page.waitForLoadState('networkidle');
 	if ( decline ) {
 		await page.getByRole('button', { name: 'Decline' }).click();
@@ -499,4 +504,21 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		.locator( '.woocommerce-order-overview__order strong' )
 		.innerText();
 	return orderId;
+}
+
+/**
+ * Run WP CLI command.
+ *
+ * @param {string} command
+ */
+export async function runWpCliCommand(command) {
+	const { stdout, stderr } = await execAsync(
+		`npm --silent run env run tests-cli -- ${command}`
+	);
+
+	if (!stderr) {
+		return true;
+	}
+	console.error(stderr);
+	return false;
 }

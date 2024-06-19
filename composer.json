@@ -5,7 +5,7 @@
 	"license": "GPL-3.0-or-later",
 	"minimum-stability": "dev",
 	"require": {
-		"square/square": "29.0.0.20230720"
+		"square/square": "35.1.0.20240320"
 	},
 	"require-dev": {
 		"woocommerce/woocommerce-sniffs": "1.0.0",
