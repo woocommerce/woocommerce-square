@@ -52,10 +52,7 @@ export const OnboardingApp = () => {
 
 	const { step, backStep } = stepData;
 
-	const {
-		settings,
-		squareSettingsLoaded,
-	} = useSquareSettings( true );
+	const { settings, squareSettingsLoaded } = useSquareSettings(true);
 
 	const {
 		system_of_record,
@@ -175,12 +172,13 @@ export const OnboardingApp = () => {
 									'woocommerce-square'
 								)}
 								afterSaveCallback={() => {
-										recordEvent(
-											ONBOARDING_TRACK_EVENTS.SAVE_BUSINESS_LOCATION,
-											{
-												number_of_locations: settings.locations.length
-											}
-										);
+									recordEvent(
+										ONBOARDING_TRACK_EVENTS.SAVE_BUSINESS_LOCATION,
+										{
+											number_of_locations:
+												settings.locations.length,
+										}
+									);
 									setStep('payment-methods');
 								}}
 							/>
@@ -214,7 +212,8 @@ export const OnboardingApp = () => {
 									recordEvent(
 										ONBOARDING_TRACK_EVENTS.SAVE_DIGITAL_WALLET_SETTINGS,
 										{
-											digital_wallets_hide_button_options: paymentGatewaySettings.digital_wallets_hide_button_options
+											digital_wallets_hide_button_options:
+												paymentGatewaySettings.digital_wallets_hide_button_options,
 										}
 									);
 									setStep('payment-complete');
@@ -259,33 +258,33 @@ export const OnboardingApp = () => {
 							afterSaveCallback={() => {
 								let trackingProperties = {};
 
-								if ( 'square' === system_of_record ) {
+								if (system_of_record === 'square') {
 									trackingProperties = {
 										system_of_record,
 										enable_inventory_sync,
 										override_product_images,
 										hide_missing_products,
 										sync_interval,
-									}
-								} else if ( 'woocommerce' === system_of_record ) {
+									};
+								} else if (system_of_record === 'woocommerce') {
 									trackingProperties = {
 										system_of_record,
 										enable_inventory_sync,
 										sync_interval,
-									}
+									};
 								} else {
 									trackingProperties = {
 										system_of_record,
-									}
+									};
 								}
 
 								recordEvent(
 									ONBOARDING_TRACK_EVENTS.SAVE_SYNC_SETTINGS,
 									{
-										...trackingProperties
+										...trackingProperties,
 									}
 								);
-									setStep('payment-complete');
+								setStep('payment-complete');
 							}}
 						/>
 					</>
@@ -329,7 +328,7 @@ export const OnboardingApp = () => {
 										recordEvent(
 											ONBOARDING_TRACK_EVENTS.SAVE_SANDBOX_SETTINGS,
 											{
-												enable_sandbox
+												enable_sandbox,
 											}
 										);
 										setStep('payment-complete');

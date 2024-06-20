@@ -440,7 +440,9 @@ export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 													onClick={() => {
 														setIsImporting(true);
 														importProducts();
-														recordEvent( ONBOARDING_TRACK_EVENTS.PRODUCT_IMPORT_STARTED )
+														recordEvent(
+															ONBOARDING_TRACK_EVENTS.PRODUCT_IMPORT_STARTED
+														);
 													}}
 													isBusy={isImporting}
 												>

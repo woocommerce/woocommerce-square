@@ -14,10 +14,7 @@ import { useSteps } from './../../onboarding/hooks';
 import { queueRecordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
 export const OnboardingHeader = () => {
-	const {
-		setStep,
-		getBackStep,
-	} = useSteps();
+	const { setStep, getBackStep } = useSteps();
 
 	const backStep = getBackStep();
 
@@ -38,17 +35,18 @@ export const OnboardingHeader = () => {
 				<FlexBlock className="wizardTitle">
 					<Square />
 				</FlexBlock>
-				<FlexItem className='flexItem closeWizard'>
+				<FlexItem className="flexItem closeWizard">
 					<Button
-						onClick={ () => {
+						onClick={() => {
 							queueRecordEvent(
 								ONBOARDING_TRACK_EVENTS.EXIT_CLICKED,
 								{
 									exited_on_step: stepData.step,
 								}
-							)
-							window.location.href = wc.wcSettings.getAdminLink( '' );
-						} }
+							);
+							window.location.href =
+								wc.wcSettings.getAdminLink('');
+						}}
 					>
 						<Close />
 					</Button>
