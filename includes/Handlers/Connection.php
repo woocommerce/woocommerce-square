@@ -106,8 +106,8 @@ class Connection {
 			wp_die( esc_html__( 'Sorry, you do not have permission to manage the Square connection.', 'woocommerce-square' ) );
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized - Input is santiized before use, the call to urldecode() first triggers this warning
-		$access_token = ! empty( $_GET['square_access_token'] ) ? sanitize_text_field( urldecode( $_GET['square_access_token'] ) ) : '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- Input is sanitized before use, the call to urldecode() first triggers this warning
+		$access_token = ! empty( $_GET['square_access_token'] ) ? sanitize_text_field( wp_unslash( urldecode( $_GET['square_access_token'] ) ) ) : '';
 
 		if ( empty( $access_token ) ) {
 			$this->get_plugin()->log( 'Error: No access token was received.' );
@@ -127,8 +127,8 @@ class Connection {
 		$this->get_plugin()->get_settings_handler()->update_access_token( $access_token );
 		$this->get_plugin()->log( 'Access token successfully received.' );
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized - Input is santiized before use, the call to urldecode() first triggers this warning
-		$refresh_token = ! empty( $_GET['square_refresh_token'] ) ? sanitize_text_field( urldecode( $_GET['square_refresh_token'] ) ) : '';
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- Input is sanitized before use, the call to urldecode() first triggers this warning
+		$refresh_token = ! empty( $_GET['square_refresh_token'] ) ? sanitize_text_field( wp_unslash( urldecode( $_GET['square_refresh_token'] ) ) ) : '';
 		if ( empty( $refresh_token ) ) {
 			$this->get_plugin()->log( 'Failed to receive refresh token from connect server.' );
 		} else {
@@ -173,8 +173,7 @@ class Connection {
 		// remove the refresh fail flag if previously set
 		delete_option( 'wc_square_refresh_failed' );
 
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended - Setting var, nonce checked next line.
-		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( $_GET['_wpnonce'] ) : '';
+		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
 
 		// check the user role & nonce
 		if ( ! current_user_can( 'manage_woocommerce' ) || ! wp_verify_nonce( $nonce, 'wc_square_disconnect' ) ) {

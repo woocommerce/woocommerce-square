@@ -179,11 +179,12 @@ class Gateway extends Payment_Gateway_Direct {
 
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );
 
-		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( $_REQUEST['type'] ) ) : 'Request' );
+		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( wp_unslash( $_REQUEST['type'] ) ) ) : 'Request' );
 
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
-			$message .= print_r( wc_clean( $_REQUEST['data'] ), true );
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true );
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );

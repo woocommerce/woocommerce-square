@@ -47,7 +47,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ github.event.repository.name }}
-          path: ${{ github.event.repository.name }}
 
       - name: Build plugin zip
         run: zip -r ${{ github.event.repository.name }}.zip ${{ github.event.repository.name }}
