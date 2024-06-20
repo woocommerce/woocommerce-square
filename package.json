@@ -70,7 +70,9 @@
     "wp_org_slug": "woocommerce-square"
   },
   "dependencies": {
-    "@wordpress/data": "^8.1.0",
+    "@codeamp/block-components": "^0.0.1-beta.13",
+    "@wordpress/icons": "^10.1.0",
+    "html-react-parser": "^5.1.10",
     "uuid": "^9.0.1"
   }
 }

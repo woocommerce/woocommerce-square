@@ -1,0 +1,29 @@
+// Settings styles.
+#woocommerce-square-settings__container-general,
+[id*="woocommerce-square-payment-gateway-settings__container"] {
+	.square-settings__connection .woo-square-setting__input-wrapper--boxed-bg {
+		padding: 12px 32px;
+	}
+}
+
+[id*="woocommerce-square-settings__container"],
+[id*="woocommerce-square-payment-gateway-settings__container"] {
+    position: relative;
+    min-height: 400px;
+}
+
+#woocommerce-square-settings__container-update {
+    min-height: auto;
+}
+
+.heading_1 {
+    text-align: left;
+}
+
+.woocommerce {
+    .woo-square-setting__section-title {
+        .wc-admin-breadcrumb {
+            margin-left: 5px;
+        }
+    }
+}
