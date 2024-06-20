@@ -3,10 +3,7 @@
  */
 import { __, sprintf } from '@wordpress/i18n';
 import parse from 'html-react-parser';
-import {
-	TextControl,
-	ToggleControl,
-} from '@wordpress/components';
+import { TextControl, ToggleControl } from '@wordpress/components';
 
 /**
  * Internal dependencies.
@@ -32,7 +29,7 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 		sandbox_token = '',
 	} = settings;
 
-	if ( ! squareSettingsLoaded ) {
+	if (!squareSettingsLoaded) {
 		return null;
 	}
 
@@ -63,52 +60,71 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 						</InputWrapper>
 					}
 
-					{ 'yes' === enable_sandbox && (
+					{enable_sandbox === 'yes' && (
 						<>
 							<InputWrapper
-								label={ __( 'Sandbox Application ID', 'woocommerce-square' ) }
-								description={
-									parse(
-										sprintf( __( 'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.', 'woocommerce-square' ),
-											'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
-											'</a>'
-										)
+								label={__(
+									'Sandbox Application ID',
+									'woocommerce-square'
+								)}
+								description={parse(
+									sprintf(
+										/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
+										__(
+											'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.',
+											'woocommerce-square'
+										),
+										'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
+										'</a>'
 									)
-								}
-								indent={ indent }
+								)}
+								indent={indent}
 							>
 								<TextControl
 									required
 									data-testid="sandbox-application-id-field"
-									value={ sandbox_application_id }
-									onChange={ ( sandbox_application_id ) => setSquareSettingData( { sandbox_application_id } ) }
+									value={sandbox_application_id}
+									onChange={(value) =>
+										setSquareSettingData({
+											sandbox_application_id: value,
+										})
+									}
 								/>
 							</InputWrapper>
 
 							<InputWrapper
-								label={ __( 'Sandbox Access Token', 'woocommerce-square' ) }
-								description={
-									parse(
-										sprintf(
-											__( 'Access Token for the Sandbox Test Account, see the details in the %1$sSandbox Test Account%2$s section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ),
-											'<a target="_blank" href="https://developer.squareup.com/console/en/sandbox-test-accounts">',
-											'</a>'
-										)
+								label={__(
+									'Sandbox Access Token',
+									'woocommerce-square'
+								)}
+								description={parse(
+									sprintf(
+										/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
+										__(
+											'Access Token for the Sandbox Test Account, see the details in the %1$sSandbox Test Account%2$s section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.',
+											'woocommerce-square'
+										),
+										'<a target="_blank" href="https://developer.squareup.com/console/en/sandbox-test-accounts">',
+										'</a>'
 									)
-								}
-								indent={ indent }
+								)}
+								indent={indent}
 							>
 								<TextControl
 									required
 									data-testid="sandbox-token-field"
-									value={ sandbox_token }
-									onChange={ ( sandbox_token ) => setSquareSettingData( { sandbox_token } ) }
+									value={sandbox_token}
+									onChange={(value) =>
+										setSquareSettingData({
+											sandbox_token: value,
+										})
+									}
 								/>
 							</InputWrapper>
 						</>
-					) }
+					)}
 				</div>
 			</Section>
 		</>
-	)
+	);
 };

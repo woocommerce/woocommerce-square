@@ -2,10 +2,10 @@ import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { check } from '@wordpress/icons';
 
-import { usePaymentGatewaySettings } from '../../onboarding/hooks'
+import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 
-const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
-	return ( props ) => {
+const withPaymentGatewaySettingsSaveButton = (WrappedComponent) => {
+	return (props) => {
 		const {
 			label = __( 'Apply Changes', 'woocommerce-square' ),
 			afterSaveLabel = __( 'Changes Saved!' ),
@@ -18,15 +18,16 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 			isCashAppGatewaySettingsSaving,
 		} = usePaymentGatewaySettings();
 
-		const isAtleastOneSaving = ( null === isPaymentGatewaySettingsSaving )
-			|| ( null === isGiftCardsGatewaySettingsSaving )
-			|| ( null === isCashAppGatewaySettingsSaving );
+		const isAtleastOneSaving =
+			isPaymentGatewaySettingsSaving === null ||
+			isGiftCardsGatewaySettingsSaving === null ||
+			isCashAppGatewaySettingsSaving === null;
 
 		const isSavingState = [
 			isPaymentGatewaySettingsSaving,
 			isGiftCardsGatewaySettingsSaving,
 			isCashAppGatewaySettingsSaving,
-		].some( state => state );
+		].some((state) => state);
 
 		return (
 			<WrappedComponent
@@ -38,11 +39,11 @@ const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 				className="button-primary"
 				onClick={ () => onClick() }
 			>
-				{ isAtleastOneSaving ? afterSaveLabel : label }
+				{isAtleastOneSaving ? afterSaveLabel : label}
 			</WrappedComponent>
-		)
+		);
 	};
 };
 
-export const PaymentGatewaySettingsSaveButton = withPaymentGatewaySettingsSaveButton( Button );
-
+export const PaymentGatewaySettingsSaveButton =
+	withPaymentGatewaySettingsSaveButton(Button);

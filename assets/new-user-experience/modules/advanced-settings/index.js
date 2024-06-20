@@ -20,31 +20,26 @@ import { useSquareSettings } from '../../settings/hooks';
 import { useSteps } from '../../onboarding/hooks';
 
 export const AdvancedSettings = () => {
-	const {
-		settings,
-		squareSettingsLoaded,
-		setSquareSettingData,
-	} = useSquareSettings();
+	const { settings, squareSettingsLoaded, setSquareSettingData } =
+		useSquareSettings();
 
 	const {
-		stepData: {
-			step,
-		}
+		stepData: { step },
 	} = useSteps();
 
-	const {
-		enable_customer_decline_messages,
-		debug_logging_enabled = 'no',
-	} = settings;
+	const { enable_customer_decline_messages, debug_logging_enabled = 'no' } =
+		settings;
 
-	if ( ! squareSettingsLoaded ) {
+	if (!squareSettingsLoaded) {
 		return null;
 	}
 
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Advanced Settings', 'woocommerce-square' ) } />
+				<SectionTitle
+					title={__('Advanced Settings', 'woocommerce-square')}
+				/>
 				<SectionDescription>
 					{ __( 'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.', 'woocommerce-square' ) }
 					{ <br /> }
@@ -58,23 +53,33 @@ export const AdvancedSettings = () => {
 
 				</SectionDescription>
 
-				<div className='woo-square-wizard__fields'>
+				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={ __( 'Detailed Decline Messages', 'woocommerce-square' ) }
+						label={__(
+							'Detailed Decline Messages',
+							'woocommerce-square'
+						)}
 					>
 						<SquareCheckboxControl
-							checked={ 'yes' === enable_customer_decline_messages }
-							onChange={ ( enabled ) => setSquareSettingData( { enable_customer_decline_messages: enabled ? 'yes' : 'no' } ) }
-							label={
-								__( 'Show detailed decline messages to the customer during checkout rather than a generic decline message.', 'woocommerce-square' )
+							checked={enable_customer_decline_messages === 'yes'}
+							onChange={(enabled) =>
+								setSquareSettingData({
+									enable_customer_decline_messages: enabled
+										? 'yes'
+										: 'no',
+								})
 							}
+							label={__(
+								'Show detailed decline messages to the customer during checkout rather than a generic decline message.',
+								'woocommerce-square'
+							)}
 						/>
 					</InputWrapper>
 
 					<DebugMode />
 
 					<InputWrapper
-						label={ __( 'Enable Logging', 'woocommerce-square' ) }
+						label={__('Enable Logging', 'woocommerce-square')}
 						variant="boxed"
 						description={
 							parse(
@@ -87,15 +92,21 @@ export const AdvancedSettings = () => {
 									'</a>'
 								)
 							)
-						}
+						)}
 					>
 						<ToggleControl
-							checked={ 'yes' === debug_logging_enabled }
-							onChange={ ( enabled ) => setSquareSettingData( { debug_logging_enabled: enabled ? 'yes' : 'no' } ) }
+							checked={debug_logging_enabled === 'yes'}
+							onChange={(enabled) =>
+								setSquareSettingData({
+									debug_logging_enabled: enabled
+										? 'yes'
+										: 'no',
+								})
+							}
 						/>
 					</InputWrapper>
 				</div>
 			</Section>
 		</>
-	)
+	);
 };

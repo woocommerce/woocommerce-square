@@ -13,13 +13,13 @@ import '../styles/onboarding.scss';
 import { OnboardingApp } from './onboarding-app';
 import store from '../../new-user-experience/onboarding/data/store';
 
-register( store );
+register(store);
 
-domReady( () => {
-	const wrapper = document.getElementById( 'woocommerce-square-onboarding' );
+domReady(() => {
+	const wrapper = document.getElementById('woocommerce-square-onboarding');
 
-	if ( wrapper ) {
-		const root = createRoot( wrapper );
-		root.render( <OnboardingApp /> );
+	if (wrapper) {
+		const root = createRoot(wrapper);
+		root.render(<OnboardingApp />);
 	}
-} );
+});

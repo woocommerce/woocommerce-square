@@ -1,8 +1,5 @@
 import { __, sprintf } from '@wordpress/i18n';
-import {
-	Button,
-	SelectControl,
-} from '@wordpress/components';
+import { Button, SelectControl } from '@wordpress/components';
 
 import {
 	Section,
@@ -60,15 +57,26 @@ export const BusinessLocation = ( { loadData = false } ) => {
 	const noLocation = (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Your Square account is missing a Business Location', 'woocommerce-square' ) } />
+				<SectionTitle
+					title={__(
+						'Your Square account is missing a Business Location',
+						'woocommerce-square'
+					)}
+				/>
 				<SectionDescription>
-					<p dangerouslySetInnerHTML={ {
-						__html: sprintf(
-							__( 'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.', 'woocommerce-square' ),
-							'<a href="https://squareup.com/dashboard/locations/" target="_blank">',
-							'</a>'
-						)
-					} } />
+					<p
+						dangerouslySetInnerHTML={{
+							__html: sprintf(
+								/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
+								__(
+									'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.',
+									'woocommerce-square'
+								),
+								'<a href="https://squareup.com/dashboard/locations/" target="_blank">',
+								'</a>'
+							),
+						}}
+					/>
 				</SectionDescription>
 			</Section>
 			<Button
@@ -76,36 +84,60 @@ export const BusinessLocation = ( { loadData = false } ) => {
 				className="button-primary"
 				onClick={ () => window.open( 'https://squareup.com/dashboard/locations/', '_blank' ) }
 			>
-				{ __( 'Create a Business Location', 'woocommerce-square' ) }
+				{__('Create a Business Location', 'woocommerce-square')}
 			</Button>
 		</>
 	);
 
-	const intro = 1 === locationCount ? (
-		<>
-			<SectionTitle title={ __( 'Confirm Your Business Location', 'woocommerce-square' ) } />
-			<SectionDescription>
-				<p>
-					{ __( 'Great, you\'re nearly there! We\'ve detected your business location as listed in Square.', 'woocommerce-square' ) }
-				</p>
-				<p>
-					{ __( 'Please confirm that this is the correct location where you\'ll be making sales:', 'woocommerce-square' ) }
-				</p>
-			</SectionDescription>
-		</>
-	) : (
-		<>
-			<SectionTitle title={ __( 'Select your business location', 'woocommerce-square' ) } />
-			<SectionDescription>
-				<p>
-					{ __( 'You\'re on your way!  It looks like you have multiple business locations associated with your Square account.', 'woocommerce-square' ) }
-				</p>
-				<p>
-					{ __( 'Please select the location you wish to link with this WooCommerce store', 'woocommerce-square' ) }
-				</p>
-			</SectionDescription>
-		</>
-	);
+	const intro =
+		locationCount === 1 ? (
+			<>
+				<SectionTitle
+					title={__(
+						'Confirm Your Business Location',
+						'woocommerce-square'
+					)}
+				/>
+				<SectionDescription>
+					<p>
+						{__(
+							"Great, you're nearly there! We've detected your business location as listed in Square.",
+							'woocommerce-square'
+						)}
+					</p>
+					<p>
+						{__(
+							"Please confirm that this is the correct location where you'll be making sales:",
+							'woocommerce-square'
+						)}
+					</p>
+				</SectionDescription>
+			</>
+		) : (
+			<>
+				<SectionTitle
+					title={__(
+						'Select your business location',
+						'woocommerce-square'
+					)}
+				/>
+				<SectionDescription>
+					<p>
+						{__(
+							"You're on your way! It looks like you have multiple business locations associated with your Square account.",
+							'woocommerce-square'
+						)}
+					</p>
+
+					<p>
+						{__(
+							'Please select the location you wish to link with this WooCommerce store',
+							'woocommerce-square'
+						)}
+					</p>
+				</SectionDescription>
+			</>
+		);
 
 	const reselect = (
 		<div style={ { textAlign: 'left', margin: '-15px 0', fontSize: '15px' } }>
@@ -120,8 +152,8 @@ export const BusinessLocation = ( { loadData = false } ) => {
 	return (
 		<div>
 			<Section>
-				{ ( locationCount === 0 && noLocation ) ||
-					( locationCount && (
+				{(locationCount === 0 && noLocation) ||
+					(locationCount && (
 						<>
 							{loadData ? reselect : intro}
 							<div className='woo-square-wizard__fields'>
@@ -142,8 +174,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 								</InputWrapper>
 							</div>
 						</>
-					) )
-				}
+					))}
 			</Section>
 		</div>
 	);

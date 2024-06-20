@@ -8,18 +8,18 @@ import { CheckboxControl } from '@wordpress/components';
  */
 import './index.scss';
 
-const withSquareCheckboxControl = ( WrapperComponent ) => {
-	return ( props ) => {
+const withSquareCheckboxControl = () => {
+	return (props) => {
 		const { label, ...remainingProps } = props;
 		return (
 			<div className="woo-square-setting__input-field--checkbox">
-				<CheckboxControl { ...remainingProps } />
+				<CheckboxControl {...remainingProps} />
 				<div className="woo-square-setting__input-field--checkbox-label">
-					{ label }
+					{label}
 				</div>
 			</div>
 		);
 	};
 };
 
-export const SquareCheckboxControl = withSquareCheckboxControl( CheckboxControl );
+export const SquareCheckboxControl = withSquareCheckboxControl();

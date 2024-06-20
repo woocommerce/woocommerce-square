@@ -237,8 +237,9 @@ class Admin {
 				'woocommerce-square-settings-js',
 				'wcSquareSettings',
 				array(
-					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
+					'nonce'      => wp_create_nonce( 'wc_square_settings' ),
 					'adminUrl' => admin_url(),
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				)
 			);
 
