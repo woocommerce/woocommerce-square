@@ -62,6 +62,13 @@ class Base_Email extends \WC_Email {
 	public $template_base;
 
 	/**
+	 * Email body.
+	 *
+	 * @var string
+	 **/
+	public $body;
+
+	/**
 	 * Email constructor.
 	 *
 	 * @since 2.1.0

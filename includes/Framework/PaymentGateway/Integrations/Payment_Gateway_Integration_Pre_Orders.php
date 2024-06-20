@@ -95,11 +95,11 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
 			if ( $order_id ) {
-				$pay_page_pre_order = \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Order::get_pre_order_product( $order_id ) );
+				$pay_page_pre_order = class_exists( 'WC_Pre_Orders_Order' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Order::get_pre_order_product( $order_id ) );
 			}
 		}
 
-		if ( ( \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
+		if ( ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
 			$pay_page_pre_order ) {
 
 			// always tokenize the card for pre-orders that are charged upon release
@@ -125,11 +125,11 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 	public function get_order( $order ) {
 
 		// bail if order doesn't contain a pre-order
-		if ( ! \WC_Pre_Orders_Order::order_contains_pre_order( $order ) ) {
+		if ( ! class_exists( 'WC_Pre_Orders_Order' ) || ! \WC_Pre_Orders_Order::order_contains_pre_order( $order ) ) {
 			return $order;
 		}
 
-		if ( \WC_Pre_Orders_Order::order_requires_payment_tokenization( $order ) ) {
+		if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Order::order_requires_payment_tokenization( $order ) ) {
 
 			// normally a guest user wouldn't be assigned a customer id, but for a pre-order requiring tokenization, it might be
 			$customer_id = $this->get_gateway()->get_guest_customer_id( $order );
@@ -141,7 +141,7 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 			// zero out the payment total since we're just tokenizing the payment method
 			$order->payment_total = '0.00';
 
-		} elseif ( \WC_Pre_Orders_Order::order_has_payment_token( $order ) && ! is_checkout_pay_page() ) {
+		} elseif ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Order::order_has_payment_token( $order ) && ! is_checkout_pay_page() ) {
 
 			// if this is a pre-order release payment with a tokenized payment method, get the payment token to complete the order
 
@@ -212,8 +212,7 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 	public function process_payment( $result, $order_id ) {
 
 		// processing pre-order
-		if ( \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) &&
-			\WC_Pre_Orders_Order::order_requires_payment_tokenization( $order_id ) ) {
+		if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Order::order_requires_payment_tokenization( $order_id ) ) {
 
 			$order = $this->get_gateway()->get_order( $order_id );
 
@@ -269,7 +268,7 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 	 */
 	public function complete_payment( $order ) {
 
-		if ( \WC_Pre_Orders_Order::order_contains_pre_order( $order ) && \WC_Pre_Orders_Order::order_requires_payment_tokenization( $order ) ) {
+		if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order ) && \WC_Pre_Orders_Order::order_requires_payment_tokenization( $order ) ) {
 			\WC_Pre_Orders_Order::mark_order_as_pre_ordered( $order );
 		}
 	}

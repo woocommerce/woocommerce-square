@@ -27,15 +27,15 @@
  *
  * @typedef {Object} SquareBillingContact
  *
- * @property {string} familyName    The billing last name
- * @property {string} givenName     The billing first name
- * @property {string} email         The billing email
- * @property {string} country       The billing contact country
- * @property {string} region        The billing state/region
- * @property {string} city          The billing city
- * @property {string} postalCode    The postal/zip code
- * @property {string} phone         The billing email
- * @property {Array} [addressLines] An array of address line items.
+ * @property {string} familyName     The billing last name
+ * @property {string} givenName      The billing first name
+ * @property {string} email          The billing email
+ * @property {string} country        The billing contact country
+ * @property {string} region         The billing state/region
+ * @property {string} city           The billing city
+ * @property {string} postalCode     The postal/zip code
+ * @property {string} phone          The billing email
+ * @property {Array}  [addressLines] An array of address line items.
  */
 
 /**
@@ -44,7 +44,7 @@
  * @typedef {Object} SquareContext
  *
  * @property {Function} onCreateNonce Triggers the SqPaymentCustomer billing data
- * @property {Function} verifyBuyer Triggers Payments.verifyBuyer() function
+ * @property {Function} verifyBuyer   Triggers Payments.verifyBuyer() function
  */
 
 /**
@@ -52,12 +52,12 @@
  *
  * @typedef {Object} PaymentsFormHandler
  *
- * @property {Function} handleInputReceived       Handle inputs received on PaymentsForm
- * @property {boolean}  isLoaded                  Used to determine if PaymentsForm has finished loading
- * @property {Function} setLoaded                 Function to set isLoaded state
- * @property {Function} getPostalCode             Function to return billingContact postalcode value
- * @property {Function} cardBrandClass            Function to return billingContact postalcode value
- * @property {Function} createNonce               Function to return billingContact postalcode value
- * @property {Function} verifyBuyer               Function to return billingContact postalcode value
- * @property {Function} getPaymentMethodData      Function to return billingContact postalcode value
+ * @property {Function} handleInputReceived  Handle inputs received on PaymentsForm
+ * @property {boolean}  isLoaded             Used to determine if PaymentsForm has finished loading
+ * @property {Function} setLoaded            Function to set isLoaded state
+ * @property {Function} getPostalCode        Function to return billingContact postalcode value
+ * @property {Function} cardBrandClass       Function to return billingContact postalcode value
+ * @property {Function} createNonce          Function to return billingContact postalcode value
+ * @property {Function} verifyBuyer          Function to return billingContact postalcode value
+ * @property {Function} getPaymentMethodData Function to return billingContact postalcode value
  */

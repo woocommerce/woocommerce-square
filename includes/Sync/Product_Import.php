@@ -652,11 +652,11 @@ class Product_Import extends Stepped_Job {
 		$variation_data = $variation->getItemVariationData();
 
 		if ( 'VARIABLE_PRICING' === $variation_data->getPricingType() ) {
-			throw new \Exception( __( 'Items with variable pricing cannot be imported.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Items with variable pricing cannot be imported.', 'woocommerce-square' ) );
 		}
 
 		if ( in_array( $variation_data->getSku(), array( '', null ), true ) ) {
-			throw new \Exception( __( 'Variations with missing SKUs cannot be imported.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Variations with missing SKUs cannot be imported.', 'woocommerce-square' ) );
 		}
 
 		$data = array(
@@ -749,7 +749,7 @@ class Product_Import extends Stepped_Job {
 
 					} else {
 
-						throw new \Exception( __( 'The SKU already exists on another product', 'woocommerce-square' ) );
+						throw new \Exception( esc_html__( 'The SKU already exists on another product', 'woocommerce-square' ) );
 					}
 				} else {
 					update_post_meta( $product_id, '_sku', '' );
@@ -1003,7 +1003,7 @@ class Product_Import extends Stepped_Job {
 			// stop if we don't have a variation ID
 			if ( is_wp_error( $variation_id ) ) {
 
-				throw new \Exception( $variation_id->get_error_message() );
+				throw new \Exception( esc_html( $variation_id->get_error_message() ) );
 			}
 
 			// SKU
@@ -1026,7 +1026,7 @@ class Product_Import extends Stepped_Job {
 
 						} else {
 
-							throw new \Exception( __( 'The SKU already exists on another product', 'woocommerce-square' ) );
+							throw new \Exception( esc_html__( 'The SKU already exists on another product', 'woocommerce-square' ) );
 						}
 					} else {
 
@@ -1320,13 +1320,13 @@ class Product_Import extends Stepped_Job {
 		// validate title field
 		if ( ! isset( $data['title'] ) ) {
 			/* translators: Placeholders: %s - missing parameter name */
-			throw new \Exception( sprintf( __( 'Missing parameter %s', 'woocommerce-square' ), 'title' ) );
+			throw new \Exception( sprintf( esc_html__( 'Missing parameter %s', 'woocommerce-square' ), 'title' ) );
 		}
 
 		// validate type
 		if ( ! array_key_exists( wc_clean( $data['type'] ), wc_get_product_types() ) ) {
 			/* translators: Placeholders: %s - comma separated list of valid product types */
-			throw new \Exception( sprintf( __( 'Invalid product type - the product type must be any of these: %s', 'woocommerce-square' ), implode( ', ', array_keys( wc_get_product_types() ) ) ) );
+			throw new \Exception( sprintf( esc_html__( 'Invalid product type - the product type must be any of these: %s', 'woocommerce-square' ), esc_html( implode( ', ', array_keys( wc_get_product_types() ) ) ) ) );
 		}
 
 		$new_product = array(
@@ -1346,7 +1346,7 @@ class Product_Import extends Stepped_Job {
 		$product_id = wp_insert_post( $new_product, true );
 
 		if ( is_wp_error( $product_id ) ) {
-			throw new \Exception( $product_id->get_error_message() );
+			throw new \Exception( esc_html( $product_id->get_error_message() ) );
 		}
 
 		return $product_id;

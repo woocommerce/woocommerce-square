@@ -110,8 +110,6 @@ class Request implements API_Request {
 	 * Gets the HTTP method.
 	 *
 	 * @since 2.0.0
-	 *
-	 * @return string
 	 */
 	public function get_method() {
 		// TODO: Implement get_method() method.
@@ -122,8 +120,6 @@ class Request implements API_Request {
 	 * Gets the query parameters.
 	 *
 	 * @since 2.0.0
-	 *
-	 * @return array
 	 */
 	public function get_params() {
 		// TODO: Implement get_params() method.
@@ -134,8 +130,6 @@ class Request implements API_Request {
 	 * Gets the path.
 	 *
 	 * @since 2.0.0
-	 *
-	 * @return string
 	 */
 	public function get_path() {
 		// TODO: Implement get_path() method.
@@ -146,8 +140,6 @@ class Request implements API_Request {
 	 * Gets the request data.
 	 *
 	 * @since 2.0.0
-	 *
-	 * @return array
 	 */
 	public function get_data() {
 		// TODO: Implement get_data() method.
