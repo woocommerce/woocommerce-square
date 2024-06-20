@@ -29,7 +29,7 @@ module.exports = {
 		'react-hooks/exhaustive-deps': 'off',
 		'react-hooks/rules-of-hooks': 'off',
 		'@woocommerce/dependency-group': 'off',
-		'camelcase': 'off',
+		camelcase: 'off',
 	},
 	overrides: [
 		{
