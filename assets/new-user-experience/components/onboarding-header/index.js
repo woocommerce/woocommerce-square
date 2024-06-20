@@ -34,7 +34,7 @@ export const OnboardingHeader = () => {
 				<FlexBlock className="wizardTitle">
 					<Square />
 				</FlexBlock>
-				<FlexItem className='flexItem closeWizard'>
+				<FlexItem className="flexItem closeWizard">
 					<Button href={wcSquareSettings.adminUrl}>
 						<Close />
 					</Button>

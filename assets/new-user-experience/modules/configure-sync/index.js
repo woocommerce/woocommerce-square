@@ -377,24 +377,26 @@ export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 									</div>
 								</InputWrapper>
 
-								{ isOpen &&
-									<Modal title='Import Products From Square' size={'large'} onRequestClose={ closeModal }>
-										<div className='import-modal-cover'>
-											<div className='import-modal-content'>
-												<p>{__( 'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.', 'woocommerce-square' )} </p>
-												<h3>{__( 'Do you wish to import existing product updates from Square?', 'woocommerce-square' )} </h3>
+								{isOpen && (
+									<Modal
+										title="Import Products From Square"
+										size={'large'}
+										onRequestClose={closeModal}
+									>
+										<div className="import-modal-cover">
+											<div className="import-modal-content">
 												<p>
 													{__(
 														'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.',
 														'woocommerce-square'
 													)}{' '}
 												</p>
-												<h4>
+												<h3>
 													{__(
 														'Do you wish to import existing product updates from Square?',
 														'woocommerce-square'
 													)}{' '}
-												</h4>
+												</h3>
 												<p>
 													{parse(
 														sprintf(
@@ -434,8 +436,8 @@ export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 													data-testid="import-products-button-confirm"
 													variant="button-primary"
 													className="button-primary"
-													onClick={ () => {
-														setIsImporting( true );
+													onClick={() => {
+														setIsImporting(true);
 														importProducts();
 													}}
 													isBusy={isImporting}

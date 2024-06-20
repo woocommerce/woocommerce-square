@@ -17,7 +17,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const GiftCardSetup = ( { origin = '' } ) => {
+export const GiftCardSetup = ({ origin = '' }) => {
 	const {
 		giftCardsGatewaySettingsLoaded,
 		giftCardsGatewaySettings,
@@ -33,14 +33,17 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={
-					parse(
+				<SectionTitle
+					title={parse(
+						/* translators: %s: Gift Cards */
 						sprintf(
-							__( 'Gift Cards %s', 'woocommerce-square' ),
-							'settings' === origin ? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` : ''
+							__('Gift Cards %s', 'woocommerce-square'),
+							origin === 'settings'
+								? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
+								: ''
 						)
-					)
-				} />
+					)}
+				/>
 				<SectionDescription>
 					{__(
 						'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.',
@@ -48,34 +51,48 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 					)}
 				</SectionDescription>
 
-				<div className='woo-square-wizard__fields'>
-					{ 'settings' !== origin &&
+				<div className="woo-square-wizard__fields">
+					{origin !== 'settings' && (
 						<InputWrapper
-							label={ __( 'Enable Square Gift Cards', 'woocommerce-square' ) }
+							label={__(
+								'Enable Square Gift Cards',
+								'woocommerce-square'
+							)}
 							variant="boxed"
 						>
 							<ToggleControl
 								className="gift-card-gateway-toggle-field"
 								data-testid="gift-card-gateway-toggle-field"
-								checked={ 'yes' === enabled }
-								onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
+								checked={enabled === 'yes'}
+								onChange={(value) =>
+									setGiftCardData({
+										enabled: value ? 'yes' : 'no',
+									})
+								}
 							/>
 						</InputWrapper>
-					}
+					)}
 
-					{ 'settings' === origin &&
+					{origin === 'settings' && (
 						<InputWrapper
-							label={ __( 'Enable / Disable', 'woocommerce-square' ) }
-							>
+							label={__('Enable / Disable', 'woocommerce-square')}
+						>
 							<SquareCheckboxControl
 								className="gift-card-gateway-toggle-field"
 								data-testid="gift-card-gateway-toggle-field"
-								label={ __( 'Enable this payment method.', 'woocommerce-square' ) }
-								checked={ 'yes' === enabled }
-								onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
+								label={__(
+									'Enable this payment method.',
+									'woocommerce-square'
+								)}
+								checked={enabled === 'yes'}
+								onChange={(value) =>
+									setGiftCardData({
+										enabled: value ? 'yes' : 'no',
+									})
+								}
 							/>
 						</InputWrapper>
-					}
+					)}
 				</div>
 			</Section>
 		</>

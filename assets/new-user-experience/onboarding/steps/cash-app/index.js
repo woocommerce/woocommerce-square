@@ -21,11 +21,9 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CashAppSetup = ( { origin = '' } ) => {
-	const {
-		cashAppGatewaySettings,
-		setCashAppData,
-	} = usePaymentGatewaySettings();
+export const CashAppSetup = ({ origin = '' }) => {
+	const { cashAppGatewaySettings, setCashAppData } =
+		usePaymentGatewaySettings();
 
 	const {
 		enabled,
@@ -86,14 +84,20 @@ export const CashAppSetup = ( { origin = '' } ) => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={
-					parse(
+				<SectionTitle
+					title={parse(
+						/* translators: %s: link to settings page */
 						sprintf(
-							__( 'Manage Cash App Pay Settings %s', 'woocommerce-square' ),
-							'settings' === origin ? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` : ''
+							__(
+								'Manage Cash App Pay Settings %s',
+								'woocommerce-square'
+							),
+							origin === 'settings'
+								? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
+								: ''
 						)
-					)
-				} />
+					)}
+				/>
 				<SectionDescription>
 					{__(
 						'Cash App Pay is an innovative payment solution that offers your customers a quick and secure way to check out. With just a few settings, you can tailor how Cash App Pay appears and operates on your site.',
@@ -107,9 +111,16 @@ export const CashAppSetup = ( { origin = '' } ) => {
 					>
 						<SquareCheckboxControl
 							data-testid="cash-app-gateway-toggle-field"
-							label={ __( 'Enable this payment method.', 'woocommerce-square' ) }
-							checked={ 'yes' === enabled }
-							onChange={ ( enabled ) => setCashAppData( { enabled: enabled ? 'yes' : 'no' } ) }
+							label={__(
+								'Enable this payment method.',
+								'woocommerce-square'
+							)}
+							checked={enabled === 'yes'}
+							onChange={(value) =>
+								setCashAppData({
+									enabled: value ? 'yes' : 'no',
+								})
+							}
 						/>
 					</InputWrapper>
 

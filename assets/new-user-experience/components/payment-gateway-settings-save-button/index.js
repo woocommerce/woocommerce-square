@@ -7,8 +7,8 @@ import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 const withPaymentGatewaySettingsSaveButton = (WrappedComponent) => {
 	return (props) => {
 		const {
-			label = __( 'Apply Changes', 'woocommerce-square' ),
-			afterSaveLabel = __( 'Changes Saved!' ),
+			label = __('Apply Changes', 'woocommerce-square'),
+			afterSaveLabel = __('Changes Saved!'),
 			onClick,
 		} = props;
 
@@ -32,12 +32,12 @@ const withPaymentGatewaySettingsSaveButton = (WrappedComponent) => {
 		return (
 			<WrappedComponent
 				data-testid="payment-gateway-settings-save-button"
-				{ ...props }
-				{ ...( isAtleastOneSaving && { icon: check } ) }
-				isBusy={ isSavingState }
+				{...props}
+				{...(isAtleastOneSaving && { icon: check })}
+				isBusy={isSavingState}
 				variant="button-primary"
 				className="button-primary"
-				onClick={ () => onClick() }
+				onClick={() => onClick()}
 			>
 				{isAtleastOneSaving ? afterSaveLabel : label}
 			</WrappedComponent>

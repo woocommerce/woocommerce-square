@@ -178,9 +178,9 @@ export const PaymentMethods = () => {
 							data-testid="next-step-button"
 							variant="button-primary"
 							className="button-primary"
-							isBusy={ isSavingState }
-							onClick={ () => {
-								( async () => {
+							isBusy={isSavingState}
+							onClick={() => {
+								(async () => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
 									await saveGiftCardsSettings();

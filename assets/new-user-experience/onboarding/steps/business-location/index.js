@@ -10,49 +10,54 @@ import {
 import { useSquareSettings } from '../../../settings/hooks';
 import { useEffect } from '@wordpress/element';
 
-export const BusinessLocation = ( { loadData = false } ) => {
-	const {
-		settings,
-		squareSettingsLoaded,
-		setSquareSettingData,
-	} = useSquareSettings( loadData );
+export const BusinessLocation = ({ loadData = false }) => {
+	const { settings, squareSettingsLoaded, setSquareSettingData } =
+		useSquareSettings(loadData);
 
 	const {
 		enable_sandbox = 'no',
 		sandbox_location_id,
 		production_location_id,
-		locations
+		locations,
 	} = settings;
 
 	const locationsList = [
-		{ label: __('Please choose a location', 'woocommerce-square'), value: '' },
-		...locations
-	]
+		{
+			label: __('Please choose a location', 'woocommerce-square'),
+			value: '',
+		},
+		...locations,
+	];
 
 	// Check if no locations found.
 	const locationCount = locations.length;
 
-	useEffect( () => {
-		if ( 1 === locationCount) {
+	useEffect(() => {
+		if (locationCount === 1) {
 			// Remove the label, to make the only location selected.
 			locationsList.shift();
-			
+
 			// Set the first location value in data.
 			const first_location_id = locations[0].value;
-			
-			if ( 'yes' === enable_sandbox ) {
-				setSquareSettingData( { sandbox_location_id: first_location_id } )
+
+			if (enable_sandbox === 'yes') {
+				setSquareSettingData({
+					sandbox_location_id: first_location_id,
+				});
 			} else {
-				setSquareSettingData( { production_location_id: first_location_id } )
+				setSquareSettingData({
+					production_location_id: first_location_id,
+				});
 			}
 		}
-	} );
+	});
 
-	if ( ! squareSettingsLoaded ) {
+	if (!squareSettingsLoaded) {
 		return null;
 	}
 
-	const _location_id = 'yes' === enable_sandbox ? sandbox_location_id : production_location_id;
+	const _location_id =
+		enable_sandbox === 'yes' ? sandbox_location_id : production_location_id;
 
 	const noLocation = (
 		<>
@@ -82,7 +87,12 @@ export const BusinessLocation = ( { loadData = false } ) => {
 			<Button
 				variant="button-primary"
 				className="button-primary"
-				onClick={ () => window.open( 'https://squareup.com/dashboard/locations/', '_blank' ) }
+				onClick={() =>
+					window.open(
+						'https://squareup.com/dashboard/locations/',
+						'_blank'
+					)
+				}
 			>
 				{__('Create a Business Location', 'woocommerce-square')}
 			</Button>
@@ -140,10 +150,13 @@ export const BusinessLocation = ( { loadData = false } ) => {
 		);
 
 	const reselect = (
-		<div style={ { textAlign: 'left', margin: '-15px 0', fontSize: '15px' } }>
+		<div style={{ textAlign: 'left', margin: '-15px 0', fontSize: '15px' }}>
 			<SectionDescription>
 				<p>
-					{ __( 'Please select the location you wish to link with this WooCommerce store', 'woocommerce-square' ) }
+					{__(
+						'Please select the location you wish to link with this WooCommerce store',
+						'woocommerce-square'
+					)}
 				</p>
 			</SectionDescription>
 		</div>
@@ -156,20 +169,30 @@ export const BusinessLocation = ( { loadData = false } ) => {
 					(locationCount && (
 						<>
 							{loadData ? reselect : intro}
-							<div className='woo-square-wizard__fields'>
-								<InputWrapper label={ __( 'Business Location:', 'woocommerce-square' ) }>
+							<div className="woo-square-wizard__fields">
+								<InputWrapper
+									label={__(
+										'Business Location:',
+										'woocommerce-square'
+									)}
+								>
 									<SelectControl
 										data-testid="business-location-field"
 										required
-										value={ _location_id }
-										onChange={ ( _location_id ) => {
-											if ( 'yes' === enable_sandbox ) {
-												setSquareSettingData( { sandbox_location_id: _location_id } )
+										value={_location_id}
+										onChange={(value) => {
+											if (enable_sandbox === 'yes') {
+												setSquareSettingData({
+													sandbox_location_id: value,
+												});
 											} else {
-												setSquareSettingData( { production_location_id: _location_id } )
+												setSquareSettingData({
+													production_location_id:
+														value,
+												});
 											}
-										} }
-										options={ locationsList }
+										}}
+										options={locationsList}
 									/>
 								</InputWrapper>
 							</div>

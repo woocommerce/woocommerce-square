@@ -9,7 +9,7 @@ const withSaveSquareSettingsButton = (WrappedComponent) => {
 		const { label = __('Apply Changes', 'woocommerce-square') } = props;
 
 		const {
-			afterSaveLabel = __( 'Changes Saved!' ),
+			afterSaveLabel = __('Changes Saved!'),
 			afterSaveCallback,
 			icon = check,
 			...remainingProps
@@ -21,37 +21,38 @@ const withSaveSquareSettingsButton = (WrappedComponent) => {
 		return (
 			<WrappedComponent
 				data-testid="square-settings-save-button"
-				{ ...( null === isSquareSettingsSaving && { icon } ) }
-				isBusy={ isSquareSettingsSaving }
+				{...(isSquareSettingsSaving === null && { icon })}
+				isBusy={isSquareSettingsSaving}
 				variant="button-primary"
 				className="button-primary"
-				onClick={ () => {
-					( async () => {
+				onClick={() => {
+					(async () => {
 						// Check of required fields.
-						const requiredFields = document.querySelectorAll( '[required]' );
+						const requiredFields =
+							document.querySelectorAll('[required]');
 						let isValid = true;
 
-						requiredFields.forEach( ( field ) => {
-							if ( ! field.value ) {
-								field.classList.add( 'required-error' );
+						requiredFields.forEach((field) => {
+							if (!field.value) {
+								field.classList.add('required-error');
 								isValid = false;
 							} else {
-								field.classList.remove( 'required-error' );
+								field.classList.remove('required-error');
 							}
-						} );
+						});
 
-						if ( ! isValid ) {
+						if (!isValid) {
 							return;
 						}
 
-						await saveSquareSettings( settings );
+						await saveSquareSettings(settings);
 
 						if (afterSaveCallback) {
 							afterSaveCallback();
 						}
-					} )()
-				} }
-				{ ...remainingProps }
+					})();
+				}}
+				{...remainingProps}
 			>
 				{isSquareSettingsSaving === null ? afterSaveLabel : label}
 			</WrappedComponent>

@@ -22,7 +22,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CreditCardSetup = ( { origin = '' } ) => {
+export const CreditCardSetup = ({ origin = '' }) => {
 	const {
 		paymentGatewaySettings,
 		paymentGatewaySettingsLoaded,
@@ -92,14 +92,20 @@ export const CreditCardSetup = ( { origin = '' } ) => {
 	return (
 		<>
 			<Section>
-				<SectionTitle title={
-					parse(
+				<SectionTitle
+					title={parse(
 						sprintf(
-							__( 'Manage Credit Card Payment Settings %s', 'woocommerce-square' ),
-							'settings' === origin ? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` : ''
+							/* translators: %s: link to payments settings */
+							__(
+								'Manage Credit Card Payment Settings %s',
+								'woocommerce-square'
+							),
+							origin === 'settings'
+								? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
+								: ''
 						)
-					)
-				} />
+					)}
+				/>
 				<SectionDescription>
 					{__(
 						'Here you can fine-tune the details of how credit card payments are processed, ensuring a secure and smooth transaction for every customer.',
@@ -113,9 +119,16 @@ export const CreditCardSetup = ( { origin = '' } ) => {
 					>
 						<SquareCheckboxControl
 							data-testid="credit-card-gateway-toggle-field"
-							label={ __( 'Enable this payment method.', 'woocommerce-square' ) }
-							checked={ 'yes' === enabled }
-							onChange={ ( enabled ) => setCreditCardData( { enabled: enabled ? 'yes' : 'no' } ) }
+							label={__(
+								'Enable this payment method.',
+								'woocommerce-square'
+							)}
+							checked={enabled === 'yes'}
+							onChange={(value) =>
+								setCreditCardData({
+									enabled: value ? 'yes' : 'no',
+								})
+							}
 						/>
 					</InputWrapper>
 

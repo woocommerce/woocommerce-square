@@ -32,9 +32,9 @@ export const ConnectSetup = () => {
 					</SectionDescription>
 
 					<Button
-							variant="button-primary"
-							className="button-primary"
-							href={settings.connection_url_wizard}
+						variant="button-primary"
+						className="button-primary"
+						href={settings.connection_url_wizard}
 					>
 						{__('Connect with Square', 'woocommerce-square')}
 					</Button>

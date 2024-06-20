@@ -16,12 +16,9 @@ import {
 } from '../../components';
 import { useSquareSettings } from '../../settings/hooks';
 
-export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
-	const {
-		settings,
-		squareSettingsLoaded,
-		setSquareSettingData,
-	} = useSquareSettings();
+export const SandboxSettings = ({ indent = 0, showToggle = true }) => {
+	const { settings, squareSettingsLoaded, setSquareSettingData } =
+		useSquareSettings();
 
 	const {
 		enable_sandbox = 'no',
@@ -36,29 +33,47 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 	return (
 		<>
 			<Section>
-				{ showToggle &&
+				{showToggle && (
 					<>
-						<SectionTitle title={ __( 'Configure Sandbox Settings', 'woocommerce-square' ) } />
+						<SectionTitle
+							title={__(
+								'Configure Sandbox Settings',
+								'woocommerce-square'
+							)}
+						/>
 						<SectionDescription>
-							{ __( 'Activate Sandbox Mode to safely simulate transactions and sync operations, ensuring your WooCommerce/Square integration functions seamlessly. Experiment with payment methods and product data syncing in a risk-free environment before going live with your store.', 'woocommerce-square' ) }
+							{__(
+								'Activate Sandbox Mode to safely simulate transactions and sync operations, ensuring your WooCommerce/Square integration functions seamlessly. Experiment with payment methods and product data syncing in a risk-free environment before going live with your store.',
+								'woocommerce-square'
+							)}
 						</SectionDescription>
 					</>
-				}
+				)}
 
-				<div className='woo-square-wizard__fields'>
-					{ showToggle &&
+				<div className="woo-square-wizard__fields">
+					{showToggle && (
 						<InputWrapper
-							label={ __( 'Enable Sandbox Mode', 'woocommerce-square' ) }
-							description={ __( 'After enabling you\'ll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' ) }
+							label={__(
+								'Enable Sandbox Mode',
+								'woocommerce-square'
+							)}
+							description={__(
+								"After enabling you'll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.",
+								'woocommerce-square'
+							)}
 							variant="boxed"
 						>
 							<ToggleControl
-								className='enable-sandbox-mode-field'
-								checked={ 'yes' === enable_sandbox }
-								onChange={ ( enable_sandbox ) => setSquareSettingData( { enable_sandbox: enable_sandbox ? 'yes' : 'no' } ) }
+								className="enable-sandbox-mode-field"
+								checked={enable_sandbox === 'yes'}
+								onChange={(value) =>
+									setSquareSettingData({
+										enable_sandbox: value ? 'yes' : 'no',
+									})
+								}
 							/>
 						</InputWrapper>
-					}
+					)}
 
 					{enable_sandbox === 'yes' && (
 						<>

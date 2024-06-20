@@ -16,9 +16,11 @@ export const CashAppSettingsApp = () => {
 	return (
 		<>
 			<CashAppSetup origin="settings" />
-			<PaymentGatewaySettingsSaveButton onClick={ () => {
-				saveCashAppSettings();
-			} } />
+			<PaymentGatewaySettingsSaveButton
+				onClick={() => {
+					saveCashAppSettings();
+				}}
+			/>
 		</>
 	);
 };

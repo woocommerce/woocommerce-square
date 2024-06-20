@@ -26,14 +26,11 @@ export const SettingsApp = () => {
 		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
-		saveSquareSettings,
 	} = useSquareSettings(true);
-		setSquareSettingData
-	} = useSquareSettings( true );
 
 	const [initialState, setInitialState] = useState(false);
 	const [isFormDirty, setIsFormDirty] = useState(false);
-	const [ envUpdated, setEnvUpdated ] = useState( false );
+	const [envUpdated, setEnvUpdated] = useState(false);
 
 	const {
 		enable_sandbox = 'no',

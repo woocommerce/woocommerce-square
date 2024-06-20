@@ -16,9 +16,11 @@ export const GiftCardsSettingsApp = () => {
 	return (
 		<>
 			<GiftCardSetup origin="settings" />
-			<PaymentGatewaySettingsSaveButton onClick={ () => {
-				saveGiftCardsSettings();
-			} } />
+			<PaymentGatewaySettingsSaveButton
+				onClick={() => {
+					saveGiftCardsSettings();
+				}}
+			/>
 		</>
 	);
 };

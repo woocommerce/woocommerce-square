@@ -57,8 +57,12 @@ export const PaymentComplete = () => {
 								)}
 							</p>
 						</SectionDescription>
-						<Button variant="button-primary" className="button-primary" href='/' >
-							{ __( 'Visit my Storefront', 'woocommerce-square' ) }
+						<Button
+							variant="button-primary"
+							className="button-primary"
+							href="/"
+						>
+							{__('Visit my Storefront', 'woocommerce-square')}
 						</Button>
 					</div>
 					<div className="woo-square-onbarding__payment-settings__center-icon">

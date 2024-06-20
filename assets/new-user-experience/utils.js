@@ -110,8 +110,8 @@ export const connectToSquare = async () => {
 
 		const data = await response.json();
 		return data;
-	} catch ( e ) {
-		console.error( 'Error fetching business locations:', e );
+	} catch (e) {
+		console.error('Error fetching business locations:', e);
 	}
 
 	return {};
@@ -127,25 +127,60 @@ export const getSquareSettings = async () => {
 	const settings = await apiFetch({ path: '/wc/v3/wc_square/settings' });
 
 	const squareSettings = {
-		enable_sandbox: settings.enable_sandbox || SQUARE_SETTINGS_DEFAULT_STATE.enable_sandbox,
-		sandbox_application_id: settings.sandbox_application_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_application_id,
-		sandbox_token: settings.sandbox_token || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_token,
-		production_location_id: settings.production_location_id || SQUARE_SETTINGS_DEFAULT_STATE.production_location_id,
-		sandbox_location_id: settings.sandbox_location_id || SQUARE_SETTINGS_DEFAULT_STATE.sandbox_location_id,
-		system_of_record: settings.system_of_record || SQUARE_SETTINGS_DEFAULT_STATE.system_of_record,
-		enable_inventory_sync: settings.enable_inventory_sync || SQUARE_SETTINGS_DEFAULT_STATE.enable_inventory_sync,
-		override_product_images: settings.override_product_images || SQUARE_SETTINGS_DEFAULT_STATE.override_product_images,
-		hide_missing_products: settings.hide_missing_products || SQUARE_SETTINGS_DEFAULT_STATE.hide_missing_products,
-		sync_interval: settings.sync_interval || SQUARE_SETTINGS_DEFAULT_STATE.sync_interval,
-		is_connected: settings.is_connected || SQUARE_SETTINGS_DEFAULT_STATE.is_connected,
-		disconnection_url: settings.disconnection_url || SQUARE_SETTINGS_DEFAULT_STATE.disconnection_url,
-		connection_url: settings.connection_url || SQUARE_SETTINGS_DEFAULT_STATE.connection_url,
-		connection_url_wizard: settings.connection_url_wizard || SQUARE_SETTINGS_DEFAULT_STATE.connection_url_wizard,
-		connection_url_sandbox: settings.connection_url_sandbox || SQUARE_SETTINGS_DEFAULT_STATE.connection_url_sandbox,
-		locations: settings.locations || SQUARE_SETTINGS_DEFAULT_STATE.locations,
-		enable_customer_decline_messages: settings.enable_customer_decline_messages || SQUARE_SETTINGS_DEFAULT_STATE.enable_customer_decline_messages,
-		debug_mode: settings.debug_mode || SQUARE_SETTINGS_DEFAULT_STATE.debug_mode,
-		debug_logging_enabled: settings.debug_logging_enabled || SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
+		enable_sandbox:
+			settings.enable_sandbox ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_sandbox,
+		sandbox_application_id:
+			settings.sandbox_application_id ||
+			SQUARE_SETTINGS_DEFAULT_STATE.sandbox_application_id,
+		sandbox_token:
+			settings.sandbox_token ||
+			SQUARE_SETTINGS_DEFAULT_STATE.sandbox_token,
+		production_location_id:
+			settings.production_location_id ||
+			SQUARE_SETTINGS_DEFAULT_STATE.production_location_id,
+		sandbox_location_id:
+			settings.sandbox_location_id ||
+			SQUARE_SETTINGS_DEFAULT_STATE.sandbox_location_id,
+		system_of_record:
+			settings.system_of_record ||
+			SQUARE_SETTINGS_DEFAULT_STATE.system_of_record,
+		enable_inventory_sync:
+			settings.enable_inventory_sync ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_inventory_sync,
+		override_product_images:
+			settings.override_product_images ||
+			SQUARE_SETTINGS_DEFAULT_STATE.override_product_images,
+		hide_missing_products:
+			settings.hide_missing_products ||
+			SQUARE_SETTINGS_DEFAULT_STATE.hide_missing_products,
+		sync_interval:
+			settings.sync_interval ||
+			SQUARE_SETTINGS_DEFAULT_STATE.sync_interval,
+		is_connected:
+			settings.is_connected || SQUARE_SETTINGS_DEFAULT_STATE.is_connected,
+		disconnection_url:
+			settings.disconnection_url ||
+			SQUARE_SETTINGS_DEFAULT_STATE.disconnection_url,
+		connection_url:
+			settings.connection_url ||
+			SQUARE_SETTINGS_DEFAULT_STATE.connection_url,
+		connection_url_wizard:
+			settings.connection_url_wizard ||
+			SQUARE_SETTINGS_DEFAULT_STATE.connection_url_wizard,
+		connection_url_sandbox:
+			settings.connection_url_sandbox ||
+			SQUARE_SETTINGS_DEFAULT_STATE.connection_url_sandbox,
+		locations:
+			settings.locations || SQUARE_SETTINGS_DEFAULT_STATE.locations,
+		enable_customer_decline_messages:
+			settings.enable_customer_decline_messages ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_customer_decline_messages,
+		debug_mode:
+			settings.debug_mode || SQUARE_SETTINGS_DEFAULT_STATE.debug_mode,
+		debug_logging_enabled:
+			settings.debug_logging_enabled ||
+			SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
 	};
 
 	return squareSettings;
