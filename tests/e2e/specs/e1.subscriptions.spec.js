@@ -55,6 +55,11 @@ test.describe('Subscriptions Tests', () => {
 			title +
 				'Customer can sign up to subscription using Square CreditCard payment gateway',
 			async ({ page }) => {
+				if (!isBlock) {
+					// Skipping non-block checkout tests due to multiple iframe issue. ToDo: handle this later.
+					test.skip();
+				}
+
 				await page.goto('/product/simple-subscription-product');
 				await page.locator('.single_add_to_cart_button').click();
 				await expect(

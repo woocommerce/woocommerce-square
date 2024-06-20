@@ -224,31 +224,23 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 	let frame = '';
 
 	if ( isBlock ) {
-		frame = '.sq-card-iframe-container .sq-card-component'
+		frame = '.sq-card-iframe-container .sq-card-component';
 	} else {
 		frame = '#wc-square-credit-card-container .sq-card-component';
 	}
 
 	// Fill credit card details.
-	const creditCardInputField = await page
-		.frameLocator( frame )
-		.locator('#cardNumber');
+	const frameLocator = await page.frameLocator(frame).first();
+	const creditCardInputField = await frameLocator.locator('#cardNumber');
+	await creditCardInputField.waitFor({ state: 'visible' });
 
 	await creditCardInputField.fill(creditCard.valid);
 
-	await page
-		.frameLocator( frame )
-		.locator('#expirationDate')
-		.fill(getRandomExpiryDate());
+	await frameLocator.locator('#expirationDate').fill(getRandomExpiryDate());
 
-	await page
-		.frameLocator( frame )
-		.locator('#cvv')
-		.fill(creditCard.cvv);
+	await frameLocator.locator('#cvv').fill(creditCard.cvv);
 
-	const postalCodeInputField = await page
-		.frameLocator( frame )
-		.locator('#postalCode');
+	const postalCodeInputField = await frameLocator.locator('#postalCode');
 
 	await postalCodeInputField.waitFor({ state: 'visible' });
 	await postalCodeInputField.fill(creditCard.postalCode);
