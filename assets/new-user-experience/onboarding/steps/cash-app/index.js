@@ -6,7 +6,7 @@ import {
 	TextareaControl,
 	SelectControl,
 } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import parse from 'html-react-parser';
 
 /**
@@ -86,8 +86,8 @@ export const CashAppSetup = ({ origin = '' }) => {
 			<Section>
 				<SectionTitle
 					title={parse(
-						/* translators: %s: link to settings page */
 						sprintf(
+							/* translators: %s: link to settings page */
 							__(
 								'Manage Cash App Pay Settings %s',
 								'woocommerce-square'

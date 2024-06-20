@@ -41,16 +41,23 @@ export const AdvancedSettings = () => {
 					title={__('Advanced Settings', 'woocommerce-square')}
 				/>
 				<SectionDescription>
-					{ __( 'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.', 'woocommerce-square' ) }
-					{ <br /> }
-					{ 'advanced-settings' === step && parse(
-						sprintf(
-							__( '%1sClick here%2s to further refine your settings in the traditional view.', 'woocommerce-square' ),
-							`<a href='${wcSquareSettings.adminUrl}admin.php?page=wc-settings&tab=square'>`,
-							'</a>',
-						)
-					) }
-
+					{__(
+						'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.',
+						'woocommerce-square'
+					)}
+					{<br />}
+					{step === 'advanced-settings' &&
+						parse(
+							sprintf(
+								/* translators: %1$s and %2$s are used to wrap the link to the WooCommerce settings page */
+								__(
+									'%1$sClick here%2$s to further refine your settings in the traditional view.',
+									'woocommerce-square'
+								),
+								`<a href='${wcSquareSettings.adminUrl}admin.php?page=wc-settings&tab=square'>`, // eslint-disable-line no-undef
+								'</a>'
+							)
+						)}
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
@@ -81,16 +88,15 @@ export const AdvancedSettings = () => {
 					<InputWrapper
 						label={__('Enable Logging', 'woocommerce-square')}
 						variant="boxed"
-						description={
-							parse(
-								sprintf (
-									__(
-										'Log debug messages to the %1$sWooCommerce status log%2$s',
-										'woocommerce-square'
-									),
-									`<a href="${wcSquareSettings.adminUrl}admin.php?page=wc-status&tab=logs">`,
-									'</a>'
-								)
+						description={parse(
+							sprintf(
+								/* translators: %1$s and %2$s are used to wrap the link to the WooCommerce status log */
+								__(
+									'Log debug messages to the %1$sWooCommerce status log%2$s',
+									'woocommerce-square'
+								),
+								`<a href="${wcSquareSettings.adminUrl}admin.php?page=wc-status&tab=logs">`, // eslint-disable-line no-undef
+								'</a>'
 							)
 						)}
 					>

@@ -7,7 +7,7 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 import { MultiSelectControl } from '@codeamp/block-components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import parse from 'html-react-parser';
 
 /**

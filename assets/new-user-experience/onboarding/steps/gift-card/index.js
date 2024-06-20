@@ -1,7 +1,7 @@
 /**
  * External dependencies.
  */
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { ToggleControl } from '@wordpress/components';
 import parse from 'html-react-parser';
 
@@ -35,8 +35,8 @@ export const GiftCardSetup = ({ origin = '' }) => {
 			<Section>
 				<SectionTitle
 					title={parse(
-						/* translators: %s: Gift Cards */
 						sprintf(
+							/* translators: %s: Gift Cards */
 							__('Gift Cards %s', 'woocommerce-square'),
 							origin === 'settings'
 								? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef

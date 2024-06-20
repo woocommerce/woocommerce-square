@@ -1,4 +1,4 @@
-/* eslint-disable import/named */
+/* eslint-disable import/named, no-undef */
 /**
  * External dependencies.
  */
