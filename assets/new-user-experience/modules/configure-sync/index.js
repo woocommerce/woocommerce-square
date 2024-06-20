@@ -23,6 +23,7 @@ import {
 	SquareCheckboxControl,
 } from '../../components';
 import { useSquareSettings } from '../../settings/hooks';
+import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
 export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 	const { settings, squareSettingsLoaded, setSquareSettingData } =
@@ -439,6 +440,9 @@ export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 													onClick={() => {
 														setIsImporting(true);
 														importProducts();
+														recordEvent(
+															ONBOARDING_TRACK_EVENTS.PRODUCT_IMPORT_STARTED
+														);
 													}}
 													isBusy={isImporting}
 												>

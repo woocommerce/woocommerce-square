@@ -17,6 +17,11 @@ import { __ } from '@wordpress/i18n';
 import { SectionTitle, SectionDescription } from '../../../components';
 import { RightArrowInCircle, Sync, Manage } from '../../../icons';
 import { useSteps, usePaymentGatewaySettings } from '../../hooks';
+import {
+	recordEvent,
+	queueRecordEvent,
+	ONBOARDING_TRACK_EVENTS,
+} from '../../../../tracks';
 
 export const PaymentComplete = () => {
 	const {
@@ -60,7 +65,13 @@ export const PaymentComplete = () => {
 						<Button
 							variant="button-primary"
 							className="button-primary"
-							href={wcSquareSettings.homeUrl} // eslint-disable-line no-undef
+							onClick={() => {
+								queueRecordEvent(
+									ONBOARDING_TRACK_EVENTS.VISIT_STOREFRONT_CLICKED
+								);
+								window.location.href =
+									window.wcSettings.homeUrl;
+							}}
 						>
 							{__('Visit my Storefront', 'woocommerce-square')}
 						</Button>
@@ -108,7 +119,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="configure-sync-button"
 									variant="secondary"
-									onClick={() => setStep('sync-settings')}
+									onClick={() => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_SYNC_SETTINGS_CLICKED
+										);
+										setStep('sync-settings');
+									}}
 								>
 									{__(
 										'Configure Sync Settings',
@@ -148,9 +164,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="credit-card-settings-button"
 												variant="secondary"
-												onClick={() =>
-													setStep('credit-card')
-												}
+												onClick={() => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_CREDIT_CARD_SETTINGS_CLICKED
+													);
+													setStep('credit-card');
+												}}
 											>
 												{__(
 													'Credit Card Settings',
@@ -162,9 +181,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="digital-wallet-settings-button"
 												variant="secondary"
-												onClick={() =>
-													setStep('digital-wallets')
-												}
+												onClick={() => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_DIGITAL_WALLET_SETTINGS_CLICKED
+													);
+													setStep('digital-wallets');
+												}}
 											>
 												{__(
 													'Digital Wallet Settings',
@@ -176,9 +198,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="cash-app-settings-button"
 												variant="secondary"
-												onClick={() =>
-													setStep('cash-app')
-												}
+												onClick={() => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_CASH_APP_SETTINGS_CLICKED
+													);
+													setStep('cash-app');
+												}}
 											>
 												{__(
 													'Cash App Pay Settings',
@@ -190,9 +215,12 @@ export const PaymentComplete = () => {
 											<Button
 												data-testid="gift-card-settings-button"
 												variant="secondary"
-												onClick={() =>
-													setStep('gift-card')
-												}
+												onClick={() => {
+													recordEvent(
+														ONBOARDING_TRACK_EVENTS.VISIT_GIFT_CARD_SETTINGS_CLICKED
+													);
+													setStep('gift-card');
+												}}
 											>
 												{__(
 													'Gift Cards Settings',
@@ -212,7 +240,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="advanced-settings-button"
 									variant="link"
-									onClick={() => setStep('advanced-settings')}
+									onClick={() => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_ADVANCED_SETTINGS_CLICKED
+										);
+										setStep('advanced-settings');
+									}}
 								>
 									{__(
 										'Go to Advanced Settings',
@@ -230,7 +263,12 @@ export const PaymentComplete = () => {
 								<Button
 									data-testid="sandbox-settings-button"
 									variant="link"
-									onClick={() => setStep('sandbox-settings')}
+									onClick={() => {
+										recordEvent(
+											ONBOARDING_TRACK_EVENTS.VISIT_SANDBOX_SETTINGS_CLICKED
+										);
+										setStep('sandbox-settings');
+									}}
 								>
 									{__(
 										'Go to Sandbox Settings',
