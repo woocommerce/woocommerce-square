@@ -49,7 +49,7 @@ export const AdvancedSettings = () => {
 					{step === 'advanced-settings' &&
 						parse(
 							sprintf(
-								/* translators: %1$s and %2$s are used to wrap the link to the WooCommerce settings page */
+								/* translators: %1$s and %2$s are HTML tags for the link to the Square settings page */
 								__(
 									'%1$sClick here%2$s to further refine your settings in the traditional view.',
 									'woocommerce-square'
@@ -90,7 +90,7 @@ export const AdvancedSettings = () => {
 						variant="boxed"
 						description={parse(
 							sprintf(
-								/* translators: %1$s and %2$s are used to wrap the link to the WooCommerce status log */
+								/* translators: %1$s and %2$s are HTML tags for the link to the WooCommerce status log */
 								__(
 									'Log debug messages to the %1$sWooCommerce status log%2$s',
 									'woocommerce-square'

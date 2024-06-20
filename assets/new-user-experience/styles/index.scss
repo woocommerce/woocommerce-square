@@ -11,6 +11,7 @@
 
 #woocommerce-square-onboarding,
 #woocommerce-square-settings__container-general,
+.import-modal-cover p,
 [id*="woocommerce-square-payment-gateway-settings__container"] {
 	font-family: 'SF Pro', sans-serif;
 	font-size: 16px;
@@ -34,6 +35,7 @@
 
 .import-modal-cover button.button-primary {
 	float: right;
+	font-size: 16px;
 }
 
 .import-modal-cover button.is-secondary {
