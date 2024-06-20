@@ -601,18 +601,17 @@ abstract class Base {
 	/**
 	 * Set the Content-Type request header
 	 *
-	 * @since x.x.x
+	 * @since 4.6.3
 	 * @param string $content_type The request content type.
 	 */
 	protected function set_request_content_type_header( $content_type ) {
 		$this->request_headers['content-type'] = $content_type;
 	}
 
-
 	/**
 	 * Set the Accept request header
 	 *
-	 * @since x.x.x
+	 * @since 4.6.3
 	 * @param string $type The request accept type.
 	 */
 	protected function set_request_accept_header( $type ) {
