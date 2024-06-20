@@ -1,9 +1,7 @@
 /**
  * External dependencies.
  */
-import {
-	Spinner,
-} from '@wordpress/components';
+import { Spinner } from '@wordpress/components';
 
 export const Loader = () => {
 	return (
@@ -11,4 +9,4 @@ export const Loader = () => {
 			<Spinner />
 		</div>
 	);
-}
+};

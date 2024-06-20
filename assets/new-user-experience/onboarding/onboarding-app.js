@@ -21,10 +21,15 @@ import {
 } from './steps';
 import { ConfigureSync, AdvancedSettings, SandboxSettings } from '../modules';
 
-import { OnboardingHeader, PaymentGatewaySettingsSaveButton, SquareSettingsSaveButton, Loader } from '../components';
+import {
+	OnboardingHeader,
+	PaymentGatewaySettingsSaveButton,
+	SquareSettingsSaveButton,
+	Loader,
+} from '../components';
 
 export const OnboardingApp = () => {
-	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
+	const [settingsLoaded, setSettingsLoaded] = useState(false);
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -33,29 +38,22 @@ export const OnboardingApp = () => {
 		savePaymentGatewaySettings,
 		saveGiftCardsSettings,
 		saveCashAppSettings,
-	} = usePaymentGatewaySettings( true );
+	} = usePaymentGatewaySettings(true);
 
-	const {
-		stepData,
-		setStep,
-		setBackStep,
-	} = useSteps( true );
+	const { stepData, setStep, setBackStep } = useSteps(true);
 
 	const { step, backStep } = stepData;
 
-	const {
-		settings,
-		squareSettingsLoaded,
-	} = useSquareSettings( true );
+	const { settings, squareSettingsLoaded } = useSquareSettings(true);
 
 	// Set info in local storage.
-	useEffect( () => {
-		localStorage.setItem('step', step);
-		localStorage.setItem('backStep', backStep);
+	useEffect(() => {
+		localStorage.setItem('step', step); // eslint-disable-line no-undef
+		localStorage.setItem('backStep', backStep); // eslint-disable-line no-undef
 	}, [step, backStep]);
 
 	// Set the settings loaded value based on the step.
-	useEffect( () => {
+	useEffect(() => {
 		switch (step) {
 			case 'connect-square':
 				setSettingsLoaded(false);
@@ -76,10 +74,16 @@ export const OnboardingApp = () => {
 				setSettingsLoaded(paymentGatewaySettingsLoaded);
 				break;
 		}
-	}, [step, squareSettingsLoaded, paymentGatewaySettingsLoaded, cashAppGatewaySettingsLoaded, giftCardsGatewaySettingsLoaded]);
+	}, [
+		step,
+		squareSettingsLoaded,
+		paymentGatewaySettingsLoaded,
+		cashAppGatewaySettingsLoaded,
+		giftCardsGatewaySettingsLoaded,
+	]);
 
 	// Set the backStep value.
-	useEffect( () => {
+	useEffect(() => {
 		switch (step) {
 			case 'connect-square':
 			case 'business-location':
@@ -102,26 +106,30 @@ export const OnboardingApp = () => {
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded,
-	].every( isLoading => isLoading );
+	].every((isLoading) => isLoading);
 
-	if ( ! isLoadingInProgress ) {
+	if (!isLoadingInProgress) {
 		return <Loader />;
 	}
 
 	// Redirect to the next page from the connect page when connection is successful.
-	if ( 'connect-square' === step && settings.is_connected ) {
+	if (step === 'connect-square' && settings.is_connected) {
 		setStep('business-location');
 		setSettingsLoaded(true);
 	}
 
 	// Redirect to the connect page when connection is not successful.
-	if ( 'connect-square' !== step && ! settings.is_connected ) {
+	if (step !== 'connect-square' && !settings.is_connected) {
 		setStep('connect-square');
 		setSettingsLoaded(true);
 	}
 
 	// Set the settings loaded when the connection is not successful on the connection page.
-	if ( 'connect-square' === step && ! settings.is_connected && ! settingsLoaded ) {
+	if (
+		step === 'connect-square' &&
+		!settings.is_connected &&
+		!settingsLoaded
+	) {
 		setSettingsLoaded(true);
 	}
 
@@ -129,93 +137,115 @@ export const OnboardingApp = () => {
 		<>
 			<OnboardingHeader />
 			<div className={'woo-square-onboarding__cover ' + step}>
-				{ step === 'connect-square' && <ConnectSetup /> }
-				{ step === 'business-location' && (
+				{step === 'connect-square' && <ConnectSetup />}
+				{step === 'business-location' && (
 					<>
 						<BusinessLocation />
-						{
-							settings.locations.length ? (
-								<SquareSettingsSaveButton
-									afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
-									afterSaveCallback={ () => {
-										setStep( 'payment-methods' );
-									} }
-								/>
-							) : null
-						}
+						{settings.locations.length ? (
+							<SquareSettingsSaveButton
+								afterSaveLabel={__(
+									'Changes Saved!',
+									'woocommerce-square'
+								)}
+								afterSaveCallback={() => {
+									setStep('payment-methods');
+								}}
+							/>
+						) : null}
 					</>
-				) }
-				{ step === 'payment-methods' && <PaymentMethods /> }
-				{ step === 'payment-complete' && <PaymentComplete /> }
-				{ step === 'credit-card' && (
+				)}
+				{step === 'payment-methods' && <PaymentMethods />}
+				{step === 'payment-complete' && <PaymentComplete />}
+				{step === 'credit-card' && (
 					<>
 						<CreditCardSetup />
-						<PaymentGatewaySettingsSaveButton data-testid="credit-card-settings-save-button" onClick={ () => {
-							( async () => {
-								await savePaymentGatewaySettings();
-								setStep( 'payment-complete' );
-							} )()
-						} } />
+						<PaymentGatewaySettingsSaveButton
+							data-testid="credit-card-settings-save-button"
+							onClick={() => {
+								(async () => {
+									await savePaymentGatewaySettings();
+									setStep('payment-complete');
+								})();
+							}}
+						/>
 					</>
-				) }
-				{ step === 'digital-wallets' && (
+				)}
+				{step === 'digital-wallets' && (
 					<>
 						<DigitalWalletsSetup />
-						<PaymentGatewaySettingsSaveButton data-testid="digital-wallets-settings-save-button" onClick={ () => {
-							( async () => {
-								await savePaymentGatewaySettings();
-								setStep( 'payment-complete' );
-							} )()
-						} } />
+						<PaymentGatewaySettingsSaveButton
+							data-testid="digital-wallets-settings-save-button"
+							onClick={() => {
+								(async () => {
+									await savePaymentGatewaySettings();
+									setStep('payment-complete');
+								})();
+							}}
+						/>
 					</>
-				) }
-				{ step === 'gift-card' && (
+				)}
+				{step === 'gift-card' && (
 					<>
 						<GiftCardSetup />
-						<PaymentGatewaySettingsSaveButton data-testid="gift-card-settings-save-button" onClick={ () => {
-							( async () => {
-								await saveGiftCardsSettings();
-								setStep( 'payment-complete' );
-							} )()
-						} } />
+						<PaymentGatewaySettingsSaveButton
+							data-testid="gift-card-settings-save-button"
+							onClick={() => {
+								(async () => {
+									await saveGiftCardsSettings();
+									setStep('payment-complete');
+								})();
+							}}
+						/>
 					</>
-				) }
-				{ step === 'cash-app' && (
+				)}
+				{step === 'cash-app' && (
 					<>
 						<CashAppSetup />
-						<PaymentGatewaySettingsSaveButton data-testid="cash-app-settings-save-button" onClick={ () => {
-							( async () => {
-								await saveCashAppSettings();
-								setStep( 'payment-complete' );
-							} )()
-						} } />
+						<PaymentGatewaySettingsSaveButton
+							data-testid="cash-app-settings-save-button"
+							onClick={() => {
+								(async () => {
+									await saveCashAppSettings();
+									setStep('payment-complete');
+								})();
+							}}
+						/>
 					</>
-				) }
-				{ step === 'sync-settings' && (
+				)}
+				{step === 'sync-settings' && (
 					<>
 						<ConfigureSync />
-						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
-							setStep( 'payment-complete' );
-						} } />
+						<SquareSettingsSaveButton
+							data-testid="square-settings-save-button"
+							afterSaveCallback={() => {
+								setStep('payment-complete');
+							}}
+						/>
 					</>
-				) }
-				{ step === 'advanced-settings' && (
+				)}
+				{step === 'advanced-settings' && (
 					<>
 						<AdvancedSettings />
-						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
-							setStep( 'payment-complete' );
-						} } />
+						<SquareSettingsSaveButton
+							data-testid="square-settings-save-button"
+							afterSaveCallback={() => {
+								setStep('payment-complete');
+							}}
+						/>
 					</>
-				) }
-				{ step === 'sandbox-settings' && (
+				)}
+				{step === 'sandbox-settings' && (
 					<>
 						<SandboxSettings />
-						<SquareSettingsSaveButton data-testid="square-settings-save-button" afterSaveCallback={ () => {
-							setStep( 'payment-complete' );
-						} } />
+						<SquareSettingsSaveButton
+							data-testid="square-settings-save-button"
+							afterSaveCallback={() => {
+								setStep('payment-complete');
+							}}
+						/>
 					</>
-				) }
+				)}
 			</div>
 		</>
-	)
+	);
 };

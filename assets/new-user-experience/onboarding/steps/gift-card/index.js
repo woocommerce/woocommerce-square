@@ -22,31 +22,39 @@ export const GiftCardSetup = () => {
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
 
-	const {
-		enabled
-	} = giftCardsGatewaySettings;
+	const { enabled } = giftCardsGatewaySettings;
 
-	if ( ! giftCardsGatewaySettingsLoaded ) {
+	if (!giftCardsGatewaySettingsLoaded) {
 		return null;
 	}
 
 	return (
 		<>
 			<Section>
-				<SectionTitle title={ __( 'Gift Cards', 'woocommerce-square' ) } />
+				<SectionTitle title={__('Gift Cards', 'woocommerce-square')} />
 				<SectionDescription>
-					{ __( 'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.', 'woocommerce-square' ) }
+					{__(
+						'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.',
+						'woocommerce-square'
+					)}
 				</SectionDescription>
 
-				<div className='woo-square-wizard__fields'>
+				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={ __( 'Enable Square Gift Cards', 'woocommerce-square' ) }
+						label={__(
+							'Enable Square Gift Cards',
+							'woocommerce-square'
+						)}
 						variant="boxed"
 					>
 						<ToggleControl
 							className="gift-card-gateway-toggle-field"
-							checked={ 'yes' === enabled }
-							onChange={ ( enabled ) => setGiftCardData( { enabled: enabled ? 'yes' : 'no' } ) }
+							checked={enabled === 'yes'}
+							onChange={(enabledGC) =>
+								setGiftCardData({
+									enabled: enabledGC ? 'yes' : 'no',
+								})
+							}
 						/>
 					</InputWrapper>
 				</div>

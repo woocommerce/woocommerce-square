@@ -1,7 +1,13 @@
 /**
  * External dependencies
  */
-import { useContext, useRef, useEffect, useLayoutEffect, useState } from '@wordpress/element';
+import {
+	useContext,
+	useRef,
+	useEffect,
+	useLayoutEffect,
+	useState,
+} from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -20,8 +26,14 @@ const ButtonComponent = () => {
 	const [googlePayBtn, setGooglePayBtn] = useState(null);
 	const [applePayBtn, setApplePayBtn] = useState(null);
 	const [clickedButton, setClickedButton] = useState(null);
-	const { billing, onClick, onSubmit, onClose, eventRegistration, paymentStatus } =
-		props;
+	const {
+		billing,
+		onClick,
+		onSubmit,
+		onClose,
+		eventRegistration,
+		paymentStatus,
+	} = props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
 
@@ -55,19 +67,27 @@ const ButtonComponent = () => {
 				if (!applePayBtn) {
 					applePay = await payments.applePay(paymentRequest);
 
-					const applePayButtonContainer = document.getElementById('apple-pay-button');
+					const applePayButtonContainer =
+						document.getElementById('apple-pay-button');
 					const color = getSquareServerData().applePayColor;
 					const type = getSquareServerData().applePayType;
 
-					if ('plain' !== type) {
-						applePayButtonContainer.querySelector('.text').innerText = `${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
-						applePayButtonContainer.classList.add('wc-square-wallet-button-with-text');
+					if (type !== 'plain') {
+						applePayButtonContainer.querySelector(
+							'.text'
+						).innerText =
+							`${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
+						applePayButtonContainer.classList.add(
+							'wc-square-wallet-button-with-text'
+						);
 					}
 
 					applePayButtonContainer.style.cssText += `-apple-pay-button-type: ${type};`;
 					applePayButtonContainer.style.cssText += `-apple-pay-button-style: ${color};`;
 					applePayButtonContainer.style.display = 'block';
-					applePayButtonContainer.classList.add(`wc-square-wallet-button-${color}`);
+					applePayButtonContainer.classList.add(
+						`wc-square-wallet-button-${color}`
+					);
 
 					/*
 					 * Apple Pay doesn't need to be attached.
@@ -103,15 +123,19 @@ const ButtonComponent = () => {
 
 		const verificationDetails = buildVerificationDetails(billing);
 		const unsubscribe = onPaymentSetup(() => {
-			const checkout = initiateCheckout(payments, verificationDetails, clickedButton)
+			const checkout = initiateCheckout(
+				payments,
+				verificationDetails,
+				clickedButton
+			);
 			checkout.then((response) => {
-				if ( response.type === 'failure' ) {
+				if (response.type === 'failure') {
 					setClickedButton(null);
 					onClose();
 				}
 			});
 			return checkout;
-		} );
+		});
 		return unsubscribe;
 	}, [clickedButton, onPaymentSetup, paymentStatus.isStarted]); // eslint-disable-line react-hooks/exhaustive-deps
 
