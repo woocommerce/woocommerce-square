@@ -5,7 +5,6 @@ import {
 	createProduct,
 	doesProductExist,
 	runWpCliCommand,
-	deleteAllProducts,
 } from '../utils/helper';
 import {
 	listCatalog,
@@ -15,13 +14,11 @@ import {
 	clearSync,
 } from '../utils/square-sandbox';
 
-test.describe.configure( { mode: 'serial' });
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
 
 	await clearSync( page );
-	await deleteAllProducts( page );
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
 	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'WooCommerce' } );
