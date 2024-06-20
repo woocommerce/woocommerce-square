@@ -238,6 +238,7 @@ class Admin {
 				'wcSquareSettings',
 				array(
 					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'  => home_url(),
 					'adminUrl' => admin_url(),
 					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
 				)
@@ -273,6 +274,7 @@ class Admin {
 				'wcSquareSettings',
 				array(
 					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'  => home_url(),
 					'adminUrl' => admin_url(),
 					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
 				)

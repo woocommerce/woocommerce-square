@@ -60,7 +60,7 @@ export const PaymentComplete = () => {
 						<Button
 							variant="button-primary"
 							className="button-primary"
-							href="/"
+							href={wcSquareSettings.homeUrl} // eslint-disable-line no-undef
 						>
 							{__('Visit my Storefront', 'woocommerce-square')}
 						</Button>
