@@ -47,7 +47,7 @@ interface Payment_Gateway_API_Authorization_Response extends Payment_Gateway_API
 	 *
 	 * @since 3.0.0
 	 *
-	 * @return string result of the AVS check, if any
+	 * @return string|void result of the AVS check, if any
 	 */
 	public function get_avs_result();
 
@@ -57,7 +57,7 @@ interface Payment_Gateway_API_Authorization_Response extends Payment_Gateway_API
 	 *
 	 * @since 3.0.0
 	 *
-	 * @return string result of CSC check
+	 * @return string|void result of CSC check
 	 */
 	public function get_csc_result();
 
@@ -67,7 +67,7 @@ interface Payment_Gateway_API_Authorization_Response extends Payment_Gateway_API
 	 *
 	 * @since 3.0.0
 	 *
-	 * @return boolean true if the CSC check was successful
+	 * @return boolean|void true if the CSC check was successful
 	 */
 	public function csc_match();
 }

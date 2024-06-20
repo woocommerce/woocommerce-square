@@ -179,11 +179,12 @@ class Gateway extends Payment_Gateway_Direct {
 
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );
 
-		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( $_REQUEST['type'] ) ) : 'Request' );
+		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( wp_unslash( $_REQUEST['type'] ) ) ) : 'Request' );
 
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
-			$message .= print_r( wc_clean( $_REQUEST['data'] ), true );
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true );
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );
@@ -604,67 +605,7 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
-
-		// common top form fields
-		$this->form_fields = array(
-			'enabled'     => array(
-				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'default' => 'no',
-			),
-
-			'title'       => array(
-				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
-				'type'     => 'text',
-				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_title(),
-			),
-
-			'description' => array(
-				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
-				'type'     => 'textarea',
-				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_description(),
-			),
-
-		);
-
-		// both credit card authorization & charge supported
-		if ( $this->supports_credit_card_authorization() && $this->supports_credit_card_charge() ) {
-			$this->form_fields = $this->add_authorization_charge_form_fields( $this->form_fields );
-		}
-
-		// card types support
-		if ( $this->supports_card_types() ) {
-			$this->form_fields = $this->add_card_types_form_fields( $this->form_fields );
-		}
-
-		// tokenization support
-		if ( $this->supports_tokenization() ) {
-			$this->form_fields = $this->add_tokenization_form_fields( $this->form_fields );
-		}
-
-		// Square digital wallet (Apple Pay and Google Pay settings)
-		if ( $this->is_digital_wallet_available() ) {
-			$this->form_fields = $this->add_digital_wallets_form_fields( $this->form_fields );
-		}
-
-		// if there is more than just the production environment available
-		if ( count( $this->get_environments() ) > 1 ) {
-			$this->form_fields = $this->add_environment_form_fields( $this->form_fields );
-		}
-
-		/**
-		 * Payment Gateway Form Fields Filter.
-		 *
-		 * Actors can use this to add, remove, or tweak gateway form fields
-		 *
-		 * @since 4.0.0
-		 * @param array $form_fields array of form fields in format required by WC_Settings_API
-		 * @param Payment_Gateway $this gateway instance
-		 */
-		$this->form_fields = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_form_fields', $this->form_fields, $this );
+		$this->form_fields = array();
 	}
 
 	/**

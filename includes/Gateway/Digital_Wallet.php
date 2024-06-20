@@ -152,6 +152,7 @@ class Digital_Wallet {
 				'hide_button_options'      => $this->get_hidden_button_options(),
 				'google_pay_color'         => $this->gateway->get_option( 'digital_wallets_google_pay_button_color', 'black' ),
 				'apple_pay_color'          => $this->gateway->get_option( 'digital_wallets_apple_pay_button_color', 'black' ),
+				'apple_pay_type'           => $this->gateway->get_option( 'digital_wallets_button_type', 'buy' ),
 			);
 		}
 
@@ -426,7 +427,7 @@ class Digital_Wallet {
 
 		if ( ! is_a( $product, 'WC_Product' ) ) {
 			/* translators: product ID */
-			throw new \Exception( sprintf( __( 'Product with the ID (%d) cannot be found.', 'woocommerce-square' ), $product_id ) );
+			throw new \Exception( sprintf( esc_html__( 'Product with the ID (%d) cannot be found.', 'woocommerce-square' ), absint( $product_id ) ) );
 		}
 
 		$quantity = $product->is_sold_individually() ? 1 : $quantity;
@@ -442,12 +443,12 @@ class Digital_Wallet {
 
 		if ( ! $product->has_enough_stock( $quantity ) ) {
 			/* translators: 1: product name 2: quantity in stock */
-			throw new \Exception( sprintf( __( 'You cannot add that amount of "%1$s"; to the cart because there is not enough stock (%2$s remaining).', 'woocommerce-square' ), $product->get_name(), wc_format_stock_quantity_for_display( $product->get_stock_quantity(), $product ) ) );
+			throw new \Exception( sprintf( esc_html__( 'You cannot add that amount of "%1$s"; to the cart because there is not enough stock (%2$s remaining).', 'woocommerce-square' ), esc_html( $product->get_name() ), esc_html( wc_format_stock_quantity_for_display( $product->get_stock_quantity(), $product ) ) ) );
 		}
 
 		if ( ! $product->is_purchasable() ) {
 			/* translators: 1: product name */
-			throw new \Exception( sprintf( __( 'You cannot purchase "%1$s" because it is currently not available.', 'woocommerce-square' ), $product->get_name() ) );
+			throw new \Exception( sprintf( esc_html__( 'You cannot purchase "%1$s" because it is currently not available.', 'woocommerce-square' ), esc_html( $product->get_name() ) ) );
 		}
 
 		if ( $add_to_cart ) {
@@ -527,7 +528,7 @@ class Digital_Wallet {
 		}
 
 		if ( count( WC()->shipping->get_packages() ) > 1 ) {
-			throw new \Exception( __( 'This payment method cannot be used for multiple shipments.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'This payment method cannot be used for multiple shipments.', 'woocommerce-square' ) );
 		}
 
 		if ( ! isset( $data['lineItems'] ) ) {
@@ -1072,7 +1073,6 @@ class Digital_Wallet {
 	 * If the store has been registered, keep verifying the registration of the current connected account and domain every hour.
 	 *
 	 * @since 2.3
-	 * @return string
 	 */
 	public function apple_pay_domain_registration() {
 		// Only register the store url with Apple Pay if the gateway and digital wallets are enable (check POST data to account for the page load when settings are being saved).
@@ -1130,7 +1130,7 @@ class Digital_Wallet {
 		}
 
 		if ( empty( $access_token ) ) {
-			throw new \Exception( __( 'Unable to verify domain with Apple Pay - missing access token.', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Unable to verify domain with Apple Pay - missing access token.', 'woocommerce-square' ) );
 		}
 
 		$response = wp_remote_post(
@@ -1151,14 +1151,14 @@ class Digital_Wallet {
 
 		if ( is_wp_error( $response ) ) {
 			/* translators: error message */
-			throw new \Exception( sprintf( 'Unable to verify domain %s - %s', $domain_name, $response->get_error_message() ) );
+			throw new \Exception( sprintf( 'Unable to verify domain %s - %s', esc_html( $domain_name ), esc_html( $response->get_error_message() ) ) );
 		}
 
 		$parsed_response = json_decode( $response['body'], true );
 
 		if ( 200 !== $response['response']['code'] || empty( $parsed_response['status'] ) || 'VERIFIED' !== $parsed_response['status'] ) {
 			/* translators: error message */
-			throw new \Exception( sprintf( 'Unable to verify domain %s - response = %s', $domain_name, print_r( $parsed_response, true ) ) ); //phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+			throw new \Exception( sprintf( 'Unable to verify domain %s - response = %s', esc_html( $domain_name ), esc_html( print_r( $parsed_response, true ) ) ) ); //phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 	}
 
@@ -1295,12 +1295,12 @@ class Digital_Wallet {
 		}
 
 		// Trial subscriptions with shipping are not supported
-		if ( class_exists( 'WC_Subscriptions_Order' ) && $product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
+		if ( class_exists( 'WC_Subscriptions_Product' ) && $product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $product ) > 0 ) {
 			return false;
 		}
 
 		// Pre Orders charge upon release not supported.
-		if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
+		if ( class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( $product ) ) {
 			return false;
 		}
 
@@ -1340,12 +1340,12 @@ class Digital_Wallet {
 			}
 
 			// Trial subscriptions with shipping are not supported
-			if ( class_exists( 'WC_Subscriptions_Order' ) && \WC_Subscriptions_Cart::cart_contains_subscription() && $_product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $_product ) > 0 ) {
+			if ( class_exists( 'WC_Subscriptions_Cart' ) && class_exists( 'WC_Subscriptions_Product' ) && \WC_Subscriptions_Cart::cart_contains_subscription() && $_product->needs_shipping() && \WC_Subscriptions_Product::get_trial_length( $_product ) > 0 ) {
 				return false;
 			}
 
-			// Pre Orders compatbility where we don't support charge upon release.
-			if ( class_exists( 'WC_Pre_Orders_Order' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) {
+			// Pre Orders compatibility where we don't support charge upon release.
+			if ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) {
 				return false;
 			}
 		}

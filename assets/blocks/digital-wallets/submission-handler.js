@@ -99,8 +99,8 @@ export const buildVerificationDetails = (billing) => {
 /**
  * Verifies a buyer.
  *
- * @param {Object} payments Square payments object.
- * @param {string} token Square payment token.
+ * @param {Object} payments            Square payments object.
+ * @param {string} token               Square payment token.
  * @param {Object} verificationDetails Buyer verification data object.
  *
  * @return {Object} Verification details
@@ -190,9 +190,9 @@ const recalculateTotals = async (data) => {
 /**
  * Initiates checkout.
  *
- * @param {Object} payments Square payments object.
+ * @param {Object} payments            Square payments object.
  * @param {Object} verificationDetails Verification details object.
- * @param {Object} button Instance of the GPay|Apple Pay button that is clicked.
+ * @param {Object} button              Instance of the GPay|Apple Pay button that is clicked.
  * @return {Object} Response object.
  */
 export const initiateCheckout = async (
@@ -229,6 +229,21 @@ export const initiateCheckout = async (
 
 	const { token: verificationToken } = verificationResult;
 
+	/*
+	 * For key contact details fall back to anything that is provided.
+	 *
+	 * This accounts for slight differences in how Apple Pay and Google Pay provide
+	 * contact details. Apple Pay provides contact details in the shipping object,
+	 * even for products that don't require shipping. Google Pay provides contact
+	 * details in the billing object.
+	 */
+	const billingEmailAddress =
+		billingContact?.email ?? shippingContact?.email ?? '';
+	const billingPhoneNumber =
+		billingContact?.phone ?? shippingContact?.phone ?? '';
+	const shippingPhoneNumber =
+		shippingContact?.phone ?? billingContact?.phone ?? '';
+
 	response.meta = {
 		paymentMethodData: {
 			[`${keyPrefix}-card-type`]: method || '',
@@ -241,7 +256,7 @@ export const initiateCheckout = async (
 			shipping_method: shippingOption.id ?? false,
 		},
 		billingAddress: {
-			email: billingContact.email ?? '',
+			email: billingEmailAddress,
 			first_name: billingContact.givenName ?? '',
 			last_name: billingContact.familyName ?? '',
 			company: '',
@@ -255,7 +270,7 @@ export const initiateCheckout = async (
 			state: billingContact.state ?? '',
 			postcode: billingContact.postalCode ?? '',
 			country: billingContact.countryCode ?? '',
-			phone: billingContact.phone ?? '',
+			phone: billingPhoneNumber,
 		},
 		shippingAddress: {
 			first_name: shippingContact.givenName ?? '',
@@ -271,7 +286,7 @@ export const initiateCheckout = async (
 			state: shippingContact.state ?? '',
 			postcode: shippingContact.postalCode ?? '',
 			country: shippingContact.countryCode ?? '',
-			phone: billingContact.phone,
+			phone: shippingPhoneNumber,
 		},
 	};
 

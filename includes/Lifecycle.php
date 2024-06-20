@@ -333,7 +333,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 
 		// Mark the onboarding wizard as visited for existing users.
-		add_option( 'wc_square_onboarding_wizard_visited', true, '', 'no' );
+		add_option( 'wc_square_connected_page_visited', true, '', 'no' );
 	}
 
 	/**

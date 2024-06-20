@@ -19,3 +19,11 @@
 .heading_1 {
     text-align: left;
 }
+
+.woocommerce {
+    .woo-square-setting__section-title {
+        .wc-admin-breadcrumb {
+            margin-left: 5px;
+        }
+    }
+}

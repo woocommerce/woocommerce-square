@@ -1,5 +1,5 @@
 module.exports = {
-	extends: [ 'plugin:@woocommerce/eslint-plugin/recommended' ],
+	extends: ['plugin:@woocommerce/eslint-plugin/recommended'],
 	globals: {
 		_: false,
 		Backbone: false,
@@ -17,13 +17,23 @@ module.exports = {
 			'@wordpress/i18n',
 			'@wordpress/element',
 		],
+		'import/resolver': {
+			node: {
+				extensions: ['.js', '.jsx', '.ts', '.tsx'],
+			},
+		},
 	},
 	rules: {
 		'no-console': 'off',
+		'react/react-in-jsx-scope': 'off',
+		'react-hooks/exhaustive-deps': 'off',
+		'react-hooks/rules-of-hooks': 'off',
+		'@woocommerce/dependency-group': 'off',
+		camelcase: 'off',
 	},
 	overrides: [
 		{
-			files: [ '**/assets/blocks/**/**.js' ],
+			files: ['**/assets/blocks/**/**.js'],
 			globals: {
 				jQuery: true,
 				browser: true,

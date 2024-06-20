@@ -37,7 +37,7 @@ class Gift_Card extends Payment_Gateway {
 			Plugin::GIFT_CARD_PAY_GATEWAY_ID,
 			wc_square(),
 			array(
-				'method_title'       => __( 'Gift Cards', 'woocommerce-square' ),
+				'method_title'       => __( 'Gift Cards (Square)', 'woocommerce-square' ),
 				'method_description' => $this->get_default_description(),
 				'payment_type'       => self::PAYMENT_TYPE_GIFT_CARD_PAY,
 			)
@@ -158,50 +158,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
-		// Common top form fields.
-		$this->form_fields = array(
-			'enabled'     => array(
-				'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-				'description' => sprintf(
-					// translators: %1$s - opening anchor tag, %2$s - closing anchor tag.
-					esc_html__(
-						'Allow customers to pay with a gift card. Please note the Gift Card feature requires %1$sSquare Credit Card%2$s payment gateway to be enabled.',
-						'woocommerce-square'
-					),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=square_credit_card' ) ) . '">',
-					'</a>'
-				),
-				'type'        => 'checkbox',
-				'default'     => '',
-				'label'       => esc_html__( 'Enable Square Gift Cards', 'woocommerce-square' ),
-			),
-
-			'title'       => array(
-				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
-				'type'     => 'text',
-				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_title(),
-			),
-
-			'description' => array(
-				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
-				'type'     => 'textarea',
-				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_description(),
-			),
-		);
-
-		/**
-		 * Payment Gateway Form Fields Filter.
-		 *
-		 * Actors can use this to add, remove, or tweak gateway form fields
-		 *
-		 * @since 4.7.0
-		 *
-		 * @param array $form_fields array of form fields in format required by WC_Settings_API
-		 * @param Payment_Gateway $this gateway instance
-		 */
-		$this->form_fields = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_form_fields', $this->form_fields, $this );
+		$this->form_fields = array();
 	}
 
 	/**
@@ -324,7 +281,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @return boolean
 	 */
 	public static function cart_contains_upon_release_pre_order() {
-		if ( ! class_exists( '\WC_Pre_Orders_Cart' ) ) {
+		if ( ! class_exists( '\WC_Pre_Orders_Cart' ) || ! class_exists( '\WC_Pre_Orders_Product' ) ) {
 			return false;
 		}
 
@@ -486,7 +443,7 @@ class Gift_Card extends Payment_Gateway {
 			<tbody>
 				<tr>
 					<td><?php esc_html_e( 'Gift card', 'woocommerce-square' ); ?></td>
-					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); ?></td>
+					<td><?php echo wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wc_price is already escaped ?></td>
 				</tr>
 				<tr>
 					<td>
@@ -498,7 +455,7 @@ class Gift_Card extends Payment_Gateway {
 						}
 						?>
 					</td>
-					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); ?></td>
+					<td><?php echo wc_price( $response['difference'], array( 'currency', get_woocommerce_currency() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wc_price is already escaped ?></td>
 				</tr>
 			</tbody>
 		</table>
@@ -521,12 +478,12 @@ class Gift_Card extends Payment_Gateway {
 					if ( $response['is_error'] ) {
 						printf( esc_html__( 'There was an error while applying the gift card.', 'woocommerce-square' ) );
 					} else {
-						printf(
-							wp_kses_post(
+						echo wp_kses_post(
+							sprintf(
 								/* translators: %s - amount to be charged on the gift card. */
-								__( '%s will be applied from the gift card.', 'woocommerce-square' )
-							),
-							wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
+								__( '%s will be applied from the gift card.', 'woocommerce-square' ),
+								wc_price( $cart_total - $response['difference'], array( 'currency' => get_woocommerce_currency() ) )
+							)
 						);
 					}
 					?>
@@ -535,21 +492,21 @@ class Gift_Card extends Payment_Gateway {
 					<?php
 					if ( ! $response['is_error'] ) {
 						if ( $response['has_balance'] ) {
-							printf(
-								wp_kses_post(
+							echo wp_kses_post(
+								sprintf(
 									/* translators: %s - balance amount in the gift card after placing the order. */
-									__( 'The remaining gift card balance after placing this order will be <strong>%s</strong>', 'woocommerce-square' )
-								),
-								wc_price( $response['post_balance'], array( 'currency' => get_woocommerce_currency() ) )
+									__( 'The remaining gift card balance after placing this order will be <strong>%s</strong>', 'woocommerce-square' ),
+									wc_price( $response['post_balance'], array( 'currency' => get_woocommerce_currency() ) )
+								)
 							);
 						} else {
-							printf(
-								wp_kses_post(
+							echo wp_kses_post(
+								sprintf(
 									/* translators: %1$s - remaining amount to be paid using the credit card or cash app pay; %2$s - payment method. */
-									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%1\$s</strong> would need to be paid with a %2\$s.", 'woocommerce-square' )
+									__( "Your gift card doesn't have enough funds to cover the order total. The remaining amount of <strong>%1\$s</strong> would need to be paid with a %2\$s.", 'woocommerce-square' ),
+									wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
+									$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ),
 								),
-								wc_price( $response['difference'], array( 'currency' => get_woocommerce_currency() ) ),
-								$cash_app_available ? __( 'credit card or cash app pay', 'woocommerce-square' ) : __( 'credit card', 'woocommerce-square' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 							);
 						}
 					}

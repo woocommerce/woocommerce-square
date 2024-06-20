@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+const { promisify } = require('util');
+const execAsync = promisify(require('child_process').exec);
 
 /**
  * Wait for blockUI to disappear.
@@ -411,7 +413,7 @@ export async function saveCashAppPaySettings(page, options) {
 		.selectOption(settings.buttonShape);
 
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 /**
@@ -432,9 +434,10 @@ export async function selectPaymentMethod(
 				`label[for="radio-control-wc-payment-method-options-${paymentMethod}"]`
 			)
 			.click();
-		await expect(
-			page.locator('.wc-block-components-loading-mask')
-		).not.toBeVisible();
+		await page
+			.locator('.wc-block-components-loading-mask')
+			.first()
+			.waitFor({ state: 'detached' });
 		return;
 	}
 	// Wait for overlay to disappear
@@ -509,16 +512,33 @@ export async function isToggleChecked( page, selector ) {
 
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 export async function savePaymentGatewaySettings( page ) {
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
-	await expect( await page.getByText( 'Changes Saved' ) ).toBeVisible();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 export async function setStepsLocalStorage( page ) {
 	await page.evaluate( ( val ) => localStorage.setItem( 'step', val ), 'payment-complete' );
 	await page.evaluate( ( val ) => localStorage.setItem( 'backStep', val ), 'payment-methods' );
 	await page.reload();
+}
+
+/**
+ * Run WP CLI command.
+ *
+ * @param {string} command
+ */
+export async function runWpCliCommand(command) {
+	const { stdout, stderr } = await execAsync(
+		`npm --silent run env run tests-cli -- ${command}`
+	);
+
+	if (!stderr) {
+		return true;
+	}
+	console.error(stderr);
+	return false;
 }

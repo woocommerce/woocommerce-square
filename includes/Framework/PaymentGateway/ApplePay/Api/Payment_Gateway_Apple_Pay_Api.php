@@ -133,7 +133,7 @@ class Payment_Gateway_Apple_Pay_API extends SquareFramework\Api\Base {
 		$response = $this->get_response();
 
 		if ( $response->get_status_code() && 200 !== $response->get_status_code() ) {
-			throw new \Exception( $response->get_status_message() );
+			throw new \Exception( esc_html( $response->get_status_message() ) );
 		}
 
 		return true;
