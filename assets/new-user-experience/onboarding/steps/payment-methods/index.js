@@ -14,6 +14,7 @@ import {
 } from '../../../components';
 import { Confetti, RightArrowInCircle } from '../../../icons';
 import { usePaymentGatewaySettings, useSteps } from '../../hooks';
+import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../../../tracks';
 
 export const PaymentMethods = () => {
 	const {
@@ -184,6 +185,15 @@ export const PaymentMethods = () => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
 									await saveGiftCardsSettings();
+									recordEvent(
+										ONBOARDING_TRACK_EVENTS.PAYMENT_METHODS_NEXT_CLICKED,
+										{
+											enable_credit_cards: enabled,
+											enable_digital_wallets,
+											enable_cash_app,
+											enable_gift_cards,
+										}
+									);
 									setStep('payment-complete');
 								})();
 							}}

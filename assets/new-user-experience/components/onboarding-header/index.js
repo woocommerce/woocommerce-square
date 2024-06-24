@@ -11,6 +11,7 @@ import { __ } from '@wordpress/i18n';
 import './index.scss';
 import { Back, Square, Close } from '../../icons';
 import { useSteps } from './../../onboarding/hooks';
+import { queueRecordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
 export const OnboardingHeader = () => {
 	const { setStep, getBackStep } = useSteps();
@@ -35,7 +36,18 @@ export const OnboardingHeader = () => {
 					<Square />
 				</FlexBlock>
 				<FlexItem className="flexItem closeWizard">
-					<Button href={wcSquareSettings.adminUrl}>
+					<Button
+						onClick={() => {
+							queueRecordEvent(
+								ONBOARDING_TRACK_EVENTS.EXIT_CLICKED,
+								{
+									exited_on_step: stepData.step,
+								}
+							);
+							window.location.href =
+								wc.wcSettings.getAdminLink('');
+						}}
+					>
 						<Close />
 					</Button>
 				</FlexItem>
