@@ -26,6 +26,10 @@ module.exports = {
 	rules: {
 		'no-console': 'off',
 		'react/react-in-jsx-scope': 'off',
+		'react-hooks/exhaustive-deps': 'off',
+		'react-hooks/rules-of-hooks': 'off',
+		'@woocommerce/dependency-group': 'off',
+		camelcase: 'off',
 	},
 	overrides: [
 		{

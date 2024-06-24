@@ -5,6 +5,8 @@ import {
 	createProduct,
 	doesProductExist,
 	clearCart,
+	isToggleChecked,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 import dummy from '../dummy-data';
 
@@ -13,12 +15,16 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const page = await browser.newPage();
 
 	await page.goto(
-		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=gift_cards_pay'
 	);
-	await page
-		.locator( '#woocommerce_square_credit_card_enable_gift_cards' )
-		.check();
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	if ( ! await isToggleChecked( page, '.gift-card-gateway-toggle-field' ) ) {
+		await page
+			.locator( '.gift-card-gateway-toggle-field' )
+			.click();
+	}
+
+	await savePaymentGatewaySettings( page );
 
 	if ( ! ( await doesProductExist( baseURL, 'gift-card-product' ) ) ) {
 		await createProduct(
