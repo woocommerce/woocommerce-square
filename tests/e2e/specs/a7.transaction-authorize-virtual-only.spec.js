@@ -9,6 +9,7 @@ import {
 	gotoOrderEditPage,
 	visitCheckout,
 	placeOrder,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -20,12 +21,13 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
 	await page
-		.locator( '#woocommerce_square_credit_card_transaction_type' )
+		.getByTestId( 'credit-card-transaction-type-field' )
 		.selectOption( { label: 'Authorization' } );
 	await page
-		.locator( '#woocommerce_square_credit_card_charge_virtual_orders' )
+		.getByTestId( 'credit-card-gateway-capture-paid-orders-field' )
 		.check();
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	await savePaymentGatewaySettings( page );
 
 	// Create product.
 	if ( ! ( await doesProductExist( baseURL, 'virtual-product' ) ) ) {
@@ -51,6 +53,46 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only', async ( {
 	page,
 } ) => {
+	await page.goto( '/product/virtual-product' );
+	await page.locator( '.single_add_to_cart_button' ).click();
+
+	await visitCheckout( page, false );
+	await fillAddressFields( page, false );
+	await fillCreditCardFields( page, null, false );
+	await placeOrder( page, false );
+
+	await expect(
+		page.locator( '.woocommerce-order-overview__total strong' )
+	).toHaveText( '$7.99' );
+	const orderId = await page
+		.locator( '.woocommerce-order-overview__order strong' )
+		.innerText();
+
+	await gotoOrderEditPage( page, orderId );
+
+	await expect( page.locator( '#order_status' ) ).toHaveValue(
+		'wc-on-hold'
+	);
+	await expect(
+		page.getByText(
+			'Square Test Authorization Approved for an amount of $7.99: Visa ending in 1111'
+		)
+	).toBeVisible();
+} );
+
+test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only but charge', async ( {
+	page,
+} ) => {
+	await page.goto(
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+	);
+
+	await page
+		.getByTestId( 'credit-card-gateway-virtual-order-only-field' )
+		.check();
+
+	await savePaymentGatewaySettings( page );
+
 	await page.goto( '/product/virtual-product' );
 	await page.locator( '.single_add_to_cart_button' ).click();
 

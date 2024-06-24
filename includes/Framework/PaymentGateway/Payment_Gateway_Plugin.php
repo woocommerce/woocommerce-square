@@ -55,7 +55,6 @@ defined( 'ABSPATH' ) || exit;
  */
 abstract class Payment_Gateway_Plugin extends Plugin {
 
-
 	/** Customer ID feature */
 	const FEATURE_CUSTOMER_ID = 'customer_id';
 
@@ -648,7 +647,11 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 
 		foreach ( $this->get_gateways() as $gateway ) {
 
-			if ( $gateway->is_enabled() && $gateway->is_production_environment() && ! $gateway->debug_off() ) {
+			// Get the debug mode.
+			$square_settings = get_option( 'wc_square_settings', array() );
+			$debug_mode      = $square_settings['debug_mode'] ?? 'off';
+
+			if ( $gateway->is_enabled() && $gateway->is_production_environment() && 'off' !== $debug_mode ) {
 
 				$is_gateway_settings = $this->is_payment_gateway_configuration_page( $gateway->get_id() );
 

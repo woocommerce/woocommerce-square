@@ -237,9 +237,12 @@ export const initiateCheckout = async (
 	 * even for products that don't require shipping. Google Pay provides contact
 	 * details in the billing object.
 	 */
-	const billingEmailAddress = billingContact?.email ?? shippingContact?.email ?? '';
-	const billingPhoneNumber = billingContact?.phone ?? shippingContact?.phone ?? '';
-	const shippingPhoneNumber = shippingContact?.phone ?? billingContact?.phone ?? '';
+	const billingEmailAddress =
+		billingContact?.email ?? shippingContact?.email ?? '';
+	const billingPhoneNumber =
+		billingContact?.phone ?? shippingContact?.phone ?? '';
+	const shippingPhoneNumber =
+		shippingContact?.phone ?? billingContact?.phone ?? '';
 
 	response.meta = {
 		paymentMethodData: {
