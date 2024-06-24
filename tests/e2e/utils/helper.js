@@ -204,12 +204,12 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 			const paymentMethod = await page.locator(
 				'ul.wc_payment_methods li.payment_method_square_credit_card'
 			);
-	
+
 			// Check if we already have a saved payment method, then check new payment method.
 			const visible = await paymentMethod
 				.locator('input#wc-square-credit-card-use-new-payment-method')
 				.isVisible();
-	
+
 			if (visible) {
 				await paymentMethod
 					.locator('input#wc-square-credit-card-use-new-payment-method')
@@ -475,7 +475,7 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		await page.locator('#wc-square-cash-app-pay').getByTestId('cap-btn').click();
 	} else {
 		await page.locator('#wc-square-cash-app').getByTestId('cap-btn').click();
-	}	
+	}
 	await page.waitForLoadState('networkidle');
 	if ( decline ) {
 		await page.getByRole('button', { name: 'Decline' }).click();
