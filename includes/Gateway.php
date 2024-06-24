@@ -79,14 +79,6 @@ class Gateway extends Payment_Gateway_Direct {
 	private $digital_wallet = null;
 
 	/**
-	 * Holds the instance of the Gift_Card class.
-	 * @since 4.2.0
-	 *
-	 * @var null|Gift_Card
-	 */
-	private $gift_card = null;
-
-	/**
 	 * Constructs the class.
 	 *
 	 * @since 2.0.0
@@ -103,7 +95,6 @@ class Gateway extends Payment_Gateway_Direct {
 				'supports'           => array(
 					self::FEATURE_PRODUCTS,
 					self::FEATURE_CARD_TYPES,
-					self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES,
 					self::FEATURE_PAYMENT_FORM,
 					self::FEATURE_CREDIT_CARD_AUTHORIZATION,
 					self::FEATURE_CREDIT_CARD_CHARGE,
@@ -149,9 +140,6 @@ class Gateway extends Payment_Gateway_Direct {
 
 		// Init Square digital wallets.
 		$this->digital_wallet = new Digital_Wallet( $this );
-
-		// Init Square gift card.
-		$this->gift_card = new Gift_Card( $this );
 	}
 
 	/**
@@ -600,17 +588,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 *
 	 * @since 4.2.0
 	 *
-	 * @return Gift_Card;
-	 */
-	public function get_gift_card_handler() {
-		return $this->gift_card;
-	}
-
-	/**
-	 * Returns the gift card object.
-	 *
-	 * @since 4.2.0
-	 *
 	 * @return Digital_Wallet;
 	 */
 	public function get_digital_wallet_handler() {
@@ -628,101 +605,7 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @see WC_Settings_API::init_form_fields()
 	 */
 	public function init_form_fields() {
-
-		// common top form fields
-		$this->form_fields = array(
-			'enabled'     => array(
-				'title'   => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-				'label'   => esc_html__( 'Enable this gateway', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'default' => 'no',
-			),
-
-			'title'       => array(
-				'title'    => esc_html__( 'Title', 'woocommerce-square' ),
-				'type'     => 'text',
-				'desc_tip' => esc_html__( 'Payment method title that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_title(),
-			),
-
-			'description' => array(
-				'title'    => esc_html__( 'Description', 'woocommerce-square' ),
-				'type'     => 'textarea',
-				'desc_tip' => esc_html__( 'Payment method description that the customer will see during checkout.', 'woocommerce-square' ),
-				'default'  => $this->get_default_description(),
-			),
-
-		);
-
-		// both credit card authorization & charge supported
-		if ( $this->supports_credit_card_authorization() && $this->supports_credit_card_charge() ) {
-			$this->form_fields = $this->add_authorization_charge_form_fields( $this->form_fields );
-		}
-
-		// card types support
-		if ( $this->supports_card_types() ) {
-			$this->form_fields = $this->add_card_types_form_fields( $this->form_fields );
-		}
-
-		// tokenization support
-		if ( $this->supports_tokenization() ) {
-			$this->form_fields = $this->add_tokenization_form_fields( $this->form_fields );
-		}
-
-		// Square digital wallet (Apple Pay and Google Pay settings)
-		if ( $this->is_digital_wallet_available() ) {
-			$this->form_fields = $this->add_digital_wallets_form_fields( $this->form_fields );
-		}
-
-		$this->form_fields = $this->add_gift_cards_form_fields( $this->form_fields );
-
-		$this->form_fields['advanced_settings_title'] = array(
-			'title' => esc_html__( 'Advanced Settings', 'woocommerce-square' ),
-			'type'  => 'title',
-		);
-
-		// add "detailed customer decline messages" option if the feature is supported
-		if ( $this->supports( self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES ) ) {
-			$this->form_fields['enable_customer_decline_messages'] = array(
-				'title'   => esc_html__( 'Detailed Decline Messages', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'label'   => esc_html__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
-				'default' => 'no',
-			);
-		}
-
-		// debug mode
-		$this->form_fields['debug_mode'] = array(
-			'title'   => esc_html__( 'Debug Mode', 'woocommerce-square' ),
-			'type'    => 'select',
-			'class'   => 'wc-enhanced-select',
-			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-			'desc'    => sprintf( esc_html__( 'Show Detailed Error Messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
-			'default' => self::DEBUG_MODE_OFF,
-			'options' => array(
-				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
-				self::DEBUG_MODE_CHECKOUT => esc_html__( 'Show on Checkout Page', 'woocommerce-square' ),
-				self::DEBUG_MODE_LOG      => esc_html__( 'Save to Log', 'woocommerce-square' ),
-				/* translators: show debugging information on both checkout page and in the log */
-				self::DEBUG_MODE_BOTH     => esc_html__( 'Both', 'woocommerce-square' ),
-			),
-		);
-
-		// if there is more than just the production environment available
-		if ( count( $this->get_environments() ) > 1 ) {
-			$this->form_fields = $this->add_environment_form_fields( $this->form_fields );
-		}
-
-		/**
-		 * Payment Gateway Form Fields Filter.
-		 *
-		 * Actors can use this to add, remove, or tweak gateway form fields
-		 *
-		 * @since 4.0.0
-		 * @param array $form_fields array of form fields in format required by WC_Settings_API
-		 * @param Payment_Gateway $this gateway instance
-		 */
-		$this->form_fields = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_form_fields', $this->form_fields, $this );
+		$this->form_fields = array();
 	}
 
 	/**
@@ -863,32 +746,6 @@ class Gateway extends Payment_Gateway_Direct {
 				'apple'  => 'Apple Pay',
 				'google' => 'Google Pay',
 			),
-		);
-
-		return $form_fields;
-	}
-
-	/**
-	 * Adds the Gift Cards setting fields.
-	 *
-	 * @since 3.7.0
-	 *
-	 * @param array $form_fields
-	 * @return array
-	 */
-	public function add_gift_cards_form_fields( $form_fields ) {
-		$form_fields['gift_card_settings'] = array(
-			'title'       => esc_html__( 'Gift Card settings', 'woocommerce-square' ),
-			'description' => esc_html__( 'Take payments on your store with a Gift Card.', 'woocommerce-square' ),
-			'type'        => 'title',
-		);
-
-		$form_fields['enable_gift_cards'] = array(
-			'title'       => esc_html__( 'Enable / Disable', 'woocommerce-square' ),
-			'description' => esc_html__( 'Allow customers to pay with a gift card.', 'woocommerce-square' ),
-			'type'        => 'checkbox',
-			'default'     => '',
-			'label'       => esc_html__( 'Enable Gift Cards', 'woocommerce-square' ),
 		);
 
 		return $form_fields;

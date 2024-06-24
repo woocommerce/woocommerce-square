@@ -23,6 +23,9 @@
 
 namespace WooCommerce\Square;
 
+use Exception;
+use WooCommerce\Square\Framework\Square_Helper;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -58,6 +61,17 @@ class Settings extends \WC_Settings_API {
 	 */
 	const SYSTEM_OF_RECORD_DISABLED = 'disabled';
 
+	/** Debug mode log to file */
+	const DEBUG_MODE_LOG = 'log';
+
+	/** Debug mode display on checkout */
+	const DEBUG_MODE_CHECKOUT = 'checkout';
+
+	/** Debug mode log to file and display on checkout */
+	const DEBUG_MODE_BOTH = 'both';
+
+	/** Debug mode disabled */
+	const DEBUG_MODE_OFF = 'off';
 
 	/**
 	 * Refresh token
@@ -106,7 +120,7 @@ class Settings extends \WC_Settings_API {
 		// remove some of our custom fields that shouldn't be saved.
 		add_action(
 			'woocommerce_settings_api_sanitized_fields_' . $this->id,
-			function( $fields ) {
+			function ( $fields ) {
 
 				unset( $fields['general'], $fields['connect'], $fields['import_products'] );
 
@@ -126,6 +140,121 @@ class Settings extends \WC_Settings_API {
 		);
 
 		add_action( 'admin_notices', array( $this, 'show_auth_keys_changed_notice' ) );
+
+		add_action( 'admin_notices', array( $this, 'show_visit_wizard_notice' ) );
+
+		add_action( 'wp_ajax_wc_square_settings_get_locations', array( $this, 'get_locations_ajax_callback' ) );
+
+		add_action( 'admin_init', array( $this, 'square_onboarding_redirect' ) );
+
+		add_action( 'admin_menu', array( $this, 'register_pages' ) );
+
+		add_action( 'woocommerce_settings_square', array( $this, 'render_square_settings_container' ) );
+
+		add_action( 'woocommerce_settings_checkout', array( $this, 'render_payments_settings_container' ) );
+
+		// Register REST API controllers.
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Cash_App_Settings_Controller();
+		new \WooCommerce\Square\Admin\Rest\WC_REST_Square_Gift_Cards_Settings_Controller();
+	}
+
+	/**
+	 * Redirect users to the templates screen on plugin activation.
+	 *
+	 * @since 4.7.0
+	 */
+	public function square_onboarding_redirect() {
+		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
+			add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
+			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Registers square page(s).
+	 *
+	 * @since 4.7.0
+	 */
+	public function register_pages() {
+		$current_page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+		if ( ! get_option( 'wc_square_connected_page_visited' ) || 'woocommerce-square-onboarding' === $current_page ) {
+			add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown
+		}
+	}
+
+	/**
+	 * Output the Setup Wizard page(s).
+	 */
+	public function render_onboarding_page() {
+		printf(
+			'<div class="wrap" id="woocommerce-square-onboarding"></div>'
+		);
+	}
+
+	/**
+	 * Show a notice to visit the wizard on plugin activation.
+	 *
+	 * @since 4.7.0
+	 */
+	public function show_visit_wizard_notice() {
+		if ( get_option( 'wc_square_connected_page_visited' ) ) {
+			return;
+		}
+
+		wc_square()->get_admin_notice_handler()->add_admin_notice(
+			sprintf(
+				/* translators: %1$s - <a> tag, %2$s - </a> tag */
+				esc_html__(
+					'Welcome to Square for WooCommerce! Get started by visiting the %1$sOnboarding Wizard%2$s.',
+					'woocommerce-square'
+				),
+				'<a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '">',
+				'</a>'
+			),
+			'wc-square-welcome',
+			array(
+				'dismissible'  => false,
+				'notice_class' => 'notice-info',
+			)
+		);
+	}
+
+	/**
+	 * Redirect users to the onboarding wizard screen on plugin activation.
+	 *
+	 * @since 4.7.0
+	 */
+	public function render_square_settings_container() {
+		$section = isset( $_GET['section'] ) && ! empty( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : 'general'; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+
+		printf(
+			'<div id="woocommerce-square-settings__container-' . esc_html( $section ) . '"></div>',
+		);
+	}
+
+	/**
+	 * Redirect users to the onboarding wizard screen on plugin activation.
+	 *
+	 * @since 4.7.0
+	 */
+	public function render_payments_settings_container() {
+		$tab     = isset( $_GET['tab'] ) ? wp_unslash( $_GET['tab'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+		$section = isset( $_GET['section'] ) ? wp_unslash( $_GET['section'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
+
+		if ( 'checkout' !== $tab ) {
+			return;
+		}
+
+		if ( ! ( 'square_credit_card' === $section || 'square_cash_app_pay' === $section || 'gift_cards_pay' === $section ) ) {
+			return;
+		}
+
+		printf(
+			'<div id="woocommerce-square-payment-gateway-settings__container--' . esc_html( $section ) . '"></div>',
+		);
 	}
 
 	/**
@@ -185,197 +314,7 @@ class Settings extends \WC_Settings_API {
 	 * @since 2.0.0
 	 */
 	public function init_form_fields() {
-
-		if ( $this->is_connected() ) {
-
-			$general_description = sprintf(
-				/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-				__( 'Sync your products and inventory and also accept credit and debit card payments at checkout. %1$sClick here%2$s to configure payments.', 'woocommerce-square' ),
-				'<a href="' . esc_url( $this->get_plugin()->get_payment_gateway_configuration_url( $this->get_plugin()->get_gateway()->get_id() ) ) . '">',
-				'</a>'
-			);
-
-		} else {
-
-			$general_description = __( 'Connect with Square to start syncing your products and inventory and also accept credit and debit card payments at checkout.', 'woocommerce-square' );
-		}
-
-		$fields = array(
-			'general' => array(
-				'type'        => 'title',
-				'description' => $general_description,
-			),
-		);
-
-		$fields['enable_sandbox'] = array(
-			'title'       => __( 'Enable Sandbox Mode', 'woocommerce-square' ),
-			'label'       => '<span>' . __( 'Enable to set the plugin in sandbox mode.', 'woocommerce-square' ) . '</span>',
-			'type'        => 'checkbox',
-			'description' => __( 'After enabling you’ll see a new Sandbox settings section with two fields; Sandbox Application ID & Sandbox Access Token.', 'woocommerce-square' ),
-		);
-
-		$fields['sandbox_settings'] = array(
-			'type'        => 'title',
-			'title'       => __( 'Sandbox settings', 'woocommerce-square' ),
-			'id'          => 'wc_square_sandbox_settings',
-			'description' => sprintf(
-				// translators: Placeholders: %1$s - URL.
-				__( 'Sandbox details can be created at: %s', 'woocommerce-square' ),
-				sprintf( '<a href="%1$s">%1$s</a>', 'https://developer.squareup.com/apps' )
-			),
-		);
-
-		$fields['sandbox_application_id'] = array(
-			'type'        => 'text',
-			'title'       => __( 'Sandbox Application ID', 'woocommerce-square' ),
-			'class'       => 'wc_square_sandbox_settings',
-			'description' => __( 'Application ID for the Sandbox Application, see the details in the My Applications section.', 'woocommerce-square' ),
-		);
-
-		$fields['sandbox_token'] = array(
-			'type'        => 'text',
-			'title'       => __( 'Sandbox Access Token', 'woocommerce-square' ),
-			'class'       => 'wc_square_sandbox_settings',
-			'description' => __( 'Access Token for the Sandbox Test Account, see the details in the Sandbox Test Account section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ),
-		);
-
-		// display these fields only if connected.
-		if ( $this->is_connected() ) {
-
-			$fields[ $this->get_environment() . '_location_id' ] = array(
-				'title'       => __( 'Business location', 'woocommerce-square' ),
-				'type'        => 'select',
-				'class'       => 'wc-enhanced-select',
-				'description' => sprintf(
-					/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag, %3$s - <a> tag, %4$s - </a> tag */
-					__( 'Select a location to link to this site. Only %1$sactive%2$s %3$slocations%4$s that support credit card processing in Square can be linked.', 'woocommerce-square' ),
-					'<strong>',
-					'</strong>',
-					'<a href="https://docs.woocommerce.com/document/woocommerce-square/#section-4" target="_blank">',
-					'</a>'
-				),
-				'options'     => array(), // this is populated on display.
-			);
-
-			$fields['system_of_record'] = array(
-				'title'       => __( 'Sync settings', 'woocommerce-square' ),
-				'type'        => 'select',
-				'class'       => 'wc-enhanced-select',
-				'description' => sprintf(
-					/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag, %3$s - <a> tag, %4$s - </a> tag */
-					__( 'Choose where data will be updated for synced products. Inventory in Square is %1$salways%2$s checked for adjustments when sync is enabled.%3$s%4$sLearn more%5$s about choosing a system of record or %6$screate a ticket%7$s if you\'re experiencing technical issues.', 'woocommerce-square' ),
-					'<strong>',
-					'</strong>',
-					'<br>',
-					'<a href="' . esc_url( wc_square()->get_documentation_url() ) . '#section-8">',
-					'</a>',
-					'<a href="https://wordpress.org/support/plugin/woocommerce-square/">',
-					'</a>'
-				),
-				'options'     => array(
-					self::SYSTEM_OF_RECORD_DISABLED    => __( 'Do not sync product data', 'woocommerce-square' ),
-					self::SYSTEM_OF_RECORD_SQUARE      => __( 'Square', 'woocommerce-square' ),
-					self::SYSTEM_OF_RECORD_WOOCOMMERCE => __( 'WooCommerce', 'woocommerce-square' ),
-				),
-				'default'     => 'disabled',
-			);
-
-			$fields['enable_inventory_sync'] = array(
-				'title'       => __( 'Sync inventory', 'woocommerce-square' ),
-				'label'       => '<span>' . __( 'Enable to sync product inventory with Square', 'woocommerce-square' ) . '</span>',
-				'type'        => 'checkbox',
-				'description' => __( 'Inventory is fetched from Square periodically and updated in WooCommerce', 'woocommerce-square' ),
-			);
-
-			$fields['override_product_images'] = array(
-				'title'       => __( 'Override product images', 'woocommerce-square' ),
-				'label'       => '<span>' . __( 'Enable to override Product images from Square', 'woocommerce-square' ) . '</span>',
-				'type'        => 'checkbox',
-				'description' => __( 'Product images that have been updated in Square will also be updated within WooCommerce during a sync.', 'woocommerce-square' ),
-			);
-
-			$fields['hide_missing_products'] = array(
-				'title'       => __( 'Handle missing products', 'woocommerce-square' ),
-				'label'       => __( 'Hide synced products when not found in Square', 'woocommerce-square' ),
-				'type'        => 'checkbox',
-				'description' => __( 'Products not found in Square will be hidden in the WooCommerce product catalog.', 'woocommerce-square' ),
-			);
-
-			$fields['sync_interval'] = array(
-				'title'       => __( 'Sync interval', 'woocommerce-square' ),
-				'type'        => 'select',
-				'class'       => 'wc-enhanced-select',
-				'default'     => '1',
-				'options'     => array(
-					'0.25' => esc_html__( '15 minutes', 'woocommerce-square' ),
-					'0.5'  => esc_html__( '30 minutes', 'woocommerce-square' ),
-					'0.75' => esc_html__( '45 minutes', 'woocommerce-square' ),
-					'1'    => esc_html__( '1 hour', 'woocommerce-square' ),
-					'2'    => esc_html__( '2 hours', 'woocommerce-square' ),
-					'3'    => esc_html__( '3 hours', 'woocommerce-square' ),
-					'6'    => esc_html__( '6 hours', 'woocommerce-square' ),
-					'8'    => esc_html__( '8 hours', 'woocommerce-square' ),
-					'12'   => esc_html__( '12 hours', 'woocommerce-square' ),
-					'24'   => esc_html__( '24 hours', 'woocommerce-square' ),
-				),
-				'description' => sprintf(
-					esc_html__( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' )
-				),
-			);
-
-			$sync_interval = $this->get_sync_interval();
-
-			if ( has_filter( 'wc_square_sync_interval' ) ) {
-				$fields['sync_interval']['custom_attributes']['disabled'] = true;
-				$fields['sync_interval']['description']                   = sprintf(
-					// translators: %4$s: interval duration in minutes.
-					esc_html__( 'Frequency for how regularly WooCommerce will sync products with Square.%1$sSync interval settings are disabled as they are being overridden by the %2$swc_square_sync_interval%3$s filter. This filter is setting the sync interval to %4$s minutes.', 'woocommerce-square' ),
-					'<br /><br />',
-					'<code>',
-					'</code>',
-					$sync_interval / HOUR_IN_SECONDS * 60
-				);
-			}
-
-			$fields['import_products'] = array(
-				'title'    => __( 'Import Products', 'woocommerce-square' ),
-				'type'     => 'import_products',
-				'desc_tip' => __( 'Run an import to create new products in this WooCommerce store for each new product created in Square that has a unique SKU not existing in here. Needs to be run each time new items are created in Square.', 'woocommerce-square' ),
-			);
-		}
-
-		// In sandbox mode we don't want to intially display the connect button, only disconnect.
-		if ( ! ( $this->is_sandbox() && ! $this->is_connected() ) ) {
-			$fields = array_merge(
-				$fields,
-				array(
-					'connect' => array(
-						'title'    => __( 'Connection', 'woocommerce-square' ),
-						'type'     => 'connect',
-						'desc_tip' => '',
-					),
-				)
-			);
-		}
-
-		// Always display these fields.
-		$fields = array_merge(
-			$fields,
-			array(
-				'debug_logging_enabled' => array(
-					'title' => __( 'Enable Logging', 'woocommerce-square' ),
-					'type'  => 'checkbox',
-					'label' => sprintf(
-						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-						__( 'Log debug messages to the %1$sWooCommerce status log%2$s', 'woocommerce-square' ),
-						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs' ) ) . '">',
-						'</a>'
-					),
-				),
-			)
-		);
-
-		$this->form_fields = $fields;
+		$this->form_fields = array();
 	}
 
 
@@ -825,12 +764,12 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @since 2.0.0
 	 *
+	 * @param bool $force whether to force a refetch of the locations.
+	 *
 	 * @return \Square\Models\Location[]
 	 */
-	public function get_locations() {
-
+	public function get_locations( $force = false ) {
 		if ( is_array( $this->locations ) ) {
-
 			return $this->locations;
 		}
 
@@ -838,8 +777,7 @@ class Settings extends \WC_Settings_API {
 
 		$section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : false;  // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		// don't always need to refetch when not on Settings screen.
-		if ( ! $this->is_admin_settings_screen() || ( $this->is_admin_settings_screen() && 'update' === $section ) ) {
+		if ( ! ( $this->is_admin_settings_screen() || ( $this->is_admin_settings_screen() && 'update' !== $section ) || $force ) ) {
 			$this->locations = get_transient( $locations_transient_key );
 		}
 
@@ -870,7 +808,6 @@ class Settings extends \WC_Settings_API {
 					$this->clear_location_id();
 				}
 			} catch ( \Exception $exception ) {
-
 				$this->get_plugin()->log( 'Could not retrieve business locations.' );
 			}
 		}
@@ -878,6 +815,18 @@ class Settings extends \WC_Settings_API {
 		return $this->locations;
 	}
 
+	/**
+	 * Ajax callback for locations.
+	 *
+	 * @since x.x.x
+	 */
+	public function get_locations_ajax_callback() {
+		check_ajax_referer( 'wc_square_settings', 'security' );
+
+		$locations = $this->get_locations( true );
+
+		wp_send_json_success( $locations );
+	}
 
 	/**
 	 * Gets the configured Sync setting.
@@ -1118,5 +1067,4 @@ class Settings extends \WC_Settings_API {
 			$this->plugin->get_sync_handler()->schedule_sync( true );
 		}
 	}
-
 }

@@ -52,6 +52,9 @@ class Products {
 	/** @var int[] array of product IDs that have been scheduled for deletion in this request */
 	private $products_to_delete = array();
 
+	/** @var bool whether gift card features are enabled */
+	private $gift_card_enabled = 'no';
+
 	/** @var int[] array of product IDs that have been scheduled for inventory sync in this request */
 	private $products_to_inventory_sync = array();
 
@@ -74,6 +77,12 @@ class Products {
 			/* translators: Placeholder: %s - product name */
 			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
 		);
+
+		// Get gift card features status.
+		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
+
+		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
 
 		// add hooks
 		$this->add_products_edit_screen_hooks();
@@ -113,8 +122,7 @@ class Products {
 		add_filter( 'woocommerce_csv_product_import_mapping_default_columns', array( $this, 'map_sync_status_column' ) );
 		add_filter( 'woocommerce_product_import_pre_insert_product_object', array( $this, 'import_sync_status' ), 10, 2 );
 
-		// gift card features.
-		if ( wc_square()->get_gateway()->get_gift_card_handler()->is_gift_card_enabled() ) {
+		if ( 'yes' === $this->gift_card_enabled ) {
 			add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'add_input_fields_to_gift_card_product' ) );
 			add_filter( 'woocommerce_product_is_taxable', array( $this, 'disable_taxes_for_gift_card_product' ), 10, 2 );
 			add_filter( 'woocommerce_product_needs_shipping', array( $this, 'disable_shipping_for_gift_card_product' ), 10, 2 );
@@ -153,7 +161,7 @@ class Products {
 
 		add_action( 'admin_notices', array( $this, 'add_notice_product_hidden_from_catalog' ) );
 
-		if ( wc_square()->get_gateway()->get_gift_card_handler()->is_gift_card_enabled() ) {
+		if ( 'yes' === $this->gift_card_enabled ) {
 			add_filter( 'product_type_options', array( __CLASS__, 'add_gift_card_checkbox' ) );
 			add_filter( 'woocommerce_product_data_tabs', array( $this, 'filter_product_tabs' ), 50 );
 		}
@@ -174,6 +182,40 @@ class Products {
 		// Sync product inventory when a product is added to the cart.
 		add_action( 'woocommerce_add_to_cart', array( $this, 'maybe_stage_products_for_sync_inventory' ), 10, 4 );
 		add_action( 'shutdown', array( $this, 'maybe_sync_product_inventory' ) );
+	}
+
+	/**
+	 * Add help tabs.
+	 *
+	 * @since 4.7.0
+	 */
+	public function add_tabs() {
+		if ( ! function_exists( 'wc_get_screen_ids' ) ) {
+			return;
+		}
+
+		$screen = get_current_screen();
+
+		if ( ! $screen || ! in_array( $screen->id, wc_get_screen_ids(), true ) ) {
+			return;
+		}
+
+		$help_tabs = $screen->get_help_tabs();
+		if ( ! isset( $help_tabs['woocommerce_onboard_tab'] ) ) {
+			return;
+		}
+
+		$updated_help_tab = $help_tabs['woocommerce_onboard_tab'];
+
+		$square_text  = '<h2>' . esc_html__( 'Square Onboarding Setup Wizard', 'woocommerce-square' ) . '</h2>';
+		$square_text .= '<p>' . esc_html__( 'If you need to access the Square onboarding setup wizard again, please click on the button below.', 'woocommerce-square' ) . '</p>' .
+			'<p><a href="' . esc_url( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) ) . '" class="button button-primary">' . esc_html__( 'Setup wizard', 'woocommerce-square' ) . '</a></p>';
+
+		$updated_help_tab['content'] .= $square_text;
+
+		// Remove the old help tab and add the new one.
+		$screen->remove_help_tab( 'woocommerce_onboard_tab' );
+		$screen->add_help_tab( $updated_help_tab );
 	}
 
 	/**

@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 import {
 	createProduct,
 	doesProductExist,
+	saveSquareSettings,
 	runWpCliCommand,
 } from '../utils/helper';
 import {
@@ -21,9 +22,9 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await clearSync( page );
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
-	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'WooCommerce' } );
-	await page.locator( '#wc_square_enable_inventory_sync' ).check();
-	await page.locator( '.woocommerce-save-button' ).click();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
+	await page.getByTestId( 'push-inventory-field' ).check();
+	await saveSquareSettings( page );
 
 	if ( ! ( await doesProductExist( baseURL, 'oneplus-8' ) ) ) {
 		await createProduct(
