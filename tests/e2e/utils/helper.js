@@ -220,10 +220,10 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 
 	let frame = '';
 
-	if ( isBlock ) {
+	if ( isBlock && await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).isVisible() ) {
 		await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).click();
 		frame = '.sq-card-iframe-container .sq-card-component'
-	} else {
+	} else if ( await page.locator( 'label[for="payment_method_square_credit_card"]' ).isVisible() ) {
 		await page.locator( 'label[for="payment_method_square_credit_card"]' ).click();
 		frame = '#wc-square-credit-card-container .sq-card-component';
 	}
@@ -509,7 +509,7 @@ export async function isToggleChecked( page, selector ) {
 
 	return await page
 		.locator( `${selector} .components-checkbox-control__input` )
-		.evaluate( node => node.classList.contains( 'is-checked' ) );
+		.evaluate( node => node.checked );
 }
 
 export async function saveSquareSettings( page ) {
