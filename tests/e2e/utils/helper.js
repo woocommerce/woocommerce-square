@@ -514,7 +514,6 @@ export async function isToggleChecked( page, selector ) {
 
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
-	await expect( await page.getByTestId( 'square-settings-save-button' ).toContainText( 'Changes Saved!' ) );
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
