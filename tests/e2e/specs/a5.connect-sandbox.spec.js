@@ -6,14 +6,9 @@ test( 'Connect a Square account', async ( { page } ) => {
 
 	await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 
-	// Skip test if already connected to sandbox.
-	test.skip( await page.getByTestId( 'environment-selection-field' ).toHaveAttribute( 'value', 'yes' ) );
-
-	if ( ! await page.getByTestId( 'environment-selection-field' ).toHaveAttribute( 'value', 'yes' ) ) {
-		await page
+	await page
 		.getByTestId( 'environment-selection-field' )
 		.selectOption( { label: 'Sandbox' } );
-	}
 
 	await page
 		.getByTestId( 'sandbox-application-id-field' )
@@ -21,9 +16,6 @@ test( 'Connect a Square account', async ( { page } ) => {
 	await page
 		.getByTestId( 'sandbox-token-field' )
 		.fill( process.env.SQUARE_ACCESS_TOKEN );
-
-
-	await page.getByTestId( 'connect-to-square-button' ).click();
 
 	await expect( await page.getByTestId( 'business-location-field' ) ).toBeVisible();
 
