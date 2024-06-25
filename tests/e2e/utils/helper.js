@@ -221,8 +221,10 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 	let frame = '';
 
 	if ( isBlock ) {
+		await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).click();
 		frame = '.sq-card-iframe-container .sq-card-component'
 	} else {
+		await page.locator( 'label[for="payment_method_square_credit_card"]' ).click();
 		frame = '#wc-square-credit-card-container .sq-card-component';
 	}
 
@@ -512,6 +514,7 @@ export async function isToggleChecked( page, selector ) {
 
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
+	// await expect( await page.getByTestId( 'square-settings-save-button' ).toContainText( 'Changes Saved!' ) );
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
