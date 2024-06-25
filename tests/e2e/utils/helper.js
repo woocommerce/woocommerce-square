@@ -508,8 +508,8 @@ export async function visitOnboardingPage( page ) {
 export async function isToggleChecked( page, selector ) {
 
 	return await page
-		.locator( `${selector} .components-checkbox-control__input` )
-		.evaluate( node => node.checked );
+		.locator( `${selector} .components-form-toggle` )
+		.evaluate( node => node.classList.contains( 'is-checked' ) );
 }
 
 export async function saveSquareSettings( page ) {

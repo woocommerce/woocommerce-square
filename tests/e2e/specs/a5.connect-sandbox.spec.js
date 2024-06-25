@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { isToggleChecked, saveSquareSettings } from '../utils/helper';
+import { saveSquareSettings } from '../utils/helper';
 
 test( 'Connect a Square account', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
