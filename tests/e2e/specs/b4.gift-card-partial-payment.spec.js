@@ -30,12 +30,13 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 
 	await savePaymentGatewaySettings( page );
 
-	if ( ! ( await doesProductExist( baseURL, 'dollar-product' ) ) ) {
+	if ( ! ( await doesProductExist( baseURL, 'simple-product' ) ) ) {
 		await createProduct( page, {
-			name: 'Dollar Product',
-			regularPrice: '1',
-			sku: 'dollar-product',
+			name: 'Simple Product',
+			regularPrice: '14.99',
+			sku: 'simple-product',
 		} );
+
 		await expect( await page.getByText( 'Product published' ) ).toBeVisible();
 	}
 

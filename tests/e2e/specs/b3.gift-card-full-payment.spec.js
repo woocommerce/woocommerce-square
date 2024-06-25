@@ -42,7 +42,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-let orderId = 38;
+let orderId;
 
 test( 'Gift card - Full payment', async ( { page } ) => {
 	await page.goto( '/product/dollar-product' );

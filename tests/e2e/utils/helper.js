@@ -506,7 +506,7 @@ export async function visitOnboardingPage( page ) {
 export async function isToggleChecked( page, selector ) {
 
 	return await page
-		.locator( `${selector} .components-form-toggle` )
+		.locator( `${selector} .components-checkbox-control__input` )
 		.evaluate( node => node.classList.contains( 'is-checked' ) );
 }
 
