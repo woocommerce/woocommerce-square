@@ -17,6 +17,8 @@ test( 'Connect a Square account', async ( { page } ) => {
 		.getByTestId( 'sandbox-token-field' )
 		.fill( process.env.SQUARE_ACCESS_TOKEN );
 
+	await saveSquareSettings( page );
+
 	await expect( await page.getByTestId( 'business-location-field' ) ).toBeVisible();
 
 	await page
