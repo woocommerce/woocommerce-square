@@ -818,7 +818,7 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Ajax callback for locations.
 	 *
-	 * @since x.x.x
+	 * @since 4.7.0
 	 */
 	public function get_locations_ajax_callback() {
 		check_ajax_referer( 'wc_square_settings', 'security' );
