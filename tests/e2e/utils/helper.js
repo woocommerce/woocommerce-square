@@ -503,6 +503,7 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 
 export async function visitOnboardingPage( page ) {
 	await page.goto( '/wp-admin/admin.php?page=woocommerce-square-onboarding' );
+	await page.locator( '.woo-square-loader' ).waitFor( { state: 'detached' } );
 }
 
 export async function isToggleChecked( page, selector ) {
