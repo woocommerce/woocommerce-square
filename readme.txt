@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.7.0 - 2024-06-25 =
+= 4.7.0 - 2024-06-27 =
 * Add - New Merchant Onboarding experience with a new wizard flow & settings pages.
 * Add - Support for WooCommerce Product Blocks.
 * Dev - Bump WooCommerce "tested up to" version 9.0.
