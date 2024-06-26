@@ -112,6 +112,18 @@ jobs:
           recreate: true
           path: phpstan-result.txt
 
+      - name: Run PHPCompat test
+        if: "${{ inputs.tests == 'phpcompat' || contains(github.event.pull_request.labels.*.name, 'needs: qit phpcompat test') && ( success() || failure() ) }}"
+        id: run-phpcompat-test
+        run: ./vendor/bin/qit run:phpcompatibility ${{ github.event.repository.name }} --zip=${{ github.event.repository.name }}.zip --wait > phpcompat-result.txt
+
+      - uses: marocchino/sticky-pull-request-comment@v2
+        if: ${{ failure() && steps.run-phpcompat-test.conclusion == 'failure' }}
+        with:
+          header: QIT PHPCompat result
+          recreate: true
+          path: phpcompat-result.txt
+
       - name: Run security test
         if: "${{ inputs.tests == 'security' || contains(github.event.pull_request.labels.*.name, 'needs: qit security test') && ( success() || failure() ) }}"
         id: run-security-test
