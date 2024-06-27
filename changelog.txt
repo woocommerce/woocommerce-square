@@ -1,5 +1,12 @@
 *** WooCommerce Square Changelog ***
 
+= 4.7.0 - 2024-06-27 =
+* Add - New Merchant Onboarding experience with a new wizard flow & settings pages.
+* Add - Support for WooCommerce Product Blocks.
+* Dev - Bump WooCommerce "tested up to" version 9.0.
+* Dev - Bump WooCommerce minimum supported version to 8.8.
+* Dev - Bump WordPress minimum supported version to 6.4.
+
 = 4.6.3 - 2024-06-17 =
 * Add - ESLint GitHub Action workflow to enforce ESLint rules on pull requests.
 * Dev - Bump Square PHP SDK version from `29.0.0.20230720` to `35.1.0.20240320`.

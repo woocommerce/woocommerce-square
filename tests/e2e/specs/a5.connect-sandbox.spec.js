@@ -1,19 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { isToggleChecked, saveSquareSettings } from '../utils/helper';
+import { saveSquareSettings } from '../utils/helper';
 
 test( 'Connect a Square account', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
 
 	await new Promise( ( resolve ) => setTimeout( resolve, 1000 ) );
 
-	// Skip test if already connected to sandbox.
-	test.skip( await page.getByTestId( 'environment-selection-field' ).hasAttribute( 'value', 'yes' ) );
-
-	if ( ! await page.getByTestId( 'environment-selection-field' ).hasAttribute( 'value', 'yes' ) ) {
-		await page
+	await page
 		.getByTestId( 'environment-selection-field' )
 		.selectOption( { label: 'Sandbox' } );
-	}
 
 	await page
 		.getByTestId( 'sandbox-application-id-field' )
@@ -22,8 +17,7 @@ test( 'Connect a Square account', async ( { page } ) => {
 		.getByTestId( 'sandbox-token-field' )
 		.fill( process.env.SQUARE_ACCESS_TOKEN );
 
-
-	await page.getByTestId( 'connect-to-square-button' ).click();
+	await saveSquareSettings( page );
 
 	await expect( await page.getByTestId( 'business-location-field' ) ).toBeVisible();
 

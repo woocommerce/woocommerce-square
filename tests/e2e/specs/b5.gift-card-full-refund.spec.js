@@ -22,11 +22,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=gift_cards_pay'
 	);
 
-	if ( ! await isToggleChecked( page, '.gift-card-gateway-toggle-field' ) ) {
-		await page
-			.locator( '.gift-card-gateway-toggle-field' )
-			.click();
-	}
+	await page.getByTestId( 'gift-card-gateway-toggle-field' ).check();
 
 	await savePaymentGatewaySettings( page );
 

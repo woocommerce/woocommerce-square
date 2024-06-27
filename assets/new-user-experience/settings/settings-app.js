@@ -103,7 +103,7 @@ export const SettingsApp = () => {
 					value={enable_sandbox}
 					onChange={(value) => {
 						setEnvUpdated(true);
-						setSquareSettingData({ value });
+						setSquareSettingData({ enable_sandbox: value });
 					}}
 					options={[
 						{
