@@ -77,6 +77,7 @@ class Product_Editor_Compatibility {
 		$data['sor']                       = wc_square()->get_settings_handler()->get_system_of_record();
 		$data['fetch_stock_nonce']         = wp_create_nonce( 'fetch-product-stock-with-square' );
 		$data['stock_quantity']            = $product->get_stock_quantity();
+		$data['is_gift_card']              = Product::is_gift_card( $product ) ? 'yes' : 'no';
 		$response->set_data( $data );
 
 		return $response;
@@ -85,12 +86,14 @@ class Product_Editor_Compatibility {
 	/**
 	 * Saves custom data to product metadata.
 	 *
-	 * @param WC_Product      $product The product object.
-	 * @param WP_REST_Request $request The request object.
+	 * @param \WC_Product      $product The product object.
+	 * @param \WP_REST_Request $request The request object.
 	 */
 	public function process_data_before_save( $product, $request ) {
 		$is_square_synced = $request->get_param( 'is_square_synced' );
 		$stock_quantity   = $request->get_param( 'stock_quantity' );
+		$is_gift_card     = $request->get_param( 'is_gift_card' );
+		$is_virtual       = $request->get_param( 'virtual' );
 
 		if ( ! is_null( $is_square_synced ) ) {
 			if ( $is_square_synced ) {
@@ -103,6 +106,20 @@ class Product_Editor_Compatibility {
 		if ( ! is_null( $stock_quantity ) && ! empty( $stock_quantity ) ) {
 			$product->set_stock_quantity( $stock_quantity );
 		}
+
+		if ( 'yes' === $is_gift_card && ( is_null( $is_virtual ) || $is_virtual ) ) {
+			$product->update_meta_data( Product::SQUARE_GIFT_CARD_KEY, 'yes' );
+			$product->set_virtual( true );
+			$product->set_sold_individually( 'yes' );
+			$product->set_tax_status( 'none' );
+		} elseif ( 'no' === $is_gift_card || ! $is_virtual ) {
+			$product->delete_meta_data( Product::SQUARE_GIFT_CARD_KEY );
+			$product->set_virtual( false );
+			$product->set_sold_individually( 'no' );
+			$product->set_tax_status( 'taxable' );
+		}
+
+		$product->save();
 	}
 
 	/**
@@ -112,6 +129,19 @@ class Product_Editor_Compatibility {
 	public function add_sync_with_square_control( $basic_details_field ) {
 		$basic_details_field->add_block(
 			array(
+				'id'             => '_square_gift_card',
+				'blockName'      => 'woocommerce/product-checkbox-field',
+				'attributes'     => array(
+					'title'          => __( 'Square Gift Card', 'woocommerce-square' ),
+					'label'          => __( 'Enable to create this product as a gift card', 'woocommerce-square' ),
+					'property'       => 'is_gift_card',
+					'checkedValue'   => 'yes',
+					'uncheckedValue' => 'no',
+				),
+			)
+		);
+		$basic_details_field->add_block(
+			array(
 				'id'             => '_wc_square_synced',
 				'blockName'      => 'woocommerce-square/sync-with-square-field',
 				'attributes'     => array(
@@ -119,7 +149,7 @@ class Product_Editor_Compatibility {
 				),
 				'hideConditions' => array(
 					array(
-						'expression' => '!editedProduct.is_sync_enabled',
+						'expression' => '!editedProduct.is_sync_enabled || editedProduct.is_gift_card === "yes"',
 					),
 				),
 			)

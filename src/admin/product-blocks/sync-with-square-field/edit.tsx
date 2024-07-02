@@ -20,10 +20,18 @@ export function Edit({ attributes, context: { postType } } ) {
 	const [ editLink ] = useProductEntityProp( 'edit_link', postType );
 	const [ product_id ] = useProductEntityProp( 'id', postType );
 	const [ product_type ] = useProductEntityProp( 'type', postType );
+	const [ is_gift_card ] = useProductEntityProp( 'is_gift_card', postType );
+
 	const variations = useSelect( ( select ) => {
 		const { getProductVariations } = select( 'wc/admin/products/variations' );
 		return getProductVariations( { product_id } );
 	} );
+
+	useEffect( () => {
+		if ( is_gift_card ) {
+			setIsSquareSynced( false );
+		}
+	}, [ is_gift_card ] );
 
 	useEffect( () => {
 		if ( 'simple' === product_type && ! sku.length ) {

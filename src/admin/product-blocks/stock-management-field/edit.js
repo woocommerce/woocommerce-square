@@ -21,8 +21,15 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 	const [ isSyncEnabled ] = useProductEntityProp( 'is_sync_enabled', { postType } );
 	const [ sku ] = useProductEntityProp( 'sku', { postType } );
 	const [ sor ] = useProductEntityProp( 'sor', { postType } );
+	const [ is_gift_card ] = useProductEntityProp( 'is_gift_card', { postType } );
 	let label = __( 'Track quantity for this product', 'woocommerce' );
 	let helpText = '';
+
+	useEffect( () => {
+		if ( is_gift_card ) {
+			setIsSquareSynced( false );
+		}
+	}, [ is_gift_card ] );
 
 	useEffect( () => {
 		if ( sku.length ) {

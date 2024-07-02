@@ -29,7 +29,7 @@ export function Edit( {
 	const [ manageStock ] = useProductEntityProp( 'manage_stock', context.postType );
 	const [ stockQuantity, setStockQuantity ] = useProductEntityProp( 'stock_quantity', context.postType );
 	const [ productId ] = useProductEntityProp( 'id', context.postType );
-	const [ isSquareSynced ] = useProductEntityProp( 'is_square_synced', context.postType );
+	const [ isSquareSynced, setIsSquareSynced ] = useProductEntityProp( 'is_square_synced', context.postType );
 	const [ isSyncEnabled ] = useProductEntityProp( 'is_sync_enabled', context.postType );
 	const [ isInventorySyncEnabled, setIsInventorySyncEnabled ] = useProductEntityProp( 'is_inventory_sync_enabled', context.postType );
 	const [ fetchStockNonce ] = useProductEntityProp( 'fetch_stock_nonce', context.postType );
@@ -39,6 +39,7 @@ export function Edit( {
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
 	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
 	const [ canManageStockInSquare, setCanManageStockInSquare ] = useState( null );
+	const [ is_gift_card ] = useProductEntityProp( 'is_gift_card', context.postType );
 	const isPublished = 'publish' === productStatus;
 
 	const {
@@ -57,6 +58,12 @@ export function Edit( {
 		},
 		[ manageStock, stockQuantity ]
 	);
+
+	useEffect( () => {
+		if ( is_gift_card ) {
+			setIsSquareSynced( false );
+		}
+	}, [ is_gift_card ] );
 
 	useEffect( () => {
 		if ( manageStock && stockQuantity === null ) {
