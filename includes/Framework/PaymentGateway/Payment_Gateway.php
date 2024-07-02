@@ -508,10 +508,10 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$handle = 'wc-square-payment-gateway-payment-form';
 
 		// Frontend JS
-		wp_enqueue_script( $handle, $this->get_plugin()->get_plugin_url() . '/assets/js/frontend/' . $handle . '.min.js', array( 'jquery-payment' ), Plugin::VERSION, true );
+		wp_enqueue_script( $handle, $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/' . $handle . '.js', array( 'jquery-payment' ), Plugin::VERSION, true );
 
 		// Frontend CSS
-		wp_enqueue_style( $handle, $this->get_plugin()->get_plugin_url() . '/assets/css/frontend/' . $handle . '.min.css', array(), Plugin::VERSION );
+		wp_enqueue_style( $handle, $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/' . $handle . '.css', array(), Plugin::VERSION );
 
 		// localized JS params
 		$this->localize_script( $handle, $this->get_payment_form_js_localized_script_params() );
@@ -573,13 +573,13 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	protected function enqueue_gateway_assets() {
 
 		$handle   = $this->get_gateway_js_handle();
-		$js_path  = $this->get_plugin()->get_plugin_path() . '/assets/js/frontend/' . $handle . '.min.js';
-		$css_path = $this->get_plugin()->get_plugin_path() . '/assets/css/frontend/' . $handle . '.min.css';
+		$js_path  = $this->get_plugin()->get_plugin_path() . '/build/assets/frontend/' . $handle . '.js';
+		$css_path = $this->get_plugin()->get_plugin_path() . '/build/assets/frontend/' . $handle . '.css';
 
 		// JS
 		if ( is_readable( $js_path ) ) {
 
-			$js_url = $this->get_plugin()->get_plugin_url() . '/assets/js/frontend/' . $handle . '.min.js';
+			$js_url = $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/' . $handle . '.js';
 
 			/**
 			 * Concrete Payment Gateway JS URL
@@ -599,7 +599,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		// CSS
 		if ( is_readable( $css_path ) ) {
 
-			$css_url = $this->get_plugin()->get_plugin_url() . '/assets/css/frontend/' . $handle . '.min.css';
+			$css_url = $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/' . $handle . '.css';
 
 			/**
 			 * Concrete Payment Gateway CSS URL

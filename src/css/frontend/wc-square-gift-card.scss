@@ -1,0 +1,161 @@
+#square-gift-card-wrapper {
+	padding: 0.75rem 0;
+	min-height: 155px;
+	overflow: hidden;
+
+	& + #payment > div.place-order:nth-of-type(1) {
+		margin-top: 0;
+	}
+}
+
+#square-gift-card-application {
+	display: none;
+	flex-wrap: wrap;
+}
+
+#square-gift-card-apply-button-wrapper {
+	padding-left: 0.5rem;
+
+	button {
+		height: 52px;
+		padding-left: 18px;
+		padding-right: 18px;
+	}
+}
+
+#square-gift-card-title {
+	width: 100%;
+	margin-bottom: 0.5rem;
+}
+
+#square-gift-card-fields-input {
+	flex: 1;
+}
+
+#square-gift-card-response {
+	display: none;
+	flex-flow: column wrap;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+
+	#square-gift-card-funds-message {
+		margin-bottom: 0 !important;
+	}
+
+	#square-gift-card-balance-info {
+		margin-bottom: 1.5rem;
+	}
+}
+
+#square-gift-card-remove {
+	display: block;
+	margin-top: 13px;
+	font-weight: 600;
+	text-decoration: underline;
+	color: #0D9CD9 !important;
+}
+
+#square-split-payment {
+	margin-top: 1rem;
+}
+
+#square-split-payment-separator {
+	margin-top: 1rem;
+}
+
+#square-gift-card-user-controls {
+	display: none;
+}
+
+.sq-card-wrapper {
+	min-width: auto !important;
+}
+
+.force-hide {
+	display: none !important;
+}
+
+#square-gift-card-buying-options {
+	margin: 0 0 2rem 0;
+	padding: 0 0.25rem;
+
+	input[type="radio"] {
+		cursor: pointer;
+		margin-right: 0.5rem;
+	}
+
+	& > label {
+		display: inline-flex;
+		cursor: pointer;
+		margin-bottom: 0.5rem;
+	}
+
+	label[for="square-gift-card-buying-option__new"] {
+		margin-right: 1rem;
+	}
+}
+
+#square-gift-card-email-to-wrapper,
+#square-gift-card-gan-wrapper {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+
+	label {
+		display: block;
+		margin-bottom: 0.5rem;
+	}
+
+	input {
+		width: 100%;
+	}
+
+	.wc-square-required-indicator {
+		color: var(--wp--preset--color--vivid-red);
+	}
+
+	.square-gift-card-field-wrapper {
+		margin-bottom: 1rem;
+	}
+}
+
+.square-gift-card-response {
+	display: none;
+	margin-bottom: 32px;
+
+	&__header {
+		position: relative;
+		padding: 15px;
+		padding-left: 40px;
+		color: #fff;
+
+		&:before {
+			position: absolute;
+			top: 50%;
+			left: 15px;
+			transform: translate( 0, -50% );
+			font-family: "Font Awesome 5 Free";
+		}
+
+		&--success {
+			background-color: #3B8052;
+
+			&:before {
+				content: '';
+			}
+		}
+
+		&--fail {
+			background-color: #DC3232;
+
+			&:before {
+				content: '';
+			}
+		}
+	}
+
+	&__content {
+		border: 1px solid rgba(0, 0, 0, 0.3);
+		padding: 17px 15px;
+	}
+}

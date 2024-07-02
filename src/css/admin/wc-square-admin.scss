@@ -1,0 +1,74 @@
+#wc-square-sync-page {
+
+	h2 {
+		margin-top: 20px;
+	}
+
+	#wc-square_clear-sync-records {
+		margin-bottom: 20px;
+	}
+}
+
+.wc_square_table {
+
+	tr:nth-child(2n) td,
+	tr:nth-child(2n) th {
+		background: #F9F9F9;
+	}
+
+	&.sor {
+		margin-bottom: 20px;
+	}
+
+	&.records {
+
+		.type {
+
+			cursor: default;
+
+			mark {
+
+				background: transparent;
+				border: none;
+				box-shadow: none;
+				display: block;
+				margin: 5px 0;
+				padding: 0;
+
+				span {
+					border-radius: 3px;
+					background: #C8D7E1;
+					color: #2E4453;
+					padding: 6px 10px;
+				}
+
+				&.alert span {
+					background: #EBA3A3;
+					color: #761919;
+				}
+
+				&.notice span {
+					background: #F8DDA7;
+					color: #94660c;
+				}
+
+				&.info span {
+					background: #E5E5E5;
+					color: #777777;
+				}
+
+				&.resolved span {
+					background: #C6E1C6;
+					color: #5B841B;
+				}
+			}
+		}
+
+		.actions {
+
+			.dashicons {
+				margin-top: 3px;
+			}
+		}
+	}
+}

@@ -337,7 +337,7 @@ class Gift_Card extends Payment_Gateway {
 		if ( is_checkout() || is_product() || has_block( 'woocommerce/single-product' ) ) {
 			wp_enqueue_script(
 				'wc-square-gift-card',
-				$this->get_plugin()->get_plugin_url() . '/assets/js/frontend/gift-card.min.js',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-gift-card.js',
 				array( 'jquery' ),
 				Plugin::VERSION,
 				true
@@ -349,7 +349,7 @@ class Gift_Card extends Payment_Gateway {
 		if ( is_checkout() || is_product() || has_block( 'woocommerce/single-product' ) ) {
 			wp_enqueue_style(
 				'wc-square-gift-card',
-				$this->get_plugin()->get_plugin_url() . '/assets/css/frontend/wc-square-gift-card.min.css',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-gift-card.css',
 				array(),
 				Plugin::VERSION
 			);
