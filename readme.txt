@@ -1,10 +1,10 @@
 === WooCommerce Square ===
 Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
-Requires at least: 6.3
+Requires at least: 6.4
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 4.6.3
+Stable tag: 4.7.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,13 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.7.0 - 2024-06-27 =
+* Add - New Merchant Onboarding experience with a new wizard flow & settings pages.
+* Add - Support for WooCommerce Product Blocks.
+* Dev - Bump WooCommerce "tested up to" version 9.0.
+* Dev - Bump WooCommerce minimum supported version to 8.8.
+* Dev - Bump WordPress minimum supported version to 6.4.
 
 = 4.6.3 - 2024-06-17 =
 * Add - ESLint GitHub Action workflow to enforce ESLint rules on pull requests.

@@ -5,6 +5,7 @@ import {
 	doesProductExist,
 	createProduct,
 	clearCart,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -26,17 +27,17 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 
 test( 'Verify the Digital Wallet Button type and color settings', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
-	await page.locator( '#woocommerce_square_credit_card_enable_digital_wallets' ).check();
-	await page.locator( '#woocommerce_square_credit_card_digital_wallets_google_pay_button_color' ).selectOption( { value: 'black' } );
-	await page.locator( '.woocommerce-save-button' ).click();
+	await page.getByTestId( 'digital-wallet-gateway-toggle-field' ).check();
+	await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ).selectOption( { value: 'black' } );
+	await savePaymentGatewaySettings( page );
 
 	await page.goto( '/simple-product/' );
 	await expect( await page.locator( '.gpay-card-info-container' ) ).toHaveClass( /black/ );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
-	await page.locator( '#woocommerce_square_credit_card_enable_digital_wallets' ).check();
-	await page.locator( '#woocommerce_square_credit_card_digital_wallets_google_pay_button_color' ).selectOption( { value: 'white' } );
-	await page.locator( '.woocommerce-save-button' ).click();
+	await page.getByTestId( 'digital-wallet-gateway-toggle-field' ).check();
+	await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ).selectOption( { value: 'white' } );
+	await savePaymentGatewaySettings( page );
 
 	await page.goto( '/simple-product/' );
 	await expect( await page.locator( '.gpay-card-info-container' ) ).toHaveClass( /white/ );
