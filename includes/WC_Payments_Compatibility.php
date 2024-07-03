@@ -13,6 +13,12 @@ use WooCommerce\Square\Handlers\Product;
  * @version x.x.x
  */
 class WC_Payments_Compatibility {
+        
+        /**
+	 * Initialize the WooPayments Compatibility class.
+	 *
+	 * @since x.x.x
+	 */
 	public function init() {
 		add_filter( 'wcpay_payment_request_is_product_supported', array( $this, 'wcpay_is_product_supported' ), 10, 2 );
 		add_filter( 'wcpay_woopay_button_is_product_supported', array( $this, 'wcpay_is_product_supported' ), 10, 2 );
@@ -68,7 +74,7 @@ class WC_Payments_Compatibility {
 	/**
 	 * Filter whether to display WooPay express pay buttons on cart pages.
 	 *
-	 * Hide the express WooPay button on cart pages containing bookings.
+	 * Hide the express WooPay button on cart pages containing Square Gift Cards.
 	 *
 	 * Runs on the `wcpay_platform_checkout_button_are_cart_items_supported` filter.
 	 *
