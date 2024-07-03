@@ -22,11 +22,11 @@
     "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
     "woorelease": "npm run build",
     "env": "wp-env",
-    "test:env:start": "wp-env start",
-    "test:env:stop": "wp-env stop",
-    "test:env:clean": "wp-env clean",
-    "test:env:destroy": "wp-env destroy",
-    "test:e2e-run": "npx playwright test --config=tests/e2e/config/playwright.config.js"
+    "env:start": "wp-env start",
+    "env:stop": "wp-env stop",
+    "env:clean": "wp-env clean",
+    "env:destroy": "wp-env destroy",
+    "test:e2e": "npx playwright test --config=tests/e2e/config/playwright.config.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.1",
@@ -34,7 +34,8 @@
     "@woocommerce/eslint-plugin": "^2.2.0",
     "@wordpress/env": "^10.0.0",
     "@wordpress/scripts": "^27.9.0",
-    "copy-webpack-plugin": "^12.0.2"
+    "copy-webpack-plugin": "^12.0.2",
+    "dotenv": "^16.4.5"
   },
   "engines": {
     "node": ">=20",

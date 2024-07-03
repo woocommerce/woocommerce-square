@@ -43,12 +43,12 @@ jobs:
         run: ./tests/bin/set-core-version.js WordPress/WordPress#master
 
       - name: Setup E2E environment
-        run: npm run test:env:start
+        run: npm run env:start
 
       - name: Run E2E tests
         id: square_e2e_tests
         if: ${{ github.event_name == 'pull_request' }}
-        run: npm run test:e2e-run
+        run: npm run test:e2e
 
       - name: Update Success Label
         if: |
@@ -94,7 +94,7 @@ jobs:
 
       - name: Run E2E Smoke Test
         if: ${{ github.event_name == 'push' }}
-        run: npm run test:e2e-run
+        run: npm run test:e2e
 
       - uses: actions/upload-artifact@v3
         if: always()
