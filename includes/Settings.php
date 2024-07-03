@@ -208,6 +208,10 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function show_visit_wizard_notice() {
+		if ( ! wc_square()->get_dependency_handler()->meets_php_dependencies() ) {
+			return;
+		}
+
 		if ( get_option( 'wc_square_connected_page_visited' ) ) {
 			return;
 		}

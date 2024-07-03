@@ -401,18 +401,19 @@ class Plugin extends Payment_Gateway_Plugin {
 			}
 		} else {
 
-			if ( $this->is_plugin_settings() ) {
+			$instruction = '';
 
-				$instruction = __( 'To get started, connect with Square.', 'woocommerce-square' );
-
-			} else {
-
-				$instruction = sprintf(
-					/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-					__( 'To get started, %1$sconnect with Square &raquo;%2$s', 'woocommerce-square' ),
-					'<a href="' . esc_url( $this->get_settings_url() ) . '">',
-					'</a>'
-				);
+			if ( wc_square()->get_dependency_handler()->meets_php_dependencies() ) {
+				if ( $this->is_plugin_settings() ) {
+					$instruction = __( 'To get started, connect with Square.', 'woocommerce-square' );
+				} else {
+					$instruction = sprintf(
+						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
+						__( 'To get started, %1$sconnect with Square &raquo;%2$s', 'woocommerce-square' ),
+						'<a href="' . esc_url( $this->get_settings_url() ) . '">',
+						'</a>'
+					);
+				}
 			}
 
 			$message = sprintf(
