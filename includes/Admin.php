@@ -101,8 +101,8 @@ class Admin {
 		// load admin scripts.
 		add_action(
 			'admin_enqueue_scripts',
-			function() {
-				$this->load_scripts_styles();
+			function ( $hook ) {
+				$this->load_scripts_styles( $hook );
 			}
 		);
 	}
@@ -111,9 +111,11 @@ class Admin {
 	/**
 	 * Loads and enqueues admin scripts and styles.
 	 *
+	 * @param string $hook The current admin page.
+	 *
 	 * @since 2.0.0
 	 */
-	private function load_scripts_styles() {
+	private function load_scripts_styles( $hook ) {
 		global $typenow;
 
 		if ( 'product' === $typenow ) {
@@ -212,7 +214,90 @@ class Admin {
 					),
 				)
 			);
+
+			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/settings.asset.php';
+
+			if ( ! file_exists( $asset_file ) ) {
+				return;
+			}
+
+			$asset = include $asset_file;
+
+			wp_enqueue_script(
+				'woocommerce-square-settings-js',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
+
+			wp_localize_script(
+				'woocommerce-square-settings-js',
+				'wcSquareSettings',
+				array(
+					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'  => home_url(),
+					'adminUrl' => admin_url(),
+					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				)
+			);
+
+			wp_enqueue_style(
+				'woocommerce-square-settings-css',
+				WC_SQUARE_PLUGIN_URL . 'build/settings.css',
+				array(),
+				$asset['version'],
+			);
+		} elseif ( 'woocommerce_page_woocommerce-square-onboarding' === $hook ) {
+			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
+
+			if ( ! file_exists( $asset_file ) ) {
+				return;
+			}
+
+			$asset = include $asset_file;
+
+			wp_enqueue_script(
+				'woocommerce-square-onboarding-js',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.js',
+				$asset['dependencies'],
+				$asset['version'],
+				array(
+					'in_footer' => true,
+				)
+			);
+
+			wp_localize_script(
+				'woocommerce-square-onboarding-js',
+				'wcSquareSettings',
+				array(
+					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'  => home_url(),
+					'adminUrl' => admin_url(),
+					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				)
+			);
+
+			wp_enqueue_style(
+				'woocommerce-square-onboarding-css',
+				WC_SQUARE_PLUGIN_URL . 'build/onboarding.css',
+				array(),
+				$asset['version'],
+			);
+
+			wp_localize_script(
+				'woocommerce-square-onboarding-js',
+				'wcSquareOnboarding',
+				array(
+					'plugin_version' => WC_SQUARE_PLUGIN_VERSION,
+					'is_mobile'      => wp_is_mobile(),
+				)
+			);
 		}
+
+		wp_enqueue_style( 'wp-components' );
 	}
 
 

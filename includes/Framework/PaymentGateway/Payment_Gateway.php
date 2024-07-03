@@ -77,6 +77,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Credit card payment type */
 	const PAYMENT_TYPE_CASH_APP_PAY = 'cash_app_pay';
 
+	/** Credit card payment type */
+	const PAYMENT_TYPE_GIFT_CARD_PAY = 'enable_gift_cards_pay';
+
 	/** Products feature */
 	const FEATURE_PRODUCTS = 'products';
 
@@ -115,9 +118,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 	/** Gateway partial capture transaction feature */
 	const FEATURE_PARTIAL_CAPTURE = 'partial_capture';
-
-	/** Display detailed customer decline messages on checkout */
-	const FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES = 'customer_decline_messages';
 
 	/** Refunds feature */
 	const FEATURE_REFUNDS = 'refunds';
@@ -242,9 +242,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var array configuration option: list of buttons that are hidden on the front end. */
 	protected $digital_wallets_hide_button_options;
 
-	/** @var string gift cards section title field. */
-	protected $gift_card_settings;
-
 	/** @var string configuration option: whether gift cards is enabled. */
 	protected $enable_gift_cards;
 
@@ -256,6 +253,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 	/** @var string whether apple pay domain registration was attempted. */
 	protected $apple_pay_domain_registration_attempted;
+
+	/** @var string Gift Card settings. */
+	protected $gift_card_settings;
+
+	/** @var string order note for the voided order. */
+	protected $voided_order_message;
 
 	/**
 	 * Initialize the gateway
@@ -340,6 +343,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// default icon filter  @see WC_Payment_Gateway::$icon
 		$this->icon = apply_filters( 'wc_' . $this->get_id() . '_icon', '' );
+
+		$square_settings = get_option( 'wc_square_settings', array() );
+
+		$this->debug_mode = $square_settings['debug_mode'] ?? 'off';
+
+		$this->enable_customer_decline_messages = $square_settings['enable_customer_decline_messages'] ?? 'no';
 
 		// Load the form fields
 		$this->init_form_fields();
@@ -1207,32 +1216,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			$this->form_fields = $this->add_tokenization_form_fields( $this->form_fields );
 		}
 
-		// add "detailed customer decline messages" option if the feature is supported
-		if ( $this->supports( self::FEATURE_DETAILED_CUSTOMER_DECLINE_MESSAGES ) ) {
-			$this->form_fields['enable_customer_decline_messages'] = array(
-				'title'   => esc_html__( 'Detailed Decline Messages', 'woocommerce-square' ),
-				'type'    => 'checkbox',
-				'label'   => esc_html__( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
-				'default' => 'no',
-			);
-		}
-
-		// debug mode
-		$this->form_fields['debug_mode'] = array(
-			'title'   => esc_html__( 'Debug Mode', 'woocommerce-square' ),
-			'type'    => 'select',
-			/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-			'desc'    => sprintf( esc_html__( 'Show Detailed Error Messages and API requests/responses on the checkout page and/or save them to the %1$sdebug log%2$s', 'woocommerce-square' ), '<a href="' . Square_Helper::get_wc_log_file_url( $this->get_id() ) . '">', '</a>' ),
-			'default' => self::DEBUG_MODE_OFF,
-			'options' => array(
-				self::DEBUG_MODE_OFF      => esc_html__( 'Off', 'woocommerce-square' ),
-				self::DEBUG_MODE_CHECKOUT => esc_html__( 'Show on Checkout Page', 'woocommerce-square' ),
-				self::DEBUG_MODE_LOG      => esc_html__( 'Save to Log', 'woocommerce-square' ),
-				/* translators: show debugging information on both checkout page and in the log */
-				self::DEBUG_MODE_BOTH     => esc_html__( 'Both', 'woocommerce-square' ),
-			),
-		);
-
 		// if there is more than just the production environment available
 		if ( count( $this->get_environments() ) > 1 ) {
 			$this->form_fields = $this->add_environment_form_fields( $this->form_fields );
@@ -1648,7 +1631,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$order->customer_id = '';
 
 		// logged in customer?
-		if ( 0 != $order->get_user_id() && false !== ( $customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) ) ) ) {
+		$customer_id = $this->get_customer_id( $order->get_user_id(), array( 'order' => $order ) );
+		if ( 0 !== $order->get_user_id() && false !== $customer_id ) {
 			$order->customer_id = $customer_id;
 		}
 
@@ -2393,7 +2377,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order WooCommerce order.
 	 */
 	public function maybe_refund_gift_card( $order ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled in WooCommerce core.
 		$line_item_qtys   = isset( $_POST['line_item_qtys'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_qtys'] ) ), true ) : array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is handled in WooCommerce core.
 		$line_item_totals = isset( $_POST['line_item_totals'] ) ? json_decode( sanitize_text_field( wp_unslash( $_POST['line_item_totals'] ) ), true ) : array();
 		$line_items       = array();
 		$item_ids         = array_unique( array_merge( array_keys( $line_item_qtys ), array_keys( $line_item_totals ) ) );
@@ -2689,7 +2675,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	protected function process_void( \WC_Order $order ) {
 
 		// partial voids are not supported
-		if ( $order->refund->amount != $order->get_total() ) {
+		if ( $order->refund->amount !== $order->get_total() ) {
 			return new \WP_Error( 'wc_' . $this->get_id() . '_void_error', esc_html__( 'Oops, you cannot partially void this order. Please use the full order amount.', 'woocommerce-square' ), 500 );
 		}
 
@@ -3044,7 +3030,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$this->update_order_meta( $order, 'customer_id', $customer_id );
 
 		// update the user
-		if ( 0 != $user_id ) {
+		if ( 0 !== $user_id ) {
 			$this->update_customer_id( $user_id, $customer_id );
 		}
 	}
@@ -3095,7 +3081,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( ! empty( $order->payment->exp_month ) && ! empty( $order->payment->exp_year ) ) {
 
 			$message .= ' ' . sprintf(
-				/** translators: Placeholders: %s - credit card expiry date */
+				/* translators: Placeholders: %s - credit card expiry date */
 				esc_html__( '(expires %s)', 'woocommerce-square' ),
 				$order->payment->exp_month . '/' . substr( $order->payment->exp_year, -2 )
 			);
@@ -3919,23 +3905,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Safely get and trim data from $_REQUEST
-	 *
-	 * @since 3.0.0
-	 * @param string $key array key to get from $_REQUEST array
-	 * @return string value from $_REQUEST or blank string if $_REQUEST[ $key ] is not set
-	 */
-	protected function get_request( $key ) {
-
-		if ( isset( $_REQUEST[ $key ] ) ) {
-			return trim( $_REQUEST[ $key ] );
-		}
-
-		return '';
-	}
-
-
-	/**
 	 * Add API request logging for the gateway. The main plugin class typically handles this, but the payment
 	 * gateway plugin class no-ops the method so each gateway's requests can be logged individually (e.g. credit card)
 	 * and make use of the payment gateway-specific add_debug_message() method
@@ -4677,7 +4646,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * direct communication
 	 *
 	 * @since 3.0.0
-	 * @return \WooCommerce\Square\Gateway\API the payment gateway API instance
+	 * @return \WooCommerce\Square\Gateway\API|void the payment gateway API instance
 	 */
 	public function get_api() {
 

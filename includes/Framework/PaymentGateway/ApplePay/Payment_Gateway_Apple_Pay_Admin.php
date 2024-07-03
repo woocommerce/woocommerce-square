@@ -144,7 +144,7 @@ class Payment_Gateway_Apple_Pay_Admin {
 				'title'   => __( 'Apple Merchant ID', 'woocommerce-square' ),
 				'type'    => 'text',
 				'desc'  => sprintf(
-					/** translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
+					/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
 					__( 'This is found in your %1$sApple developer account%2$s', 'woocommerce-square' ),
 					'<a href="https://developer.apple.com" target="_blank">', '</a>'
 				),
@@ -326,7 +326,7 @@ class Payment_Gateway_Apple_Pay_Admin {
 		if ( false !== $this->handler->get_cert_path() && ! $this->handler->is_cert_configured() ) {
 
 			$errors[] = sprintf(
-				/** translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag */
+				/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag */
 				__( 'Your %1$sMerchant Identity Certificate%2$s cannot be found. Please check your path configuration.', 'woocommerce-square' ),
 				'<strong>', '</strong>'
 			);

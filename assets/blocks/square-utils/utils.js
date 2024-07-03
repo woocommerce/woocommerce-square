@@ -46,6 +46,7 @@ const getSquareServerData = () => {
 		paymentRequestNonce: squareData.payment_request_nonce || '',
 		googlePayColor: squareData.google_pay_color || 'black',
 		applePayColor: squareData.apple_pay_color || 'black',
+		applePayType: squareData.apple_pay_type || 'buy',
 		hideButtonOptions: squareData.hide_button_options || [],
 	};
 
@@ -55,7 +56,7 @@ const getSquareServerData = () => {
 /**
  * Handles errors received from Square requests
  *
- * @param {Array} errors
+ * @param {Array}  errors
  * @param {Object} response
  */
 const handleErrors = (errors, response = { logs: [], notices: [] }) => {

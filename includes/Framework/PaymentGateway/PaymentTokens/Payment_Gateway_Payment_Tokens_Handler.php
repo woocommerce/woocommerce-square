@@ -197,7 +197,7 @@ class Payment_Gateway_Payment_Tokens_Handler {
 				$message .= ' ' . sprintf( esc_html__( 'Transaction ID %s', 'woocommerce-square' ), $response->get_transaction_id() );
 			}
 
-			throw new \Exception( $message );
+			throw new \Exception( esc_html( $message ) );
 		}
 
 		return $order;
@@ -212,7 +212,6 @@ class Payment_Gateway_Payment_Tokens_Handler {
 	 * @param int $user_id user identifier
 	 * @param Payment_Gateway_Payment_Token $token the token
 	 * @param string|null $environment_id optional environment id, defaults to plugin current environment
-	 * @return bool|int false if token not added, user meta ID if added
 	 */
 	public function add_token( $user_id, $token, $environment_id = null ) {
 		$payment_token = new Square_Credit_Card_Payment_Token();

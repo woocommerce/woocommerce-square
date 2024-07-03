@@ -2,9 +2,9 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 4.6.2
+ * Version: 4.7.0
  * Plugin URI: https://woocommerce.com/products/square/
- * Requires at least: 6.3
+ * Requires at least: 6.4
  * Tested up to: 6.5
  * Requires PHP: 7.4
  * PHP tested up to: 8.3
@@ -22,14 +22,14 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 8.7
- * WC tested up to: 8.9
+ * WC requires at least: 8.8
+ * WC tested up to: 9.0
  */
 
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '4.6.2' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '4.7.0' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
@@ -52,10 +52,10 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_PHP_VERSION = '7.4.0';
 
 	/** minimum WordPress version required by this plugin */
-	const MINIMUM_WP_VERSION = '6.3';
+	const MINIMUM_WP_VERSION = '6.4';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '8.7';
+	const MINIMUM_WC_VERSION = '8.8';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
@@ -80,15 +80,15 @@ class WooCommerce_Square_Loader {
 	 * @since 2.0.0
 	 */
 	protected function __construct() {
-		add_action( 'admin_init', array( $this, 'add_plugin_notices' ) );
 		add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
-
-		// if the environment check fails, don't initialize the plugin.
-		if ( $this->is_environment_compatible() ) {
-			add_action( 'plugins_loaded', array( $this, 'init_plugin' ) );
-			add_action( 'woocommerce_blocks_payment_method_type_registration', array( $this, 'register_payment_method_block_integrations' ), 5, 1 );
-			add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
-		}
+		add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
+		/*
+		 * Bootstrap the extension on plugins_loaded.
+		 *
+		 * This ensures that the extension is loaded after WooCommerce Core and to
+		 * ensure the WC_VERSION constant is defined prior to checking for compatibility.
+		 */
+		add_action( 'plugins_loaded', array( $this, 'init_plugin' ) );
 	}
 
 
@@ -123,7 +123,7 @@ class WooCommerce_Square_Loader {
 	 */
 	public function init_plugin() {
 
-		if ( ! $this->plugins_compatible() ) {
+		if ( ! $this->is_environment_compatible() ) {
 			return;
 		}
 
@@ -139,6 +139,8 @@ class WooCommerce_Square_Loader {
 
 		// fire it up!
 		wc_square();
+
+		add_action( 'woocommerce_blocks_payment_method_type_registration', array( $this, 'register_payment_method_block_integrations' ), 5, 1 );
 	}
 
 
@@ -182,41 +184,11 @@ class WooCommerce_Square_Loader {
 	 * Adds notices for out-of-date WordPress and/or WooCommerce versions.
 	 *
 	 * @since 2.0.0
+	 * @deprecated 4.6.3 Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 */
 	public function add_plugin_notices() {
-
-		if ( ! $this->is_wp_compatible() ) {
-
-			$this->add_admin_notice(
-				'update_wordpress',
-				'error',
-				sprintf(
-					'%s requires WordPress version %s or higher. Please %supdate WordPress &raquo;%s',
-					'<strong>' . self::PLUGIN_NAME .
-					'</strong>',
-					self::MINIMUM_WP_VERSION,
-					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
-					'</a>'
-				)
-			);
-		}
-
-		if ( ! $this->is_wc_compatible() ) {
-
-			$this->add_admin_notice(
-				'update_woocommerce',
-				'error',
-				sprintf(
-					'%1$s requires WooCommerce version %2$s or higher. Please %3$supdate WooCommerce%4$s to the latest version, or %5$sdownload the minimum required version &raquo;%6$s',
-					'<strong>' . self::PLUGIN_NAME . '</strong>',
-					self::MINIMUM_WC_VERSION,
-					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
-					'</a>',
-					'<a href="' . esc_url( 'https://downloads.wordpress.org/plugin/woocommerce.' . self::MINIMUM_WC_VERSION . '.zip' ) . '">',
-					'</a>'
-				)
-			);
-		}
+		_deprecated_function( __METHOD__, '4.6.3', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		$this->is_environment_compatible();
 	}
 
 
@@ -224,12 +196,13 @@ class WooCommerce_Square_Loader {
 	 * Determines if the required plugins are compatible.
 	 *
 	 * @since 2.0.0
+	 * @deprecated 4.6.3 Use \WooCommerce_Square_Loader::is_environment_compatible() instead.
 	 *
 	 * @return bool
 	 */
 	protected function plugins_compatible() {
-
-		return $this->is_wp_compatible() && $this->is_wc_compatible();
+		_deprecated_function( __METHOD__, '4.6.3', '\WooCommerce_Square_Loader::is_environment_compatible()' );
+		return $this->is_environment_compatible();
 	}
 
 
@@ -345,11 +318,13 @@ class WooCommerce_Square_Loader {
 	 * @return bool
 	 */
 	public function is_environment_compatible() {
+		$is_wc_compatible        = $this->is_wc_compatible();
+		$is_wp_compatible        = $this->is_wp_compatible();
 		$is_php_valid            = $this->is_php_version_valid();
 		$is_opcache_config_valid = $this->is_opcache_save_message_enabled();
 		$error_message           = '';
 
-		if ( ! $is_php_valid || ! $is_opcache_config_valid ) {
+		if ( ! $is_php_valid || ! $is_opcache_config_valid || ! $is_wc_compatible || ! $is_wp_compatible ) {
 			$error_message .= sprintf(
 				// translators: plugin name
 				__( '<strong>All features in %1$s have been disabled</strong> due to unsupported settings:<br>', 'woocommerce-square' ),
@@ -374,6 +349,38 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
+		if ( ! $is_wc_compatible ) {
+			if ( ! defined( 'WC_VERSION' ) ) {
+				$error_message .= sprintf(
+					// translators: 1: Minimum required WooCommerce version.
+					__( '&bull;&nbsp;<strong>WooCommerce is not installed: </strong>The plugin requires WooCommerce version %1$s or later be installed.<br>', 'woocommerce-square' ),
+					self::MINIMUM_WC_VERSION
+				);
+			} else {
+				$error_message .= sprintf(
+					// translators: 1: Plugin name, 2: Minimum required WooCommerce version, 3: Opening link to upgrade screen, 4: Closing link, 5: Opening link to download page, 6: Closing link.
+					'&bull;&nbsp;%1$s requires WooCommerce version %2$s or higher. Please %3$supdate WooCommerce%4$s to the latest version, or %5$sdownload the minimum required version &raquo;%6$s<br>',
+					'<strong>' . self::PLUGIN_NAME . '</strong>',
+					self::MINIMUM_WC_VERSION,
+					'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
+					'</a>',
+					'<a href="' . esc_url( $this->get_woocommerce_download_link( 'minimum' ) ) . '">',
+					'</a>'
+				);
+			}
+		}
+
+		if ( ! $is_wp_compatible ) {
+			$error_message .= sprintf(
+				// translators: 1: Plugin name, 2: Minimum required WordPress version, 3: Opening link to upgrade screen, 4: Closing link.
+				'&bull;&nbsp;%s requires WordPress version %s or higher. Please %supdate WordPress &raquo;%s<br>',
+				'<strong>' . self::PLUGIN_NAME . '</strong>',
+				self::MINIMUM_WP_VERSION,
+				'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
+				'</a>'
+			);
+		}
+
 		if ( ! empty( $error_message ) ) {
 			$this->add_admin_notice(
 				'bad_environment',
@@ -382,7 +389,56 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
-		return $is_php_valid && $is_opcache_config_valid;
+		return $is_php_valid && $is_opcache_config_valid && $is_wc_compatible && $is_wp_compatible;
+	}
+
+	/**
+	 * Get the WooCommerce download link for a specific version.
+	 *
+	 * Ensures the download link is correct for major versions of WooCommerce by
+	 * ensuring that specific download links match the tagged version and include
+	 * three parts in the version number.
+	 *
+	 * @since 4.6.3
+	 *
+	 * @param string|int|float $version The version of WooCommerce to get the download link for.
+	 *                                  Accepts a version number in the forms of 'x', 'x.x' or 'x.x.x'.
+	 *                                  Accepts the strings 'minimum' and 'latest'.
+	 *                                  Defaults to 'latest'.
+	 * @return string The download link for the WooCommerce version.
+	 */
+	public function get_woocommerce_download_link( $version = 'latest' ) {
+		$version = (string) $version;
+		$version = strtolower( $version );
+
+		if ( preg_match( '/^(\d+\.)*(\d+)$/', $version ) || 'minimum' === $version ) {
+			if ( 'minimum' === $version ) {
+				$version_download_string = self::MINIMUM_WC_VERSION;
+			} else {
+				$version_download_string = $version;
+			}
+			$version_parts = explode( '.', $version_download_string );
+			/*
+			 * Ensure the version string has at least 3 parts.
+			 *
+			 * Publicly major versions are listed as two parts, eg 6.7, but the
+			 * tag published to the WordPress.org repository uses three parts,
+			 * eg 6.7.0.
+			 *
+			 * This is to ensure the download link is correct.
+			 */
+			$version_part_count = count( $version_parts ); // Coding standards don't allow for count() in the while condition.
+			while ( $version_part_count < 3 ) {
+				$version_parts[]    = '0';
+				$version_part_count = count( $version_parts );
+			}
+			$version_download_string = implode( '.', $version_parts );
+		} else {
+			// Default to latest version.
+			$version_download_string = 'latest-stable';
+		}
+
+		return "https://downloads.wordpress.org/plugin/woocommerce.{$version_download_string}.zip";
 	}
 
 	/**

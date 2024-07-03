@@ -858,11 +858,19 @@ class Order {
 				$other_gateway_charged = $gateway->get_order_meta( $order, 'credit_card_partial_total' );
 			}
 
+			$payment_method = '';
+
+			if ( $is_tender_card ) {
+				$payment_method = esc_html__( 'Credit Card', 'woocommerce-square' );
+			} elseif ( $is_tender_cash_app ) {
+				$payment_method = esc_html__( 'Cash App Pay', 'woocommerce-square' );
+			}
+
 			return sprintf(
 				/* translators: %1$s - Amount charged on gift card, %2$s -  Amount charged on credit card. */
 				__( 'Square Gift Card (%1$s) and %2$s (%3$s)', 'woocommerce-square' ),
 				get_woocommerce_currency_symbol( $order->get_currency() ) . Square_Helper::number_format( $gift_card_charged ),
-				$value ?? '',
+				$payment_method ?? '',
 				get_woocommerce_currency_symbol( $order->get_currency() ) . Square_Helper::number_format( $other_gateway_charged )
 			);
 		}

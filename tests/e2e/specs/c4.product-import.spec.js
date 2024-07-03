@@ -4,6 +4,8 @@ import { chromium } from 'playwright';
 import {
 	doesProductExist,
 	deleteAllProducts,
+	saveSquareSettings,
+	runWpCliCommand,
 } from '../utils/helper';
 import {
 	deleteAllCatalogItems,
@@ -28,9 +30,9 @@ test.beforeAll( 'Setup', async () => {
 	await clearSync( page );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
-	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'Square' } );
-	await page.locator( '.woocommerce-save-button' ).click();
-	await expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
+	await page.getByTestId( 'pull-inventory-field' ).check();
+	await saveSquareSettings( page );
 
 	await browser.close();
 } );
@@ -67,13 +69,49 @@ test( 'Import Cap from Square', async ( { page, baseURL } ) => {
 	await expect( await page.getByText( '53 in stock' ) ).toBeVisible();
 } );
 
+test('Sync Inventory stock from Square on the product edit screen - (SOR Square)', async ({
+	page,
+}) => {
+	await page.goto('/product/cap/');
+	await page.locator('#wpadminbar li#wp-admin-bar-edit a').click();
+	await expect(page.locator('#title')).toBeVisible();
+	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
+
+	const productId = await page.locator("#post_ID").inputValue();
+
+	// Disable stock management for the product to test the sync inventory feature.
+	await runWpCliCommand(`wp post meta update ${productId} _stock "23"`);
+
+	// Sync inventory from Square on the product edit screen.
+	await page.goto(`/wp-admin/post.php?post=${productId}&action=edit`);
+	await expect(page.locator('#title')).toBeVisible();
+	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
+	await page.locator('.inventory_tab').click();
+	await expect(page.locator('#_stock')).not.toBeEditable();
+	await expect(await page.locator('#_stock').inputValue()).toEqual('23');
+	await expect(await page.locator('.sync-stock-from-square')).toBeVisible();
+	await expect(await page.locator('.sync-stock-from-square')).toHaveText(
+		'Sync stock from Square'
+	);
+	await page.locator('.sync-stock-from-square').click();
+	await page.waitForTimeout(5000); // This is required to wait for the ajax request.
+	await page.goto(`/wp-admin/post.php?post=${productId}&action=edit`);
+	await expect(page.locator('#title')).toBeVisible();
+	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
+	await page.locator('.inventory_tab').click();
+	await expect(await page.locator('#_stock').inputValue()).toEqual('53');
+});
+
+
 test( 'Handle missing products', async ( { page } ) => {
 	await deleteAllCatalogItems();
 	await clearSync( page );
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
-	await page.locator( '#wc_square_hide_missing_products' ).check();
-	await page.locator( '.woocommerce-save-button' ).click();
-	await expect( await page.getByText( 'Your settings have been saved.' ) ).toBeVisible();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
+	await page.getByTestId( 'hide-missing-products-field' ).check();
+	await saveSquareSettings( page );
+	await page.reload();
+
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 	await page.locator( '#wc-square-sync' ).click();
 	await page.locator( '#btn-ok' ).click();

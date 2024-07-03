@@ -433,7 +433,7 @@ class Product {
 		$square_id = $product->get_meta( self::SQUARE_VARIATION_ID_META_KEY );
 
 		if ( ! $square_id ) {
-			throw new \Exception( __( 'Product not synced with Square', 'woocommerce-square' ) );
+			throw new \Exception( esc_html__( 'Product not synced with Square', 'woocommerce-square' ) );
 		}
 
 		// if saving the product, flag as syncing so updating the stock won't trigger another sync
@@ -1675,7 +1675,7 @@ class Product {
 	 *
 	 * @since 4.2.0
 	 *
-	 * @param WC_Product $product WooCommerce product.
+	 * @param \WC_Product $product WooCommerce product.
 	 *
 	 * @return bool
 	 */

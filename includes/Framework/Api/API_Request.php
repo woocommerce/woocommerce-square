@@ -27,7 +27,6 @@ interface API_Request {
 	 * Returns the method for this request: one of HEAD, GET, PUT, PATCH, POST, DELETE
 	 *
 	 * @since 3.0.0
-	 * @return string the request method, or null to use the API default
 	 */
 	public function get_method();
 
@@ -36,7 +35,6 @@ interface API_Request {
 	 * Returns the request path
 	 *
 	 * @since 3.0.0
-	 * @return string the request path, or '' if none
 	 */
 	public function get_path();
 
@@ -45,8 +43,6 @@ interface API_Request {
 	 * Gets the request query params.
 	 *
 	 * @since 3.0.0
-	 *
-	 * @return array
 	 */
 	public function get_params();
 
@@ -55,8 +51,6 @@ interface API_Request {
 	 * Gets the request data.
 	 *
 	 * @since 3.0.0
-	 *
-	 * @return array
 	 */
 	public function get_data();
 
