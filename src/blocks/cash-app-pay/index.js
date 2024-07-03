@@ -21,9 +21,9 @@ const { title, applicationId, locationId } = getSquareCashAppPayServerData();
  *
  * @param {Object} props
  */
-const SquareCashAppPayLabel = (props) => {
+const SquareCashAppPayLabel = ( props ) => {
 	const { PaymentMethodLabel } = props.components;
-	return <PaymentMethodLabel text={decodeEntities(title)} />;
+	return <PaymentMethodLabel text={ decodeEntities( title ) } />;
 };
 
 /**
@@ -33,12 +33,12 @@ const SquareCashAppPayLabel = (props) => {
  * @param {ComponentCashAppPay} props.RenderedComponent Component to render
  * @param {boolean}             props.isEdit            Is the block in edit mode
  */
-const SquareComponent = ({ RenderedComponent, isEdit, ...props }) => {
+const SquareComponent = ( { RenderedComponent, isEdit, ...props } ) => {
 	// Don't render anything if we're in the block editor.
-	if (isEdit) {
+	if ( isEdit ) {
 		return null;
 	}
-	return <RenderedComponent {...props} />;
+	return <RenderedComponent { ...props } />;
 };
 
 /**
@@ -48,15 +48,15 @@ const squareCashAppPayMethod = {
 	name: PAYMENT_METHOD_ID,
 	label: <SquareCashAppPayLabel />,
 	paymentMethodId: PAYMENT_METHOD_ID,
-	ariaLabel: __('Cash App Pay payment method', 'woocommerce-square'),
-	content: <SquareComponent RenderedComponent={ComponentCashAppPay} />,
+	ariaLabel: __( 'Cash App Pay payment method', 'woocommerce' ),
+	content: <SquareComponent RenderedComponent={ ComponentCashAppPay } />,
 	edit: (
 		<SquareComponent
-			RenderedComponent={ComponentCashAppPay}
-			isEdit={true}
+			RenderedComponent={ ComponentCashAppPay }
+			isEdit={ true }
 		/>
 	),
-	canMakePayment: ({ billingData, cartTotals }) => {
+	canMakePayment: ( { billingData, cartTotals } ) => {
 		const isSquareConnected = applicationId && locationId;
 		const isCountrySupported = billingData.country === 'US';
 		const isCurrencySupported = cartTotals.currency_code === 'USD';
@@ -71,7 +71,7 @@ const squareCashAppPayMethod = {
 		 *
 		 * Initially tried to use the experimental__woocommerce_blocks-checkout-render-checkout-form action but it doesn't work when stripe payment gateway is enabled.
 		 */
-		if (isEnabled) {
+		if ( isEnabled ) {
 			selectCashAppPaymentMethod();
 		}
 
@@ -85,4 +85,4 @@ const squareCashAppPayMethod = {
 };
 
 // Register Square Cash App.
-registerPaymentMethod(squareCashAppPayMethod);
+registerPaymentMethod( squareCashAppPayMethod );

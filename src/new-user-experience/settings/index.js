@@ -16,37 +16,37 @@ import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import { GiftCardsSettingsApp } from './gift-cards-gateway-settings-app';
 import store from '../../new-user-experience/onboarding/data/store';
 
-register(store);
+register( store );
 
-domReady(() => {
+domReady( () => {
 	let container = document.getElementById(
 		'woocommerce-square-settings__container-general'
 	);
 
-	if (container) {
-		const root = createRoot(container);
-		root.render(<SettingsApp />);
+	if ( container ) {
+		const root = createRoot( container );
+		root.render( <SettingsApp /> );
 	} else {
 		container = document.getElementById(
 			'woocommerce-square-payment-gateway-settings__container--square_credit_card'
 		);
-		if (container) {
-			const root = createRoot(container);
-			root.render(<PaymentGatewaySettingsApp />);
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <PaymentGatewaySettingsApp /> );
 		}
 		container = document.getElementById(
 			'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay'
 		);
-		if (container) {
-			const root = createRoot(container);
-			root.render(<CashAppSettingsApp />);
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <CashAppSettingsApp /> );
 		}
 		container = document.getElementById(
 			'woocommerce-square-payment-gateway-settings__container--gift_cards_pay'
 		);
-		if (container) {
-			const root = createRoot(container);
-			root.render(<GiftCardsSettingsApp />);
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <GiftCardsSettingsApp /> );
 		}
 	}
-});
+} );

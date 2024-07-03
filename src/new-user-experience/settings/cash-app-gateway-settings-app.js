@@ -7,9 +7,9 @@ import { Loader, PaymentGatewaySettingsSaveButton } from '../components';
 
 export const CashAppSettingsApp = () => {
 	const { cashAppGatewaySettingsLoaded, saveCashAppSettings } =
-		usePaymentGatewaySettings(true);
+		usePaymentGatewaySettings( true );
 
-	if (!cashAppGatewaySettingsLoaded) {
+	if ( ! cashAppGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
@@ -17,9 +17,9 @@ export const CashAppSettingsApp = () => {
 		<>
 			<CashAppSetup origin="settings" />
 			<PaymentGatewaySettingsSaveButton
-				onClick={() => {
+				onClick={ () => {
 					saveCashAppSettings();
-				}}
+				} }
 			/>
 		</>
 	);

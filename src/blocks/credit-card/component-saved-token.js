@@ -14,23 +14,23 @@ import { usePaymentForm } from './use-payment-form';
  *
  * @param {RegisteredPaymentMethodProps} props Incoming props
  */
-export const ComponentSavedToken = ({
+export const ComponentSavedToken = ( {
 	billing,
 	eventRegistration,
 	emitResponse,
 	token,
-}) => {
-	const form = usePaymentForm(billing, false, token);
+} ) => {
+	const form = usePaymentForm( billing, false, token );
 
 	return (
 		<SquareWebPaymentsForm
-			token={token}
-			defaults={{ postalCode: form.getPostalCode() }}
+			token={ token }
+			defaults={ { postalCode: form.getPostalCode() } }
 		>
 			<CheckoutHandler
-				checkoutFormHandler={form}
-				eventRegistration={eventRegistration}
-				emitResponse={emitResponse}
+				checkoutFormHandler={ form }
+				eventRegistration={ eventRegistration }
+				emitResponse={ emitResponse }
 			/>
 		</SquareWebPaymentsForm>
 	);

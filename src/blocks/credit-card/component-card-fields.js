@@ -15,16 +15,16 @@ export const ComponentCardFields = () => {
 	/**
 	 * The Square card object.
 	 */
-	const { card } = useContext(SquareWebContext);
+	const { card } = useContext( SquareWebContext );
 
 	/**
 	 * A ref to reference the HTML wrapper that will host the
 	 * credit card fields.
 	 */
-	const cardContainer = useRef(false);
+	const cardContainer = useRef( false );
 
-	useEffect(() => {
-		if (!card) {
+	useEffect( () => {
+		if ( ! card ) {
 			return;
 		}
 
@@ -32,11 +32,11 @@ export const ComponentCardFields = () => {
 		 * Attaching the card fields to the container.
 		 */
 		const attachCard = async () => {
-			card.attach(cardContainer.current);
+			card.attach( cardContainer.current );
 		};
 
 		attachCard();
-	}, [card]);
+	}, [ card ] );
 
-	return <div ref={cardContainer}></div>;
+	return <div ref={ cardContainer }></div>;
 };

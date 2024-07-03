@@ -78,7 +78,6 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
 		await new Promise( ( resolve ) => {
 			const inventoryIntervalId = setInterval( async () => {
 				inventory = await retrieveInventoryCount( variations[ 0 ].id );
-				console.log( inventory );
 				if ( inventory.counts ) {
 					clearInterval( inventoryIntervalId );
 					resolve();

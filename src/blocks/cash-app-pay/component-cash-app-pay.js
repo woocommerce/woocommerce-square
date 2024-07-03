@@ -22,10 +22,10 @@ const buttonId = 'wc-square-cash-app-pay';
  *
  * @param {Object} props Incoming props
  */
-export const ComponentCashAppPay = (props) => {
-	const [errorMessage, setErrorMessage] = useState(null);
-	const [isLoaded, setIsLoaded] = useState(false);
-	const [paymentNonce, setPaymentNonce] = useState('');
+export const ComponentCashAppPay = ( props ) => {
+	const [ errorMessage, setErrorMessage ] = useState( null );
+	const [ isLoaded, setIsLoaded ] = useState( false );
+	const [ paymentNonce, setPaymentNonce ] = useState( '' );
 	const {
 		applicationId,
 		locationId,
@@ -46,16 +46,17 @@ export const ComponentCashAppPay = (props) => {
 	const { onPaymentSetup } = eventRegistration;
 
 	// Checkout handler.
-	useEffect(() => {
-		const unsubscribe = onPaymentSetup(() => {
-			if (!paymentNonce) {
+	useEffect( () => {
+		const unsubscribe = onPaymentSetup( () => {
+			if ( ! paymentNonce ) {
 				return {
 					type: emitResponse.responseTypes.ERROR,
 					message: generalError,
 				};
 			}
 			const paymentMethodData = {
-				[`wc-${gatewayIdDasherized}-payment-nonce`]: paymentNonce || '',
+				[ `wc-${ gatewayIdDasherized }-payment-nonce` ]:
+					paymentNonce || '',
 			};
 			return {
 				type: emitResponse.responseTypes.SUCCESS,
@@ -63,7 +64,7 @@ export const ComponentCashAppPay = (props) => {
 					paymentMethodData,
 				},
 			};
-		});
+		} );
 		return unsubscribe;
 	}, [
 		emitResponse.responseTypes.SUCCESS,
@@ -72,87 +73,92 @@ export const ComponentCashAppPay = (props) => {
 		paymentNonce,
 		gatewayIdDasherized,
 		generalError,
-	]);
+	] );
 
 	// Initialize the Square Cash App Pay Button.
-	useEffect(() => {
-		setIsLoaded(false);
-		setErrorMessage(null);
+	useEffect( () => {
+		setIsLoaded( false );
+		setErrorMessage( null );
 		// Bail if Square is not loaded.
-		if (!window.Square) {
+		if ( ! window.Square ) {
 			return;
 		}
 
-		log('[Square Cash App Pay] Initializing Square Cash App Pay Button');
-		const payments = window.Square.payments(applicationId, locationId);
-		if (!payments) {
+		log( '[Square Cash App Pay] Initializing Square Cash App Pay Button' );
+		const payments = window.Square.payments( applicationId, locationId );
+		if ( ! payments ) {
 			return;
 		}
 
 		async function setupIntegration() {
-			setIsLoaded(false);
+			setIsLoaded( false );
 			try {
-				const paymentRequest = await createPaymentRequest(payments);
-				if (window.wcSquareCashAppPay) {
+				const paymentRequest = await createPaymentRequest( payments );
+				if ( window.wcSquareCashAppPay ) {
 					await window.wcSquareCashAppPay.destroy();
 					window.wcSquareCashAppPay = null;
 				}
 
-				const cashAppPay = await payments.cashAppPay(paymentRequest, {
+				const cashAppPay = await payments.cashAppPay( paymentRequest, {
 					redirectURL: window.location.href,
 					referenceId,
-				});
-				await cashAppPay.attach(`#${buttonId}`, buttonStyles);
+				} );
+				await cashAppPay.attach( `#${ buttonId }`, buttonStyles );
 
 				// Handle the payment response.
-				cashAppPay.addEventListener('ontokenization', (event) => {
+				cashAppPay.addEventListener( 'ontokenization', ( event ) => {
 					const { tokenResult, error } = event.detail;
-					if (error) {
-						setPaymentNonce('');
-						setErrorMessage(error.message);
-					} else if (tokenResult.status === 'OK') {
+					if ( error ) {
+						setPaymentNonce( '' );
+						setErrorMessage( error.message );
+					} else if ( tokenResult.status === 'OK' ) {
 						const nonce = tokenResult.token;
-						if (!nonce) {
-							setPaymentNonce('');
-							setErrorMessage(generalError);
+						if ( ! nonce ) {
+							setPaymentNonce( '' );
+							setErrorMessage( generalError );
 						}
 
 						// Set the nonce.
-						setPaymentNonce(nonce);
+						setPaymentNonce( nonce );
 
 						// Place an Order.
 						onSubmit();
 					} else {
 						// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
-						setPaymentNonce(null);
+						setPaymentNonce( null );
 						setupIntegration();
 					}
-				});
+				} );
 
 				// Handle the customer interaction. set continuation session to select the Cash App Pay payment method after the redirect back from the Cash App.
-				cashAppPay.addEventListener('customerInteraction', (event) => {
-					if (event.detail && event.detail.isMobile) {
-						return setContinuationSession();
+				cashAppPay.addEventListener(
+					'customerInteraction',
+					( event ) => {
+						if ( event.detail && event.detail.isMobile ) {
+							return setContinuationSession();
+						}
 					}
-				});
+				);
 
 				window.wcSquareCashAppPay = cashAppPay;
-				log('[Square Cash App Pay] Square Cash App Pay Button Loaded');
-			} catch (e) {
-				setErrorMessage(generalError);
-				console.error(e);
+				log(
+					'[Square Cash App Pay] Square Cash App Pay Button Loaded'
+				);
+			} catch ( e ) {
+				setErrorMessage( generalError );
+				console.error( e );
 			}
-			setIsLoaded(true);
+			setIsLoaded( true );
 		}
 		setupIntegration();
 
 		return () =>
-			(async () => {
-				if (window.wcSquareCashAppPay) {
+			( async () => {
+				if ( window.wcSquareCashAppPay ) {
 					await window.wcSquareCashAppPay.destroy();
 					window.wcSquareCashAppPay = null;
 				}
-			})();
+			} )();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		cartTotal.value,
@@ -161,34 +167,34 @@ export const ComponentCashAppPay = (props) => {
 		locationId,
 		generalError,
 		referenceId,
-	]);
+	] );
 
 	// Disable the place order button when Cash App Pay is active. TODO: find a better way to do this.
-	useEffect(() => {
+	useEffect( () => {
 		const button = document.querySelector(
 			'button.wc-block-components-checkout-place-order-button'
 		);
-		if (button) {
-			if (activePaymentMethod === PAYMENT_METHOD_ID && !paymentNonce) {
-				button.setAttribute('disabled', 'disabled');
+		if ( button ) {
+			if ( activePaymentMethod === PAYMENT_METHOD_ID && ! paymentNonce ) {
+				button.setAttribute( 'disabled', 'disabled' );
 			}
 			return () => {
-				button.removeAttribute('disabled');
+				button.removeAttribute( 'disabled' );
 			};
 		}
-	}, [activePaymentMethod, paymentNonce]);
+	}, [ activePaymentMethod, paymentNonce ] );
 
 	return (
 		<>
-			<p>{decodeEntities(description || '')}</p>
-			{errorMessage && (
-				<div className="woocommerce-error">{errorMessage}</div>
-			)}
-			{!errorMessage && (
-				<LoadingMask isLoading={!isLoaded} showSpinner={true}>
-					<div id={buttonId}></div>
+			<p>{ decodeEntities( description || '' ) }</p>
+			{ errorMessage && (
+				<div className="woocommerce-error">{ errorMessage }</div>
+			) }
+			{ ! errorMessage && (
+				<LoadingMask isLoading={ ! isLoaded } showSpinner={ true }>
+					<div id={ buttonId }></div>
 				</LoadingMask>
-			)}
+			) }
 		</>
 	);
 };

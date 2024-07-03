@@ -21,7 +21,7 @@ import {
 } from '../../../components';
 import { usePaymentGatewaySettings } from '../../hooks';
 
-export const CashAppSetup = ({ origin = '' }) => {
+export const CashAppSetup = ( { origin = '' } ) => {
 	const { cashAppGatewaySettings, setCashAppData } =
 		usePaymentGatewaySettings();
 
@@ -39,42 +39,39 @@ export const CashAppSetup = ({ origin = '' }) => {
 	const authorizationFields = transaction_type === 'authorization' && (
 		<>
 			<InputWrapper
-				description={__(
+				description={ __(
 					'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.',
-					'woocommerce-square'
-				)}
-				indent={2}
+					'woocommerce'
+				) }
+				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					data-testid="cash-app-gateway-virtual-order-only-field"
-					label={__(
-						'Charge Virtual-Only Orders',
-						'woocommerce-square'
-					)}
-					checked={charge_virtual_orders === 'yes'}
-					onChange={(value) =>
-						setCashAppData({
+					label={ __( 'Charge Virtual-Only Orders', 'woocommerce' ) }
+					checked={ charge_virtual_orders === 'yes' }
+					onChange={ ( value ) =>
+						setCashAppData( {
 							charge_virtual_orders: value ? 'yes' : 'no',
-						})
+						} )
 					}
 				/>
 			</InputWrapper>
 
 			<InputWrapper
-				description={__(
+				description={ __(
 					'Automatically capture orders when they are changed to Processing or Completed.',
-					'woocommerce-square'
-				)}
-				indent={2}
+					'woocommerce'
+				) }
+				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					data-testid="cash-app-gateway-capture-paid-orders-field"
-					label={__('Capture Paid Orders', 'woocommerce-square')}
-					checked={enable_paid_capture === 'yes'}
-					onChange={(value) =>
-						setCashAppData({
+					label={ __( 'Capture Paid Orders', 'woocommerce' ) }
+					checked={ enable_paid_capture === 'yes' }
+					onChange={ ( value ) =>
+						setCashAppData( {
 							enable_paid_capture: value ? 'yes' : 'no',
-						})
+						} )
 					}
 				/>
 			</InputWrapper>
@@ -85,144 +82,136 @@ export const CashAppSetup = ({ origin = '' }) => {
 		<>
 			<Section>
 				<SectionTitle
-					title={parse(
+					title={ parse(
 						sprintf(
 							/* translators: %s: link to settings page */
 							__(
 								'Manage Cash App Pay Settings %s',
-								'woocommerce-square'
+								'woocommerce'
 							),
 							origin === 'settings'
-								? `<small className="wc-admin-breadcrumb"><a href="${wcSquareSettings.adminUrl}admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
+								? `<small className="wc-admin-breadcrumb"><a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
 								: ''
 						)
-					)}
+					) }
 				/>
 				<SectionDescription>
-					{__(
+					{ __(
 						'Cash App Pay is an innovative payment solution that offers your customers a quick and secure way to check out. With just a few settings, you can tailor how Cash App Pay appears and operates on your site.',
-						'woocommerce-square'
-					)}
+						'woocommerce'
+					) }
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={__('Enable / Disable', 'woocommerce-square')}
+						label={ __( 'Enable / Disable', 'woocommerce' ) }
 					>
 						<SquareCheckboxControl
 							data-testid="cash-app-gateway-toggle-field"
-							label={__(
+							label={ __(
 								'Enable this payment method.',
-								'woocommerce-square'
-							)}
-							checked={enabled === 'yes'}
-							onChange={(value) =>
-								setCashAppData({
+								'woocommerce'
+							) }
+							checked={ enabled === 'yes' }
+							onChange={ ( value ) =>
+								setCashAppData( {
 									enabled: value ? 'yes' : 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>
 
-					<InputWrapper label={__('Title', 'woocommerce-square')}>
+					<InputWrapper label={ __( 'Title', 'woocommerce' ) }>
 						<TextControl
 							data-testid="cash-app-gateway-title-field"
-							value={title}
-							onChange={(value) =>
-								setCashAppData({ title: value })
+							value={ title }
+							onChange={ ( value ) =>
+								setCashAppData( { title: value } )
 							}
 						/>
 					</InputWrapper>
 
-					<InputWrapper
-						label={__('Description', 'woocommerce-square')}
-					>
+					<InputWrapper label={ __( 'Description', 'woocommerce' ) }>
 						<TextareaControl
 							data-testid="cash-app-gateway-description-field"
-							value={description}
-							onChange={(value) =>
-								setCashAppData({ description: value })
+							value={ description }
+							onChange={ ( value ) =>
+								setCashAppData( { description: value } )
 							}
 						/>
 					</InputWrapper>
 
 					<InputWrapper
-						label={__('Transaction Type', 'woocommerce-square')}
+						label={ __( 'Transaction Type', 'woocommerce' ) }
 					>
 						<SelectControl
 							data-testid="cash-app-gateway-transaction-type-field"
-							value={transaction_type}
-							onChange={(value) =>
-								setCashAppData({ transaction_type: value })
+							value={ transaction_type }
+							onChange={ ( value ) =>
+								setCashAppData( { transaction_type: value } )
 							}
-							options={[
+							options={ [
 								{
-									label: __('Charge', 'woocommerce-square'),
+									label: __( 'Charge', 'woocommerce' ),
 									value: 'charge',
 								},
 								{
-									label: __(
-										'Authorization',
-										'woocommerce-square'
-									),
+									label: __( 'Authorization', 'woocommerce' ),
 									value: 'authorization',
 								},
-							]}
+							] }
 						/>
 					</InputWrapper>
 
-					{authorizationFields}
+					{ authorizationFields }
 
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Cash App Pay Button Theme',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					>
 						<SelectControl
 							data-testid="cash-app-gateway-button-theme-field"
-							value={button_theme}
-							onChange={(value) =>
-								setCashAppData({ button_theme: value })
+							value={ button_theme }
+							onChange={ ( value ) =>
+								setCashAppData( { button_theme: value } )
 							}
-							options={[
+							options={ [
 								{
-									label: __('Dark', 'woocommerce-square'),
+									label: __( 'Dark', 'woocommerce' ),
 									value: 'dark',
 								},
 								{
-									label: __('Light', 'woocommerce-square'),
+									label: __( 'Light', 'woocommerce' ),
 									value: 'light',
 								},
-							]}
+							] }
 						/>
 					</InputWrapper>
 
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Cash App Pay Button Shape',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					>
 						<SelectControl
 							data-testid="cash-app-gateway-button-shape-field"
-							value={button_shape}
-							onChange={(value) =>
-								setCashAppData({ button_shape: value })
+							value={ button_shape }
+							onChange={ ( value ) =>
+								setCashAppData( { button_shape: value } )
 							}
-							options={[
+							options={ [
 								{
-									label: __(
-										'Semiround',
-										'woocommerce-square'
-									),
+									label: __( 'Semiround', 'woocommerce' ),
 									value: 'semiround',
 								},
 								{
-									label: __('Round', 'woocommerce-square'),
+									label: __( 'Round', 'woocommerce' ),
 									value: 'round',
 								},
-							]}
+							] }
 						/>
 					</InputWrapper>
 				</div>

@@ -14,7 +14,7 @@ import { getSquareServerData } from '../square-utils';
  *
  * @param {Object} props The props object.
  */
-export const SquareWebPaymentsForm = (props) => {
+export const SquareWebPaymentsForm = ( props ) => {
 	const {
 		children,
 		token = null,
@@ -26,49 +26,49 @@ export const SquareWebPaymentsForm = (props) => {
 	 *
 	 * @see https://developer.squareup.com/reference/sdks/web/payments/objects/Payments
 	 */
-	const [payments, setPayments] = useState(false);
+	const [ payments, setPayments ] = useState( false );
 
 	/**
 	 * Square's `card` request object state.
 	 *
 	 * @see https://developer.squareup.com/reference/sdks/web/payments/objects/Card
 	 */
-	const [card, setCard] = useState(false);
+	const [ card, setCard ] = useState( false );
 
 	/**
 	 * Parameters to intialize Square payments.
 	 */
 	const { applicationId, locationId } = getSquareServerData();
 
-	useEffect(() => {
-		if (!payments && window.Square) {
-			setPayments(window.Square.payments(applicationId, locationId));
+	useEffect( () => {
+		if ( ! payments && window.Square ) {
+			setPayments( window.Square.payments( applicationId, locationId ) );
 		}
-	}, [applicationId, locationId, payments]);
+	}, [ applicationId, locationId, payments ] );
 
 	/**
 	 * Effect to initialize `card`
 	 */
-	useEffect(() => {
-		if (!payments || card || token) {
+	useEffect( () => {
+		if ( ! payments || card || token ) {
 			return;
 		}
 
 		const initializeCard = async () => {
-			const card = await payments.card({ postalCode });
-			setCard(card);
+			const __card = await payments.card( { postalCode } );
+			setCard( __card );
 		};
 
 		initializeCard();
-	}, [payments, card, token, postalCode]);
+	}, [ payments, card, token, postalCode ] );
 
-	if (!payments) {
+	if ( ! payments ) {
 		return null;
 	}
 
 	return (
-		<SquareWebContext.Provider value={{ payments, card, token }}>
-			{children}
+		<SquareWebContext.Provider value={ { payments, card, token } }>
+			{ children }
 		</SquareWebContext.Provider>
 	);
 };

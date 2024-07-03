@@ -37,13 +37,13 @@ export const usePaymentProcessing = (
 	createNonce,
 	verifyBuyer
 ) => {
-	const square = useRef(squareContext);
+	const square = useRef( squareContext );
 
-	useEffect(() => {
+	useEffect( () => {
 		square.current = squareContext;
-	}, [squareContext]);
+	}, [ squareContext ] );
 
-	useEffect(() => {
+	useEffect( () => {
 		const processCheckout = async () => {
 			const response = { type: emitResponse.responseTypes.SUCCESS };
 			const paymentData = {
@@ -52,12 +52,12 @@ export const usePaymentProcessing = (
 				logs: [],
 			};
 
-			if (square.current?.token) {
+			if ( square.current?.token ) {
 				const { paymentTokenNonce } = getSquareServerData();
-				const response = await fetch(
-					`${wc.wcSettings.ADMIN_URL}admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${square.current.token}&nonce=${paymentTokenNonce}`
+				const __response = await fetch(
+					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
 				);
-				const { success, data: token } = await response.json();
+				const { success, data: token } = await __response.json();
 				paymentData.token = success ? token : '';
 			} else {
 				const createNonceResponse = await createNonce(
@@ -78,7 +78,7 @@ export const usePaymentProcessing = (
 
 			const paymentToken = paymentData.token || paymentData.nonce;
 
-			if (paymentToken) {
+			if ( paymentToken ) {
 				const verifyBuyerResponse = await verifyBuyer(
 					square.current.payments,
 					paymentToken
@@ -94,11 +94,11 @@ export const usePaymentProcessing = (
 				);
 			}
 
-			if (paymentToken || paymentData.logs.length > 0) {
+			if ( paymentToken || paymentData.logs.length > 0 ) {
 				response.meta = {
-					paymentMethodData: getPaymentMethodData(paymentData),
+					paymentMethodData: getPaymentMethodData( paymentData ),
 				};
-			} else if (paymentData.notices.length > 0) {
+			} else if ( paymentData.notices.length > 0 ) {
 				response.type = emitResponse.responseTypes.ERROR;
 				response.message = paymentData.notices;
 			}
@@ -106,7 +106,7 @@ export const usePaymentProcessing = (
 			return response;
 		};
 
-		const unsubscribe = onPaymentProcessing(processCheckout);
+		const unsubscribe = onPaymentProcessing( processCheckout );
 		return unsubscribe;
 	}, [
 		onPaymentProcessing,
@@ -115,5 +115,5 @@ export const usePaymentProcessing = (
 		createNonce,
 		verifyBuyer,
 		getPaymentMethodData,
-	]);
+	] );
 };

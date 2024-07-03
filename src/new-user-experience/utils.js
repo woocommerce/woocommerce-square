@@ -9,9 +9,9 @@ import {
 } from '../new-user-experience/onboarding/data/reducers';
 
 export const getPaymentGatewaySettingsData = async () => {
-	const settings = await apiFetch({
+	const settings = await apiFetch( {
 		path: '/wc/v3/wc_square/payment_settings',
-	});
+	} );
 
 	const creditCard = {
 		enabled: settings.enabled || CREDIT_CARD_DEFAULT_STATE.enabled,
@@ -54,9 +54,9 @@ export const getPaymentGatewaySettingsData = async () => {
 };
 
 export const getGiftCardsSettingsData = async () => {
-	const settings = await apiFetch({
+	const settings = await apiFetch( {
 		path: '/wc/v3/wc_square/gift_cards_settings',
-	});
+	} );
 
 	const giftCard = {
 		enabled: settings.enabled || GIFT_CARDS_DEFAULT_STATE.enabled,
@@ -66,9 +66,9 @@ export const getGiftCardsSettingsData = async () => {
 };
 
 export const getCashAppSettingsData = async () => {
-	const settings = await apiFetch({
+	const settings = await apiFetch( {
 		path: '/wc/v3/wc_square/cash_app_settings',
-	});
+	} );
 
 	const cashApp = {
 		enabled: settings.enabled || CASH_APP_DEFAULT_STATE.enabled,
@@ -96,35 +96,38 @@ export const connectToSquare = async () => {
 	try {
 		const _wpnonce = wcSquareSettings ? wcSquareSettings.nonce : ''; // eslint-disable-line no-undef
 
-		if (_wpnonce === '') {
-			throw new Error('Invalid nonce.');
+		if ( _wpnonce === '' ) {
+			throw new Error( 'Invalid nonce.' );
 		}
 
-		const requestURL = `${wcSquareSettings.ajaxUrl}?action=wc_square_settings_get_locations&_wpnonce=${_wpnonce}`; // eslint-disable-line no-undef
+		const requestURL = `${ wcSquareSettings.ajaxUrl }?action=wc_square_settings_get_locations&_wpnonce=${ _wpnonce }`; // eslint-disable-line no-undef
 
-		const response = await fetch(requestURL);
+		const response = await fetch( requestURL );
 
-		if (!response.ok) {
-			throw new Error('Failed to fetch business locations.');
+		if ( ! response.ok ) {
+			throw new Error( 'Failed to fetch business locations.' );
 		}
 
 		const data = await response.json();
 		return data;
-	} catch (e) {
-		console.error('Error fetching business locations:', e);
+	} catch ( e ) {
+		console.error( 'Error fetching business locations:', e );
 	}
 
 	return {};
 };
 
-export const filterBusinessLocations = (locations = []) => {
+export const filterBusinessLocations = ( locations = [] ) => {
 	return locations
-		.filter((location) => location.status === 'ACTIVE')
-		.map((location) => ({ label: location.name, value: location.id }));
+		.filter( ( location ) => location.status === 'ACTIVE' )
+		.map( ( location ) => ( {
+			label: location.name,
+			value: location.id,
+		} ) );
 };
 
 export const getSquareSettings = async () => {
-	const settings = await apiFetch({ path: '/wc/v3/wc_square/settings' });
+	const settings = await apiFetch( { path: '/wc/v3/wc_square/settings' } );
 
 	const squareSettings = {
 		enable_sandbox:

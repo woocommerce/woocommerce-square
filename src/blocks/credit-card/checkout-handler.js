@@ -25,12 +25,12 @@ import { SquareWebContext } from './square-web-context';
  * @param {EventRegistrationProps} props.eventRegistration   Event registration functions.
  * @param {EmitResponseProps}      props.emitResponse        Helpers for observer response objects.
  */
-export const CheckoutHandler = ({
+export const CheckoutHandler = ( {
 	checkoutFormHandler,
 	eventRegistration,
 	emitResponse,
-}) => {
-	const square = useContext(SquareWebContext);
+} ) => {
+	const square = useContext( SquareWebContext );
 
 	const {
 		onPaymentProcessing,

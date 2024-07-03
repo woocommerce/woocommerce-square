@@ -17,13 +17,13 @@ let cachedSquareCashAppData = null;
  * @return {Object} Square server data.
  */
 export const getSquareCashAppPayServerData = () => {
-	if (cachedSquareCashAppData !== null) {
+	if ( cachedSquareCashAppData !== null ) {
 		return cachedSquareCashAppData;
 	}
 
-	const squareData = getSetting('square_cash_app_pay_data', null);
+	const squareData = getSetting( 'square_cash_app_pay_data', null );
 
-	if (!squareData) {
+	if ( ! squareData ) {
 		throw new Error(
 			'Square Cash App Pay initialization data is not available'
 		);
@@ -60,10 +60,10 @@ export const getSquareCashAppPayServerData = () => {
  * @param {string} action Corresponding action name for the AJAX endpoint.
  * @return {string} AJAX URL
  */
-const getAjaxUrl = (action) => {
+const getAjaxUrl = ( action ) => {
 	return getSquareCashAppPayServerData().ajaxUrl.replace(
 		'%%endpoint%%',
-		`square_cash_app_pay_${action}`
+		`square_cash_app_pay_${ action }`
 	);
 };
 
@@ -74,7 +74,7 @@ const getAjaxUrl = (action) => {
  * @return {Object} data to create Square payment request.
  */
 const getPaymentRequest = () => {
-	return new Promise((resolve, reject) => {
+	return new Promise( ( resolve, reject ) => {
 		const data = {
 			security: getSquareCashAppPayServerData().paymentRequestNonce,
 			is_pay_for_order_page:
@@ -82,14 +82,18 @@ const getPaymentRequest = () => {
 			order_id: getSquareCashAppPayServerData().orderId || 0,
 		};
 
-		jQuery.post(getAjaxUrl('get_payment_request'), data, (response) => {
-			if (response.success) {
-				return resolve(response.data);
-			}
+		jQuery.post(
+			getAjaxUrl( 'get_payment_request' ),
+			data,
+			( response ) => {
+				if ( response.success ) {
+					return resolve( response.data );
+				}
 
-			return reject(response.data);
-		});
-	});
+				return reject( response.data );
+			}
+		);
+	} );
 };
 
 /**
@@ -98,10 +102,10 @@ const getPaymentRequest = () => {
  * @param {Object} payments Square payment object.
  * @return {Object} The payment request object.
  */
-export const createPaymentRequest = async (payments) => {
+export const createPaymentRequest = async ( payments ) => {
 	const __paymentRequestJson = await getPaymentRequest();
-	const __paymentRequestObject = JSON.parse(__paymentRequestJson);
-	const paymentRequest = payments.paymentRequest(__paymentRequestObject);
+	const __paymentRequestObject = JSON.parse( __paymentRequestJson );
+	const paymentRequest = payments.paymentRequest( __paymentRequestObject );
 
 	return paymentRequest;
 };
@@ -112,32 +116,32 @@ export const createPaymentRequest = async (payments) => {
  * @param {boolean} clear Clear the continuation session.
  * @return {Promise<Object>} Response from the server.
  */
-export const setContinuationSession = (clear = false) => {
-	return new Promise((resolve, reject) => {
+export const setContinuationSession = ( clear = false ) => {
+	return new Promise( ( resolve, reject ) => {
 		const data = {
 			security: getSquareCashAppPayServerData().continuationSessionNonce,
 			clear,
 		};
 
 		jQuery.post(
-			getAjaxUrl('set_continuation_session'),
+			getAjaxUrl( 'set_continuation_session' ),
 			data,
-			(response) => {
-				if (response.success) {
-					return resolve(response.data);
+			( response ) => {
+				if ( response.success ) {
+					return resolve( response.data );
 				}
 
-				return reject(response.data);
+				return reject( response.data );
 			}
 		);
-	});
+	} );
 };
 
 /**
  * Clear continuation session.
  */
 export const clearContinuationSession = () => {
-	return setContinuationSession(true);
+	return setContinuationSession( true );
 };
 
 /**
@@ -146,15 +150,15 @@ export const clearContinuationSession = () => {
  * @param {*}      data Data to log to console
  * @param {string} type Type of log, 'error' will log as an error
  */
-export const log = (data, type = 'notice') => {
-	if (!getSquareCashAppPayServerData().loggingEnabled) {
+export const log = ( data, type = 'notice' ) => {
+	if ( ! getSquareCashAppPayServerData().loggingEnabled ) {
 		return;
 	}
 
-	if (type === 'error') {
-		console.error(data);
+	if ( type === 'error' ) {
+		console.error( data );
 	} else {
-		console.log(data);
+		console.log( data );
 	}
 };
 
@@ -169,11 +173,11 @@ export const selectCashAppPaymentMethod = () => {
 		);
 	if (
 		getSquareCashAppPayServerData().isContinuation &&
-		!window.wcSquareCashAppPaySelected &&
+		! window.wcSquareCashAppPaySelected &&
 		payMethodInput
 	) {
-		log('[Square Cash App Pay] Selecting Cash App Pay payment method');
-		dispatch(PAYMENT_STORE_KEY).__internalSetActivePaymentMethod(
+		log( '[Square Cash App Pay] Selecting Cash App Pay payment method' );
+		dispatch( PAYMENT_STORE_KEY ).__internalSetActivePaymentMethod(
 			PAYMENT_METHOD_ID
 		);
 		window.wcSquareCashAppPaySelected = true;

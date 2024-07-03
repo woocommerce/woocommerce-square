@@ -43,37 +43,37 @@ export const PaymentComplete = () => {
 				<div className="woo-square-onbarding__payment-settings--left">
 					<div className="woo-square-onbarding__payment-settings__intro">
 						<div className="woo-square-onbarding__payment-settings__intro--title">
-							{__('Congratulations,', 'woocommerce-square')}
+							{ __( 'Congratulations,', 'woocommerce' ) }
 							<br />
-							{__(
+							{ __(
 								'Your Payment Setup is Complete!',
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 						</div>
 						<SectionDescription>
-							{__(
+							{ __(
 								'Your online store is now equipped to accept payments, making you ready to welcome customers and start generating sales.',
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 							<p>
-								{__(
+								{ __(
 									"Ready to see your store in action? Explore the front-end of your online shop. It's a great way to experience what your customers will see and ensure everything looks perfect.",
-									'woocommerce-square'
-								)}
+									'woocommerce'
+								) }
 							</p>
 						</SectionDescription>
 						<Button
 							variant="button-primary"
 							className="button-primary"
-							onClick={() => {
+							onClick={ () => {
 								queueRecordEvent(
 									ONBOARDING_TRACK_EVENTS.VISIT_STOREFRONT_CLICKED
 								);
 								window.location.href =
 									window.wcSettings.homeUrl;
-							}}
+							} }
 						>
-							{__('Visit my Storefront', 'woocommerce-square')}
+							{ __( 'Visit my Storefront', 'woocommerce' ) }
 						</Button>
 					</div>
 					<div className="woo-square-onbarding__payment-settings__center-icon">
@@ -83,203 +83,205 @@ export const PaymentComplete = () => {
 				<div className="woo-square-onbarding__payment-settings--right">
 					<div className="woo-square-onbarding__payment-settings__toggles">
 						<SectionTitle
-							title={__(
+							title={ __(
 								'Synchronize your Items and Inventory',
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 						/>
 						<SectionDescription>
-							{__(
+							{ __(
 								'Discover additional settings to further refine and personalize your e-commerce experience.',
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 						</SectionDescription>
 
 						<Divider margin="10" />
 
-						<Flex direction={['column', 'row']}>
+						<Flex direction={ [ 'column', 'row' ] }>
 							<FlexItem className="flexItem iconBox">
 								<Sync />
 							</FlexItem>
 							<FlexBlock className="flexItem contentBox">
 								<b>
-									{__(
+									{ __(
 										'Synchronize Your Inventory',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</b>
 								<p>
-									{__(
+									{ __(
 										'Sync your items and inventory effortlessly. Ensure your online and offline sales channels are always up to date.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</p>
 							</FlexBlock>
 							<FlexItem>
 								<Button
 									data-testid="configure-sync-button"
 									variant="secondary"
-									onClick={() => {
+									onClick={ () => {
 										recordEvent(
 											ONBOARDING_TRACK_EVENTS.VISIT_SYNC_SETTINGS_CLICKED
 										);
-										setStep('sync-settings');
-									}}
+										setStep( 'sync-settings' );
+									} }
 								>
-									{__(
+									{ __(
 										'Configure Sync Settings',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</Button>
 							</FlexItem>
 						</Flex>
 
-						{(creditCardEnabled === 'yes' ||
+						{ ( creditCardEnabled === 'yes' ||
 							digitalWalletsEnabled === 'yes' ||
 							cashAppEnabled === 'yes' ||
-							giftCardsEnabled === 'yes') && (
+							giftCardsEnabled === 'yes' ) && (
 							<>
 								<Divider margin="10" />
 
-								<Flex direction={['column', 'row']}>
+								<Flex direction={ [ 'column', 'row' ] }>
 									<FlexItem className="flexItem iconBox">
 										<Manage />
 									</FlexItem>
 									<FlexBlock className="flexItem contentBox">
 										<b>
-											{__(
+											{ __(
 												'Manage Payment Methods',
-												'woocommerce-square'
-											)}
+												'woocommerce'
+											) }
 										</b>
 										<p>
-											{__(
+											{ __(
 												'Easily add, edit, or remove your credit cards, digital wallets, and Cash App settings to streamline your payments securely and efficiently.',
-												'woocommerce-square'
-											)}
+												'woocommerce'
+											) }
 										</p>
 									</FlexBlock>
 									<FlexItem>
-										{creditCardEnabled === 'yes' && (
+										{ creditCardEnabled === 'yes' && (
 											<Button
 												data-testid="credit-card-settings-button"
 												variant="secondary"
-												onClick={() => {
+												onClick={ () => {
 													recordEvent(
 														ONBOARDING_TRACK_EVENTS.VISIT_CREDIT_CARD_SETTINGS_CLICKED
 													);
-													setStep('credit-card');
-												}}
+													setStep( 'credit-card' );
+												} }
 											>
-												{__(
+												{ __(
 													'Credit Card Settings',
-													'woocommerce-square'
-												)}
+													'woocommerce'
+												) }
 											</Button>
-										)}
-										{digitalWalletsEnabled === 'yes' && (
+										) }
+										{ digitalWalletsEnabled === 'yes' && (
 											<Button
 												data-testid="digital-wallet-settings-button"
 												variant="secondary"
-												onClick={() => {
+												onClick={ () => {
 													recordEvent(
 														ONBOARDING_TRACK_EVENTS.VISIT_DIGITAL_WALLET_SETTINGS_CLICKED
 													);
-													setStep('digital-wallets');
-												}}
+													setStep(
+														'digital-wallets'
+													);
+												} }
 											>
-												{__(
+												{ __(
 													'Digital Wallet Settings',
-													'woocommerce-square'
-												)}
+													'woocommerce'
+												) }
 											</Button>
-										)}
-										{cashAppEnabled === 'yes' && (
+										) }
+										{ cashAppEnabled === 'yes' && (
 											<Button
 												data-testid="cash-app-settings-button"
 												variant="secondary"
-												onClick={() => {
+												onClick={ () => {
 													recordEvent(
 														ONBOARDING_TRACK_EVENTS.VISIT_CASH_APP_SETTINGS_CLICKED
 													);
-													setStep('cash-app');
-												}}
+													setStep( 'cash-app' );
+												} }
 											>
-												{__(
+												{ __(
 													'Cash App Pay Settings',
-													'woocommerce-square'
-												)}
+													'woocommerce'
+												) }
 											</Button>
-										)}
-										{giftCardsEnabled === 'yes' && (
+										) }
+										{ giftCardsEnabled === 'yes' && (
 											<Button
 												data-testid="gift-card-settings-button"
 												variant="secondary"
-												onClick={() => {
+												onClick={ () => {
 													recordEvent(
 														ONBOARDING_TRACK_EVENTS.VISIT_GIFT_CARD_SETTINGS_CLICKED
 													);
-													setStep('gift-card');
-												}}
+													setStep( 'gift-card' );
+												} }
 											>
-												{__(
+												{ __(
 													'Gift Cards Settings',
-													'woocommerce-square'
-												)}
+													'woocommerce'
+												) }
 											</Button>
-										)}
+										) }
 									</FlexItem>
 								</Flex>
 							</>
-						)}
+						) }
 
 						<Divider margin="10" />
 
-						<Flex direction={['column', 'row']} align="top">
+						<Flex direction={ [ 'column', 'row' ] } align="top">
 							<FlexBlock>
 								<Button
 									data-testid="advanced-settings-button"
 									variant="link"
-									onClick={() => {
+									onClick={ () => {
 										recordEvent(
 											ONBOARDING_TRACK_EVENTS.VISIT_ADVANCED_SETTINGS_CLICKED
 										);
-										setStep('advanced-settings');
-									}}
+										setStep( 'advanced-settings' );
+									} }
 								>
-									{__(
+									{ __(
 										'Go to Advanced Settings',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</Button>
 								<p className="adv-settings-copy">
-									{__(
+									{ __(
 										'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</p>
 							</FlexBlock>
 							<FlexBlock>
 								<Button
 									data-testid="sandbox-settings-button"
 									variant="link"
-									onClick={() => {
+									onClick={ () => {
 										recordEvent(
 											ONBOARDING_TRACK_EVENTS.VISIT_SANDBOX_SETTINGS_CLICKED
 										);
-										setStep('sandbox-settings');
-									}}
+										setStep( 'sandbox-settings' );
+									} }
 								>
-									{__(
+									{ __(
 										'Go to Sandbox Settings',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</Button>
 								<p>
-									{__(
+									{ __(
 										'Test new features and payment scenarios safely. Experiment in a risk-free environment to make sure everything is set up correctly before going live.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								</p>
 							</FlexBlock>
 						</Flex>

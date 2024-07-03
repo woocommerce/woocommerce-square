@@ -25,16 +25,16 @@ import {
 import { useSquareSettings } from '../../settings/hooks';
 import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
-export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
+export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 	const { settings, squareSettingsLoaded, setSquareSettingData } =
 		useSquareSettings();
 
-	const [updateImport, setUpdateImport] = useState(false);
-	const [isOpen, setOpen] = useState(false);
-	const [isImporting, setIsImporting] = useState(false);
-	const [importDoneNotice, setImportDoneNotice] = useState('');
-	const openModal = () => setOpen(true);
-	const closeModal = () => setOpen(false);
+	const [ updateImport, setUpdateImport ] = useState( false );
+	const [ isOpen, setOpen ] = useState( false );
+	const [ isImporting, setIsImporting ] = useState( false );
+	const [ importDoneNotice, setImportDoneNotice ] = useState( '' );
+	const openModal = () => setOpen( true );
+	const closeModal = () => setOpen( false );
 
 	const {
 		system_of_record = 'disabled',
@@ -47,419 +47,407 @@ export const ConfigureSync = ({ indent = 0, isDirty = false }) => {
 
 	const sync_interval_options = [
 		{
-			label: __('15 minutes', 'woocommerce-square'),
+			label: __( '15 minutes', 'woocommerce' ),
 			value: '0.25',
 		},
 		{
-			label: __('30 minutes', 'woocommerce-square'),
+			label: __( '30 minutes', 'woocommerce' ),
 			value: '0.5',
 		},
 		{
-			label: __('45 minutes', 'woocommerce-square'),
+			label: __( '45 minutes', 'woocommerce' ),
 			value: '0.75',
 		},
 		{
-			label: __('1 hour', 'woocommerce-square'),
+			label: __( '1 hour', 'woocommerce' ),
 			value: '1',
 		},
 		{
-			label: __('2 hours', 'woocommerce-square'),
+			label: __( '2 hours', 'woocommerce' ),
 			value: '2',
 		},
 		{
-			label: __('3 hours', 'woocommerce-square'),
+			label: __( '3 hours', 'woocommerce' ),
 			value: '3',
 		},
 		{
-			label: __('6 hours', 'woocommerce-square'),
+			label: __( '6 hours', 'woocommerce' ),
 			value: '6',
 		},
 		{
-			label: __('8 hours', 'woocommerce-square'),
+			label: __( '8 hours', 'woocommerce' ),
 			value: '8',
 		},
 		{
-			label: __('12 hours', 'woocommerce-square'),
+			label: __( '12 hours', 'woocommerce' ),
 			value: '12',
 		},
 		{
-			label: __('24 hours', 'woocommerce-square'),
+			label: __( '24 hours', 'woocommerce' ),
 			value: '24',
 		},
 	];
 
-	if (!squareSettingsLoaded) {
+	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
 
 	const importProducts = async () => {
-		const response = await apiFetch({
+		const response = await apiFetch( {
 			path: '/wc/v3/wc_square/import-products',
 			method: 'POST',
 			data: {
 				update_during_import: updateImport,
 				api_callback: true,
 			},
-		});
+		} );
 
 		closeModal();
-		setIsImporting(false);
-		setImportDoneNotice(response.data);
+		setIsImporting( false );
+		setImportDoneNotice( response.data );
 	};
 
 	return (
 		<>
-			{is_connected && (
+			{ is_connected && (
 				<Section>
 					<SectionTitle
-						title={__(
-							'Configure Sync Settings',
-							'woocommerce-square'
-						)}
+						title={ __( 'Configure Sync Settings', 'woocommerce' ) }
 					/>
 					<SectionDescription>
-						{__(
+						{ __(
 							'Choose how you want your product data to flow between WooCommerce and Square to keep your inventory and listings perfectly aligned. Select from the options below to best match your business operations:',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</SectionDescription>
 
 					<div className="woo-square-wizard__fields">
 						<InputWrapper
-							label={__('Sync Settings', 'woocommerce-square')}
-							description={parse(
+							label={ __( 'Sync Settings', 'woocommerce' ) }
+							description={ parse(
 								sprintf(
 									/* translators: %1$s and %2$s are placeholders for the link to the documentation, %3$s and %4$s are placeholders for the link to the support forum */
 									__(
 										"Choose where data will be updated for synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you're experiencing technical issues.",
-										'woocommerce-square'
+										'woocommerce'
 									),
 									'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
 									'</a>',
 									'<a href="https://wordpress.org/support/plugin/woocommerce-square/" target="_blank">',
 									'</a>'
 								)
-							)}
+							) }
 						>
 							<SelectControl
 								data-testid="sync-settings-field"
-								value={system_of_record}
-								onChange={(value) =>
-									setSquareSettingData({
+								value={ system_of_record }
+								onChange={ ( value ) =>
+									setSquareSettingData( {
 										system_of_record: value,
-									})
+									} )
 								}
-								options={[
+								options={ [
 									{
-										label: __(
-											'Disabled',
-											'woocommerce-square'
-										),
+										label: __( 'Disabled', 'woocommerce' ),
 										value: 'disabled',
 									},
 									{
-										label: __(
-											'Square',
-											'woocommerce-square'
-										),
+										label: __( 'Square', 'woocommerce' ),
 										value: 'square',
 									},
 									{
 										label: __(
 											'WooCommerce',
-											'woocommerce-square'
+											'woocommerce'
 										),
 										value: 'woocommerce',
 									},
-								]}
+								] }
 							/>
 						</InputWrapper>
 
-						{system_of_record === 'woocommerce' && (
+						{ system_of_record === 'woocommerce' && (
 							<InputWrapper
-								label={__(
-									'Sync Inventory',
-									'woocommerce-square'
-								)}
-								indent={indent}
-								description={parse(
+								label={ __( 'Sync Inventory', 'woocommerce' ) }
+								indent={ indent }
+								description={ parse(
 									sprintf(
 										/* translators: %1$s and %2$s are placeholders for the strong tag */
 										__(
 											'Inventory is %1$salways fetched from Square%2$s periodically to account for sales from other channels.',
-											'woocommerce-square'
+											'woocommerce'
 										),
 										'<strong>',
 										'</strong>'
 									)
-								)}
+								) }
 							>
 								<SquareCheckboxControl
 									data-testid="push-inventory-field"
-									checked={enable_inventory_sync === 'yes'}
-									onChange={(value) =>
-										setSquareSettingData({
+									checked={ enable_inventory_sync === 'yes' }
+									onChange={ ( value ) =>
+										setSquareSettingData( {
 											enable_inventory_sync: value
 												? 'yes'
 												: 'no',
-										})
+										} )
 									}
-									label={__(
+									label={ __(
 										'Enable to push inventory changes to Square',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								/>
 							</InputWrapper>
-						)}
+						) }
 
-						{system_of_record === 'square' && (
+						{ system_of_record === 'square' && (
 							<>
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Sync Inventory',
-										'woocommerce-square'
-									)}
-									indent={indent}
-									description={__(
+										'woocommerce'
+									) }
+									indent={ indent }
+									description={ __(
 										'Inventory is fetched from Square periodically and updated in WooCommerce.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								>
 									<SquareCheckboxControl
 										data-testid="pull-inventory-field"
 										checked={
 											enable_inventory_sync === 'yes'
 										}
-										onChange={(value) =>
-											setSquareSettingData({
+										onChange={ ( value ) =>
+											setSquareSettingData( {
 												enable_inventory_sync: value
 													? 'yes'
 													: 'no',
-											})
+											} )
 										}
-										label={__(
+										label={ __(
 											'Enable to fetch inventory changes from Square',
-											'woocommerce-square'
-										)}
+											'woocommerce'
+										) }
 									/>
 								</InputWrapper>
 
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Override product images',
-										'woocommerce-square'
-									)}
-									indent={indent}
-									description={__(
+										'woocommerce'
+									) }
+									indent={ indent }
+									description={ __(
 										'Product images that have been updated in Square will also be updated within WooCommerce during a sync.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								>
 									<SquareCheckboxControl
 										data-testid="override-images-field"
 										checked={
 											override_product_images === 'yes'
 										}
-										onChange={(value) =>
-											setSquareSettingData({
+										onChange={ ( value ) =>
+											setSquareSettingData( {
 												override_product_images: value
 													? 'yes'
 													: 'no',
-											})
+											} )
 										}
-										label={__(
+										label={ __(
 											'Enable to override Product images from Square',
-											'woocommerce-square'
-										)}
+											'woocommerce'
+										) }
 									/>
 								</InputWrapper>
 
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Handle missing products',
-										'woocommerce-square'
-									)}
-									indent={indent}
-									description={__(
+										'woocommerce'
+									) }
+									indent={ indent }
+									description={ __(
 										'Products not found in Square will be hidden in the WooCommerce product catalog.',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								>
 									<SquareCheckboxControl
 										data-testid="hide-missing-products-field"
 										checked={
 											hide_missing_products === 'yes'
 										}
-										onChange={(value) =>
-											setSquareSettingData({
+										onChange={ ( value ) =>
+											setSquareSettingData( {
 												hide_missing_products: value
 													? 'yes'
 													: 'no',
-											})
+											} )
 										}
-										label={__(
+										label={ __(
 											'Hide synced products when not found in Square',
-											'woocommerce-square'
-										)}
+											'woocommerce'
+										) }
 									/>
 								</InputWrapper>
 							</>
-						)}
+						) }
 
-						{(system_of_record === 'woocommerce' ||
-							system_of_record === 'square') && (
+						{ ( system_of_record === 'woocommerce' ||
+							system_of_record === 'square' ) && (
 							<>
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Sync interval',
-										'woocommerce-square'
-									)}
-									description={__(
+										'woocommerce'
+									) }
+									description={ __(
 										'Frequency for how regularly WooCommerce will sync products with Square.',
-										'woocommerce-square'
-									)}
-									indent={indent}
+										'woocommerce'
+									) }
+									indent={ indent }
 								>
 									<SelectControl
 										data-testid="sync-interval-field"
-										value={sync_interval}
-										options={sync_interval_options}
-										onChange={(value) =>
-											setSquareSettingData({
+										value={ sync_interval }
+										options={ sync_interval_options }
+										onChange={ ( value ) =>
+											setSquareSettingData( {
 												sync_interval: value,
-											})
+											} )
 										}
 									/>
 								</InputWrapper>
 
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Import Products',
-										'woocommerce-square'
-									)}
-									indent={indent}
+										'woocommerce'
+									) }
+									indent={ indent }
 									className="import-products-wrapper"
 								>
 									<Button
 										data-testid="import-products-button"
 										variant="secondary"
 										className="import-square-products-react"
-										onClick={openModal}
-										style={{
+										onClick={ openModal }
+										style={ {
 											display: importDoneNotice
 												? 'none'
 												: 'block',
-										}}
-										disabled={isDirty}
+										} }
+										disabled={ isDirty }
 									>
-										{__(
+										{ __(
 											'Import all Products from Square',
-											'woocommerce-square'
-										)}
+											'woocommerce'
+										) }
 									</Button>
-									{isDirty && (
+									{ isDirty && (
 										<p>
-											{__(
+											{ __(
 												'You have made changes to the settings. Please save the changes to enable the button.',
-												'woocommerce-square'
-											)}
+												'woocommerce'
+											) }
 										</p>
-									)}
+									) }
 									<div
 										className="import-notice notice notice-info is-dismissible"
-										style={{
+										style={ {
 											display: importDoneNotice
 												? 'block'
 												: 'none',
 											padding: '10px',
-										}}
+										} }
 									>
-										{importDoneNotice}
+										{ importDoneNotice }
 									</div>
 								</InputWrapper>
 
-								{isOpen && (
+								{ isOpen && (
 									<Modal
 										title="Import Products From Square"
-										size={'large'}
-										onRequestClose={closeModal}
+										size={ 'large' }
+										onRequestClose={ closeModal }
 									>
 										<div className="import-modal-cover">
 											<div className="import-modal-content">
 												<p>
-													{__(
+													{ __(
 														'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.',
-														'woocommerce-square'
-													)}{' '}
+														'woocommerce'
+													) }{ ' ' }
 												</p>
 												<h3>
-													{__(
+													{ __(
 														'Do you wish to import existing product updates from Square?',
-														'woocommerce-square'
-													)}{' '}
+														'woocommerce'
+													) }{ ' ' }
 												</h3>
 												<p>
-													{parse(
+													{ parse(
 														sprintf(
 															/* translators: %1$s and %2$s are placeholders for the link to the documentation */
 															__(
 																'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.',
-																'woocommerce-square'
+																'woocommerce'
 															),
 															'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
 															'</a>'
 														)
-													)}
+													) }
 												</p>
 												<CheckboxControl
 													data-testid="update-during-import-field"
-													checked={updateImport}
-													onChange={(value) =>
-														setUpdateImport(value)
+													checked={ updateImport }
+													onChange={ ( value ) =>
+														setUpdateImport( value )
 													}
-													label={__(
+													label={ __(
 														'Update existing products during import.',
-														'woocommerce-square'
-													)}
+														'woocommerce'
+													) }
 												/>
 											</div>
 											<div className="import-buttons">
 												<Button
 													variant="secondary"
-													onClick={closeModal}
+													onClick={ closeModal }
 												>
-													{__(
+													{ __(
 														'Cancel',
-														'woocommerce-square'
-													)}
+														'woocommerce'
+													) }
 												</Button>
 												<Button
 													data-testid="import-products-button-confirm"
 													variant="button-primary"
 													className="button-primary"
-													onClick={() => {
-														setIsImporting(true);
+													onClick={ () => {
+														setIsImporting( true );
 														importProducts();
 														recordEvent(
 															ONBOARDING_TRACK_EVENTS.PRODUCT_IMPORT_STARTED
 														);
-													}}
-													isBusy={isImporting}
+													} }
+													isBusy={ isImporting }
 												>
-													{__(
+													{ __(
 														'Import Products',
-														'woocommerce-square'
-													)}
+														'woocommerce'
+													) }
 												</Button>
 											</div>
 										</div>
 									</Modal>
-								)}
+								) }
 							</>
-						)}
+						) }
 					</div>
 				</Section>
-			)}
+			) }
 		</>
 	);
 };

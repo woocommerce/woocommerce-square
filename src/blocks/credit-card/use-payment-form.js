@@ -34,11 +34,11 @@ export const usePaymentForm = (
 	shouldSavePayment = false,
 	token = null
 ) => {
-	const [isLoaded, setLoaded] = useState(false);
-	const [cardType, setCardType] = useState('');
+	const [ isLoaded, setLoaded ] = useState( false );
+	const [ cardType, setCardType ] = useState( '' );
 
-	const verificationDetails = useMemo(() => {
-		const intent = shouldSavePayment && !token ? 'STORE' : 'CHARGE';
+	const verificationDetails = useMemo( () => {
+		const intent = shouldSavePayment && ! token ? 'STORE' : 'CHARGE';
 		const newVerificationDetails = {
 			billingContact: {
 				familyName: billing.billingData.last_name || '',
@@ -57,7 +57,7 @@ export const usePaymentForm = (
 			intent,
 		};
 
-		if (intent === 'CHARGE') {
+		if ( intent === 'CHARGE' ) {
 			newVerificationDetails.amount = (
 				billing.cartTotal.value / 100
 			).toString();
@@ -70,10 +70,10 @@ export const usePaymentForm = (
 		billing.currency.code,
 		shouldSavePayment,
 		token,
-	]);
+	] );
 
 	const getPaymentMethodData = useCallback(
-		(inputData) => {
+		( inputData ) => {
 			const {
 				cardData = {},
 				nonce,
@@ -83,32 +83,34 @@ export const usePaymentForm = (
 			} = inputData;
 
 			const data = {
-				[`wc-${PAYMENT_METHOD_NAME}-card-type`]: cardData?.brand || '',
-				[`wc-${PAYMENT_METHOD_NAME}-last-four`]: cardData?.last4 || '',
-				[`wc-${PAYMENT_METHOD_NAME}-exp-month`]:
+				[ `wc-${ PAYMENT_METHOD_NAME }-card-type` ]:
+					cardData?.brand || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-last-four` ]:
+					cardData?.last4 || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-exp-month` ]:
 					cardData?.expMonth?.toString() || '',
-				[`wc-${PAYMENT_METHOD_NAME}-exp-year`]:
+				[ `wc-${ PAYMENT_METHOD_NAME }-exp-year` ]:
 					cardData?.expYear?.toString() || '',
-				[`wc-${PAYMENT_METHOD_NAME}-payment-postcode`]:
+				[ `wc-${ PAYMENT_METHOD_NAME }-payment-postcode` ]:
 					cardData?.postalCode || '',
-				[`wc-${PAYMENT_METHOD_NAME}-payment-nonce`]: nonce || '',
-				[`wc-${PAYMENT_METHOD_NAME}-payment-token`]: token || '',
-				[`wc-${PAYMENT_METHOD_NAME}-buyer-verification-token`]:
+				[ `wc-${ PAYMENT_METHOD_NAME }-payment-nonce` ]: nonce || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-payment-token` ]: token || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-buyer-verification-token` ]:
 					verificationToken || '',
-				[`wc-${PAYMENT_METHOD_NAME}-tokenize-payment-method`]:
+				[ `wc-${ PAYMENT_METHOD_NAME }-tokenize-payment-method` ]:
 					shouldSavePayment || false,
-				'log-data': logs.length > 0 ? JSON.stringify(logs) : '',
+				'log-data': logs.length > 0 ? JSON.stringify( logs ) : '',
 				'checkout-notices':
-					notices.length > 0 ? JSON.stringify(notices) : '',
+					notices.length > 0 ? JSON.stringify( notices ) : '',
 			};
 
-			if (token) {
+			if ( token ) {
 				data.token = token;
 			}
 
 			return data;
 		},
-		[cardType, shouldSavePayment, token] // eslint-disable-line react-hooks/exhaustive-deps
+		[ cardType, shouldSavePayment, token ] // eslint-disable-line react-hooks/exhaustive-deps
 	);
 
 	/**
@@ -119,14 +121,14 @@ export const usePaymentForm = (
 	 * @return {Promise} Returns Promise<TokenResult>
 	 */
 	const createNonce = useCallback(
-		async (card) => {
-			if (!token) {
+		async ( card ) => {
+			if ( ! token ) {
 				return await card.tokenize();
 			}
 
 			return token;
 		},
-		[token]
+		[ token ]
 	);
 
 	/**
@@ -134,14 +136,14 @@ export const usePaymentForm = (
 	 *
 	 * @param {Object} verificationResult Verify buyer result from Square
 	 */
-	const handleVerifyBuyerResponse = useCallback((verificationResult) => {
+	const handleVerifyBuyerResponse = useCallback( ( verificationResult ) => {
 		const response = {
 			notices: [],
 			logs: [],
 		};
 
 		// no errors, but also no verification token.
-		if (!verificationResult || !verificationResult.token) {
+		if ( ! verificationResult || ! verificationResult.token ) {
 			logData(
 				'Verification token is missing from the Square response',
 				response
@@ -150,13 +152,13 @@ export const usePaymentForm = (
 				'Verification token is missing from the Square response',
 				'error'
 			);
-			handleErrors([], response);
+			handleErrors( [], response );
 		} else {
 			response.verificationToken = verificationResult.token;
 		}
 
 		return response;
-	}, []);
+	}, [] );
 
 	/**
 	 * Generates a verification buyer token
@@ -167,7 +169,7 @@ export const usePaymentForm = (
 	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
 	 */
 	const verifyBuyer = useCallback(
-		async (payments, paymentToken) => {
+		async ( payments, paymentToken ) => {
 			let verificationResponse;
 			try {
 				verificationResponse = await payments.verifyBuyer(
@@ -175,14 +177,14 @@ export const usePaymentForm = (
 					verificationDetails
 				);
 
-				return handleVerifyBuyerResponse(verificationResponse);
-			} catch (error) {
-				handleErrors([error]);
+				return handleVerifyBuyerResponse( verificationResponse );
+			} catch ( error ) {
+				handleErrors( [ error ] );
 			}
 
 			return false;
 		},
-		[verificationDetails, handleVerifyBuyerResponse]
+		[ verificationDetails, handleVerifyBuyerResponse ]
 	);
 
 	/**
@@ -191,34 +193,34 @@ export const usePaymentForm = (
 	 *
 	 * @param {Object} event Input event object
 	 */
-	const handleInputReceived = useCallback((event) => {
+	const handleInputReceived = useCallback( ( event ) => {
 		// change card icon
-		if (event.eventType === 'cardBrandChanged') {
+		if ( event.eventType === 'cardBrandChanged' ) {
 			const brand = event.cardBrand;
 			let newCardType = 'plain';
 
-			if (brand === null || brand === 'unknown') {
+			if ( brand === null || brand === 'unknown' ) {
 				newCardType = '';
 			}
 
-			if (getSquareServerData().availableCardTypes[brand] !== null) {
-				newCardType = getSquareServerData().availableCardTypes[brand];
+			if ( getSquareServerData().availableCardTypes[ brand ] !== null ) {
+				newCardType = getSquareServerData().availableCardTypes[ brand ];
 			}
 
-			log(`Card brand changed to ${brand}`);
-			setCardType(newCardType);
+			log( `Card brand changed to ${ brand }` );
+			setCardType( newCardType );
 		}
-	}, []);
+	}, [] );
 
 	/**
 	 * Returns the postcode value from BillingDataProps or an empty string
 	 *
 	 * @return {string} Postal Code value or an empty string
 	 */
-	const getPostalCode = useCallback(() => {
+	const getPostalCode = useCallback( () => {
 		const postalCode = billing.billingData.postcode || '';
 		return postalCode;
-	}, [billing.billingData.postcode]);
+	}, [ billing.billingData.postcode ] );
 
 	return {
 		handleInputReceived,

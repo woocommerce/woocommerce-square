@@ -2,20 +2,17 @@ import { __ } from '@wordpress/i18n';
 
 export const CREDIT_CARD_DEFAULT_STATE = {
 	enabled: 'yes',
-	title: __('Credit Card', 'woocommerce-square'),
-	description: __(
-		'Pay securely using your credit card.',
-		'woocommerce-square'
-	),
+	title: __( 'Credit Card', 'woocommerce' ),
+	description: __( 'Pay securely using your credit card.', 'woocommerce' ),
 	transaction_type: 'charge',
 	charge_virtual_orders: 'no',
 	enable_paid_capture: 'no',
-	card_types: ['VISA', 'MC', 'AMEX', 'DISC', 'DINERS', 'JCB', 'UNIONPAY'],
+	card_types: [ 'VISA', 'MC', 'AMEX', 'DISC', 'DINERS', 'JCB', 'UNIONPAY' ],
 	tokenization: 'no',
 };
 
-const creditCardReducer = (state = CREDIT_CARD_DEFAULT_STATE, action) => {
-	switch (action.type) {
+const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
 		case 'SET_CREDIT_CARD_DATA':
 			return {
 				...state,
@@ -39,7 +36,7 @@ const digitalWalletsReducer = (
 	state = DIGITAL_WALLETS_DEFAULT_STATE,
 	action
 ) => {
-	switch (action.type) {
+	switch ( action.type ) {
 		case 'SET_DIGITAL_WALLETS_DATA':
 			return {
 				...state,
@@ -53,15 +50,15 @@ const digitalWalletsReducer = (
 
 export const GIFT_CARDS_DEFAULT_STATE = {
 	enabled: 'no',
-	title: __('Square Gift Cards', 'woocommerce-square'),
+	title: __( 'Square Gift Cards', 'woocommerce' ),
 	description: __(
 		'Allow customers to purchase and redeem gift cards during checkout.',
-		'woocommerce-square'
+		'woocommerce'
 	),
 };
 
-const giftCardReducer = (state = GIFT_CARDS_DEFAULT_STATE, action) => {
-	switch (action.type) {
+const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
 		case 'SET_GIFT_CARD_DATA':
 			return {
 				...state,
@@ -75,8 +72,8 @@ const giftCardReducer = (state = GIFT_CARDS_DEFAULT_STATE, action) => {
 
 export const CASH_APP_DEFAULT_STATE = {
 	enabled: 'no',
-	title: __('Cash App Pay', 'woocommerce-square'),
-	description: __('Pay securely using Cash App Pay.', 'woocommerce-square'),
+	title: __( 'Cash App Pay', 'woocommerce' ),
+	description: __( 'Pay securely using Cash App Pay.', 'woocommerce' ),
 	transaction_type: 'charge',
 	charge_virtual_orders: 'no',
 	enable_paid_capture: 'no',
@@ -84,8 +81,8 @@ export const CASH_APP_DEFAULT_STATE = {
 	button_shape: 'semiround',
 };
 
-const cashAppReducer = (state = CASH_APP_DEFAULT_STATE, action) => {
-	switch (action.type) {
+const cashAppReducer = ( state = CASH_APP_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
 		case 'SET_CASH_APP_DATA':
 			return {
 				...state,
@@ -123,7 +120,7 @@ const squareSettingsReducer = (
 	state = SQUARE_SETTINGS_DEFAULT_STATE,
 	action
 ) => {
-	switch (action.type) {
+	switch ( action.type ) {
 		case 'SET_SQUARE_SETTING_DATA':
 			return {
 				...state,
@@ -142,8 +139,11 @@ const PROCESS_STATUS_DEFAULT_STATE = {
 	giftCardsSettingsIsSaving: false,
 };
 
-const savingProcessStatus = (state = PROCESS_STATUS_DEFAULT_STATE, action) => {
-	switch (action.type) {
+const savingProcessStatus = (
+	state = PROCESS_STATUS_DEFAULT_STATE,
+	action
+) => {
+	switch ( action.type ) {
 		case 'SET_SQUARE_SETTING_PROCESS_STATUS':
 			return {
 				...state,
@@ -178,8 +178,8 @@ const STEP_DEFAULT_STATE = {
 	backStep: '',
 };
 
-const stepReducer = (state = STEP_DEFAULT_STATE, action) => {
-	switch (action.type) {
+const stepReducer = ( state = STEP_DEFAULT_STATE, action ) => {
+	switch ( action.type ) {
 		case 'SET_STEP':
 			return {
 				...state,

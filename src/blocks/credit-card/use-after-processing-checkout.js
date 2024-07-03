@@ -25,7 +25,7 @@ export const useAfterProcessingCheckout = (
 	onCheckoutAfterProcessingWithSuccess,
 	emitResponse
 ) => {
-	useEffect(() => {
+	useEffect( () => {
 		/**
 		 * Before finishing the checkout with the 'success' status, check that there
 		 * are no checkout errors and return them if so.
@@ -36,7 +36,7 @@ export const useAfterProcessingCheckout = (
 		 *
 		 * @return {Object} If checkout errors, return an error response object with message, otherwise return true.
 		 */
-		const onCheckoutComplete = (checkoutResponse) => {
+		const onCheckoutComplete = ( checkoutResponse ) => {
 			let response = { type: emitResponse.responseTypes.SUCCESS };
 
 			const { paymentStatus, paymentDetails } =
@@ -48,7 +48,7 @@ export const useAfterProcessingCheckout = (
 			) {
 				response = {
 					type: emitResponse.responseTypes.ERROR,
-					message: JSON.parse(paymentDetails.checkoutNotices),
+					message: JSON.parse( paymentDetails.checkoutNotices ),
 					messageContext: emitResponse.noticeContexts.PAYMENTS,
 					retry: true,
 				};
@@ -58,9 +58,9 @@ export const useAfterProcessingCheckout = (
 		};
 
 		const unsubscribeCheckoutCompleteError =
-			onCheckoutAfterProcessingWithError(onCheckoutComplete);
+			onCheckoutAfterProcessingWithError( onCheckoutComplete );
 		const unsubscribeCheckoutCompleteSuccess =
-			onCheckoutAfterProcessingWithSuccess(onCheckoutComplete);
+			onCheckoutAfterProcessingWithSuccess( onCheckoutComplete );
 
 		return () => {
 			unsubscribeCheckoutCompleteError();
@@ -72,5 +72,5 @@ export const useAfterProcessingCheckout = (
 		emitResponse.noticeContexts.PAYMENTS,
 		emitResponse.responseTypes.ERROR,
 		emitResponse.responseTypes.SUCCESS,
-	]);
+	] );
 };

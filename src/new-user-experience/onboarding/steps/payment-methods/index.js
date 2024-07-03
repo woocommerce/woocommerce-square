@@ -45,7 +45,7 @@ export const PaymentMethods = () => {
 	const enable_gift_cards = giftCardsGatewaySettings.enabled;
 	const enable_cash_app = cashAppGatewaySettings.enabled;
 
-	if (!(paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded)) {
+	if ( ! ( paymentGatewaySettingsLoaded && cashAppGatewaySettingsLoaded ) ) {
 		return null;
 	}
 
@@ -53,31 +53,28 @@ export const PaymentMethods = () => {
 		isPaymentGatewaySettingsSaving,
 		isCashAppGatewaySettingsSaving,
 		isGiftCardsGatewaySettingsSaving,
-	].some((state) => state === null || state === true);
+	].some( ( state ) => state === null || state === true );
 
 	return (
 		<div className="woo-square-onbarding__payment-settings">
 			<div className="woo-square-onbarding__payment-settings--left">
 				<div className="woo-square-onbarding__payment-settings__intro">
 					<div className="woo-square-onbarding__payment-settings__intro--title">
-						{__(
-							"You're connected to Square!",
-							'woocommerce-square'
-						)}
+						{ __( "You're connected to Square!", 'woocommerce' ) }
 						<span className="woo-square-onbarding__payment-settings__intro--title-icon">
 							<Confetti />
 						</span>
 					</div>
 					<SectionDescription>
-						{__(
+						{ __(
 							"Congratulations! You've successfully connected your Square account.",
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 						<p>
-							{__(
+							{ __(
 								"Now, let's enable the payment methods you want to offer on your site. This is where you can tailor your checkout experience to meet your customers' needs.",
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 						</p>
 					</SectionDescription>
 				</div>
@@ -88,88 +85,82 @@ export const PaymentMethods = () => {
 			<div className="woo-square-onbarding__payment-settings--right">
 				<div className="woo-square-onbarding__payment-settings__toggles">
 					<SectionTitle
-						title={__(
-							'Enable Payment Methods',
-							'woocommerce-square'
-						)}
+						title={ __( 'Enable Payment Methods', 'woocommerce' ) }
 					/>
 					<SectionDescription>
-						{__(
+						{ __(
 							'Simply toggle the payment methods you wish to activate. Each method you enable here will be available to your customers at checkout, making their purchase process smooth and effortless.',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</SectionDescription>
 
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Enable Credit & Debit Cards',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 						variant="boxed"
 					>
 						<ToggleControl
 							className="payment-gateway-toggle__credit-card"
-							checked={enabled === 'yes'}
-							onChange={(enabledCC) =>
-								setCreditCardData({
+							checked={ enabled === 'yes' }
+							onChange={ ( enabledCC ) =>
+								setCreditCardData( {
 									enabled: enabledCC ? 'yes' : 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>
 
 					<InputWrapper
-						label={__(
-							'Enable Digital Wallets',
-							'woocommerce-square'
-						)}
+						label={ __( 'Enable Digital Wallets', 'woocommerce' ) }
 						variant="boxed"
 					>
 						<ToggleControl
 							className="payment-gateway-toggle__digital-wallet"
-							checked={enable_digital_wallets === 'yes'}
-							onChange={(digital_wallets) =>
-								setDigitalWalletData({
+							checked={ enable_digital_wallets === 'yes' }
+							onChange={ ( digital_wallets ) =>
+								setDigitalWalletData( {
 									enable_digital_wallets: digital_wallets
 										? 'yes'
 										: 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>
 
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Enable Cash App Pay (US-only)',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 						variant="boxed"
 					>
 						<ToggleControl
 							className="payment-gateway-toggle__cash-app"
-							checked={enable_cash_app === 'yes'}
-							onChange={(cash_app) =>
-								setCashAppData({
+							checked={ enable_cash_app === 'yes' }
+							onChange={ ( cash_app ) =>
+								setCashAppData( {
 									enabled: cash_app ? 'yes' : 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>
 
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Enable Square Gift Cards',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 						variant="boxed"
 					>
 						<ToggleControl
 							className="payment-gateway-toggle__gift-card"
-							checked={enable_gift_cards === 'yes'}
-							onChange={(gift_cards) =>
-								setGiftCardData({
+							checked={ enable_gift_cards === 'yes' }
+							onChange={ ( gift_cards ) =>
+								setGiftCardData( {
 									enabled: gift_cards ? 'yes' : 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>
@@ -179,9 +170,9 @@ export const PaymentMethods = () => {
 							data-testid="next-step-button"
 							variant="button-primary"
 							className="button-primary"
-							isBusy={isSavingState}
-							onClick={() => {
-								(async () => {
+							isBusy={ isSavingState }
+							onClick={ () => {
+								( async () => {
 									await savePaymentGatewaySettings();
 									await saveCashAppSettings();
 									await saveGiftCardsSettings();
@@ -194,11 +185,11 @@ export const PaymentMethods = () => {
 											enable_gift_cards,
 										}
 									);
-									setStep('payment-complete');
-								})();
-							}}
+									setStep( 'payment-complete' );
+								} )();
+							} }
 						>
-							{__('Next', 'woocommerce-square')}
+							{ __( 'Next', 'woocommerce' ) }
 						</Button>
 					</div>
 				</div>

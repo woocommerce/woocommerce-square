@@ -26,11 +26,11 @@ export const SettingsApp = () => {
 		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
-	} = useSquareSettings(true);
+	} = useSquareSettings( true );
 
-	const [initialState, setInitialState] = useState(false);
-	const [isFormDirty, setIsFormDirty] = useState(false);
-	const [envUpdated, setEnvUpdated] = useState(false);
+	const [ initialState, setInitialState ] = useState( false );
+	const [ isFormDirty, setIsFormDirty ] = useState( false );
+	const [ envUpdated, setEnvUpdated ] = useState( false );
 
 	const {
 		enable_sandbox = 'no',
@@ -46,90 +46,90 @@ export const SettingsApp = () => {
 		enable_sandbox === 'yes' ? sandbox_location_id : production_location_id;
 
 	// Set the initial state.
-	useEffect(() => {
-		if (!squareSettingsLoaded) {
+	useEffect( () => {
+		if ( ! squareSettingsLoaded ) {
 			return;
 		}
 
-		setInitialState(settings);
-	}, [squareSettingsLoaded]);
+		setInitialState( settings );
+	}, [ squareSettingsLoaded ] );
 
 	// We set the state for `isFormDirty` here.
-	useEffect(() => {
-		if (initialState === false) {
+	useEffect( () => {
+		if ( initialState === false ) {
 			return;
 		}
 
 		setIsFormDirty(
-			!Object.keys(initialState).every(
-				(key) => initialState[key] === settings[key]
+			! Object.keys( initialState ).every(
+				( key ) => initialState[ key ] === settings[ key ]
 			)
 		);
-	}, [settings]);
+	}, [ settings ] );
 
 	// We disable the "Import products" button when the form is dirty
 	// and re-enable it when we form is submitted / saved.
-	useEffect(() => {
-		if (isSquareSettingsSaving !== null) {
+	useEffect( () => {
+		if ( isSquareSettingsSaving !== null ) {
 			return;
 		}
 
-		setInitialState(settings);
-		setIsFormDirty(false);
-	}, [isSquareSettingsSaving]);
+		setInitialState( settings );
+		setIsFormDirty( false );
+	}, [ isSquareSettingsSaving ] );
 
-	if (!squareSettingsLoaded) {
+	if ( ! squareSettingsLoaded ) {
 		return <Loader />;
 	}
 
 	return (
 		<>
-			<SectionTitle
-				title={__('Connect to Square', 'woocommerce-square')}
-			/>
+			<SectionTitle title={ __( 'Connect to Square', 'woocommerce' ) } />
 			<SectionDescription>
-				{__(
+				{ __(
 					'Activate Square integration to securely manage and process transactions for your WooCommerce store. Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes. This setup ensures your payment processing is seamless, whether you are in a development stage or ready to go live.',
-					'woocommerce-square'
-				)}
+					'woocommerce'
+				) }
 			</SectionDescription>
 
 			<InputWrapper
-				label={__('Environment Selection', 'woocommerce-square')}
+				label={ __( 'Environment Selection', 'woocommerce' ) }
 			>
 				<SelectControl
 					data-testid="environment-selection-field"
 					required
-					value={enable_sandbox}
-					onChange={(value) => {
-						setEnvUpdated(true);
-						setSquareSettingData({ enable_sandbox: value });
-					}}
-					options={[
+					value={ enable_sandbox }
+					onChange={ ( value ) => {
+						setEnvUpdated( true );
+						setSquareSettingData( { enable_sandbox: value } );
+					} }
+					options={ [
 						{
 							label: __(
 								'Please choose an environment',
-								'woocommerce-square'
+								'woocommerce'
 							),
 							value: '',
 						},
 						{
-							label: __('Production', 'woocommerce-square'),
+							label: __( 'Production', 'woocommerce' ),
 							value: 'no',
 						},
 						{
-							label: __('Sandbox', 'woocommerce-square'),
+							label: __( 'Sandbox', 'woocommerce' ),
 							value: 'yes',
 						},
-					]}
+					] }
 				/>
 			</InputWrapper>
 
-			{enable_sandbox === 'yes' && <SandboxSettings showToggle={false} />}
+			{ enable_sandbox === 'yes' && (
+				<SandboxSettings showToggle={ false } />
+			) }
 
-			{enable_sandbox === 'no' && (
+			{ enable_sandbox === 'no' && (
 				<InputWrapper
-					label={__('Connection', 'woocommerce-square')}
+					label={ __( 'Connection', 'woocommerce' ) }
 					variant="boxed"
 					className="square-settings__connection"
 				>
@@ -138,80 +138,83 @@ export const SettingsApp = () => {
 						variant="button-primary"
 						className="button-primary"
 						href={
-							is_connected && !envUpdated
+							is_connected && ! envUpdated
 								? disconnection_url
 								: connection_url
 						}
-						isBusy={isSquareSettingsSaving}
+						isBusy={ isSquareSettingsSaving }
 					>
-						{is_connected && !envUpdated
-							? __('Disconnect from Square', 'woocommerce-square')
-							: __('Connect to Square', 'woocommerce-square')}
+						{ is_connected && ! envUpdated
+							? __( 'Disconnect from Square', 'woocommerce' )
+							: __( 'Connect to Square', 'woocommerce' ) }
 					</Button>
 				</InputWrapper>
-			)}
+			) }
 
-			{is_connected && (
+			{ is_connected && (
 				<Section>
 					<SectionTitle
-						title={__(
+						title={ __(
 							'Select your business location',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					/>
 					<SectionDescription>
-						{parse(
+						{ parse(
 							sprintf(
 								/* translators: %1$s and %2$s are placeholders for the link to the documentation */
 								__(
-									'Please select the location you wish to link with this WooCommerce store. Only active %1$slocations%2$s that support credit card processing in Square can be linked.'
+									'Please select the location you wish to link with this WooCommerce store. Only active %1$slocations%2$s that support credit card processing in Square can be linked.',
+									'woocommerce'
 								),
 								'<a target="_blank" href="https://docs.woocommerce.com/document/woocommerce-square/#section-4">',
 								'</a>'
 							)
-						)}
+						) }
 					</SectionDescription>
 
 					<InputWrapper
-						label={__('Business location', 'woocommerce-square')}
+						label={ __( 'Business location', 'woocommerce' ) }
 					>
 						<SelectControl
 							data-testid="business-location-field"
-							value={_location_id}
-							onChange={(value) => {
-								if (enable_sandbox === 'yes') {
-									setSquareSettingData({
+							value={ _location_id }
+							onChange={ ( value ) => {
+								if ( enable_sandbox === 'yes' ) {
+									setSquareSettingData( {
 										sandbox_location_id: value,
-									});
+									} );
 								} else {
-									setSquareSettingData({
+									setSquareSettingData( {
 										production_location_id: value,
-									});
+									} );
 								}
-							}}
-							options={[
+							} }
+							options={ [
 								{
 									label: __(
 										'Please choose a location',
-										'woocommerce-square'
+										'woocommerce'
 									),
 									value: '',
 								},
 								...locations,
-							]}
+							] }
 						/>
 					</InputWrapper>
 				</Section>
-			)}
+			) }
 
-			{is_connected && <ConfigureSync indent={2} isDirty={isFormDirty} />}
+			{ is_connected && (
+				<ConfigureSync indent={ 2 } isDirty={ isFormDirty } />
+			) }
 
 			<AdvancedSettings />
 
 			<SquareSettingsSaveButton
-				label={__('Save changes', 'woocommerce-square')}
-				afterSaveLabel={__('Changes Saved!', 'woocommerce-square')}
-				afterSaveCallback={() => window.location.reload()}
+				label={ __( 'Save changes', 'woocommerce' ) }
+				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce' ) }
+				afterSaveCallback={ () => window.location.reload() }
 			/>
 		</>
 	);

@@ -3,10 +3,10 @@ import {
 	queueRecordEvent as coreQueueRecordEvent,
 } from '@woocommerce/tracks';
 
-const getEventRecordParams = (e = '', properties = {}) => {
+const getEventRecordParams = ( e = '', properties = {} ) => {
 	const prefix = 'woocommerce_square_';
 
-	const eventName = `${prefix}${e}`;
+	const eventName = `${ prefix }${ e }`;
 	const baseProperties = {
 		plugin_version: wcSquareOnboarding.plugin_version, // eslint-disable-line no-undef
 		is_mobile: wcSquareOnboarding.is_mobile, // eslint-disable-line no-undef
@@ -19,16 +19,16 @@ const getEventRecordParams = (e = '', properties = {}) => {
 	};
 };
 
-export const recordEvent = (e = '', properties = {}) => {
-	const { eventName, allProperties } = getEventRecordParams(e, properties);
+export const recordEvent = ( e = '', properties = {} ) => {
+	const { eventName, allProperties } = getEventRecordParams( e, properties );
 
-	coreRecordEvent(eventName, allProperties);
+	coreRecordEvent( eventName, allProperties );
 };
 
-export const queueRecordEvent = (e = '', properties = {}) => {
-	const { eventName, allProperties } = getEventRecordParams(e, properties);
+export const queueRecordEvent = ( e = '', properties = {} ) => {
+	const { eventName, allProperties } = getEventRecordParams( e, properties );
 
-	coreQueueRecordEvent(eventName, allProperties);
+	coreQueueRecordEvent( eventName, allProperties );
 };
 
 export const ONBOARDING_TRACK_EVENTS = {

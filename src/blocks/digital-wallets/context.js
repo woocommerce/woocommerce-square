@@ -3,6 +3,6 @@
  */
 import { createContext } from '@wordpress/element';
 
-const DigitalWalletContext = createContext(false);
+const DigitalWalletContext = createContext( false );
 
 export default DigitalWalletContext;

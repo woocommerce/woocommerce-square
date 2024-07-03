@@ -7,9 +7,9 @@ import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const GiftCardsSettingsApp = () => {
 	const { giftCardsGatewaySettingsLoaded, saveGiftCardsSettings } =
-		usePaymentGatewaySettings(true);
+		usePaymentGatewaySettings( true );
 
-	if (!giftCardsGatewaySettingsLoaded) {
+	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
@@ -17,9 +17,9 @@ export const GiftCardsSettingsApp = () => {
 		<>
 			<GiftCardSetup origin="settings" />
 			<PaymentGatewaySettingsSaveButton
-				onClick={() => {
+				onClick={ () => {
 					saveGiftCardsSettings();
-				}}
+				} }
 			/>
 		</>
 	);

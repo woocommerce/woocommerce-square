@@ -16,24 +16,26 @@ import { getSquareServerData } from '../square-utils';
  *
  * @param {RegisteredPaymentMethodProps} props Incoming props
  */
-export const ComponentCreditCard = ({
+export const ComponentCreditCard = ( {
 	billing,
 	eventRegistration,
 	emitResponse,
 	shouldSavePayment,
-}) => {
+} ) => {
 	const { isTokenizationForced } = getSquareServerData();
 	const shouldMaybeSavePayment = shouldSavePayment || isTokenizationForced;
 
-	const form = usePaymentForm(billing, shouldMaybeSavePayment);
+	const form = usePaymentForm( billing, shouldMaybeSavePayment );
 
 	return (
-		<SquareWebPaymentsForm defaults={{ postalCode: form.getPostalCode() }}>
+		<SquareWebPaymentsForm
+			defaults={ { postalCode: form.getPostalCode() } }
+		>
 			<ComponentCardFields />
 			<CheckoutHandler
-				checkoutFormHandler={form}
-				eventRegistration={eventRegistration}
-				emitResponse={emitResponse}
+				checkoutFormHandler={ form }
+				eventRegistration={ eventRegistration }
+				emitResponse={ emitResponse }
 			/>
 		</SquareWebPaymentsForm>
 	);

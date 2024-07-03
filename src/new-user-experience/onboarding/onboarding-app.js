@@ -32,11 +32,13 @@ import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../tracks';
 import { connectToSquare } from '../utils';
 
 export const OnboardingApp = () => {
-	const [settingsLoaded, setSettingsLoaded] = useState(false);
-	const [sandboxConnectLabel, setSandboxConnectLabel] = useState('');
-	const [isVerifyingConnection, setIsVerifyingConnection] = useState(false);
-	const [sandboxConnected, setSandboxConnected] = useState(false);
-	const [businessLocationLoaded, setBusinessLocationLoaded] = useState(false);
+	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
+	const [ sandboxConnectLabel, setSandboxConnectLabel ] = useState( '' );
+	const [ isVerifyingConnection, setIsVerifyingConnection ] =
+		useState( false );
+	const [ sandboxConnected, setSandboxConnected ] = useState( false );
+	const [ businessLocationLoaded, setBusinessLocationLoaded ] =
+		useState( false );
 
 	const {
 		paymentGatewaySettingsLoaded,
@@ -46,13 +48,13 @@ export const OnboardingApp = () => {
 		savePaymentGatewaySettings,
 		saveGiftCardsSettings,
 		saveCashAppSettings,
-	} = usePaymentGatewaySettings(true);
+	} = usePaymentGatewaySettings( true );
 
-	const { stepData, setStep, setBackStep } = useSteps(true);
+	const { stepData, setStep, setBackStep } = useSteps( true );
 
 	const { step, backStep } = stepData;
 
-	const { settings, squareSettingsLoaded } = useSquareSettings(true);
+	const { settings, squareSettingsLoaded } = useSquareSettings( true );
 
 	const {
 		system_of_record,
@@ -67,35 +69,35 @@ export const OnboardingApp = () => {
 	} = settings;
 
 	// Set info in local storage.
-	useEffect(() => {
-		localStorage.setItem('step', step); // eslint-disable-line no-undef
-		localStorage.setItem('backStep', backStep); // eslint-disable-line no-undef
-	}, [step, backStep]);
+	useEffect( () => {
+		localStorage.setItem( 'step', step ); // eslint-disable-line no-undef
+		localStorage.setItem( 'backStep', backStep ); // eslint-disable-line no-undef
+	}, [ step, backStep ] );
 
 	// Set the settings loaded value based on the step.
-	useEffect(() => {
-		switch (step) {
+	useEffect( () => {
+		switch ( step ) {
 			case 'connect-square':
-				setSettingsLoaded(false);
+				setSettingsLoaded( false );
 				break;
 			case 'cash-app':
-				setSettingsLoaded(cashAppGatewaySettingsLoaded);
+				setSettingsLoaded( cashAppGatewaySettingsLoaded );
 				break;
 			case 'gift-card':
 			case 'payment-methods':
-				setSettingsLoaded(giftCardsGatewaySettingsLoaded);
-				apiFetch({
+				setSettingsLoaded( giftCardsGatewaySettingsLoaded );
+				apiFetch( {
 					path: '/wc/v3/wc_square/connected_page_visited',
 					method: 'POST',
-				});
+				} );
 				break;
 			case 'sync-settings':
 			case 'advanced-settings':
 			case 'sandbox-settings':
-				setSettingsLoaded(squareSettingsLoaded);
+				setSettingsLoaded( squareSettingsLoaded );
 				break;
 			default:
-				setSettingsLoaded(paymentGatewaySettingsLoaded);
+				setSettingsLoaded( paymentGatewaySettingsLoaded );
 				break;
 		}
 	}, [
@@ -104,74 +106,74 @@ export const OnboardingApp = () => {
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded,
-	]);
+	] );
 
 	// Set the backStep value.
-	useEffect(() => {
-		switch (step) {
+	useEffect( () => {
+		switch ( step ) {
 			case 'connect-square':
 			case 'business-location':
-				setBackStep('');
+				setBackStep( '' );
 				break;
 			case 'payment-methods':
-				setBackStep('business-location');
+				setBackStep( 'business-location' );
 				break;
 			case 'payment-complete':
-				setBackStep('payment-methods');
+				setBackStep( 'payment-methods' );
 				break;
 			default:
-				setBackStep('payment-complete');
+				setBackStep( 'payment-complete' );
 				break;
 		}
-	}, [step]);
+	}, [ step ] );
 
 	const isLoadingInProgress = [
 		squareSettingsLoaded,
 		paymentGatewaySettingsLoaded,
 		cashAppGatewaySettingsLoaded,
 		giftCardsGatewaySettingsLoaded,
-	].every((isLoading) => isLoading);
+	].every( ( isLoading ) => isLoading );
 
-	if (!isLoadingInProgress) {
+	if ( ! isLoadingInProgress ) {
 		return <Loader />;
 	}
 
 	// Redirect to the next page from the connect page when connection is successful.
-	if (step === 'connect-square' && settings.is_connected) {
-		setStep('business-location');
-		setSettingsLoaded(true);
+	if ( step === 'connect-square' && settings.is_connected ) {
+		setStep( 'business-location' );
+		setSettingsLoaded( true );
 	}
 
 	// Redirect to the connect page when connection is not successful.
-	if (step !== 'connect-square' && !settings.is_connected) {
-		setStep('connect-square');
-		setSettingsLoaded(true);
+	if ( step !== 'connect-square' && ! settings.is_connected ) {
+		setStep( 'connect-square' );
+		setSettingsLoaded( true );
 	}
 
 	// Set the settings loaded when the connection is not successful on the connection page.
 	if (
 		step === 'connect-square' &&
-		!settings.is_connected &&
-		!settingsLoaded
+		! settings.is_connected &&
+		! settingsLoaded
 	) {
-		setSettingsLoaded(true);
+		setSettingsLoaded( true );
 	}
 
 	return (
 		<>
 			<OnboardingHeader />
-			<div className={'woo-square-onboarding__cover ' + step}>
-				{step === 'connect-square' && <ConnectSetup />}
-				{step === 'business-location' && (
+			<div className={ 'woo-square-onboarding__cover ' + step }>
+				{ step === 'connect-square' && <ConnectSetup /> }
+				{ step === 'business-location' && (
 					<>
 						<BusinessLocation />
-						{settings.locations.length ? (
+						{ settings.locations.length ? (
 							<SquareSettingsSaveButton
-								afterSaveLabel={__(
+								afterSaveLabel={ __(
 									'Changes Saved!',
-									'woocommerce-square'
-								)}
-								afterSaveCallback={() => {
+									'woocommerce'
+								) }
+								afterSaveCallback={ () => {
 									recordEvent(
 										ONBOARDING_TRACK_EVENTS.SAVE_BUSINESS_LOCATION,
 										{
@@ -179,35 +181,35 @@ export const OnboardingApp = () => {
 												settings.locations.length,
 										}
 									);
-									setStep('payment-methods');
-								}}
+									setStep( 'payment-methods' );
+								} }
 							/>
-						) : null}
+						) : null }
 					</>
-				)}
-				{step === 'payment-methods' && <PaymentMethods />}
-				{step === 'payment-complete' && <PaymentComplete />}
-				{step === 'credit-card' && (
+				) }
+				{ step === 'payment-methods' && <PaymentMethods /> }
+				{ step === 'payment-complete' && <PaymentComplete /> }
+				{ step === 'credit-card' && (
 					<>
 						<CreditCardSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="credit-card-settings-save-button"
-							onClick={() => {
-								(async () => {
+							onClick={ () => {
+								( async () => {
 									await savePaymentGatewaySettings();
-									setStep('payment-complete');
-								})();
-							}}
+									setStep( 'payment-complete' );
+								} )();
+							} }
 						/>
 					</>
-				)}
-				{step === 'digital-wallets' && (
+				) }
+				{ step === 'digital-wallets' && (
 					<>
 						<DigitalWalletsSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="digital-wallets-settings-save-button"
-							onClick={() => {
-								(async () => {
+							onClick={ () => {
+								( async () => {
 									await savePaymentGatewaySettings();
 									recordEvent(
 										ONBOARDING_TRACK_EVENTS.SAVE_DIGITAL_WALLET_SETTINGS,
@@ -216,49 +218,49 @@ export const OnboardingApp = () => {
 												paymentGatewaySettings.digital_wallets_hide_button_options,
 										}
 									);
-									setStep('payment-complete');
-								})();
-							}}
+									setStep( 'payment-complete' );
+								} )();
+							} }
 						/>
 					</>
-				)}
-				{step === 'gift-card' && (
+				) }
+				{ step === 'gift-card' && (
 					<>
 						<GiftCardSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="gift-card-settings-save-button"
-							onClick={() => {
-								(async () => {
+							onClick={ () => {
+								( async () => {
 									await saveGiftCardsSettings();
-									setStep('payment-complete');
-								})();
-							}}
+									setStep( 'payment-complete' );
+								} )();
+							} }
 						/>
 					</>
-				)}
-				{step === 'cash-app' && (
+				) }
+				{ step === 'cash-app' && (
 					<>
 						<CashAppSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="cash-app-settings-save-button"
-							onClick={() => {
-								(async () => {
+							onClick={ () => {
+								( async () => {
 									await saveCashAppSettings();
-									setStep('payment-complete');
-								})();
-							}}
+									setStep( 'payment-complete' );
+								} )();
+							} }
 						/>
 					</>
-				)}
-				{step === 'sync-settings' && (
+				) }
+				{ step === 'sync-settings' && (
 					<>
 						<ConfigureSync />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
-							afterSaveCallback={() => {
+							afterSaveCallback={ () => {
 								let trackingProperties = {};
 
-								if (system_of_record === 'square') {
+								if ( system_of_record === 'square' ) {
 									trackingProperties = {
 										system_of_record,
 										enable_inventory_sync,
@@ -266,7 +268,9 @@ export const OnboardingApp = () => {
 										hide_missing_products,
 										sync_interval,
 									};
-								} else if (system_of_record === 'woocommerce') {
+								} else if (
+									system_of_record === 'woocommerce'
+								) {
 									trackingProperties = {
 										system_of_record,
 										enable_inventory_sync,
@@ -284,17 +288,17 @@ export const OnboardingApp = () => {
 										...trackingProperties,
 									}
 								);
-								setStep('payment-complete');
-							}}
+								setStep( 'payment-complete' );
+							} }
 						/>
 					</>
-				)}
-				{step === 'advanced-settings' && (
+				) }
+				{ step === 'advanced-settings' && (
 					<>
 						<AdvancedSettings />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
-							afterSaveCallback={() => {
+							afterSaveCallback={ () => {
 								recordEvent(
 									ONBOARDING_TRACK_EVENTS.SAVE_ADVANCED_SETTINGS,
 									{
@@ -303,24 +307,24 @@ export const OnboardingApp = () => {
 										debug_logging_enabled,
 									}
 								);
-								setStep('payment-complete');
-							}}
+								setStep( 'payment-complete' );
+							} }
 						/>
 					</>
-				)}
-				{step === 'sandbox-settings' && (
+				) }
+				{ step === 'sandbox-settings' && (
 					<>
 						<SandboxSettings />
-						{sandboxConnected &&
-							(businessLocationLoaded ||
-								setBusinessLocationLoaded(true)) &&
+						{ sandboxConnected &&
+							( businessLocationLoaded ||
+								setBusinessLocationLoaded( true ) ) &&
 							settings.enable_sandbox === 'yes' && (
-								<BusinessLocation loadData={true} />
-							)}
+								<BusinessLocation loadData={ true } />
+							) }
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
-							afterSaveCallback={() => {
-								(async () => {
+							afterSaveCallback={ () => {
+								( async () => {
 									if (
 										businessLocationLoaded ||
 										settings.enable_sandbox !== 'yes'
@@ -331,48 +335,48 @@ export const OnboardingApp = () => {
 												enable_sandbox,
 											}
 										);
-										setStep('payment-complete');
+										setStep( 'payment-complete' );
 										return;
 									}
 
 									setSandboxConnectLabel(
 										__(
 											'Verifying connection …',
-											'woocommerce-square'
+											'woocommerce'
 										)
 									);
-									setIsVerifyingConnection(true);
+									setIsVerifyingConnection( true );
 									const { data: locations } =
 										await connectToSquare();
 
-									if (locations.length) {
+									if ( locations.length ) {
 										setSandboxConnectLabel(
 											__(
 												'Connected to sandbox!',
-												'woocommerce-square'
+												'woocommerce'
 											)
 										);
-										await new Promise(setTimeout, 1000);
-										setSandboxConnected(true);
+										await new Promise( setTimeout, 1000 );
+										setSandboxConnected( true );
 									} else {
 										setSandboxConnectLabel(
 											__(
 												'Connection to sandbox failed.',
-												'woocommerce-square'
+												'woocommerce'
 											)
 										);
 									}
 
-									setIsVerifyingConnection(false);
-								})();
-							}}
+									setIsVerifyingConnection( false );
+								} )();
+							} }
 						/>
 						<p>
-							{sandboxConnectLabel}
-							{isVerifyingConnection && <Spinner />}
+							{ sandboxConnectLabel }
+							{ isVerifyingConnection && <Spinner /> }
 						</p>
 					</>
-				)}
+				) }
 			</div>
 		</>
 	);

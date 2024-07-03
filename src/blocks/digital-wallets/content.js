@@ -10,16 +10,16 @@ import DigitalWalletContext from './context';
 import ButtonComponent from './button-component';
 import { getSquareServerData } from '../square-utils';
 
-const Content = (props) => {
-	const [payments, setPayments] = useState(null);
+const Content = ( props ) => {
+	const [ payments, setPayments ] = useState( null );
 	const { onCheckoutFail } = props.eventRegistration;
 	const { onClose } = props;
 
-	useEffect(() => {
+	useEffect( () => {
 		const applicationId = getSquareServerData().applicationId;
 		const locationId = getSquareServerData().locationId;
 
-		if (!window.Square) {
+		if ( ! window.Square ) {
 			return;
 		}
 
@@ -28,24 +28,24 @@ const Content = (props) => {
 				applicationId,
 				locationId
 			);
-			setPayments(__payments);
-		} catch (e) {
-			console.error(e);
+			setPayments( __payments );
+		} catch ( e ) {
+			console.error( e );
 		}
-	}, []);
+	}, [] );
 
-	useEffect(() => {
-		const unsubscribeOnCheckoutFail = onCheckoutFail(() => {
+	useEffect( () => {
+		const unsubscribeOnCheckoutFail = onCheckoutFail( () => {
 			onClose();
 			return true;
-		});
+		} );
 
 		return unsubscribeOnCheckoutFail;
-	}, [onCheckoutFail]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [ onCheckoutFail ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<>
-			<DigitalWalletContext.Provider value={{ payments, props }}>
+			<DigitalWalletContext.Provider value={ { payments, props } }>
 				<ButtonComponent />
 			</DigitalWalletContext.Provider>
 		</>

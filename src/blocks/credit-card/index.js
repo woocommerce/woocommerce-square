@@ -15,9 +15,9 @@ import { getSquareServerData } from '../square-utils';
  *
  * @param {RegisteredPaymentMethodProps} props
  */
-const SquareLabel = (props) => {
+const SquareLabel = ( props ) => {
 	const { PaymentMethodLabel } = props.components;
-	return <PaymentMethodLabel text={getSquareServerData().title} />;
+	return <PaymentMethodLabel text={ getSquareServerData().title } />;
 };
 
 /**
@@ -26,17 +26,17 @@ const SquareLabel = (props) => {
  * @param {Object}                                  props                   Incoming props for component (including props from Payments API)
  * @param {ComponentCreditCard|ComponentSavedToken} props.RenderedComponent Component to render
  */
-const SquareComponent = ({ RenderedComponent, ...props }) => {
-	return <RenderedComponent {...props} />;
+const SquareComponent = ( { RenderedComponent, ...props } ) => {
+	return <RenderedComponent { ...props } />;
 };
 
 const squareCreditCardMethod = {
 	name: PAYMENT_METHOD_ID,
 	label: <SquareLabel />,
-	content: <SquareComponent RenderedComponent={ComponentCreditCard} />,
-	edit: <SquareComponent RenderedComponent={ComponentCreditCard} />,
+	content: <SquareComponent RenderedComponent={ ComponentCreditCard } />,
+	edit: <SquareComponent RenderedComponent={ ComponentCreditCard } />,
 	savedTokenComponent: (
-		<SquareComponent RenderedComponent={ComponentSavedToken} />
+		<SquareComponent RenderedComponent={ ComponentSavedToken } />
 	),
 	paymentMethodId: PAYMENT_METHOD_ID,
 	ariaLabel: 'Square',

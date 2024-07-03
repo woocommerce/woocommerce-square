@@ -30,7 +30,7 @@ export const AdvancedSettings = () => {
 	const { enable_customer_decline_messages, debug_logging_enabled = 'no' } =
 		settings;
 
-	if (!squareSettingsLoaded) {
+	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
 
@@ -38,76 +38,78 @@ export const AdvancedSettings = () => {
 		<>
 			<Section>
 				<SectionTitle
-					title={__('Advanced Settings', 'woocommerce-square')}
+					title={ __( 'Advanced Settings', 'woocommerce' ) }
 				/>
 				<SectionDescription>
-					{__(
+					{ __(
 						'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.',
-						'woocommerce-square'
-					)}
-					{<br />}
-					{step === 'advanced-settings' &&
+						'woocommerce'
+					) }
+					{ <br /> }
+					{ step === 'advanced-settings' &&
 						parse(
 							sprintf(
 								/* translators: %1$s and %2$s are HTML tags for the link to the Square settings page */
 								__(
 									'%1$sClick here%2$s to further refine your settings in the traditional view.',
-									'woocommerce-square'
+									'woocommerce'
 								),
-								`<a href='${wcSquareSettings.adminUrl}admin.php?page=wc-settings&tab=square'>`, // eslint-disable-line no-undef
+								`<a href='${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&tab=square'>`, // eslint-disable-line no-undef
 								'</a>'
 							)
-						)}
+						) }
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={__(
+						label={ __(
 							'Detailed Decline Messages',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					>
 						<SquareCheckboxControl
-							checked={enable_customer_decline_messages === 'yes'}
-							onChange={(enabled) =>
-								setSquareSettingData({
+							checked={
+								enable_customer_decline_messages === 'yes'
+							}
+							onChange={ ( enabled ) =>
+								setSquareSettingData( {
 									enable_customer_decline_messages: enabled
 										? 'yes'
 										: 'no',
-								})
+								} )
 							}
-							label={__(
+							label={ __(
 								'Show detailed decline messages to the customer during checkout rather than a generic decline message.',
-								'woocommerce-square'
-							)}
+								'woocommerce'
+							) }
 						/>
 					</InputWrapper>
 
 					<DebugMode />
 
 					<InputWrapper
-						label={__('Enable Logging', 'woocommerce-square')}
+						label={ __( 'Enable Logging', 'woocommerce' ) }
 						variant="boxed"
-						description={parse(
+						description={ parse(
 							sprintf(
 								/* translators: %1$s and %2$s are HTML tags for the link to the WooCommerce status log */
 								__(
 									'Log debug messages to the %1$sWooCommerce status log%2$s',
-									'woocommerce-square'
+									'woocommerce'
 								),
-								`<a href="${wcSquareSettings.adminUrl}admin.php?page=wc-status&tab=logs">`, // eslint-disable-line no-undef
+								`<a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-status&tab=logs">`, // eslint-disable-line no-undef
 								'</a>'
 							)
-						)}
+						) }
 					>
 						<ToggleControl
-							checked={debug_logging_enabled === 'yes'}
-							onChange={(enabled) =>
-								setSquareSettingData({
+							checked={ debug_logging_enabled === 'yes' }
+							onChange={ ( enabled ) =>
+								setSquareSettingData( {
 									debug_logging_enabled: enabled
 										? 'yes'
 										: 'no',
-								})
+								} )
 							}
 						/>
 					</InputWrapper>

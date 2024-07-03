@@ -20,24 +20,24 @@ export const OnboardingHeader = () => {
 
 	return (
 		<div className="woo-square-onboarding__header">
-			<Flex direction={['column', 'row']}>
+			<Flex direction={ [ 'column', 'row' ] }>
 				<FlexItem className="flexItem backBtn">
-					{backStep && (
+					{ backStep && (
 						<Button
 							data-testid="previous-step-button"
-							onClick={() => setStep(backStep)}
+							onClick={ () => setStep( backStep ) }
 						>
 							<Back />
-							<span>{__('Back', 'woocommerce-square')}</span>
+							<span>{ __( 'Back', 'woocommerce' ) }</span>
 						</Button>
-					)}
+					) }
 				</FlexItem>
 				<FlexBlock className="wizardTitle">
 					<Square />
 				</FlexBlock>
 				<FlexItem className="flexItem closeWizard">
 					<Button
-						onClick={() => {
+						onClick={ () => {
 							queueRecordEvent(
 								ONBOARDING_TRACK_EVENTS.EXIT_CLICKED,
 								{
@@ -45,8 +45,8 @@ export const OnboardingHeader = () => {
 								}
 							);
 							window.location.href =
-								wc.wcSettings.getAdminLink('');
-						}}
+								wc.wcSettings.getAdminLink( '' );
+						} }
 					>
 						<Close />
 					</Button>

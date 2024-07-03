@@ -10,9 +10,9 @@ import {
 import { useSquareSettings } from '../../../settings/hooks';
 import { useEffect } from '@wordpress/element';
 
-export const BusinessLocation = ({ loadData = false }) => {
+export const BusinessLocation = ( { loadData = false } ) => {
 	const { settings, squareSettingsLoaded, setSquareSettingData } =
-		useSquareSettings(loadData);
+		useSquareSettings( loadData );
 
 	const {
 		enable_sandbox = 'no',
@@ -23,7 +23,7 @@ export const BusinessLocation = ({ loadData = false }) => {
 
 	const locationsList = [
 		{
-			label: __('Please choose a location', 'woocommerce-square'),
+			label: __( 'Please choose a location', 'woocommerce' ),
 			value: '',
 		},
 		...locations,
@@ -32,27 +32,27 @@ export const BusinessLocation = ({ loadData = false }) => {
 	// Check if no locations found.
 	const locationCount = locations.length;
 
-	useEffect(() => {
-		if (locationCount === 1) {
+	useEffect( () => {
+		if ( locationCount === 1 ) {
 			// Remove the label, to make the only location selected.
 			locationsList.shift();
 
 			// Set the first location value in data.
-			const first_location_id = locations[0].value;
+			const first_location_id = locations[ 0 ].value;
 
-			if (enable_sandbox === 'yes') {
-				setSquareSettingData({
+			if ( enable_sandbox === 'yes' ) {
+				setSquareSettingData( {
 					sandbox_location_id: first_location_id,
-				});
+				} );
 			} else {
-				setSquareSettingData({
+				setSquareSettingData( {
 					production_location_id: first_location_id,
-				});
+				} );
 			}
 		}
-	});
+	} );
 
-	if (!squareSettingsLoaded) {
+	if ( ! squareSettingsLoaded ) {
 		return null;
 	}
 
@@ -63,38 +63,38 @@ export const BusinessLocation = ({ loadData = false }) => {
 		<>
 			<Section>
 				<SectionTitle
-					title={__(
+					title={ __(
 						'Your Square account is missing a Business Location',
-						'woocommerce-square'
-					)}
+						'woocommerce'
+					) }
 				/>
 				<SectionDescription>
 					<p
-						dangerouslySetInnerHTML={{
+						dangerouslySetInnerHTML={ {
 							__html: sprintf(
 								/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
 								__(
 									'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.',
-									'woocommerce-square'
+									'woocommerce'
 								),
 								'<a href="https://squareup.com/dashboard/locations/" target="_blank">',
 								'</a>'
 							),
-						}}
+						} }
 					/>
 				</SectionDescription>
 			</Section>
 			<Button
 				variant="button-primary"
 				className="button-primary"
-				onClick={() =>
+				onClick={ () =>
 					window.open(
 						'https://squareup.com/dashboard/locations/',
 						'_blank'
 					)
 				}
 			>
-				{__('Create a Business Location', 'woocommerce-square')}
+				{ __( 'Create a Business Location', 'woocommerce' ) }
 			</Button>
 		</>
 	);
@@ -103,60 +103,62 @@ export const BusinessLocation = ({ loadData = false }) => {
 		locationCount === 1 ? (
 			<>
 				<SectionTitle
-					title={__(
+					title={ __(
 						'Confirm Your Business Location',
-						'woocommerce-square'
-					)}
+						'woocommerce'
+					) }
 				/>
 				<SectionDescription>
 					<p>
-						{__(
+						{ __(
 							"Great, you're nearly there! We've detected your business location as listed in Square.",
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</p>
 					<p>
-						{__(
+						{ __(
 							"Please confirm that this is the correct location where you'll be making sales:",
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</p>
 				</SectionDescription>
 			</>
 		) : (
 			<>
 				<SectionTitle
-					title={__(
+					title={ __(
 						'Select your business location',
-						'woocommerce-square'
-					)}
+						'woocommerce'
+					) }
 				/>
 				<SectionDescription>
 					<p>
-						{__(
+						{ __(
 							"You're on your way! It looks like you have multiple business locations associated with your Square account.",
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</p>
 
 					<p>
-						{__(
+						{ __(
 							'Please select the location you wish to link with this WooCommerce store',
-							'woocommerce-square'
-						)}
+							'woocommerce'
+						) }
 					</p>
 				</SectionDescription>
 			</>
 		);
 
 	const reselect = (
-		<div style={{ textAlign: 'left', margin: '-15px 0', fontSize: '15px' }}>
+		<div
+			style={ { textAlign: 'left', margin: '-15px 0', fontSize: '15px' } }
+		>
 			<SectionDescription>
 				<p>
-					{__(
+					{ __(
 						'Please select the location you wish to link with this WooCommerce store',
-						'woocommerce-square'
-					)}
+						'woocommerce'
+					) }
 				</p>
 			</SectionDescription>
 		</div>
@@ -165,39 +167,39 @@ export const BusinessLocation = ({ loadData = false }) => {
 	return (
 		<div>
 			<Section>
-				{(locationCount === 0 && noLocation) ||
-					(locationCount && (
+				{ ( locationCount === 0 && noLocation ) ||
+					( locationCount && (
 						<>
-							{loadData ? reselect : intro}
+							{ loadData ? reselect : intro }
 							<div className="woo-square-wizard__fields">
 								<InputWrapper
-									label={__(
+									label={ __(
 										'Business Location:',
-										'woocommerce-square'
-									)}
+										'woocommerce'
+									) }
 								>
 									<SelectControl
 										data-testid="business-location-field"
 										required
-										value={_location_id}
-										onChange={(value) => {
-											if (enable_sandbox === 'yes') {
-												setSquareSettingData({
+										value={ _location_id }
+										onChange={ ( value ) => {
+											if ( enable_sandbox === 'yes' ) {
+												setSquareSettingData( {
 													sandbox_location_id: value,
-												});
+												} );
 											} else {
-												setSquareSettingData({
+												setSquareSettingData( {
 													production_location_id:
 														value,
-												});
+												} );
 											}
-										}}
-										options={locationsList}
+										} }
+										options={ locationsList }
 									/>
 								</InputWrapper>
 							</div>
 						</>
-					))}
+					) ) }
 			</Section>
 		</div>
 	);

@@ -10,9 +10,9 @@ import { PaymentGatewaySettingsSaveButton, Loader } from '../components';
 
 export const PaymentGatewaySettingsApp = () => {
 	const { paymentGatewaySettingsLoaded, savePaymentGatewaySettings } =
-		usePaymentGatewaySettings(true);
+		usePaymentGatewaySettings( true );
 
-	if (!paymentGatewaySettingsLoaded) {
+	if ( ! paymentGatewaySettingsLoaded ) {
 		return <Loader />;
 	}
 
@@ -21,9 +21,9 @@ export const PaymentGatewaySettingsApp = () => {
 			<CreditCardSetup origin="settings" />
 			<DigitalWalletsSetup />
 			<PaymentGatewaySettingsSaveButton
-				onClick={() => {
+				onClick={ () => {
 					savePaymentGatewaySettings();
-				}}
+				} }
 			/>
 		</>
 	);
