@@ -213,7 +213,7 @@ class Gift_Card extends Payment_Gateway {
 		}
 
 		$upload_dir = wp_upload_dir();
-		$source     = WC_SQUARE_PLUGIN_PATH . '/assets/images/gift-card-featured-image.png';
+		$source     = WC_SQUARE_PLUGIN_PATH . '/build/images/gift-card-featured-image.png';
 		$filename   = $upload_dir['basedir'] . '/wc-square-gift-card-placeholder.png';
 
 		if ( ! file_exists( $filename ) ) {

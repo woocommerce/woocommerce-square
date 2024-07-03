@@ -1,6 +1,6 @@
 const defaultConfig = require('@wordpress/scripts/config/webpack.config');
 const WooDependencyExtractionWebpackPlugin = require('@woocommerce/dependency-extraction-webpack-plugin');
-const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
 	...defaultConfig,
@@ -10,6 +10,11 @@ module.exports = {
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
 		),
 		new WooDependencyExtractionWebpackPlugin(),
+		new CopyWebpackPlugin( {
+			patterns: [
+				{ from: './src/images', to: 'images' }
+			]
+		} )
 	],
 	entry: {
 		...defaultConfig.entry(),
@@ -36,5 +41,5 @@ module.exports = {
 		'assets/frontend/wc-square-payment-gateway-my-payment-methods': './src/js/frontend/wc-square-payment-gateway-my-payment-methods.js',
 		'assets/frontend/wc-square-payment-gateway-payment-form': './src/js/frontend/wc-square-payment-gateway-payment-form.js',
 		'assets/frontend/wc-square-cart-checkout-blocks': './src/css/frontend/wc-square-cart-checkout-blocks.scss',
-	},
+	}
 };

@@ -1167,8 +1167,8 @@ class Gateway extends Payment_Gateway_Direct {
 		$image_extension = apply_filters( 'wc_payment_gateway_' . $this->get_plugin()->get_id() . '_use_svg', true ) ? '.svg' : '.png';
 
 		// first, is the card image available within the plugin?
-		if ( is_readable( $this->get_plugin()->get_plugin_path() . '/assets/images/card-' . $image_type . $image_extension ) ) {
-			return \WC_HTTPS::force_https_url( $this->get_plugin()->get_plugin_url() . '/assets/images/card-' . $image_type . $image_extension );
+		if ( is_readable( $this->get_plugin()->get_plugin_path() . '/build/images/card-' . $image_type . $image_extension ) ) {
+			return \WC_HTTPS::force_https_url( $this->get_plugin()->get_plugin_url() . '/build/images/card-' . $image_type . $image_extension );
 		}
 
 		// Fall back to framework image URL.
