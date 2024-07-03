@@ -797,6 +797,10 @@ class Settings extends \WC_Settings_API {
 
 			$this->locations = array();
 
+			if ( ! $this->get_plugin()->get_dependency_handler()->meets_php_dependencies() ) {
+				return $this->locations;
+			}
+
 			try {
 
 				// cache the locations returned so they can be used elsewhere.
