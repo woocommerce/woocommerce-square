@@ -16,7 +16,7 @@ export const DebugMode = () => {
 	const { debug_mode } = settings;
 
 	return (
-		<InputWrapper label={ __( 'Debug Mode', 'woocommerce' ) }>
+		<InputWrapper label={ __( 'Debug Mode', 'woocommerce-square' ) }>
 			<SelectControl
 				value={ debug_mode }
 				onChange={ ( value ) =>
@@ -24,19 +24,22 @@ export const DebugMode = () => {
 				}
 				options={ [
 					{
-						label: __( 'Off', 'woocommerce' ),
+						label: __( 'Off', 'woocommerce-square' ),
 						value: 'off',
 					},
 					{
-						label: __( 'Show on Checkout Page', 'woocommerce' ),
+						label: __(
+							'Show on Checkout Page',
+							'woocommerce-square'
+						),
 						value: 'checkout',
 					},
 					{
-						label: __( 'Save to Log', 'woocommerce' ),
+						label: __( 'Save to Log', 'woocommerce-square' ),
 						value: 'log',
 					},
 					{
-						label: __( 'Both', 'woocommerce' ),
+						label: __( 'Both', 'woocommerce-square' ),
 						value: 'both',
 					},
 				] }

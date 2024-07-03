@@ -37,7 +37,7 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 					title={ parse(
 						sprintf(
 							/* translators: %s: Gift Cards */
-							__( 'Gift Cards %s', 'woocommerce' ),
+							__( 'Gift Cards %s', 'woocommerce-square' ),
 							origin === 'settings'
 								? `<small className="wc-admin-breadcrumb"><a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
 								: ''
@@ -47,7 +47,7 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 				<SectionDescription>
 					{ __(
 						'You can receive payments with Square Gift Cards and sell Square Gift Cards by enabling the Gift Cards option here.',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				</SectionDescription>
 
@@ -56,7 +56,7 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 						<InputWrapper
 							label={ __(
 								'Enable Square Gift Cards',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 							variant="boxed"
 						>
@@ -75,14 +75,17 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 
 					{ origin === 'settings' && (
 						<InputWrapper
-							label={ __( 'Enable / Disable', 'woocommerce' ) }
+							label={ __(
+								'Enable / Disable',
+								'woocommerce-square'
+							) }
 						>
 							<SquareCheckboxControl
 								className="gift-card-gateway-toggle-field"
 								data-testid="gift-card-gateway-toggle-field"
 								label={ __(
 									'Enable this payment method.',
-									'woocommerce'
+									'woocommerce-square'
 								) }
 								checked={ enabled === 'yes' }
 								onChange={ ( value ) =>

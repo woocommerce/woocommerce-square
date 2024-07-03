@@ -43,25 +43,25 @@ export const DigitalWalletsSetup = () => {
 				<SectionTitle
 					title={ __(
 						'Manage Digital Wallet Settings',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				/>
 				<SectionDescription>
 					{ __(
 						'Accept payments with Apple Pay and Google Pay on your store, available in select countries. Enabling digital wallets adds payment buttons to Product, Cart and Checkout pages.',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={ __( 'Enable / Disable', 'woocommerce' ) }
+						label={ __( 'Enable / Disable', 'woocommerce-square' ) }
 						description={ parse(
 							sprintf(
 								/* translators: %1$s: opening link tag, %2$s: closing link tag */
 								__(
 									'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. Read more about the availablity of digital wallets in our %1$sdocumentation%2$s.',
-									'woocommerce'
+									'woocommerce-square'
 								),
 								'<a target="_blank" href="https://docs.woocommerce.com/document/woocommerce-square/">',
 								'</a>'
@@ -72,7 +72,7 @@ export const DigitalWalletsSetup = () => {
 							data-testid="digital-wallet-gateway-toggle-field"
 							label={ __(
 								'Enable digital wallets.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 							checked={ enable_digital_wallets === 'yes' }
 							onChange={ ( value ) =>
@@ -85,7 +85,9 @@ export const DigitalWalletsSetup = () => {
 						/>
 					</InputWrapper>
 
-					<InputWrapper label={ __( 'Button Type', 'woocommerce' ) }>
+					<InputWrapper
+						label={ __( 'Button Type', 'woocommerce-square' ) }
+					>
 						<SelectControl
 							data-testid="digital-wallet-gatewaybutton-type-field"
 							value={ digital_wallets_button_type }
@@ -96,15 +98,21 @@ export const DigitalWalletsSetup = () => {
 							}
 							options={ [
 								{
-									label: __( 'Buy Now', 'woocommerce' ),
+									label: __(
+										'Buy Now',
+										'woocommerce-square'
+									),
 									value: 'buy',
 								},
 								{
-									label: __( 'Donate', 'woocommerce' ),
+									label: __( 'Donate', 'woocommerce-square' ),
 									value: 'donate',
 								},
 								{
-									label: __( 'No Text', 'woocommerce' ),
+									label: __(
+										'No Text',
+										'woocommerce-square'
+									),
 									value: 'plain',
 								},
 							] }
@@ -112,7 +120,10 @@ export const DigitalWalletsSetup = () => {
 					</InputWrapper>
 
 					<InputWrapper
-						label={ __( 'Apple Pay Button Color', 'woocommerce' ) }
+						label={ __(
+							'Apple Pay Button Color',
+							'woocommerce-square'
+						) }
 					>
 						<SelectControl
 							data-testid="digital-wallet-gatewayapple-pay-button-color-field"
@@ -125,17 +136,17 @@ export const DigitalWalletsSetup = () => {
 							}
 							options={ [
 								{
-									label: __( 'Black', 'woocommerce' ),
+									label: __( 'Black', 'woocommerce-square' ),
 									value: 'black',
 								},
 								{
-									label: __( 'White', 'woocommerce' ),
+									label: __( 'White', 'woocommerce-square' ),
 									value: 'white',
 								},
 								{
 									label: __(
 										'White with outline',
-										'woocommerce'
+										'woocommerce-square'
 									),
 									value: 'white-outline',
 								},
@@ -144,7 +155,10 @@ export const DigitalWalletsSetup = () => {
 					</InputWrapper>
 
 					<InputWrapper
-						label={ __( 'Google Pay Button Color', 'woocommerce' ) }
+						label={ __(
+							'Google Pay Button Color',
+							'woocommerce-square'
+						) }
 					>
 						<SelectControl
 							data-testid="digital-wallet-gatewaygoogle-pay-button-color-field"
@@ -157,11 +171,11 @@ export const DigitalWalletsSetup = () => {
 							}
 							options={ [
 								{
-									label: __( 'Black', 'woocommerce' ),
+									label: __( 'Black', 'woocommerce-square' ),
 									value: 'black',
 								},
 								{
-									label: __( 'White', 'woocommerce' ),
+									label: __( 'White', 'woocommerce-square' ),
 									value: 'white',
 								},
 							] }
@@ -171,7 +185,7 @@ export const DigitalWalletsSetup = () => {
 					<InputWrapper
 						label={ __(
 							'Hide Digital Wallet Buttons',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					>
 						<MultiSelectControl
@@ -186,11 +200,17 @@ export const DigitalWalletsSetup = () => {
 							}
 							options={ [
 								{
-									label: __( 'Apple Pay', 'woocommerce' ),
+									label: __(
+										'Apple Pay',
+										'woocommerce-square'
+									),
 									value: 'apple',
 								},
 								{
-									label: __( 'Google Pay', 'woocommerce' ),
+									label: __(
+										'Google Pay',
+										'woocommerce-square'
+									),
 									value: 'google',
 								},
 							] }

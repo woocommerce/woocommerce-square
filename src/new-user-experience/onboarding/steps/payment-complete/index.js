@@ -43,22 +43,22 @@ export const PaymentComplete = () => {
 				<div className="woo-square-onbarding__payment-settings--left">
 					<div className="woo-square-onbarding__payment-settings__intro">
 						<div className="woo-square-onbarding__payment-settings__intro--title">
-							{ __( 'Congratulations,', 'woocommerce' ) }
+							{ __( 'Congratulations,', 'woocommerce-square' ) }
 							<br />
 							{ __(
 								'Your Payment Setup is Complete!',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						</div>
 						<SectionDescription>
 							{ __(
 								'Your online store is now equipped to accept payments, making you ready to welcome customers and start generating sales.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 							<p>
 								{ __(
 									"Ready to see your store in action? Explore the front-end of your online shop. It's a great way to experience what your customers will see and ensure everything looks perfect.",
-									'woocommerce'
+									'woocommerce-square'
 								) }
 							</p>
 						</SectionDescription>
@@ -73,7 +73,10 @@ export const PaymentComplete = () => {
 									window.wcSettings.homeUrl;
 							} }
 						>
-							{ __( 'Visit my Storefront', 'woocommerce' ) }
+							{ __(
+								'Visit my Storefront',
+								'woocommerce-square'
+							) }
 						</Button>
 					</div>
 					<div className="woo-square-onbarding__payment-settings__center-icon">
@@ -85,13 +88,13 @@ export const PaymentComplete = () => {
 						<SectionTitle
 							title={ __(
 								'Synchronize your Items and Inventory',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						/>
 						<SectionDescription>
 							{ __(
 								'Discover additional settings to further refine and personalize your e-commerce experience.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						</SectionDescription>
 
@@ -105,13 +108,13 @@ export const PaymentComplete = () => {
 								<b>
 									{ __(
 										'Synchronize Your Inventory',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</b>
 								<p>
 									{ __(
 										'Sync your items and inventory effortlessly. Ensure your online and offline sales channels are always up to date.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</p>
 							</FlexBlock>
@@ -128,7 +131,7 @@ export const PaymentComplete = () => {
 								>
 									{ __(
 										'Configure Sync Settings',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</Button>
 							</FlexItem>
@@ -149,13 +152,13 @@ export const PaymentComplete = () => {
 										<b>
 											{ __(
 												'Manage Payment Methods',
-												'woocommerce'
+												'woocommerce-square'
 											) }
 										</b>
 										<p>
 											{ __(
 												'Easily add, edit, or remove your credit cards, digital wallets, and Cash App settings to streamline your payments securely and efficiently.',
-												'woocommerce'
+												'woocommerce-square'
 											) }
 										</p>
 									</FlexBlock>
@@ -173,7 +176,7 @@ export const PaymentComplete = () => {
 											>
 												{ __(
 													'Credit Card Settings',
-													'woocommerce'
+													'woocommerce-square'
 												) }
 											</Button>
 										) }
@@ -192,7 +195,7 @@ export const PaymentComplete = () => {
 											>
 												{ __(
 													'Digital Wallet Settings',
-													'woocommerce'
+													'woocommerce-square'
 												) }
 											</Button>
 										) }
@@ -209,7 +212,7 @@ export const PaymentComplete = () => {
 											>
 												{ __(
 													'Cash App Pay Settings',
-													'woocommerce'
+													'woocommerce-square'
 												) }
 											</Button>
 										) }
@@ -226,7 +229,7 @@ export const PaymentComplete = () => {
 											>
 												{ __(
 													'Gift Cards Settings',
-													'woocommerce'
+													'woocommerce-square'
 												) }
 											</Button>
 										) }
@@ -251,13 +254,13 @@ export const PaymentComplete = () => {
 								>
 									{ __(
 										'Go to Advanced Settings',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</Button>
 								<p className="adv-settings-copy">
 									{ __(
 										'Gain greater control over your payment processes. Customize and manage detailed settings to optimize your transactions and checkout flow.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</p>
 							</FlexBlock>
@@ -274,13 +277,13 @@ export const PaymentComplete = () => {
 								>
 									{ __(
 										'Go to Sandbox Settings',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</Button>
 								<p>
 									{ __(
 										'Test new features and payment scenarios safely. Experiment in a risk-free environment to make sure everything is set up correctly before going live.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								</p>
 							</FlexBlock>

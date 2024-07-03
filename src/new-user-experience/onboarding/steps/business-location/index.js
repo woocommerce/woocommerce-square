@@ -23,7 +23,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 
 	const locationsList = [
 		{
-			label: __( 'Please choose a location', 'woocommerce' ),
+			label: __( 'Please choose a location', 'woocommerce-square' ),
 			value: '',
 		},
 		...locations,
@@ -65,7 +65,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 				<SectionTitle
 					title={ __(
 						'Your Square account is missing a Business Location',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				/>
 				<SectionDescription>
@@ -75,7 +75,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 								/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
 								__(
 									'Please %1$sgo here%2$s or use the button below to create a Business Location and then return to WooCommerce to complete setup.',
-									'woocommerce'
+									'woocommerce-square'
 								),
 								'<a href="https://squareup.com/dashboard/locations/" target="_blank">',
 								'</a>'
@@ -94,7 +94,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 					)
 				}
 			>
-				{ __( 'Create a Business Location', 'woocommerce' ) }
+				{ __( 'Create a Business Location', 'woocommerce-square' ) }
 			</Button>
 		</>
 	);
@@ -105,20 +105,20 @@ export const BusinessLocation = ( { loadData = false } ) => {
 				<SectionTitle
 					title={ __(
 						'Confirm Your Business Location',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				/>
 				<SectionDescription>
 					<p>
 						{ __(
 							"Great, you're nearly there! We've detected your business location as listed in Square.",
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</p>
 					<p>
 						{ __(
 							"Please confirm that this is the correct location where you'll be making sales:",
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</p>
 				</SectionDescription>
@@ -128,21 +128,21 @@ export const BusinessLocation = ( { loadData = false } ) => {
 				<SectionTitle
 					title={ __(
 						'Select your business location',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				/>
 				<SectionDescription>
 					<p>
 						{ __(
 							"You're on your way! It looks like you have multiple business locations associated with your Square account.",
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</p>
 
 					<p>
 						{ __(
 							'Please select the location you wish to link with this WooCommerce store',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</p>
 				</SectionDescription>
@@ -157,7 +157,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 				<p>
 					{ __(
 						'Please select the location you wish to link with this WooCommerce store',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				</p>
 			</SectionDescription>
@@ -175,7 +175,7 @@ export const BusinessLocation = ( { loadData = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Business Location:',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								>
 									<SelectControl

@@ -21,13 +21,13 @@ export const ConnectSetup = () => {
 					<SectionTitle
 						title={ __(
 							'Thanks for installing WooCommerce Square!',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					/>
 					<SectionDescription>
 						{ __(
 							"To get started, let's connect to your Square Account to complete the setup process.",
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</SectionDescription>
 
@@ -36,7 +36,7 @@ export const ConnectSetup = () => {
 						className="button-primary"
 						href={ settings.connection_url_wizard }
 					>
-						{ __( 'Connect with Square', 'woocommerce' ) }
+						{ __( 'Connect with Square', 'woocommerce-square' ) }
 					</Button>
 				</Section>
 			</div>

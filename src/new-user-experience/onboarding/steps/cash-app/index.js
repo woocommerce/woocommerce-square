@@ -41,13 +41,16 @@ export const CashAppSetup = ( { origin = '' } ) => {
 			<InputWrapper
 				description={ __(
 					'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.',
-					'woocommerce'
+					'woocommerce-square'
 				) }
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					data-testid="cash-app-gateway-virtual-order-only-field"
-					label={ __( 'Charge Virtual-Only Orders', 'woocommerce' ) }
+					label={ __(
+						'Charge Virtual-Only Orders',
+						'woocommerce-square'
+					) }
 					checked={ charge_virtual_orders === 'yes' }
 					onChange={ ( value ) =>
 						setCashAppData( {
@@ -60,13 +63,13 @@ export const CashAppSetup = ( { origin = '' } ) => {
 			<InputWrapper
 				description={ __(
 					'Automatically capture orders when they are changed to Processing or Completed.',
-					'woocommerce'
+					'woocommerce-square'
 				) }
 				indent={ 2 }
 			>
 				<SquareCheckboxControl
 					data-testid="cash-app-gateway-capture-paid-orders-field"
-					label={ __( 'Capture Paid Orders', 'woocommerce' ) }
+					label={ __( 'Capture Paid Orders', 'woocommerce-square' ) }
 					checked={ enable_paid_capture === 'yes' }
 					onChange={ ( value ) =>
 						setCashAppData( {
@@ -87,7 +90,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 							/* translators: %s: link to settings page */
 							__(
 								'Manage Cash App Pay Settings %s',
-								'woocommerce'
+								'woocommerce-square'
 							),
 							origin === 'settings'
 								? `<small className="wc-admin-breadcrumb"><a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&amp;tab=checkout" ariaLabel="Return to payments">⤴</a></small>` // eslint-disable-line no-undef
@@ -98,19 +101,19 @@ export const CashAppSetup = ( { origin = '' } ) => {
 				<SectionDescription>
 					{ __(
 						'Cash App Pay is an innovative payment solution that offers your customers a quick and secure way to check out. With just a few settings, you can tailor how Cash App Pay appears and operates on your site.',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
 					<InputWrapper
-						label={ __( 'Enable / Disable', 'woocommerce' ) }
+						label={ __( 'Enable / Disable', 'woocommerce-square' ) }
 					>
 						<SquareCheckboxControl
 							data-testid="cash-app-gateway-toggle-field"
 							label={ __(
 								'Enable this payment method.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 							checked={ enabled === 'yes' }
 							onChange={ ( value ) =>
@@ -121,7 +124,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 						/>
 					</InputWrapper>
 
-					<InputWrapper label={ __( 'Title', 'woocommerce' ) }>
+					<InputWrapper label={ __( 'Title', 'woocommerce-square' ) }>
 						<TextControl
 							data-testid="cash-app-gateway-title-field"
 							value={ title }
@@ -131,7 +134,9 @@ export const CashAppSetup = ( { origin = '' } ) => {
 						/>
 					</InputWrapper>
 
-					<InputWrapper label={ __( 'Description', 'woocommerce' ) }>
+					<InputWrapper
+						label={ __( 'Description', 'woocommerce-square' ) }
+					>
 						<TextareaControl
 							data-testid="cash-app-gateway-description-field"
 							value={ description }
@@ -142,7 +147,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 					</InputWrapper>
 
 					<InputWrapper
-						label={ __( 'Transaction Type', 'woocommerce' ) }
+						label={ __( 'Transaction Type', 'woocommerce-square' ) }
 					>
 						<SelectControl
 							data-testid="cash-app-gateway-transaction-type-field"
@@ -152,11 +157,14 @@ export const CashAppSetup = ( { origin = '' } ) => {
 							}
 							options={ [
 								{
-									label: __( 'Charge', 'woocommerce' ),
+									label: __( 'Charge', 'woocommerce-square' ),
 									value: 'charge',
 								},
 								{
-									label: __( 'Authorization', 'woocommerce' ),
+									label: __(
+										'Authorization',
+										'woocommerce-square'
+									),
 									value: 'authorization',
 								},
 							] }
@@ -168,7 +176,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 					<InputWrapper
 						label={ __(
 							'Cash App Pay Button Theme',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					>
 						<SelectControl
@@ -179,11 +187,11 @@ export const CashAppSetup = ( { origin = '' } ) => {
 							}
 							options={ [
 								{
-									label: __( 'Dark', 'woocommerce' ),
+									label: __( 'Dark', 'woocommerce-square' ),
 									value: 'dark',
 								},
 								{
-									label: __( 'Light', 'woocommerce' ),
+									label: __( 'Light', 'woocommerce-square' ),
 									value: 'light',
 								},
 							] }
@@ -193,7 +201,7 @@ export const CashAppSetup = ( { origin = '' } ) => {
 					<InputWrapper
 						label={ __(
 							'Cash App Pay Button Shape',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					>
 						<SelectControl
@@ -204,11 +212,14 @@ export const CashAppSetup = ( { origin = '' } ) => {
 							}
 							options={ [
 								{
-									label: __( 'Semiround', 'woocommerce' ),
+									label: __(
+										'Semiround',
+										'woocommerce-square'
+									),
 									value: 'semiround',
 								},
 								{
-									label: __( 'Round', 'woocommerce' ),
+									label: __( 'Round', 'woocommerce-square' ),
 									value: 'round',
 								},
 							] }

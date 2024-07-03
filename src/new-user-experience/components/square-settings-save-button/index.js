@@ -6,10 +6,10 @@ import { useSquareSettings } from '../../settings/hooks';
 
 const withSaveSquareSettingsButton = ( WrappedComponent ) => {
 	return ( props ) => {
-		const { label = __( 'Apply Changes', 'woocommerce' ) } = props;
+		const { label = __( 'Apply Changes', 'woocommerce-square' ) } = props;
 
 		const {
-			afterSaveLabel = __( 'Changes Saved!', 'woocommerce' ),
+			afterSaveLabel = __( 'Changes Saved!', 'woocommerce-square' ),
 			afterSaveCallback,
 			icon = check,
 			...remainingProps

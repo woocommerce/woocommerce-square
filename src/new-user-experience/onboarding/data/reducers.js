@@ -2,8 +2,11 @@ import { __ } from '@wordpress/i18n';
 
 export const CREDIT_CARD_DEFAULT_STATE = {
 	enabled: 'yes',
-	title: __( 'Credit Card', 'woocommerce' ),
-	description: __( 'Pay securely using your credit card.', 'woocommerce' ),
+	title: __( 'Credit Card', 'woocommerce-square' ),
+	description: __(
+		'Pay securely using your credit card.',
+		'woocommerce-square'
+	),
 	transaction_type: 'charge',
 	charge_virtual_orders: 'no',
 	enable_paid_capture: 'no',
@@ -50,10 +53,10 @@ const digitalWalletsReducer = (
 
 export const GIFT_CARDS_DEFAULT_STATE = {
 	enabled: 'no',
-	title: __( 'Square Gift Cards', 'woocommerce' ),
+	title: __( 'Square Gift Cards', 'woocommerce-square' ),
 	description: __(
 		'Allow customers to purchase and redeem gift cards during checkout.',
-		'woocommerce'
+		'woocommerce-square'
 	),
 };
 
@@ -72,8 +75,8 @@ const giftCardReducer = ( state = GIFT_CARDS_DEFAULT_STATE, action ) => {
 
 export const CASH_APP_DEFAULT_STATE = {
 	enabled: 'no',
-	title: __( 'Cash App Pay', 'woocommerce' ),
-	description: __( 'Pay securely using Cash App Pay.', 'woocommerce' ),
+	title: __( 'Cash App Pay', 'woocommerce-square' ),
+	description: __( 'Pay securely using Cash App Pay.', 'woocommerce-square' ),
 	transaction_type: 'charge',
 	charge_virtual_orders: 'no',
 	enable_paid_capture: 'no',

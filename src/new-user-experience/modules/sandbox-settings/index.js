@@ -38,13 +38,13 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 						<SectionTitle
 							title={ __(
 								'Configure Sandbox Settings',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						/>
 						<SectionDescription>
 							{ __(
 								'Activate Sandbox Mode to safely simulate transactions and sync operations, ensuring your WooCommerce/Square integration functions seamlessly. Experiment with payment methods and product data syncing in a risk-free environment before going live with your store.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						</SectionDescription>
 					</>
@@ -53,10 +53,13 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 				<div className="woo-square-wizard__fields">
 					{ showToggle && (
 						<InputWrapper
-							label={ __( 'Enable Sandbox Mode', 'woocommerce' ) }
+							label={ __(
+								'Enable Sandbox Mode',
+								'woocommerce-square'
+							) }
 							description={ __(
 								"After enabling you'll see a new Sandbox settings section with two fields: Sandbox Application ID & Sandbox Access Token.",
-								'woocommerce'
+								'woocommerce-square'
 							) }
 							variant="boxed"
 						>
@@ -77,14 +80,14 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 							<InputWrapper
 								label={ __(
 									'Sandbox Application ID',
-									'woocommerce'
+									'woocommerce-square'
 								) }
 								description={ parse(
 									sprintf(
 										/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
 										__(
 											'Application ID for the Sandbox Application, see the details in the %1$sMy Applications%2$s section.',
-											'woocommerce'
+											'woocommerce-square'
 										),
 										'<a target="_blank" href="https://squareupsandbox.com/dashboard/apps/my-applications">',
 										'</a>'
@@ -107,14 +110,14 @@ export const SandboxSettings = ( { indent = 0, showToggle = true } ) => {
 							<InputWrapper
 								label={ __(
 									'Sandbox Access Token',
-									'woocommerce'
+									'woocommerce-square'
 								) }
 								description={ parse(
 									sprintf(
 										/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
 										__(
 											'Access Token for the Sandbox Test Account, see the details in the %1$sSandbox Test Account%2$s section. Make sure you use the correct Sandbox Access Token for your application. For a given Sandbox Test Account, each Authorized Application is assigned a different Access Token.',
-											'woocommerce'
+											'woocommerce-square'
 										),
 										'<a target="_blank" href="https://developer.squareup.com/console/en/sandbox-test-accounts">',
 										'</a>'

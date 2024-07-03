@@ -7,8 +7,8 @@ import { usePaymentGatewaySettings } from '../../onboarding/hooks';
 const withPaymentGatewaySettingsSaveButton = ( WrappedComponent ) => {
 	return ( props ) => {
 		const {
-			label = __( 'Apply Changes', 'woocommerce' ),
-			afterSaveLabel = __( 'Changes Saved!', 'woocommerce' ),
+			label = __( 'Apply Changes', 'woocommerce-square' ),
+			afterSaveLabel = __( 'Changes Saved!', 'woocommerce-square' ),
 			onClick,
 		} = props;
 

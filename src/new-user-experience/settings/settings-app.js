@@ -84,16 +84,18 @@ export const SettingsApp = () => {
 
 	return (
 		<>
-			<SectionTitle title={ __( 'Connect to Square', 'woocommerce' ) } />
+			<SectionTitle
+				title={ __( 'Connect to Square', 'woocommerce-square' ) }
+			/>
 			<SectionDescription>
 				{ __(
 					'Activate Square integration to securely manage and process transactions for your WooCommerce store. Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes. This setup ensures your payment processing is seamless, whether you are in a development stage or ready to go live.',
-					'woocommerce'
+					'woocommerce-square'
 				) }
 			</SectionDescription>
 
 			<InputWrapper
-				label={ __( 'Environment Selection', 'woocommerce' ) }
+				label={ __( 'Environment Selection', 'woocommerce-square' ) }
 			>
 				<SelectControl
 					data-testid="environment-selection-field"
@@ -107,16 +109,16 @@ export const SettingsApp = () => {
 						{
 							label: __(
 								'Please choose an environment',
-								'woocommerce'
+								'woocommerce-square'
 							),
 							value: '',
 						},
 						{
-							label: __( 'Production', 'woocommerce' ),
+							label: __( 'Production', 'woocommerce-square' ),
 							value: 'no',
 						},
 						{
-							label: __( 'Sandbox', 'woocommerce' ),
+							label: __( 'Sandbox', 'woocommerce-square' ),
 							value: 'yes',
 						},
 					] }
@@ -129,7 +131,7 @@ export const SettingsApp = () => {
 
 			{ enable_sandbox === 'no' && (
 				<InputWrapper
-					label={ __( 'Connection', 'woocommerce' ) }
+					label={ __( 'Connection', 'woocommerce-square' ) }
 					variant="boxed"
 					className="square-settings__connection"
 				>
@@ -145,8 +147,11 @@ export const SettingsApp = () => {
 						isBusy={ isSquareSettingsSaving }
 					>
 						{ is_connected && ! envUpdated
-							? __( 'Disconnect from Square', 'woocommerce' )
-							: __( 'Connect to Square', 'woocommerce' ) }
+							? __(
+									'Disconnect from Square',
+									'woocommerce-square'
+							  )
+							: __( 'Connect to Square', 'woocommerce-square' ) }
 					</Button>
 				</InputWrapper>
 			) }
@@ -156,7 +161,7 @@ export const SettingsApp = () => {
 					<SectionTitle
 						title={ __(
 							'Select your business location',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					/>
 					<SectionDescription>
@@ -165,7 +170,7 @@ export const SettingsApp = () => {
 								/* translators: %1$s and %2$s are placeholders for the link to the documentation */
 								__(
 									'Please select the location you wish to link with this WooCommerce store. Only active %1$slocations%2$s that support credit card processing in Square can be linked.',
-									'woocommerce'
+									'woocommerce-square'
 								),
 								'<a target="_blank" href="https://docs.woocommerce.com/document/woocommerce-square/#section-4">',
 								'</a>'
@@ -174,7 +179,10 @@ export const SettingsApp = () => {
 					</SectionDescription>
 
 					<InputWrapper
-						label={ __( 'Business location', 'woocommerce' ) }
+						label={ __(
+							'Business location',
+							'woocommerce-square'
+						) }
 					>
 						<SelectControl
 							data-testid="business-location-field"
@@ -194,7 +202,7 @@ export const SettingsApp = () => {
 								{
 									label: __(
 										'Please choose a location',
-										'woocommerce'
+										'woocommerce-square'
 									),
 									value: '',
 								},
@@ -212,8 +220,8 @@ export const SettingsApp = () => {
 			<AdvancedSettings />
 
 			<SquareSettingsSaveButton
-				label={ __( 'Save changes', 'woocommerce' ) }
-				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce' ) }
+				label={ __( 'Save changes', 'woocommerce-square' ) }
+				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
 				afterSaveCallback={ () => window.location.reload() }
 			/>
 		</>

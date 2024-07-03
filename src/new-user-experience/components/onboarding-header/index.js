@@ -28,7 +28,7 @@ export const OnboardingHeader = () => {
 							onClick={ () => setStep( backStep ) }
 						>
 							<Back />
-							<span>{ __( 'Back', 'woocommerce' ) }</span>
+							<span>{ __( 'Back', 'woocommerce-square' ) }</span>
 						</Button>
 					) }
 				</FlexItem>

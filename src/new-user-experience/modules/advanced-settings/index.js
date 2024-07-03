@@ -38,12 +38,12 @@ export const AdvancedSettings = () => {
 		<>
 			<Section>
 				<SectionTitle
-					title={ __( 'Advanced Settings', 'woocommerce' ) }
+					title={ __( 'Advanced Settings', 'woocommerce-square' ) }
 				/>
 				<SectionDescription>
 					{ __(
 						'Adjust these options to provide your customers with additional clarity and troubleshoot any issues more effectively.',
-						'woocommerce'
+						'woocommerce-square'
 					) }
 					{ <br /> }
 					{ step === 'advanced-settings' &&
@@ -52,7 +52,7 @@ export const AdvancedSettings = () => {
 								/* translators: %1$s and %2$s are HTML tags for the link to the Square settings page */
 								__(
 									'%1$sClick here%2$s to further refine your settings in the traditional view.',
-									'woocommerce'
+									'woocommerce-square'
 								),
 								`<a href='${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&tab=square'>`, // eslint-disable-line no-undef
 								'</a>'
@@ -64,7 +64,7 @@ export const AdvancedSettings = () => {
 					<InputWrapper
 						label={ __(
 							'Detailed Decline Messages',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					>
 						<SquareCheckboxControl
@@ -80,7 +80,7 @@ export const AdvancedSettings = () => {
 							}
 							label={ __(
 								'Show detailed decline messages to the customer during checkout rather than a generic decline message.',
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						/>
 					</InputWrapper>
@@ -88,14 +88,14 @@ export const AdvancedSettings = () => {
 					<DebugMode />
 
 					<InputWrapper
-						label={ __( 'Enable Logging', 'woocommerce' ) }
+						label={ __( 'Enable Logging', 'woocommerce-square' ) }
 						variant="boxed"
 						description={ parse(
 							sprintf(
 								/* translators: %1$s and %2$s are HTML tags for the link to the WooCommerce status log */
 								__(
 									'Log debug messages to the %1$sWooCommerce status log%2$s',
-									'woocommerce'
+									'woocommerce-square'
 								),
 								`<a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-status&tab=logs">`, // eslint-disable-line no-undef
 								'</a>'

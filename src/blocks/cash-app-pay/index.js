@@ -48,7 +48,7 @@ const squareCashAppPayMethod = {
 	name: PAYMENT_METHOD_ID,
 	label: <SquareCashAppPayLabel />,
 	paymentMethodId: PAYMENT_METHOD_ID,
-	ariaLabel: __( 'Cash App Pay payment method', 'woocommerce' ),
+	ariaLabel: __( 'Cash App Pay payment method', 'woocommerce-square' ),
 	content: <SquareComponent RenderedComponent={ ComponentCashAppPay } />,
 	edit: (
 		<SquareComponent

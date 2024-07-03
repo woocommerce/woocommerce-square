@@ -60,7 +60,10 @@ export const PaymentMethods = () => {
 			<div className="woo-square-onbarding__payment-settings--left">
 				<div className="woo-square-onbarding__payment-settings__intro">
 					<div className="woo-square-onbarding__payment-settings__intro--title">
-						{ __( "You're connected to Square!", 'woocommerce' ) }
+						{ __(
+							"You're connected to Square!",
+							'woocommerce-square'
+						) }
 						<span className="woo-square-onbarding__payment-settings__intro--title-icon">
 							<Confetti />
 						</span>
@@ -68,12 +71,12 @@ export const PaymentMethods = () => {
 					<SectionDescription>
 						{ __(
 							"Congratulations! You've successfully connected your Square account.",
-							'woocommerce'
+							'woocommerce-square'
 						) }
 						<p>
 							{ __(
 								"Now, let's enable the payment methods you want to offer on your site. This is where you can tailor your checkout experience to meet your customers' needs.",
-								'woocommerce'
+								'woocommerce-square'
 							) }
 						</p>
 					</SectionDescription>
@@ -85,19 +88,22 @@ export const PaymentMethods = () => {
 			<div className="woo-square-onbarding__payment-settings--right">
 				<div className="woo-square-onbarding__payment-settings__toggles">
 					<SectionTitle
-						title={ __( 'Enable Payment Methods', 'woocommerce' ) }
+						title={ __(
+							'Enable Payment Methods',
+							'woocommerce-square'
+						) }
 					/>
 					<SectionDescription>
 						{ __(
 							'Simply toggle the payment methods you wish to activate. Each method you enable here will be available to your customers at checkout, making their purchase process smooth and effortless.',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</SectionDescription>
 
 					<InputWrapper
 						label={ __(
 							'Enable Credit & Debit Cards',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 						variant="boxed"
 					>
@@ -113,7 +119,10 @@ export const PaymentMethods = () => {
 					</InputWrapper>
 
 					<InputWrapper
-						label={ __( 'Enable Digital Wallets', 'woocommerce' ) }
+						label={ __(
+							'Enable Digital Wallets',
+							'woocommerce-square'
+						) }
 						variant="boxed"
 					>
 						<ToggleControl
@@ -132,7 +141,7 @@ export const PaymentMethods = () => {
 					<InputWrapper
 						label={ __(
 							'Enable Cash App Pay (US-only)',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 						variant="boxed"
 					>
@@ -150,7 +159,7 @@ export const PaymentMethods = () => {
 					<InputWrapper
 						label={ __(
 							'Enable Square Gift Cards',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 						variant="boxed"
 					>
@@ -189,7 +198,7 @@ export const PaymentMethods = () => {
 								} )();
 							} }
 						>
-							{ __( 'Next', 'woocommerce' ) }
+							{ __( 'Next', 'woocommerce-square' ) }
 						</Button>
 					</div>
 				</div>

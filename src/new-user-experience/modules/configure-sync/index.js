@@ -47,43 +47,43 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 
 	const sync_interval_options = [
 		{
-			label: __( '15 minutes', 'woocommerce' ),
+			label: __( '15 minutes', 'woocommerce-square' ),
 			value: '0.25',
 		},
 		{
-			label: __( '30 minutes', 'woocommerce' ),
+			label: __( '30 minutes', 'woocommerce-square' ),
 			value: '0.5',
 		},
 		{
-			label: __( '45 minutes', 'woocommerce' ),
+			label: __( '45 minutes', 'woocommerce-square' ),
 			value: '0.75',
 		},
 		{
-			label: __( '1 hour', 'woocommerce' ),
+			label: __( '1 hour', 'woocommerce-square' ),
 			value: '1',
 		},
 		{
-			label: __( '2 hours', 'woocommerce' ),
+			label: __( '2 hours', 'woocommerce-square' ),
 			value: '2',
 		},
 		{
-			label: __( '3 hours', 'woocommerce' ),
+			label: __( '3 hours', 'woocommerce-square' ),
 			value: '3',
 		},
 		{
-			label: __( '6 hours', 'woocommerce' ),
+			label: __( '6 hours', 'woocommerce-square' ),
 			value: '6',
 		},
 		{
-			label: __( '8 hours', 'woocommerce' ),
+			label: __( '8 hours', 'woocommerce-square' ),
 			value: '8',
 		},
 		{
-			label: __( '12 hours', 'woocommerce' ),
+			label: __( '12 hours', 'woocommerce-square' ),
 			value: '12',
 		},
 		{
-			label: __( '24 hours', 'woocommerce' ),
+			label: __( '24 hours', 'woocommerce-square' ),
 			value: '24',
 		},
 	];
@@ -112,24 +112,30 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 			{ is_connected && (
 				<Section>
 					<SectionTitle
-						title={ __( 'Configure Sync Settings', 'woocommerce' ) }
+						title={ __(
+							'Configure Sync Settings',
+							'woocommerce-square'
+						) }
 					/>
 					<SectionDescription>
 						{ __(
 							'Choose how you want your product data to flow between WooCommerce and Square to keep your inventory and listings perfectly aligned. Select from the options below to best match your business operations:',
-							'woocommerce'
+							'woocommerce-square'
 						) }
 					</SectionDescription>
 
 					<div className="woo-square-wizard__fields">
 						<InputWrapper
-							label={ __( 'Sync Settings', 'woocommerce' ) }
+							label={ __(
+								'Sync Settings',
+								'woocommerce-square'
+							) }
 							description={ parse(
 								sprintf(
 									/* translators: %1$s and %2$s are placeholders for the link to the documentation, %3$s and %4$s are placeholders for the link to the support forum */
 									__(
 										"Choose where data will be updated for synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you're experiencing technical issues.",
-										'woocommerce'
+										'woocommerce-square'
 									),
 									'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
 									'</a>',
@@ -148,17 +154,23 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								}
 								options={ [
 									{
-										label: __( 'Disabled', 'woocommerce' ),
+										label: __(
+											'Disabled',
+											'woocommerce-square'
+										),
 										value: 'disabled',
 									},
 									{
-										label: __( 'Square', 'woocommerce' ),
+										label: __(
+											'Square',
+											'woocommerce-square'
+										),
 										value: 'square',
 									},
 									{
 										label: __(
 											'WooCommerce',
-											'woocommerce'
+											'woocommerce-square'
 										),
 										value: 'woocommerce',
 									},
@@ -168,14 +180,17 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 
 						{ system_of_record === 'woocommerce' && (
 							<InputWrapper
-								label={ __( 'Sync Inventory', 'woocommerce' ) }
+								label={ __(
+									'Sync Inventory',
+									'woocommerce-square'
+								) }
 								indent={ indent }
 								description={ parse(
 									sprintf(
 										/* translators: %1$s and %2$s are placeholders for the strong tag */
 										__(
 											'Inventory is %1$salways fetched from Square%2$s periodically to account for sales from other channels.',
-											'woocommerce'
+											'woocommerce-square'
 										),
 										'<strong>',
 										'</strong>'
@@ -194,7 +209,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 									}
 									label={ __(
 										'Enable to push inventory changes to Square',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								/>
 							</InputWrapper>
@@ -205,12 +220,12 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Sync Inventory',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									indent={ indent }
 									description={ __(
 										'Inventory is fetched from Square periodically and updated in WooCommerce.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								>
 									<SquareCheckboxControl
@@ -227,7 +242,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 										}
 										label={ __(
 											'Enable to fetch inventory changes from Square',
-											'woocommerce'
+											'woocommerce-square'
 										) }
 									/>
 								</InputWrapper>
@@ -235,12 +250,12 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Override product images',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									indent={ indent }
 									description={ __(
 										'Product images that have been updated in Square will also be updated within WooCommerce during a sync.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								>
 									<SquareCheckboxControl
@@ -257,7 +272,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 										}
 										label={ __(
 											'Enable to override Product images from Square',
-											'woocommerce'
+											'woocommerce-square'
 										) }
 									/>
 								</InputWrapper>
@@ -265,12 +280,12 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Handle missing products',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									indent={ indent }
 									description={ __(
 										'Products not found in Square will be hidden in the WooCommerce product catalog.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 								>
 									<SquareCheckboxControl
@@ -287,7 +302,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 										}
 										label={ __(
 											'Hide synced products when not found in Square',
-											'woocommerce'
+											'woocommerce-square'
 										) }
 									/>
 								</InputWrapper>
@@ -300,11 +315,11 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Sync interval',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									description={ __(
 										'Frequency for how regularly WooCommerce will sync products with Square.',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									indent={ indent }
 								>
@@ -323,7 +338,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 								<InputWrapper
 									label={ __(
 										'Import Products',
-										'woocommerce'
+										'woocommerce-square'
 									) }
 									indent={ indent }
 									className="import-products-wrapper"
@@ -342,14 +357,14 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 									>
 										{ __(
 											'Import all Products from Square',
-											'woocommerce'
+											'woocommerce-square'
 										) }
 									</Button>
 									{ isDirty && (
 										<p>
 											{ __(
 												'You have made changes to the settings. Please save the changes to enable the button.',
-												'woocommerce'
+												'woocommerce-square'
 											) }
 										</p>
 									) }
@@ -377,13 +392,13 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 												<p>
 													{ __(
 														'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.',
-														'woocommerce'
+														'woocommerce-square'
 													) }{ ' ' }
 												</p>
 												<h3>
 													{ __(
 														'Do you wish to import existing product updates from Square?',
-														'woocommerce'
+														'woocommerce-square'
 													) }{ ' ' }
 												</h3>
 												<p>
@@ -392,7 +407,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 															/* translators: %1$s and %2$s are placeholders for the link to the documentation */
 															__(
 																'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.',
-																'woocommerce'
+																'woocommerce-square'
 															),
 															'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
 															'</a>'
@@ -407,7 +422,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 													}
 													label={ __(
 														'Update existing products during import.',
-														'woocommerce'
+														'woocommerce-square'
 													) }
 												/>
 											</div>
@@ -418,7 +433,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 												>
 													{ __(
 														'Cancel',
-														'woocommerce'
+														'woocommerce-square'
 													) }
 												</Button>
 												<Button
@@ -436,7 +451,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 												>
 													{ __(
 														'Import Products',
-														'woocommerce'
+														'woocommerce-square'
 													) }
 												</Button>
 											</div>

@@ -171,7 +171,7 @@ export const OnboardingApp = () => {
 							<SquareSettingsSaveButton
 								afterSaveLabel={ __(
 									'Changes Saved!',
-									'woocommerce'
+									'woocommerce-square'
 								) }
 								afterSaveCallback={ () => {
 									recordEvent(
@@ -342,7 +342,7 @@ export const OnboardingApp = () => {
 									setSandboxConnectLabel(
 										__(
 											'Verifying connection …',
-											'woocommerce'
+											'woocommerce-square'
 										)
 									);
 									setIsVerifyingConnection( true );
@@ -353,7 +353,7 @@ export const OnboardingApp = () => {
 										setSandboxConnectLabel(
 											__(
 												'Connected to sandbox!',
-												'woocommerce'
+												'woocommerce-square'
 											)
 										);
 										await new Promise( setTimeout, 1000 );
@@ -362,7 +362,7 @@ export const OnboardingApp = () => {
 										setSandboxConnectLabel(
 											__(
 												'Connection to sandbox failed.',
-												'woocommerce'
+												'woocommerce-square'
 											)
 										);
 									}
