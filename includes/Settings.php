@@ -166,7 +166,7 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function square_onboarding_redirect() {
-		if ( count( $this->get_plugin()->get_dependency_handler()->get_missing_php_extensions() ) > 0 ) {
+		if ( ! $this->get_plugin()->get_dependency_handler()->meets_php_dependencies() ) {
 			return;
 		}
 
@@ -183,7 +183,7 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function register_pages() {
-		if ( count( $this->get_plugin()->get_dependency_handler()->get_missing_php_extensions() ) ) {
+		if ( ! $this->get_plugin()->get_dependency_handler()->meets_php_dependencies() ) {
 			return;
 		}
 

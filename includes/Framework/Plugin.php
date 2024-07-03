@@ -363,7 +363,7 @@ abstract class Plugin {
 		$custom_actions = array();
 
 		// settings url(s)
-		if ( $this->get_square_onboarding_link() && 0 === count( wc_square()->get_dependency_handler()->get_missing_php_extensions() ) ) {
+		if ( $this->get_square_onboarding_link() && wc_square()->get_dependency_handler()->meets_php_dependencies() ) {
 			$custom_actions['setup-wizard'] = $this->get_square_onboarding_link();
 		}
 
