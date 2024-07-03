@@ -13,8 +13,8 @@ use WooCommerce\Square\Handlers\Product;
  * @version x.x.x
  */
 class WC_Payments_Compatibility {
-        
-        /**
+
+	/**
 	 * Initialize the WooPayments Compatibility class.
 	 *
 	 * @since x.x.x
