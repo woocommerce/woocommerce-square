@@ -237,10 +237,11 @@ class Admin {
 				'woocommerce-square-settings-js',
 				'wcSquareSettings',
 				array(
-					'nonce'    => wp_create_nonce( 'wc_square_settings' ),
-					'homeUrl'  => home_url(),
-					'adminUrl' => admin_url(),
-					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+					'nonce'     => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'   => home_url(),
+					'adminUrl'  => admin_url(),
+					'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+					'depsCheck' => count( $this->get_plugin()->get_dependency_handler()->get_missing_php_extensions() ),
 				)
 			);
 

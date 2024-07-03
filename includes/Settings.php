@@ -166,6 +166,10 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function square_onboarding_redirect() {
+		if ( count( $this->get_plugin()->get_dependency_handler()->get_missing_php_extensions() ) > 0 ) {
+			return;
+		}
+
 		if ( ! get_option( 'wc_square_show_wizard_on_activation' ) ) {
 			add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
 			wp_safe_redirect( admin_url( 'admin.php?page=woocommerce-square-onboarding' ) );
@@ -179,6 +183,10 @@ class Settings extends \WC_Settings_API {
 	 * @since 4.7.0
 	 */
 	public function register_pages() {
+		if ( count( $this->get_plugin()->get_dependency_handler()->get_missing_php_extensions() ) ) {
+			return;
+		}
+
 		$current_page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended
 		if ( ! get_option( 'wc_square_connected_page_visited' ) || 'woocommerce-square-onboarding' === $current_page ) {
 			add_submenu_page( 'woocommerce', __( 'Square Onboarding', 'woocommerce-square' ), __( 'Square Onboarding', 'woocommerce-square' ), 'manage_woocommerce', 'woocommerce-square-onboarding', array( $this, 'render_onboarding_page' ) ); // phpcs:ignore WordPress.WP.Capabilities.Unknown

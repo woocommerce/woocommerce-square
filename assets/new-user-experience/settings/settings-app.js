@@ -143,6 +143,7 @@ export const SettingsApp = () => {
 								: connection_url
 						}
 						isBusy={isSquareSettingsSaving}
+						disabled={wcSquareSettings.depsCheck > 0}
 					>
 						{is_connected && !envUpdated
 							? __('Disconnect from Square', 'woocommerce-square')
