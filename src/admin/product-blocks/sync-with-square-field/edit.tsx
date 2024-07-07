@@ -28,7 +28,7 @@ export function Edit({ attributes, context: { postType } } ) {
 	} );
 
 	useEffect( () => {
-		if ( is_gift_card ) {
+		if ( 'yes' === is_gift_card ) {
 			setIsSquareSynced( false );
 		}
 	}, [ is_gift_card ] );

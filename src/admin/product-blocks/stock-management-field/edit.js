@@ -1,9 +1,9 @@
 /**
  * External dependencies
  */
-import { __, sprintf } from '@wordpress/i18n';
-import { BaseControl, ToggleControl } from '@wordpress/components';
-import { useEffect } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { BaseControl, ToggleControl, Button, Flex } from '@wordpress/components';
+import { useEffect, useState } from '@wordpress/element';
 import {
 	__experimentalUseProductEntityProp as useProductEntityProp,
 } from '@woocommerce/product-editor';
@@ -21,15 +21,21 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 	const [ isSyncEnabled ] = useProductEntityProp( 'is_sync_enabled', { postType } );
 	const [ sku ] = useProductEntityProp( 'sku', { postType } );
 	const [ sor ] = useProductEntityProp( 'sor', { postType } );
-	const [ is_gift_card ] = useProductEntityProp( 'is_gift_card', { postType } );
+	const [ isGiftCard ] = useProductEntityProp( 'is_gift_card', { postType } );
+	const [ isStockManaged ] = useProductEntityProp( 'manage_stock', { postType } );
+	const [ productStatus ] = useProductEntityProp( 'status', { postType } );
+	const [ productId ] = useProductEntityProp( 'id', { postType } );
+	const [ fetchStockNonce ] = useProductEntityProp( 'fetch_stock_nonce', { postType } );
+	const [ isInventorySyncing, setIsInventorySyncing ] = useState( false );
+	const [ inventorySyncMessage, setInventorySyncMessage ] = useState( '' );
 	let label = __( 'Track quantity for this product', 'woocommerce' );
 	let helpText = '';
 
 	useEffect( () => {
-		if ( is_gift_card ) {
+		if ( 'yes' === isGiftCard ) {
 			setIsSquareSynced( false );
 		}
-	}, [ is_gift_card ] );
+	}, [ isGiftCard ] );
 
 	useEffect( () => {
 		if ( sku.length ) {
@@ -38,6 +44,30 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 
 		setIsSquareSynced( false );
 	}, [ sku ] );
+
+	const syncInventory = async () => {
+		const fetchStockData = new FormData();
+
+		fetchStockData.append( 'action', 'wc_square_fetch_product_stock_with_square' );
+		fetchStockData.append( 'security', fetchStockNonce );
+		fetchStockData.append( 'product_id', productId );
+
+		setIsInventorySyncing( true );
+		setInventorySyncMessage( '' );
+
+		let response = await fetch( window.ajaxurl, {
+			method: 'POST',
+			body: fetchStockData,
+		} );
+
+		response = await response.json();
+
+		if ( ! response.success ) {
+			setInventorySyncMessage( response.data );
+		}
+
+		setIsInventorySyncing( false );
+	};
 
 	if ( isSquareSynced && isSyncEnabled && sku.length ) {
 		label = <a href="/wp-admin/admin.php?page=wc-settings&tab=square">{ __( 'Synced with Square', 'woocommerce-square' ) }</a>
@@ -48,6 +78,7 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 	}
 
 	let canManageStock = true;
+	let isPublished = 'publish' === productStatus;
 
 	if ( disabled || ( isSquareSynced && isSyncEnabled && sku.length ) ) {
 		if ( ! isInventorySyncEnabled || 'square' === sor ) {
@@ -65,13 +96,32 @@ export const Edit = ( { attributes, context: { postType } } ) => {
 				label={ __( 'Stock management', 'woocommerce-square' ) }
 				className='wc-square-track-quantity'
 			>
-				<ToggleControl
-					label={ label }
-					disabled={ ! canManageStock }
-					help={ helpText }
-					checked={ manageStock }
-					onChange={ setManageStock }
-				/>
+				<Flex justify="flex-start">
+					<ToggleControl
+						label={ label }
+						disabled={ ! canManageStock }
+						help={ helpText }
+						checked={ manageStock }
+						onChange={ setManageStock }
+					/>
+					{ ! isStockManaged && isSquareSynced && isPublished && (
+						<>
+							(<Button
+								variant="link"
+								disabled={ isInventorySyncing }
+								isBusy={ isInventorySyncing }
+								onClick={ syncInventory }
+							>
+								{ __( 'Sync Inventory', 'woocommerce-square' ) }
+							</Button>)
+						</>
+					) }
+				</Flex>
+					{ inventorySyncMessage && (
+						<p style={ { color: 'rgb(170, 0, 0)' } }>
+							{ inventorySyncMessage }
+						</p>
+					) }
 			</BaseControl>
 		</>
 	);

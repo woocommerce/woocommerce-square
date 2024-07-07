@@ -39,7 +39,7 @@ export function Edit( {
 	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
 	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
 	const [ canManageStockInSquare, setCanManageStockInSquare ] = useState( null );
-	const [ is_gift_card ] = useProductEntityProp( 'is_gift_card', context.postType );
+	const [ isGiftCard ] = useProductEntityProp( 'is_gift_card', context.postType );
 	const isPublished = 'publish' === productStatus;
 
 	const {
@@ -60,10 +60,10 @@ export function Edit( {
 	);
 
 	useEffect( () => {
-		if ( is_gift_card ) {
+		if ( 'yes' === isGiftCard ) {
 			setIsSquareSynced( false );
 		}
-	}, [ is_gift_card ] );
+	}, [ isGiftCard ] );
 
 	useEffect( () => {
 		if ( manageStock && stockQuantity === null ) {
