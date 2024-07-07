@@ -14,6 +14,10 @@ class Product_Editor_Compatibility {
 			return;
 		}
 
+		if ( wc_square()->get_settings_handler()->is_system_of_record_disabled() ) {
+			return;
+		}
+
 		add_action(
 			'init',
 			array( $this, 'register_custom_blocks' )
