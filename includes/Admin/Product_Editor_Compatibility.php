@@ -129,21 +129,32 @@ class Product_Editor_Compatibility {
 	/**
 	 * Adds the sync with Square control to the product editor.
 	 *
+	 * @param Section $basic_details_field The basic details field block.
 	 */
 	public function add_sync_with_square_control( $basic_details_field ) {
-		$basic_details_field->add_block(
-			array(
-				'id'             => '_square_gift_card',
-				'blockName'      => 'woocommerce/product-checkbox-field',
-				'attributes'     => array(
-					'title'          => __( 'Square Gift Card', 'woocommerce-square' ),
-					'label'          => __( 'Enable to create this product as a gift card', 'woocommerce-square' ),
-					'property'       => 'is_gift_card',
-					'checkedValue'   => 'yes',
-					'uncheckedValue' => 'no',
-				),
-			)
-		);
+		$gift_card_settings = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+
+		if ( isset( $gift_card_settings['enabled'] ) && 'yes' === $gift_card_settings['enabled'] ) {
+			$basic_details_field->add_block(
+				array(
+					'id'             => '_square_gift_card',
+					'blockName'      => 'woocommerce/product-checkbox-field',
+					'attributes'     => array(
+						'title'          => __( 'Square Gift Card', 'woocommerce-square' ),
+						'label'          => __( 'Enable to create this product as a gift card', 'woocommerce-square' ),
+						'property'       => 'is_gift_card',
+						'checkedValue'   => 'yes',
+						'uncheckedValue' => 'no',
+					),
+					'hideConditions' => array(
+						array(
+							'expression' => '"simple" !== editedProduct.type && "variable" !== editedProduct.type',
+						),
+					),
+				)
+			);
+		}
+
 		$basic_details_field->add_block(
 			array(
 				'id'             => '_wc_square_synced',
