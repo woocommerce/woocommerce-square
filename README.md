@@ -1,6 +1,5 @@
 # [Square for WooCommerce](http://woocommerce.com/products/square/)
 
-
 ## Getting Started
 
 1. Make sure you have `git`, `node`, `npm` installed. We use the node LTS version on our servers, so we recommended 
@@ -57,11 +56,14 @@ TBD - Travis Integration
 TBD - Unit Testing
 TBD - E2E Testing
 
-## Compatibility with WooPayments
+## Compatibility
 
-This extension is compatible with the WooPayments extension.
+This extension is compatible with:
+
+* [WooPayments extension](https://woo.com/products/woopayments/)
 
 ## Contribution
+
 Contribution can be done in many ways. We appreciate it.
 * If you test this extension and find a bug/have a question, do log an issue.
 * If you have fixed any of the issues, do submit a PR.
