@@ -33,6 +33,7 @@ const ButtonComponent = () => {
 		onClose,
 		eventRegistration,
 		paymentStatus,
+		buttonAttributes,
 	} = props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
@@ -148,10 +149,12 @@ const ButtonComponent = () => {
 	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
+	const buttonHeight = buttonAttributes?.height || '48';
 	return (
 		<>
 			{!isApplePayDisabled && (
 				<div
+					style={{ height: buttonHeight }}
 					tabIndex={0}
 					role="button"
 					id="apple-pay-button"
@@ -171,6 +174,7 @@ const ButtonComponent = () => {
 			)}
 			{!isGooglePayDisabled && (
 				<div
+					style={{ height: `${buttonHeight}px` }}
 					tabIndex={0}
 					role="button"
 					ref={googlePaybuttonRef}
