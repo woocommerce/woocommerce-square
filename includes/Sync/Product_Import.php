@@ -161,7 +161,7 @@ class Product_Import extends Stepped_Job {
 			}
 
 			// import or update categories related to the products that are being imported
-			$catelog_category_id = $catalog_object->getItemData()->getCategoryId();
+			$catelog_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
 
 			if ( $catelog_category_id && isset( $categories[ $catelog_category_id ] ) ) {
 				Category::import_or_update( $categories[ $catelog_category_id ] );
@@ -532,7 +532,8 @@ class Product_Import extends Stepped_Job {
 			return null;
 		}
 
-		$category_id = Category::get_category_id_by_square_id( $catalog_object->getItemData()->getCategoryId() );
+		$square_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
+		$category_id        = Category::get_category_id_by_square_id( $square_category_id );
 
 		$data = array(
 			'title'       => $catalog_object->getItemData()->getName(),
