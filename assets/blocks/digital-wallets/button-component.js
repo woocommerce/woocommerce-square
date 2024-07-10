@@ -20,7 +20,6 @@ import {
 } from './submission-handler';
 
 import { getSquareServerData } from '../square-utils';
-import { button } from '@wordpress/icons';
 
 const ButtonComponent = () => {
 	const { payments, props } = useContext(DigitalWalletContext);
