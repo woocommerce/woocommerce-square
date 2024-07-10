@@ -20,6 +20,7 @@ import {
 } from './submission-handler';
 
 import { getSquareServerData } from '../square-utils';
+import { button } from '@wordpress/icons';
 
 const ButtonComponent = () => {
 	const { payments, props } = useContext(DigitalWalletContext);
@@ -151,7 +152,7 @@ const ButtonComponent = () => {
 
 	// Default button height aligns with Woo defaults
 	let buttonHeight = '48';
-	if (typeof buttonAttributes !== 'undefined') {
+	if (typeof buttonAttributes !== 'undefined' && buttonAttributes !== null) {
 		buttonHeight = buttonAttributes?.height || buttonHeight;
 	}
 
