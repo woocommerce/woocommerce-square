@@ -152,7 +152,7 @@ const ButtonComponent = () => {
 
 	// Default button height aligns with Woo defaults
 	let buttonHeight = '48';
-	if (typeof buttonAttributes !== 'undefined' && buttonAttributes !== null) {
+	if (typeof buttonAttributes !== 'undefined') {
 		buttonHeight = buttonAttributes?.height || buttonHeight;
 	}
 
