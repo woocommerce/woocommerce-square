@@ -153,7 +153,7 @@ export function extractCatalogInfo( catalogObject = {} ) {
  * @param {String} price Price of the variation.
  * @returns {Object}
  */
-export async function createCatalogObject( name, sku, price, description = '' ) {
+export async function createCatalogObject( name, sku, price, description = '', categoryId = '' ) {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
 	const headers = {
@@ -189,10 +189,51 @@ export async function createCatalogObject( name, sku, price, description = '' ) 
 		}
 	};
 
+	if (categoryId) {
+		data.object.item_data.categories = [{ id: categoryId }];
+		data.object.item_data.reporting_category = { id: categoryId };
+	}
+
 	const response = await fetch(url, {
 		method: method,
 		headers: headers,
 		body: JSON.stringify(data)
+	});
+
+	return await response.json();
+}
+
+/**
+ * Create a Category to be used in the catalog.
+ *
+ * @param {String} name Name of the category.
+ * @returns {Object}
+ */
+export async function createCategory(name) {
+	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
+	const method = 'POST';
+	const headers = {
+		'Square-Version': squareVersion,
+		Authorization: `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+		'Content-Type': 'application/json',
+	};
+
+	const data = {
+		idempotency_key: uuidv4(),
+		object: {
+			type: 'CATEGORY',
+			category_data: {
+				name,
+			},
+			id: `#${name}Category`,
+			present_at_all_locations: true,
+		},
+	};
+
+	const response = await fetch(url, {
+		method,
+		headers,
+		body: JSON.stringify(data),
 	});
 
 	return await response.json();
