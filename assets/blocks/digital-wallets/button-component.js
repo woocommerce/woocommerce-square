@@ -149,7 +149,12 @@ const ButtonComponent = () => {
 	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
-	const buttonHeight = buttonAttributes?.height || '48';
+	// Default button height aligns with Woo defaults
+	let buttonHeight = '48';
+	if (typeof buttonAttributes !== 'undefined') {
+		buttonHeight = buttonAttributes?.height || buttonHeight;
+	}
+
 	return (
 		<>
 			{!isApplePayDisabled && (
