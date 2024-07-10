@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 
+const squareVersion = '2024-03-20';
+
 /**
  * Returns an object that contains an array of catalog objects.
  *
@@ -9,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 export async function listCatalog() {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM';
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};
@@ -17,6 +19,27 @@ export async function listCatalog() {
 	const response = await fetch( url, {
 		method: 'GET',
 		headers: headers
+	} );
+
+	return await response.json();
+}
+
+/**
+ * Returns an object that contains an array of category objects.
+ *
+ * @returns {Object} Response object.
+ */
+export async function listCategories() {
+	const url = 'https://connect.squareupsandbox.com/v2/catalog/list?types=CATEGORY';
+	const headers = {
+		'Square-Version': squareVersion,
+		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+		'Content-Type': 'application/json',
+	};
+
+	const response = await fetch( url, {
+		method: 'GET',
+		headers,
 	} );
 
 	return await response.json();
@@ -31,7 +54,7 @@ export async function listCatalog() {
 export async function batchDeleteCatalogItem( ids = [] ) {
 	const url = `https://connect.squareupsandbox.com/v2/catalog/batch-delete`;
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};
@@ -75,7 +98,7 @@ export async function deleteAllCatalogItems() {
 export async function retrieveInventoryCount( variationId ) {
 	const url = `https://connect.squareupsandbox.com/v2/inventory/${variationId}?location_ids=${process.env.SQUARE_LOCATION_ID}`;
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};
@@ -97,6 +120,15 @@ export async function retrieveInventoryCount( variationId ) {
 export function extractCatalogInfo( catalogObject = {} ) {
 	const catalogId = catalogObject.id;
 	const name = catalogObject.item_data.name;
+	const description =
+		catalogObject.item_data.description ||
+		catalogObject.item_data.description_html ||
+		'';
+	let category = catalogObject.item_data.reporting_category?.id;
+	if (!category) {
+		category = catalogObject.categories[0]?.id;
+	}
+
 	const variations = catalogObject.item_data.variations.map( variation => {
 		return {
 			id: variation.id,
@@ -108,7 +140,9 @@ export function extractCatalogInfo( catalogObject = {} ) {
 	return {
 		catalogId,
 		name,
-		variations
+		category,
+		description,
+		variations,
 	}
 }
 
@@ -123,7 +157,7 @@ export async function createCatalogObject( name, sku, price, description = '' ) 
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};
@@ -168,7 +202,7 @@ export async function updateCatalogItemInventory( catalogId, inventoryCount ) {
 	const url = 'https://connect.squareupsandbox.com/v2/inventory/changes/batch-create';
 	const method = 'POST';
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};
@@ -236,8 +270,8 @@ export async function importProducts( page, update = false ) {
 export async function getGiftCard( gan = '' ) {
 	const url = 'https://connect.squareupsandbox.com/v2/gift-cards/from-gan';
 	const headers = {
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Square-Version': '2023-09-25',
 		'Content-Type': 'application/json'
 	};
 
