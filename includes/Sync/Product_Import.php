@@ -161,11 +161,11 @@ class Product_Import extends Stepped_Job {
 			}
 
 			// import or update categories related to the products that are being imported
-			$catelog_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
+			$catalog_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
 
-			if ( $catelog_category_id && isset( $categories[ $catelog_category_id ] ) ) {
-				Category::import_or_update( $categories[ $catelog_category_id ] );
-				unset( $categories[ $catelog_category_id ] ); // don't import/update the same category multiple times per batch
+			if ( $catalog_category_id && isset( $categories[ $catalog_category_id ] ) ) {
+				Category::import_or_update( $categories[ $catalog_category_id ] );
+				unset( $categories[ $catalog_category_id ] ); // don't import/update the same category multiple times per batch
 			}
 
 			$data = $this->extract_product_data( $catalog_object, $product );
