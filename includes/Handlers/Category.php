@@ -239,23 +239,23 @@ class Category {
 	 * @return string|null
 	 */
 	public static function get_square_category_id( $catalog_item ) {
-		$catelog_category_id = null;
+		$catalog_category_id = null;
 		// Try to get the category from the reporting category first.
-		$catelog_category = $catalog_item->getReportingCategory();
+		$catalog_category = $catalog_item->getReportingCategory();
 
 		// If no reporting category, try to get the first category from the categories list.
-		if ( empty( $catelog_category ) ) {
-			$catelog_categories = $catalog_item->getCategories();
-			if ( ! empty( $catelog_categories ) ) {
-				$catelog_category = $catelog_categories[0];
+		if ( empty( $catalog_category ) ) {
+			$catalog_categories = $catalog_item->getCategories();
+			if ( ! empty( $catalog_categories ) ) {
+				$catalog_category = $catalog_categories[0];
 			}
 		}
 
 		// If we have a category, get the ID.
-		if ( ! empty( $catelog_category ) ) {
-			$catelog_category_id = $catelog_category->getId();
+		if ( ! empty( $catalog_category ) ) {
+			$catalog_category_id = $catalog_category->getId();
 		}
 
-		return $catelog_category_id;
+		return $catalog_category_id;
 	}
 }
