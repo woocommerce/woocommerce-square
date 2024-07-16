@@ -159,7 +159,7 @@ const ButtonComponent = () => {
 		<>
 			{!isApplePayDisabled && (
 				<div
-					style={{ height: buttonHeight }}
+					style={{ height: `${buttonHeight}px` }}
 					tabIndex={0}
 					role="button"
 					id="apple-pay-button"
