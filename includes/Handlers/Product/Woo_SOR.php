@@ -74,7 +74,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 		// if a category with a Square ID was found
 		if ( $square_category_id ) {
-			$item_data->setCategoryId( $square_category_id );
+			$square_category = new \Square\Models\CatalogObjectCategory();
+			$square_category->setId( $square_category_id );
+			$item_data->setCategories( array( $square_category ) );
+			// Set the reporting category.
+			$item_data->setReportingCategory( $square_category );
 		}
 
 		$catalog_variations = $item_data->getVariations() ?: array();
