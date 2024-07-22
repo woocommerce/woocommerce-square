@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 4.7.0
+Stable tag: 4.7.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.7.1 - xxxx-xx-xx =
+= 4.7.1 - 2024-07-22 =
 * Fix - Remove double encoding from the redirect_url param in the oauth connect url.
 * Dev - Bump WordPress "tested up to" version 6.6.
 
