@@ -145,6 +145,7 @@ export const SettingsApp = () => {
 								: connection_url
 						}
 						isBusy={ isSquareSettingsSaving }
+						disabled={ ! wcSquareSettings.depsCheck }
 					>
 						{ is_connected && ! envUpdated
 							? __(
@@ -223,6 +224,7 @@ export const SettingsApp = () => {
 				label={ __( 'Save changes', 'woocommerce-square' ) }
 				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
 				afterSaveCallback={ () => window.location.reload() }
+				disabled={ ! wcSquareSettings.depsCheck }
 			/>
 		</>
 	);
