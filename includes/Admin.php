@@ -122,7 +122,7 @@ class Admin {
 
 			wp_enqueue_script(
 				'wc-square-admin-products',
-				$this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-admin-products.min.js',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-products.js',
 				array( 'jquery' ),
 				Plugin::VERSION,
 				true
@@ -156,14 +156,14 @@ class Admin {
 		} elseif ( $this->get_plugin()->is_plugin_settings() ) {
 			wp_enqueue_style(
 				'wc-square-admin',
-				$this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-admin.min.css',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',
 				array(),
 				Plugin::VERSION
 			);
 
 			wp_enqueue_script(
 				'wc-square-admin-settings',
-				$this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-admin-settings.min.js',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-settings.js',
 				array( 'jquery', 'jquery-blockui', 'backbone', 'wc-backbone-modal' ),
 				Plugin::VERSION,
 				true
