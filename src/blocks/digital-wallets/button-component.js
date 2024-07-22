@@ -33,6 +33,7 @@ const ButtonComponent = () => {
 		onClose,
 		eventRegistration,
 		paymentStatus,
+		buttonAttributes,
 	} = props;
 	const { onPaymentSetup } = eventRegistration;
 	const googlePaybuttonRef = useRef();
@@ -149,10 +150,17 @@ const ButtonComponent = () => {
 	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes( 'apple' );
 
+	// Default button height aligns with Woo defaults
+	let buttonHeight = '48';
+	if (typeof buttonAttributes !== 'undefined') {
+		buttonHeight = buttonAttributes?.height || buttonHeight;
+	}
+
 	return (
 		<>
 			{ ! isApplePayDisabled && (
 				<div
+					style={{ height: `${buttonHeight}px` }}
 					tabIndex={ 0 }
 					role="button"
 					id="apple-pay-button"
@@ -172,6 +180,7 @@ const ButtonComponent = () => {
 			) }
 			{ ! isGooglePayDisabled && (
 				<div
+					style={{ height: `${buttonHeight}px` }}
 					tabIndex={ 0 }
 					role="button"
 					ref={ googlePaybuttonRef }
