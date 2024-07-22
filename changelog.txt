@@ -1,6 +1,6 @@
 *** WooCommerce Square Changelog ***
 
-= 4.7.1 - xxxx-xx-xx =
+= 4.7.1 - 2024-07-22 =
 * Fix - Remove double encoding from the redirect_url param in the oauth connect url.
 * Dev - Bump WordPress "tested up to" version 6.6.
 
