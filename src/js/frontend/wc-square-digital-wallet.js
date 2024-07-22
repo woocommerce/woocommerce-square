@@ -27,7 +27,7 @@ jQuery( document ).ready( ( $ ) => {
 
 			this.args = args;
 			this.payment_request = args.payment_request;
-			this.total_amount = args.payment_request.total.amount;
+			this.total_amount = args.payment_request.total?.amount;
 			this.isPayForOrderPage = args.is_pay_for_order_page;
 			this.orderId = args.order_id;
 			this.id_dasherized = args.gateway_id_dasherized;
@@ -62,7 +62,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.get_payment_request().then(
 				( response ) => {
 					this.payment_request = JSON.parse( response );
-					this.total_amount = this.payment_request.total.amount;
+					this.total_amount = this.payment_request.total?.amount;
 					this.load_square_form();
 				},
 				( message ) => {
@@ -695,7 +695,7 @@ jQuery( document ).ready( ( $ ) => {
 			return new Promise( ( resolve, reject ) => {
 				return $.post( this.get_ajax_url( 'recalculate_totals' ), data, ( response ) => {
 					if ( response.success ) {
-						this.total_amount = response.data.total.amount;
+						this.total_amount = response.data.total?.amount;
 						return resolve( response.data );
 					}
 					return reject( response.data );
