@@ -207,12 +207,12 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 			const paymentMethod = await page.locator(
 				'ul.wc_payment_methods li.payment_method_square_credit_card'
 			);
-	
+
 			// Check if we already have a saved payment method, then check new payment method.
 			const visible = await paymentMethod
 				.locator('input#wc-square-credit-card-use-new-payment-method')
 				.isVisible();
-	
+
 			if (visible) {
 				await paymentMethod
 					.locator('input#wc-square-credit-card-use-new-payment-method')
@@ -225,8 +225,14 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 
 	if ( isBlock ) {
 		frame = '.sq-card-iframe-container .sq-card-component';
+		if ( await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).isVisible() ) {
+			await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).click();
+		}
 	} else {
 		frame = '#wc-square-credit-card-container .sq-card-component';
+		if ( await page.locator( 'label[for="payment_method_square_credit_card"]' ).isVisible() ) {
+			await page.locator( 'label[for="payment_method_square_credit_card"]' ).click();
+		}
 	}
 
 	// Fill credit card details.
@@ -365,26 +371,26 @@ export async function saveCashAppPaySettings(page, options) {
 
 	// Enable/Disable
 	if (!settings.enabled) {
-		await page.locator('#woocommerce_square_cash_app_pay_enabled').uncheck();
+		await page.getByTestId('cash-app-gateway-toggle-field').uncheck();
 	} else {
-		await page.locator('#woocommerce_square_cash_app_pay_enabled').check();
+		await page.getByTestId('cash-app-gateway-toggle-field').check();
 	}
 
 	// Title and Description
 	await page
-		.locator('#woocommerce_square_cash_app_pay_title')
+		.getByTestId('cash-app-gateway-title-field')
 		.fill(settings.title);
 	await page
-		.locator('#woocommerce_square_cash_app_pay_description')
+		.getByTestId('cash-app-gateway-description-field')
 		.fill(settings.description);
 
 	// Transaction Type
 	await page
-		.locator('#woocommerce_square_cash_app_pay_transaction_type')
+		.getByTestId('cash-app-gateway-transaction-type-field')
 		.selectOption(settings.transactionType);
 	if ( settings.transactionType === 'authorization' ) {
-		const chargeVirtualOrders = await page.locator('#woocommerce_square_cash_app_pay_charge_virtual_orders');
-		const capturePaidOrders = await page.locator('#woocommerce_square_cash_app_pay_enable_paid_capture');
+		const chargeVirtualOrders = await page.getByTestId('cash-app-gateway-virtual-order-only-field');
+		const capturePaidOrders = await page.getByTestId('cash-app-gateway-capture-paid-orders-field');
 		if ( settings.chargeVirtualOrders ) {
 			await chargeVirtualOrders.check();
 		} else {
@@ -398,23 +404,16 @@ export async function saveCashAppPaySettings(page, options) {
 		}
 	}
 
-	// Debug Mode and Environment
-	await page
-		.locator('#woocommerce_square_cash_app_pay_debug_mode')
-		.selectOption(settings.debugMode);
-	
 	// Button customization
 	await page
-		.locator('#woocommerce_square_cash_app_pay_button_theme')
+		.getByTestId('cash-app-gateway-button-theme-field')
 		.selectOption(settings.buttonTheme);
 	await page
-		.locator('#woocommerce_square_cash_app_pay_button_shape')
+		.getByTestId('cash-app-gateway-button-shape-field')
 		.selectOption(settings.buttonShape);
 
-	await page.getByRole('button', { name: 'Save changes' }).click();
-	await expect(page.locator('#message.updated.inline').last()).toContainText(
-		'Your settings have been saved.'
-	);
+	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
 /**
@@ -476,7 +475,7 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		await page.locator('#wc-square-cash-app-pay').getByTestId('cap-btn').click();
 	} else {
 		await page.locator('#wc-square-cash-app').getByTestId('cap-btn').click();
-	}	
+	}
 	await page.waitForLoadState('networkidle');
 	if ( decline ) {
 		await page.getByRole('button', { name: 'Decline' }).click();
@@ -498,6 +497,34 @@ export async function placeCashAppPayOrder( page, isBlock = true, decline = fals
 		.locator( '.woocommerce-order-overview__order strong' )
 		.innerText();
 	return orderId;
+}
+
+export async function visitOnboardingPage( page ) {
+	await page.goto( '/wp-admin/admin.php?page=woocommerce-square-onboarding' );
+	await page.locator( '.woo-square-loader' ).waitFor( { state: 'detached' } );
+}
+
+export async function isToggleChecked( page, selector ) {
+
+	return await page
+		.locator( `${selector} .components-form-toggle` )
+		.evaluate( node => node.classList.contains( 'is-checked' ) );
+}
+
+export async function saveSquareSettings( page ) {
+	await page.getByTestId( 'square-settings-save-button' ).click();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
+}
+
+export async function savePaymentGatewaySettings( page ) {
+	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
+}
+
+export async function setStepsLocalStorage( page ) {
+	await page.evaluate( ( val ) => localStorage.setItem( 'step', val ), 'payment-complete' );
+	await page.evaluate( ( val ) => localStorage.setItem( 'backStep', val ), 'payment-methods' );
+	await page.reload();
 }
 
 /**

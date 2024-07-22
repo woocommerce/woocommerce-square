@@ -6,7 +6,8 @@ import {
 	clearCart,
 	gotoOrderEditPage,
 	visitCheckout,
-	placeOrder
+	placeOrder,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -18,9 +19,10 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
 	await page
-		.locator( '#woocommerce_square_credit_card_transaction_type' )
+		.getByTestId( 'credit-card-transaction-type-field' )
 		.selectOption( { label: 'Charge' } );
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	await savePaymentGatewaySettings( page );
 
 	await clearCart( page );
 	await browser.close();

@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.6.3",
+  "version": "4.7.1",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "main": "Gruntfile.js",
   "scripts": {
@@ -72,7 +72,10 @@
     "wp_org_slug": "woocommerce-square"
   },
   "dependencies": {
-    "@wordpress/data": "^8.1.0",
+    "@codeamp/block-components": "^0.0.1-beta.13",
+    "@woocommerce/tracks": "^1.3.0",
+    "@wordpress/icons": "^10.1.0",
+    "html-react-parser": "^5.1.10",
     "uuid": "^9.0.1"
   }
 }

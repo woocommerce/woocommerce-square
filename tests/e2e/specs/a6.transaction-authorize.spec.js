@@ -9,6 +9,7 @@ import {
 	gotoOrderEditPage,
 	placeOrder,
 	visitCheckout,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -20,12 +21,13 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
 	await page
-		.locator( '#woocommerce_square_credit_card_transaction_type' )
+		.getByTestId( 'credit-card-transaction-type-field' )
 		.selectOption( { label: 'Authorization' } );
 	await page
-		.locator( '#woocommerce_square_credit_card_charge_virtual_orders' )
+		.getByTestId( 'credit-card-gateway-virtual-order-only-field' )
 		.uncheck();
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	await savePaymentGatewaySettings( page );
 
 	// Create product.
 	if ( ! ( await doesProductExist( baseURL, 'simple-product' ) ) ) {

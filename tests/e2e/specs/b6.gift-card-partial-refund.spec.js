@@ -11,6 +11,7 @@ import {
 	gotoOrderEditPage,
 	waitForUnBlock,
 	doSquareRefund,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -18,12 +19,12 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const page = await browser.newPage();
 
 	await page.goto(
-		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=gift_cards_pay'
 	);
-	await page
-		.locator( '#woocommerce_square_credit_card_enable_gift_cards' )
-		.check();
-	await page.locator( '.woocommerce-save-button' ).click();
+
+	await page.getByTestId( 'gift-card-gateway-toggle-field' ).check();
+
+	await savePaymentGatewaySettings( page );
 
 	if ( ! ( await doesProductExist( baseURL, 'dollar-product' ) ) ) {
 		await createProduct( page, {

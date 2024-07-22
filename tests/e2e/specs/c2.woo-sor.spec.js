@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 import {
 	createProduct,
 	doesProductExist,
-	deleteAllProducts,
+	saveSquareSettings,
 } from '../utils/helper';
 import {
 	listCatalog,
@@ -20,8 +20,8 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
-	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'WooCommerce' } );
-	await page.locator( '.woocommerce-save-button' ).click();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
+	await saveSquareSettings( page );
 
 	await clearSync( page );
 
