@@ -10,7 +10,7 @@ test( 'Enable/Disable Payment Gateway in WooCommerce Settings', async ( {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout' );
 	await expect(
 		page.locator( 'tr[data-gateway_id="square_credit_card"] .action' )
-	).toHaveText( 'Finish setup' );
+	).toHaveText( 'Finish set up' );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
 	await page.getByTestId( 'credit-card-gateway-toggle-field' ).check();

@@ -14,7 +14,7 @@ import { useSteps } from './../../onboarding/hooks';
 import { queueRecordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
 export const OnboardingHeader = () => {
-	const { setStep, getBackStep } = useSteps();
+	const { stepData, setStep, getBackStep } = useSteps();
 
 	const backStep = getBackStep();
 

@@ -31,6 +31,7 @@ test.beforeAll( 'Setup', async () => {
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
 	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
+	await page.getByTestId( 'pull-inventory-field' ).check();
 	await saveSquareSettings( page );
 
 	await browser.close();
@@ -109,6 +110,7 @@ test( 'Handle missing products', async ( { page } ) => {
 	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
 	await page.getByTestId( 'hide-missing-products-field' ).check();
 	await saveSquareSettings( page );
+	await page.reload();
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 	await page.locator( '#wc-square-sync' ).click();
