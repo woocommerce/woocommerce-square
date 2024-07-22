@@ -101,6 +101,7 @@ class Order {
 
 		// Add Gift Card "send-to" email address to the order meta.
 		add_action( 'woocommerce_checkout_create_order_line_item', array( $this, 'add_gift_card_add_to_cart_details_to_order' ), 10, 4 );
+		add_action( 'woocommerce_add_order_again_cart_item', array( $this, 'reorder_gift_card' ) );
 		add_filter( 'woocommerce_order_item_display_meta_key', array( $this, 'modify_gift_card_line_item_key' ), 10, 3 );
 		add_action( 'wc_square_gift_card_activated', array( $this, 'trigger_email_for_gift_card_sent' ) );
 		add_filter( 'woocommerce_hidden_order_itemmeta', array( $this, 'hide_gift_card_line_item_meta' ) );
@@ -523,6 +524,52 @@ class Order {
 		if ( empty( $values['square-gift-card-send-to-email'] ) && empty( $values['square-gift-card-gan'] ) ) {
 			$item->add_meta_data( '_square-gift-card-purchase-type', 'new' );
 		}
+	}
+
+	/**
+	 * Adds gift card related order item meta to the order again cart item.
+	 *
+	 * @param array $cart_item_data Cart item data.
+	 *
+	 * @return array
+	 */
+	public function reorder_gift_card( $cart_item_data ) {
+		// Disabling PHPCS check as nonce verification is done in the parent method.
+		$order_id = absint( wp_unslash( $_GET['order_again'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $order_id ) {
+			return $cart_item_data;
+		}
+
+		$order       = wc_get_order( $order_id );
+		$order_items = $order->get_items();
+
+		if ( empty( $order_items ) ) {
+			return $cart_item_data;
+		}
+
+		$product = wc_get_product( $cart_item_data['product_id'] );
+
+		if ( ! Product::is_gift_card( $product ) ) {
+			return $cart_item_data;
+		}
+
+		/** @var \WC_Order_Item $order_item */
+		foreach ( $order_items as $order_item ) {
+			$order_item_data = $order_item->get_data();
+			$product         = wc_get_product( $order_item_data['product_id'] );
+
+			if ( ! Product::is_gift_card( $product ) ) {
+				continue;
+			}
+
+			$cart_item_data['square-gift-card-send-to-email']      = $order_item->get_meta( 'square-gift-card-send-to-email' );
+			$cart_item_data['square-gift-card-sender-name']        = $order_item->get_meta( 'square-gift-card-sender-name' );
+			$cart_item_data['square-gift-card-sent-to-first-name'] = $order_item->get_meta( 'square-gift-card-sent-to-first-name' );
+			$cart_item_data['square-gift-card-sent-to-message']    = $order_item->get_meta( 'square-gift-card-sent-to-message' );
+		}
+
+		return $cart_item_data;
 	}
 
 	/**
