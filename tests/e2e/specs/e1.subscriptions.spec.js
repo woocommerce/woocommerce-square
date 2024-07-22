@@ -15,6 +15,7 @@ import {
 	renewSubscription,
 	doesProductExist,
 	runWpCliCommand,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 
 test.describe('Subscriptions Tests', () => {
@@ -22,24 +23,20 @@ test.describe('Subscriptions Tests', () => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
 
-		// Set authorization transaction type.
+		// Set Charge transaction type.
 		await page.goto(
 			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 		);
 		await page
-			.locator('#woocommerce_square_credit_card_transaction_type')
-			.selectOption({ label: 'Charge' });
+			.getByTestId( 'credit-card-transaction-type-field' )
+			.selectOption( { label: 'Charge' } );
 		await page
-			.locator('#woocommerce_square_credit_card_tokenization')
+			.getByTestId( 'credit-card-tokenization-field' )
 			.check();
-		const settingsSaved = page.waitForResponse(
-			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
-		);
-		await page.locator('.woocommerce-save-button').click();
-		await settingsSaved;
+		await savePaymentGatewaySettings( page );
 
 		// Create a product if it doesn't exist.
-		if (!(await doesProductExist(baseURL, 'simple-subscription-product1'))) {
+		if (!(await doesProductExist(baseURL, 'simple-subscription-product'))) {
 			await runWpCliCommand(
 				'wp wc product create --name="Simple Subscription Product" --slug="simple-subscription-product" --user=1 --regular_price=10 --type=subscription --meta_data=\'[{"key":"_subscription_price","value":"10"},{"key":"_subscription_period","value":"month"},{"key":"_subscription_period_interval","value":"1"}]\''
 			);

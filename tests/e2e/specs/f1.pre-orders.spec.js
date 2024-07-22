@@ -17,6 +17,7 @@ import {
 	gotoOrderEditPage,
 	selectPaymentMethod,
 	placeCashAppPayOrder,
+	savePaymentGatewaySettings,
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
@@ -27,18 +28,16 @@ test.describe('Pre-Orders Tests', () => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
 
-		// Set authorization transaction type.
 		await page.goto(
 			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 		);
 		await page
-			.locator( '#woocommerce_square_credit_card_transaction_type' )
+			.getByTestId( 'credit-card-transaction-type-field' )
 			.selectOption( { label: 'Charge' } );
 		await page
-			.locator( '#woocommerce_square_credit_card_tokenization' )
+			.getByTestId( 'credit-card-tokenization-field' )
 			.check();
-		await page.locator( '.woocommerce-save-button' ).click();
-		await page.waitForEvent( 'load' );
+		await savePaymentGatewaySettings( page );
 
 		// Set authorization transaction type.
 		await saveCashAppPaySettings(page, {
