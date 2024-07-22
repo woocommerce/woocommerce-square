@@ -456,7 +456,7 @@ class Connection {
 		}
 
 		$args = array(
-			'redirect' => urlencode( urlencode( $redirect_url ) ),
+			'redirect' => rawurlencode( $redirect_url ),
 			'scopes'   => implode( ',', $this->get_scopes() ),
 		);
 
