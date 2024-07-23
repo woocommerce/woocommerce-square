@@ -43,14 +43,14 @@ jobs:
         run: ./tests/bin/set-core-version.js WordPress/WordPress#master
 
       - name: Setup E2E environment
-        run: pwd
+        run: npm run test:env:start
 
       - name: Run E2E tests
         id: square_e2e_tests
         if: ${{ github.event_name == 'pull_request' }}
-        run: pwd
+        run: npm run test:e2e-run
 
-      - name: remove existing labels
+      - name: Remove existing labels
         uses: actions/github-script@v6
         continue-on-error: true
         with:
@@ -59,7 +59,14 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: ['status: e2e tests passing', 'status: e2e tests failing']
+              name: ['status: e2e tests passing']
+            })
+
+            github.rest.issues.removeLabel({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: ['status: e2e tests failing']
             })
 
       - name: Update Success Label
