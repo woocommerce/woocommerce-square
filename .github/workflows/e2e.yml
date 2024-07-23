@@ -4,13 +4,13 @@ on:
     branches:
       - smoke-testing
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
     branches:
       - trunk
 
 jobs:
   e2e:
-    if: "${{ ( github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'needs: e2e testing') ) ||  github.event_name == 'push' }}"
+    if: "${{ ( github.event_name == 'pull_request' ) ||  github.event_name == 'push' }}"
     runs-on: ubuntu-latest
     env:
       WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
@@ -58,12 +58,6 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['needs: e2e testing']
-            })
             github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -79,12 +73,6 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['needs: e2e testing']
-            })
             github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: context.repo.owner,
