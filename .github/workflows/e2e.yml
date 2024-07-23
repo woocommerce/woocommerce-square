@@ -19,7 +19,7 @@ jobs:
       SQUARE_ACCESS_TOKEN: ${{ secrets.SQUARE_ACCESS_TOKEN }}
       SQUARE_LOCATION_ID: ${{ secrets.SQUARE_LOCATION_ID }}
     permissions:
-      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
