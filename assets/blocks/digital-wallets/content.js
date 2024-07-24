@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from '@wordpress/element';
+import { useRef, useEffect } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -9,45 +9,68 @@ import { useEffect, useState } from '@wordpress/element';
 import DigitalWalletContext from './context';
 import ButtonComponent from './button-component';
 import { getSquareServerData } from '../square-utils';
+import {
+	useSquare,
+	usePaymentRequest,
+	useOnClickHandler,
+	useShippingContactChangeHandler,
+	useShippingOptionChangeHandler,
+	useGooglePay,
+	usePaymentProcessing,
+} from './hooks';
 
-const Content = (props) => {
-	const [payments, setPayments] = useState(null);
-	const { onCheckoutFail } = props.eventRegistration;
-	const { onClose } = props;
+const Content = ( {
+	billing,
+	components,
+	shippingData,
+	onClick,
+	onClose,
+	onSubmit,
+	setExpressPaymentError,
+	eventRegistration: {
+		onPaymentSetup,
+		onCheckoutFail,
+		onCheckoutSuccess,
+	},
+	paymentStatus
+} ) => {
+	const { needsShipping } = shippingData;
+	const payments = useSquare();
+	const paymentRequest = usePaymentRequest( payments, needsShipping, billing );
+	const [ googlePay, googlePayRef ] = useGooglePay( payments, paymentRequest );
+	const onPaymentRequestButtonClick = useOnClickHandler(
+		setExpressPaymentError,
+		onClick,
+		onSubmit,
+	);
 
-	useEffect(() => {
-		const applicationId = getSquareServerData().applicationId;
-		const locationId = getSquareServerData().locationId;
+	useShippingContactChangeHandler( paymentRequest );
+	useShippingOptionChangeHandler( paymentRequest );
+	usePaymentProcessing(
+		billing,
+		googlePay,
+		onPaymentSetup,
+		onClose
+	);
 
-		if (!window.Square) {
-			return;
-		}
+	console.table(paymentStatus)
 
-		try {
-			const __payments = window.Square.payments(
-				applicationId,
-				locationId
-			);
-			setPayments(__payments);
-		} catch (e) {
-			console.error(e);
-		}
-	}, []);
-
-	useEffect(() => {
-		const unsubscribeOnCheckoutFail = onCheckoutFail(() => {
+	useEffect( () => {
+		if ( paymentStatus.hasError ) {
 			onClose();
-			return true;
-		});
-
-		return unsubscribeOnCheckoutFail;
-	}, [onCheckoutFail]); // eslint-disable-line react-hooks/exhaustive-deps
+			setExpressPaymentError( '' );
+		}
+	}, [
+		paymentStatus
+	] );
 
 	return (
 		<>
-			<DigitalWalletContext.Provider value={{ payments, props }}>
-				<ButtonComponent />
-			</DigitalWalletContext.Provider>
+			<div
+				ref={ googlePayRef }
+				onClick={ onPaymentRequestButtonClick }
+			>
+			</div>
 		</>
 	);
 };
