@@ -1526,6 +1526,20 @@ class Manual_Synchronization extends Stepped_Job {
 				$product->save();
 
 				$in_progress['processed_variation_ids'][] = $catalog_object_id;
+			} else {
+				Records::set_record(
+					array(
+						'type'    => 'alert',
+						'message' => sprintf(
+							/* translators: %1$s - Item Variation ID */
+							__( '[Pull Inventory] The product does not exist in the WooCommerce store for the item variation: %1$s.', 'woocommerce-square' ),
+							$catalog_object_id
+						),
+					)
+				);
+
+				// Add the catalog object ID to the processed list to avoid processing it again.
+				$in_progress['processed_variation_ids'][] = $catalog_object_id;
 			}
 
 			$this->set_attr( 'in_progress_pull_inventory', $in_progress );
