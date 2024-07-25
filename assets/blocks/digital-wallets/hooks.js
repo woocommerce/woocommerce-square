@@ -143,7 +143,7 @@ export function useApplePay( payments, paymentRequest ) {
 	}, [ payments, paymentRequest ] );
 
 	useEffect( () => {
-		if ( applePayRef?.current ) {
+		if ( ! applePayRef?.current ) {
 			return;
 		}
 

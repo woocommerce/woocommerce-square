@@ -7,6 +7,7 @@ import { useEffect, useState } from '@wordpress/element';
  * Internal dependencies
  */
 import { tokenize } from './utils';
+import { getSquareServerData } from '../square-utils/utils';
 import {
 	useSquare,
 	usePaymentRequest,
@@ -60,6 +61,7 @@ const Content = ( {
 
 			if ( ! __tokenResult ) {
 				onClose();
+				setClickedButton( null );
 			} else {
 				setTokenResult( __tokenResult );
 				onSubmit();
@@ -67,18 +69,35 @@ const Content = ( {
 		} )();
 	}, [ clickedButton ] );
 
+	const isGooglePayDisabled = getSquareServerData().hideButtonOptions.includes('google');
+	const isApplePayDisabled = getSquareServerData().hideButtonOptions.includes('apple');
+
+	const googlePayExpressButton = ! isGooglePayDisabled && (
+		<div
+			tabIndex={0}
+			role="button"
+			ref={ googlePayRef }
+			onClick={ () => setClickedButton( googlePay ) }
+			onKeyDown={ () => setClickedButton( googlePay ) }
+		>
+		</div>
+	);
+
+	const applePayExpressButton = ! isApplePayDisabled && (
+		<div
+			tabIndex={0}
+			role="button"
+			ref={ applePayRef }
+			onClick={ () => setClickedButton( applePay ) }
+			onKeyDown={ () => setClickedButton( applePay ) }
+		>
+		</div>
+	);
+
 	return (
 		<>
-			<div
-				ref={ googlePayRef }
-				onClick={ () => setClickedButton( googlePay ) }
-			>
-			</div>
-			<div
-				ref={ applePayRef }
-				onClick={ () => setClickedButton( applePay ) }
-			>
-			</div>
+			{ applePayExpressButton }
+			{ googlePayExpressButton }
 		</>
 	);
 };
