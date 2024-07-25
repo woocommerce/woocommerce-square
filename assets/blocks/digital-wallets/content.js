@@ -26,14 +26,14 @@ const Content = ({
 	onSubmit,
 	setExpressPaymentError,
 	emitResponse,
-	eventRegistration: { onPaymentSetup },
+	eventRegistration: { onPaymentSetup, onCheckoutFail },
 }) => {
 	const { needsShipping } = shippingData;
 	const payments = useSquare();
 	const paymentRequest = usePaymentRequest(payments, needsShipping);
 	const [googlePay, googlePayRef] = useGooglePay(payments, paymentRequest);
 	const [applePay, applePayRef] = useApplePay(payments, paymentRequest);
-	const [tokenResult, setTokenResult] = useState(null);
+	const [tokenResult, setTokenResult] = useState(false);
 	const [clickedButton, setClickedButton] = useState(null);
 
 	useShippingContactChangeHandler(paymentRequest);
@@ -68,28 +68,35 @@ const Content = ({
 		})();
 	}, [clickedButton]);
 
+	useEffect(() => {
+		const unsubscribe = onCheckoutFail(() => {
+			setClickedButton(null);
+			onClose();
+			return true;
+		});
+		return unsubscribe;
+	}, [onCheckoutFail]);
+
 	const isGooglePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('google');
 	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
 	const googlePayExpressButton = !isGooglePayDisabled && (
-		<div
+		<div // eslint-disable-line jsx-a11y/click-events-have-key-events
 			tabIndex={0}
 			role="button"
 			ref={googlePayRef}
 			onClick={() => setClickedButton(googlePay)}
-			onKeyDown={() => setClickedButton(googlePay)}
 		></div>
 	);
 
 	const applePayExpressButton = !isApplePayDisabled && (
-		<div
+		<div // eslint-disable-line jsx-a11y/click-events-have-key-events
 			tabIndex={0}
 			role="button"
 			ref={applePayRef}
 			onClick={() => setClickedButton(applePay)}
-			onKeyDown={() => setClickedButton(applePay)}
 		></div>
 	);
 
