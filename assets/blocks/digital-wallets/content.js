@@ -25,6 +25,7 @@ const Content = ({
 	onClose,
 	onSubmit,
 	setExpressPaymentError,
+	emitResponse,
 	eventRegistration: { onPaymentSetup },
 }) => {
 	const { needsShipping } = shippingData;
@@ -42,6 +43,7 @@ const Content = ({
 		billing,
 		clickedButton,
 		tokenResult,
+		emitResponse,
 		onPaymentSetup
 	);
 

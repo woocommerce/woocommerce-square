@@ -191,6 +191,7 @@ export function useApplePay(payments, paymentRequest) {
  * @param {Object}   billing        The billing data object.
  * @param {Object}   button         Google or Apple Pay instance, whichever is clicked.
  * @param {Object}   tokenResult    Tokenization response object.
+ * @param {Object}   emitResponse   Object containing properties referencing the various response types.
  * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
  */
 export function usePaymentProcessing(
@@ -198,6 +199,7 @@ export function usePaymentProcessing(
 	billing,
 	button,
 	tokenResult,
+	emitResponse,
 	onPaymentSetup
 ) {
 	const verificationDetails = buildVerificationDetails(billing);
@@ -214,11 +216,11 @@ export function usePaymentProcessing(
 				}
 
 				async function handlePaymentProcessing() {
-					let response = { type: 'success' };
+					let response = { type: emitResponse.responseTypes.SUCCESS };
 
 					if (!tokenResult) {
 						response = {
-							type: 'failure',
+							type: emitResponse.responseTypes.FAILURE,
 						};
 						return response;
 					}
@@ -331,7 +333,7 @@ export function usePaymentProcessing(
 									shippingRatePackage.shipping_rates.length
 							)
 						) {
-							response.type = 'failure';
+							response.type = emitResponse.responseTypes.FAILURE;
 
 							return response;
 						}
