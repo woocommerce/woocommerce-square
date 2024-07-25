@@ -1,5 +1,27 @@
 import { getSquareServerData } from '../square-utils';
 
+export const buildVerificationDetails = (billing) => {
+	return {
+		intent: 'CHARGE',
+		amount: (billing.cartTotal.value / 100).toString(),
+		currencyCode: billing.currency.code,
+		billingContact: {
+			familyName: billing.billingData.last_name || '',
+			givenName: billing.billingData.first_name || '',
+			email: billing.billingData.email || '',
+			country: billing.billingData.country || '',
+			region: billing.billingData.state || '',
+			city: billing.billingData.city || '',
+			postalCode: billing.billingData.postcode || '',
+			phone: billing.billingData.phone || '',
+			addressLines: [
+				billing.billingData.address_1 || '',
+				billing.billingData.address_2 || '',
+			],
+		},
+	};
+};
+
 /**
  * Returns the AJAX URL for a given action.
  *
@@ -14,11 +36,11 @@ export const getAjaxUrl = (action) => {
 };
 
 /**
-	 * Returns the payment request object to create
-	 * Square payment request object.
-	 *
-	 * @return {Object} data to create Square payment request.
-	 */
+ * Returns the payment request object to create
+ * Square payment request object.
+ *
+ * @return {Object} data to create Square payment request.
+ */
 export const getPaymentRequest = () => {
 	return new Promise((resolve, reject) => {
 		const data = {
@@ -93,7 +115,6 @@ export const handleShippingAddressChanged = async (shippingContact) => {
 	const response = await recalculateTotals(data);
 	return response;
 };
-
 
 /**
  * Verifies a buyer.
