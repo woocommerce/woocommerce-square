@@ -1,100 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 
 import { getSquareServerData } from '../square-utils';
-
-/**
- * Returns the AJAX URL for a given action.
- *
- * @param {string} action Corresponding action name for the AJAX endpoint.
- * @return {string} AJAX URL
- */
-const getAjaxUrl = (action) => {
-	return getSquareServerData().ajaxUrl.replace(
-		'%%endpoint%%',
-		`square_digital_wallet_${action}`
-	);
-};
-
-/**
-	 * Returns the payment request object to create
-	 * Square payment request object.
-	 *
-	 * @return {Object} data to create Square payment request.
-	 */
-const getPaymentRequest = () => {
-	return new Promise((resolve, reject) => {
-		const data = {
-			context: getSquareServerData().context,
-			security: getSquareServerData().paymentRequestNonce,
-			is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
-		};
-
-		jQuery.post(getAjaxUrl('get_payment_request'), data, (response) => {
-			if (response.success) {
-				return resolve(response.data);
-			}
-
-			return reject(response.data);
-		});
-	});
-};
-
-/**
- * Recalculates cart total.
- *
- * @param {Object} data Cart data.
- * @return {Object} Updated data required to refresh the Gpay|Apple Pay popup.
- */
-const recalculateTotals = async (data) => {
-	return new Promise((resolve, reject) => {
-		return jQuery.post(
-			getAjaxUrl('recalculate_totals'),
-			data,
-			(response) => {
-				if (response.success) {
-					return resolve(response.data);
-				}
-				return reject(response.data);
-			}
-		);
-	});
-};
-
-/**
- * Callback for the `shippingoptionchanged` event.
- *
- * @param {Object} shippingOption Shipping option object
- * @return {Object} Recalculated totals after the shipping option is changed.
- */
-const handleShippingOptionChanged = async (shippingOption) => {
-	const data = {
-		context: getSquareServerData().context,
-		shipping_option: shippingOption.id,
-		security: getSquareServerData().recalculateTotalNonce,
-		is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
-	};
-
-	const response = await recalculateTotals(data);
-	return response;
-};
-
-/**
- * Callback for the `shippingcontactchanged` event.
- *
- * @param {Object} shippingContact Shipping option object
- * @return {Object} Recalculated totals after the shipping option is changed.
- */
-const handleShippingAddressChanged = async (shippingContact) => {
-	const data = {
-		context: getSquareServerData().context,
-		shipping_contact: shippingContact,
-		security: getSquareServerData().recalculateTotalNonce,
-		is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
-	};
-
-	const response = await recalculateTotals(data);
-	return response;
-};
+import {
+	getPaymentRequest,
+	handleShippingOptionChanged,
+	handleShippingAddressChanged,
+	verifyBuyer,
+	tokenize,
+} from './utils';
 
 const buildVerificationDetails = (billing) => {
 	return {
@@ -116,41 +29,6 @@ const buildVerificationDetails = (billing) => {
 			],
 		},
 	};
-};
-
-
-/**
- * Verifies a buyer.
- *
- * @param {Object} payments            Square payments object.
- * @param {string} token               Square payment token.
- * @param {Object} verificationDetails Buyer verification data object.
- *
- * @return {Object} Verification details
- */
-export const verifyBuyer = async (payments, token, verificationDetails) => {
-	const verificationResults = await payments.verifyBuyer(
-		token,
-		verificationDetails
-	);
-
-	return verificationResults;
-};
-
-/**
- * Tokenizes the payment method.
- *
- * @param {Object} button Instance of the Google|Apple Pay button.
- * @return {Object|boolean} Returns the token result, or false if tokenisation fails.
- */
-export const tokenize = async (button) => {
-	const tokenResult = await button.tokenize();
-
-	if (tokenResult.status === 'OK') {
-		return tokenResult;
-	}
-
-	return false;
 };
 
 export function useSquare() {
@@ -201,19 +79,23 @@ export function usePaymentRequest( payments, needsShipping, billing ) {
 }
 
 export function useShippingContactChangeHandler( paymentRequest ) {
-	paymentRequest?.addEventListener(
-		'shippingcontactchanged',
-		(shippingContact) => handleShippingAddressChanged(shippingContact)
-	);
+	useEffect( () => {
+		paymentRequest?.addEventListener(
+			'shippingcontactchanged',
+			(shippingContact) => handleShippingAddressChanged(shippingContact)
+		);
+	}, [ paymentRequest ] );
 
 	return () => paymentRequest?.removeListener( 'shippingcontactchanged' );
 }
 
 export function useShippingOptionChangeHandler( paymentRequest ) {
-	paymentRequest?.addEventListener(
-		'shippingoptionchanged',
-		(option) => handleShippingOptionChanged(option)
-	);
+	useEffect( () => {
+		paymentRequest?.addEventListener(
+			'shippingoptionchanged',
+			(option) => handleShippingOptionChanged(option)
+		);
+	}, [ paymentRequest ] );
 
 	return () => paymentRequest?.removeListener( 'shippingoptionchanged' );
 }
@@ -243,22 +125,25 @@ export function useGooglePay( payments, paymentRequest ) {
 	return [ googlePay, googlePayRef ];
 }
 
-export function useOnClickHandler( setExpressPaymentError, onClick, onSubmit ) {
-	return useCallback(
-		() => {
-			// Reset any Payment Request errors.
-			setExpressPaymentError( '' );
+export function useOnClickHandler( setExpressPaymentError, onClick, button ) {
+	return useCallback( async () => {
+		if ( ! button ) {
+			return false;
+		}
 
-			// Call the Blocks API `onClick` handler.
-			onClick();
+		// Reset any Payment Request errors.
+		setExpressPaymentError( '' );
 
-			onSubmit();
-		},
-		[ onClick ]
-	);
+		// Call the Blocks API `onClick` handler.
+		onClick();
+
+		const tokenResult = await tokenize( button );
+
+		return tokenResult;
+	}, [ onClick ] );
 }
 
-export function usePaymentProcessing( billing, button, onPaymentSetup, onClose ) {
+export function usePaymentProcessing( payments, billing, button, tokenResult, onPaymentSetup ) {
 	const verificationDetails = buildVerificationDetails( billing );
 
 	useEffect( () => onPaymentSetup( () => {
@@ -266,20 +151,16 @@ export function usePaymentProcessing( billing, button, onPaymentSetup, onClose )
 			return;
 		}
 
+		if ( ! tokenResult ) {
+			return;
+		}
+
 		async function handlePaymentProcessing() {
-			const tokenResult = await tokenize(button);
 			let response = { type: 'success' };
 
-			console.log('returning false');
-
-			return {
-				type: 'failure'
-			}
-		
 			if (!tokenResult) {
 				response = {
 					type: 'failure',
-					retry: true,
 				};
 				return response;
 			}
@@ -362,20 +243,20 @@ export function usePaymentProcessing( billing, button, onPaymentSetup, onClose )
 					phone: shippingPhoneNumber,
 				},
 			};
-		
-			dispatch('wc/store/cart').setBillingAddress(response.meta.billingAddress);
-		
-			const needsShipping = select('wc/store/cart').getNeedsShipping();
-		
+
+			wp.data.dispatch('wc/store/cart').setBillingAddress(response.meta.billingAddress);
+
+			const needsShipping = wp.data.select('wc/store/cart').getNeedsShipping();
+
 			if (needsShipping) {
-				dispatch('wc/store/cart').setShippingAddress(
+				wp.data.dispatch('wc/store/cart').setShippingAddress(
 					response.meta.shippingAddress
 				);
-		
+
 				const shippingRates = wp.data
 					.select('wc/store/cart')
 					.getShippingRates();
-		
+
 				if (
 					!shippingRates.some(
 						(shippingRatePackage) =>
@@ -383,12 +264,11 @@ export function usePaymentProcessing( billing, button, onPaymentSetup, onClose )
 					)
 				) {
 					response.type = 'failure';
-					response.retry = true;
-		
+
 					return response;
 				}
 			}
-		
+
 			return response;
 		}
 
@@ -397,5 +277,6 @@ export function usePaymentProcessing( billing, button, onPaymentSetup, onClose )
 		onPaymentSetup,
 		billing.billingData,
 		button,
+		tokenResult,
 	] );
 }

@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useRef, useEffect } from '@wordpress/element';
+import { useRef, useEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -29,46 +29,47 @@ const Content = ( {
 	setExpressPaymentError,
 	eventRegistration: {
 		onPaymentSetup,
-		onCheckoutFail,
-		onCheckoutSuccess,
-	},
-	paymentStatus
+	}
 } ) => {
 	const { needsShipping } = shippingData;
 	const payments = useSquare();
 	const paymentRequest = usePaymentRequest( payments, needsShipping, billing );
 	const [ googlePay, googlePayRef ] = useGooglePay( payments, paymentRequest );
+	const [ tokenResult, setTokenResult ] = useState( null );
+	const [ clickedButton, setClickedButton ] = useState( null );
 	const onPaymentRequestButtonClick = useOnClickHandler(
 		setExpressPaymentError,
 		onClick,
-		onSubmit,
+		googlePay,
 	);
 
 	useShippingContactChangeHandler( paymentRequest );
 	useShippingOptionChangeHandler( paymentRequest );
 	usePaymentProcessing(
+		payments,
 		billing,
-		googlePay,
+		clickedButton,
+		tokenResult,
 		onPaymentSetup,
-		onClose
 	);
 
-	console.table(paymentStatus)
+	async function onClickHandler( button ) {
+		const __tokenResult = await onPaymentRequestButtonClick();
 
-	useEffect( () => {
-		if ( paymentStatus.hasError ) {
+		if ( ! __tokenResult ) {
 			onClose();
-			setExpressPaymentError( '' );
+		} else {
+			setClickedButton( button );
+			setTokenResult( __tokenResult );
+			onSubmit();
 		}
-	}, [
-		paymentStatus
-	] );
+	}
 
 	return (
 		<>
 			<div
 				ref={ googlePayRef }
-				onClick={ onPaymentRequestButtonClick }
+				onClick={ () => onClickHandler( googlePay ) }
 			>
 			</div>
 		</>
