@@ -30,6 +30,12 @@ module.exports = {
 		'react-hooks/rules-of-hooks': 'off',
 		'@woocommerce/dependency-group': 'off',
 		camelcase: 'off',
+		'@wordpress/i18n-text-domain': [
+			'error',
+			{
+				allowedTextDomain: 'woocommerce-square',
+			},
+		],
 	},
 	overrides: [
 		{
