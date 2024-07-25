@@ -184,9 +184,9 @@ class Product_Editor_Compatibility {
 		 */
 		$parent = $sku_field->get_parent();
 
-		$is_inventiry_sync_enabled = wc_square()->get_settings_handler()->is_inventory_sync_enabled();
+		$is_inventory_sync_enabled = wc_square()->get_settings_handler()->is_inventory_sync_enabled();
 
-		if ( ! $is_inventiry_sync_enabled ) {
+		if ( ! $is_inventory_sync_enabled ) {
 			return;
 		}
 
