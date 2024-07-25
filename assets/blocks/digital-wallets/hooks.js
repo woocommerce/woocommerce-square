@@ -9,6 +9,11 @@ import {
 	buildVerificationDetails,
 } from './utils';
 
+/**
+ * Initialises Square.
+ *
+ * @return {Object} Returns the Square window object.
+ */
 export function useSquare() {
 	const [payment, setPayments] = useState(null);
 
@@ -34,6 +39,14 @@ export function useSquare() {
 	return payment;
 }
 
+/**
+ * Builds and returns the payment request object.
+ *
+ * @param {Object}  payments      The Square payments object used to create the payment request.
+ * @param {boolean} needsShipping A value from the Block checkout that indicates whether shipping
+ *                                is required or not.
+ * @return {Object} The payment request object.
+ */
 export function usePaymentRequest(payments, needsShipping) {
 	const [paymentRequest, setPaymentRequest] = useState(null);
 
@@ -58,6 +71,12 @@ export function usePaymentRequest(payments, needsShipping) {
 	return paymentRequest;
 }
 
+/**
+ * Registers event handler on `shippingcontactchanged`
+ *
+ * @param {Object} paymentRequest The payment request object.
+ * @return {Function} Function to remove the listener on unmount.
+ */
 export function useShippingContactChangeHandler(paymentRequest) {
 	useEffect(() => {
 		paymentRequest?.addEventListener(
@@ -69,6 +88,12 @@ export function useShippingContactChangeHandler(paymentRequest) {
 	return () => paymentRequest?.removeListener('shippingcontactchanged');
 }
 
+/**
+ * Registers event handler on `shippingoptionchanged`
+ *
+ * @param {Object} paymentRequest The payment request object.
+ * @return {Function} Function to remove the listener on unmount.
+ */
 export function useShippingOptionChangeHandler(paymentRequest) {
 	useEffect(() => {
 		paymentRequest?.addEventListener('shippingoptionchanged', (option) =>
@@ -79,6 +104,13 @@ export function useShippingOptionChangeHandler(paymentRequest) {
 	return () => paymentRequest?.removeListener('shippingoptionchanged');
 }
 
+/**
+ * Initializes Google Pay with the provided payments and paymentRequest objects.
+ *
+ * @param {Object} payments       The Square payments object used to create the payment request.
+ * @param {Object} paymentRequest The payment request object.
+ * @return {Array} Array containing the Google Pay instance and its reference.
+ */
 export function useGooglePay(payments, paymentRequest) {
 	const [googlePay, setGooglePay] = useState(null);
 	const googlePayRef = useRef(null);
@@ -104,6 +136,13 @@ export function useGooglePay(payments, paymentRequest) {
 	return [googlePay, googlePayRef];
 }
 
+/**
+ * Initializes Apple Pay with the provided payments and paymentRequest objects.
+ *
+ * @param {Object} payments       The Square payments object used to create the payment request.
+ * @param {Object} paymentRequest The payment request object.
+ * @return {Array} Array containing the Apple Pay instance and its reference.
+ */
 export function useApplePay(payments, paymentRequest) {
 	const [applePay, setApplePay] = useState(null);
 	const applePayRef = useRef(null);
@@ -146,6 +185,14 @@ export function useApplePay(payments, paymentRequest) {
 	return [applePay, applePayRef];
 }
 
+/**
+ *
+ * @param {Object}   payments       The Square payments object used to create the payment request.
+ * @param {Object}   billing        The billing data object.
+ * @param {Object}   button         Google or Apple Pay instance, whichever is clicked.
+ * @param {Object}   tokenResult    Tokenization response object.
+ * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
+ */
 export function usePaymentProcessing(
 	payments,
 	billing,
