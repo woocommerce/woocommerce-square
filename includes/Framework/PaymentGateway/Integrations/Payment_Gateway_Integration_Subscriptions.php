@@ -93,7 +93,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 		add_filter( 'woocommerce_my_subscriptions_payment_method', array( $this, 'maybe_render_payment_method' ), 10, 3 );
 
 		// don't copy over order-specific meta to the WC_Subscription object during renewal processing
-		add_filter( 'wcs_renewal_order_meta', array( $this, 'do_not_copy_order_meta' ) );
+		add_filter( 'wc_subscriptions_renewal_order_data', array( $this, 'do_not_copy_order_meta' ) );
 
 		// process the Change Payment "transaction"
 		add_filter( 'wc_payment_gateway_' . $this->get_gateway()->get_id() . '_process_payment', array( $this, 'process_change_payment' ), 10, 3 );
@@ -304,10 +304,9 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 
 		$meta_keys = $this->get_order_specific_meta_keys();
 
-		foreach ( $order_meta as $index => $meta ) {
-
-			if ( in_array( $meta['meta_key'], $meta_keys, true ) ) {
-				unset( $order_meta[ $index ] );
+		foreach ( $meta_keys as $meta_key ) {
+			if ( isset( $order_meta[ $meta_key ] ) ) {
+				unset( $order_meta[ $meta_key ] );
 			}
 		}
 
