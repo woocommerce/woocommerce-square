@@ -1,21 +1,19 @@
 /**
  * External dependencies
  */
-import { useRef, useEffect, useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import DigitalWalletContext from './context';
-import ButtonComponent from './button-component';
-import { getSquareServerData } from '../square-utils';
+import { tokenize } from './utils';
 import {
 	useSquare,
 	usePaymentRequest,
-	useOnClickHandler,
 	useShippingContactChangeHandler,
 	useShippingOptionChangeHandler,
 	useGooglePay,
+	useApplePay,
 	usePaymentProcessing,
 } from './hooks';
 
@@ -35,13 +33,9 @@ const Content = ( {
 	const payments = useSquare();
 	const paymentRequest = usePaymentRequest( payments, needsShipping, billing );
 	const [ googlePay, googlePayRef ] = useGooglePay( payments, paymentRequest );
+	const [ applePay, applePayRef ] = useApplePay( payments, paymentRequest );
 	const [ tokenResult, setTokenResult ] = useState( null );
 	const [ clickedButton, setClickedButton ] = useState( null );
-	const onPaymentRequestButtonClick = useOnClickHandler(
-		setExpressPaymentError,
-		onClick,
-		googlePay,
-	);
 
 	useShippingContactChangeHandler( paymentRequest );
 	useShippingOptionChangeHandler( paymentRequest );
@@ -53,23 +47,36 @@ const Content = ( {
 		onPaymentSetup,
 	);
 
-	async function onClickHandler( button ) {
-		const __tokenResult = await onPaymentRequestButtonClick();
-
-		if ( ! __tokenResult ) {
-			onClose();
-		} else {
-			setClickedButton( button );
-			setTokenResult( __tokenResult );
-			onSubmit();
+	useEffect( () => {
+		if ( ! clickedButton ) {
+			return;
 		}
-	}
+
+		setExpressPaymentError( '' );
+		onClick();
+
+		( async () => {
+			const __tokenResult = await tokenize( clickedButton );
+
+			if ( ! __tokenResult ) {
+				onClose();
+			} else {
+				setTokenResult( __tokenResult );
+				onSubmit();
+			}
+		} )();
+	}, [ clickedButton ] );
 
 	return (
 		<>
 			<div
 				ref={ googlePayRef }
-				onClick={ () => onClickHandler( googlePay ) }
+				onClick={ () => setClickedButton( googlePay ) }
+			>
+			</div>
+			<div
+				ref={ applePayRef }
+				onClick={ () => setClickedButton( applePay ) }
 			>
 			</div>
 		</>

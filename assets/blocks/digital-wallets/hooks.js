@@ -125,22 +125,50 @@ export function useGooglePay( payments, paymentRequest ) {
 	return [ googlePay, googlePayRef ];
 }
 
-export function useOnClickHandler( setExpressPaymentError, onClick, button ) {
-	return useCallback( async () => {
-		if ( ! button ) {
-			return false;
+export function useApplePay( payments, paymentRequest ) {
+	const [ applePay, setApplePay ] = useState( null );
+	const applePayRef = useRef( null );
+
+	useEffect( () => {
+		if ( ! ( payments && paymentRequest ) ) {
+			return;
 		}
 
-		// Reset any Payment Request errors.
-		setExpressPaymentError( '' );
+		( async () => {
+			await payments.applePay( paymentRequest );
+			const __applePay = await payments.applePay( paymentRequest );
 
-		// Call the Blocks API `onClick` handler.
-		onClick();
+			setApplePay( __applePay );
+		} )()
+	}, [ payments, paymentRequest ] );
 
-		const tokenResult = await tokenize( button );
+	useEffect( () => {
+		if ( applePayRef?.current ) {
+			return;
+		}
 
-		return tokenResult;
-	}, [ onClick ] );
+		const color = getSquareServerData().applePayColor;
+		const type = getSquareServerData().applePayType;
+
+		if (type !== 'plain') {
+			applePayRef.current.querySelector(
+				'.text'
+			).innerText =
+				`${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
+			applePayRef.current.classList.add(
+				'wc-square-wallet-button-with-text'
+			);
+		}
+
+		applePayRef.current.style.cssText += `-apple-pay-button-type: ${type};`;
+		applePayRef.current.style.cssText += `-apple-pay-button-style: ${color};`;
+		applePayRef.current.style.display = 'block';
+		applePayRef.current.classList.add(
+			`wc-square-wallet-button-${color}`
+		);
+	}, [ applePayRef ] );
+
+	return [ applePay, applePayRef ];
 }
 
 export function usePaymentProcessing( payments, billing, button, tokenResult, onPaymentSetup ) {
