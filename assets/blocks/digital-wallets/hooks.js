@@ -121,15 +121,17 @@ export function useGooglePay(payments, paymentRequest) {
 		}
 
 		(async () => {
-			await payments.googlePay(paymentRequest);
-			const __googlePay = await payments.googlePay(paymentRequest);
-			await __googlePay.attach(googlePayRef.current, {
-				buttonColor: getSquareServerData().googlePayColor,
-				buttonSizeMode: 'fill',
-				buttonType: 'long',
-			});
+			try {
+				await payments.googlePay(paymentRequest);
+				const __googlePay = await payments.googlePay(paymentRequest);
+				await __googlePay.attach(googlePayRef.current, {
+					buttonColor: getSquareServerData().googlePayColor,
+					buttonSizeMode: 'fill',
+					buttonType: 'long',
+				});
 
-			setGooglePay(__googlePay);
+				setGooglePay(__googlePay);
+			} catch( e ) {}
 		})();
 	}, [payments, paymentRequest]);
 
@@ -153,10 +155,12 @@ export function useApplePay(payments, paymentRequest) {
 		}
 
 		(async () => {
-			await payments.applePay(paymentRequest);
-			const __applePay = await payments.applePay(paymentRequest);
-
-			setApplePay(__applePay);
+			try {
+				await payments.applePay(paymentRequest);
+				const __applePay = await payments.applePay(paymentRequest);
+	
+				setApplePay(__applePay);
+			} catch( e ) {}
 		})();
 	}, [payments, paymentRequest]);
 
