@@ -131,7 +131,7 @@ export function useGooglePay(payments, paymentRequest) {
 				});
 
 				setGooglePay(__googlePay);
-			} catch( e ) {}
+			} catch (e) {}
 		})();
 	}, [payments, paymentRequest]);
 
@@ -158,9 +158,9 @@ export function useApplePay(payments, paymentRequest) {
 			try {
 				await payments.applePay(paymentRequest);
 				const __applePay = await payments.applePay(paymentRequest);
-	
+
 				setApplePay(__applePay);
-			} catch( e ) {}
+			} catch (e) {}
 		})();
 	}, [payments, paymentRequest]);
 
@@ -193,7 +193,6 @@ export function useApplePay(payments, paymentRequest) {
  *
  * @param {Object}   payments       The Square payments object used to create the payment request.
  * @param {Object}   billing        The billing data object.
- * @param {Object}   button         Google or Apple Pay instance, whichever is clicked.
  * @param {Object}   tokenResult    Tokenization response object.
  * @param {Object}   emitResponse   Object containing properties referencing the various response types.
  * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
@@ -201,7 +200,6 @@ export function useApplePay(payments, paymentRequest) {
 export function usePaymentProcessing(
 	payments,
 	billing,
-	button,
 	tokenResult,
 	emitResponse,
 	onPaymentSetup
@@ -211,10 +209,6 @@ export function usePaymentProcessing(
 	useEffect(
 		() =>
 			onPaymentSetup(() => {
-				if (!button) {
-					return;
-				}
-
 				if (!tokenResult) {
 					return;
 				}
@@ -348,6 +342,6 @@ export function usePaymentProcessing(
 
 				return handlePaymentProcessing();
 			}),
-		[onPaymentSetup, billing.billingData, button, tokenResult]
+		[onPaymentSetup, billing.billingData, tokenResult]
 	);
 }

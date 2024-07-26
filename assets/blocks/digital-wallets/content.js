@@ -34,43 +34,19 @@ const Content = ({
 	const [googlePay, googlePayRef] = useGooglePay(payments, paymentRequest);
 	const [applePay, applePayRef] = useApplePay(payments, paymentRequest);
 	const [tokenResult, setTokenResult] = useState(false);
-	const [clickedButton, setClickedButton] = useState(null);
 
 	useShippingContactChangeHandler(paymentRequest);
 	useShippingOptionChangeHandler(paymentRequest);
 	usePaymentProcessing(
 		payments,
 		billing,
-		clickedButton,
 		tokenResult,
 		emitResponse,
 		onPaymentSetup
 	);
 
 	useEffect(() => {
-		if (!clickedButton) {
-			return;
-		}
-
-		setExpressPaymentError('');
-		onClick();
-
-		(async () => {
-			const __tokenResult = await tokenize(clickedButton);
-
-			if (!__tokenResult) {
-				onClose();
-				setClickedButton(null);
-			} else {
-				setTokenResult(__tokenResult);
-				onSubmit();
-			}
-		})();
-	}, [clickedButton]);
-
-	useEffect(() => {
 		const unsubscribe = onCheckoutFail(() => {
-			setClickedButton(null);
 			onClose();
 			return true;
 		});
@@ -82,12 +58,28 @@ const Content = ({
 	const isApplePayDisabled =
 		getSquareServerData().hideButtonOptions.includes('apple');
 
+	function onClickHandler(buttonInstance) {
+		setExpressPaymentError('');
+		onClick();
+
+		(async () => {
+			const __tokenResult = await tokenize(buttonInstance);
+
+			if (!__tokenResult) {
+				onClose();
+			} else {
+				setTokenResult(__tokenResult);
+				onSubmit();
+			}
+		})();
+	}
+
 	const googlePayExpressButton = !isGooglePayDisabled && (
 		<div // eslint-disable-line jsx-a11y/click-events-have-key-events
 			tabIndex={0}
 			role="button"
 			ref={googlePayRef}
-			onClick={() => setClickedButton(googlePay)}
+			onClick={() => onClickHandler(googlePay)}
 		></div>
 	);
 
@@ -96,7 +88,7 @@ const Content = ({
 			tabIndex={0}
 			role="button"
 			ref={applePayRef}
-			onClick={() => setClickedButton(applePay)}
+			onClick={() => onClickHandler(applePay)}
 			className="apple-pay-button wc-square-wallet-buttons"
 		>
 			<span className="text"></span>
