@@ -33,7 +33,7 @@ export const CheckoutHandler = ({
 	const square = useContext(SquareWebContext);
 
 	const {
-		onPaymentProcessing,
+		onPaymentSetup,
 		onCheckoutAfterProcessingWithError,
 		onCheckoutAfterProcessingWithSuccess,
 	} = eventRegistration;
@@ -42,7 +42,7 @@ export const CheckoutHandler = ({
 		checkoutFormHandler;
 
 	usePaymentProcessing(
-		onPaymentProcessing,
+		onPaymentSetup,
 		emitResponse,
 		square,
 		getPaymentMethodData,
