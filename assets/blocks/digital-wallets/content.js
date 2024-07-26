@@ -59,6 +59,10 @@ const Content = ({
 		getSquareServerData().hideButtonOptions.includes('apple');
 
 	function onClickHandler(buttonInstance) {
+		if (!buttonInstance) {
+			return;
+		}
+
 		setExpressPaymentError('');
 		onClick();
 
