@@ -97,7 +97,11 @@ const Content = ({
 			role="button"
 			ref={applePayRef}
 			onClick={() => setClickedButton(applePay)}
-		></div>
+			className="apple-pay-button wc-square-wallet-buttons"
+		>
+			<span className="text"></span>
+			<span className="logo"></span>
+		</div>
 	);
 
 	return (
