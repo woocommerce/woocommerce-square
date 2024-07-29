@@ -14,6 +14,7 @@ import {
 } from '../utils/square-sandbox';
 
 let createdCatalogObject = {};
+const squareVersion = '2024-03-20';
 
 test.beforeAll( 'Setup', async () => {
 	const browser = await chromium.launch();
@@ -44,7 +45,7 @@ test( 'Import Scarf from Square and Update', async ( { page, baseURL } ) => {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
 	const headers = {
-		'Square-Version': '2023-09-25',
+		'Square-Version': squareVersion,
 		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
 		'Content-Type': 'application/json'
 	};

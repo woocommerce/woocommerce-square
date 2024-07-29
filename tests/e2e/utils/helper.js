@@ -60,11 +60,22 @@ export async function visitCheckout( page, isBlock = true ) {
  * @param {Boolean} save Indicates if the product should be published.
  */
 export async function createProduct( page, product, save = true ) {
-	await page.goto( '/wp-admin/post-new.php?post_type=product' );
+	let url = '/wp-admin/post-new.php?post_type=product';
+	if (product.content) {
+		url += '&content=' + encodeURIComponent(product.content);
+	}
+	await page.goto( url );
 	await page.locator( '#title' ).fill( product.name );
 	await page.locator( '#_regular_price' ).fill( product.regularPrice );
 	await page.locator( '.inventory_options' ).click();
 	await page.locator( '#_sku' ).fill( product.sku );
+
+	if (product.category) {
+		await page.locator('#product_cat-add-toggle').click();
+		await page.locator('#newproduct_cat').fill(product.category);
+		await page.locator('#product_cat-add-submit').click();
+		await page.waitForTimeout(2000);
+	}
 
 	if ( save ) {
 		await page.waitForTimeout( 2000 );
