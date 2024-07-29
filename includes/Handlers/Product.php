@@ -1657,13 +1657,14 @@ class Product {
 	 */
 	public static function get_parent_product_id_by_variation_id( $variation_id ) {
 		global $wpdb;
-
+		$tablename = $wpdb->prefix.'posts';
+		
 		return $wpdb->get_var(
 			$wpdb->prepare(
 				"
 				SELECT pr.post_parent
-				FROM wp_posts pr
-				INNER JOIN wp_posts pp ON pp.ID = pr.post_parent
+				FROM $tablename pr
+				INNER JOIN $tablename pp ON pp.ID = pr.post_parent
 				WHERE pr.ID=%d AND pr.post_type IN ('product', 'product_variation') AND pp.post_type = 'product';
 				",
 				$variation_id
