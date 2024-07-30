@@ -5,6 +5,7 @@ module.exports = {
 		Backbone: false,
 		jQuery: false,
 		wp: false,
+		wcSquareSettings: false,
 	},
 	settings: {
 		jsdoc: { mode: 'typescript' },
