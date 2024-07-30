@@ -141,10 +141,14 @@ export const verifyBuyer = async (payments, token, verificationDetails) => {
  * @return {Object|boolean} Returns the token result, or false if tokenisation fails.
  */
 export const tokenize = async (button) => {
-	const tokenResult = await button.tokenize();
+	try {
+		const tokenResult = await button.tokenize();
 
-	if (tokenResult.status === 'OK') {
-		return tokenResult;
+		if (tokenResult.status === 'OK') {
+			return tokenResult;
+		}
+	} catch (e) {
+		return false;
 	}
 
 	return false;

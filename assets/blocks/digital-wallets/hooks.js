@@ -165,7 +165,7 @@ export function useApplePay(payments, paymentRequest) {
 	}, [payments, paymentRequest]);
 
 	useEffect(() => {
-		if (!applePayRef?.current) {
+		if (!applePayRef?.current || !applePay) {
 			return;
 		}
 
@@ -184,7 +184,7 @@ export function useApplePay(payments, paymentRequest) {
 		applePayRef.current.style.cssText += `-apple-pay-button-style: ${color};`;
 		applePayRef.current.style.display = 'block';
 		applePayRef.current.classList.add(`wc-square-wallet-button-${color}`);
-	}, [applePayRef]);
+	}, [applePay, applePayRef]);
 
 	return [applePay, applePayRef];
 }
