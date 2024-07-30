@@ -334,6 +334,15 @@ class Plugin_Dependencies {
 		return $missing_extensions;
 	}
 
+	/**
+	 * Returns true if the plugin meets PHP dependencies, false otherwise.
+	 *
+	 * @return boolean
+	 */
+	public function meets_php_dependencies() {
+		return empty( $this->get_missing_php_extensions() ) && empty( $this->get_missing_php_functions() );
+	}
+
 
 	/**
 	 * Gets the required PHP extensions.

@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 4.7.2 - 2024-07-29 =
+* Fix - Check if dependencies are loaded before showing onboarding process.
+* Fix - Ensure the product category syncs properly between the Square and WooCommerce store.
+* Dev - Fix QIT E2E tests and add support for a few new test types.
+
 = 4.7.1 - 2024-07-22 =
 * Fix - Remove double encoding from the redirect_url param in the oauth connect url.
 * Dev - Bump WordPress "tested up to" version 6.6.
