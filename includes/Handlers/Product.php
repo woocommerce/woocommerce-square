@@ -1657,7 +1657,6 @@ class Product {
 	 */
 	public static function get_parent_product_id_by_variation_id( $variation_id ) {
 		global $wpdb;
-		$tablename = $wpdb->prefix.'posts';
 		
 		return $wpdb->get_var(
 			$wpdb->prepare(
