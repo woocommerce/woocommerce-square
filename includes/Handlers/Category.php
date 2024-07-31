@@ -231,4 +231,31 @@ class Category {
 			)
 		);
 	}
+
+	/**
+	 * Get category ID from ITEM catalog object.
+	 *
+	 * @param \Square\Models\CatalogItem $catalog_item the catalog item object
+	 * @return string|null
+	 */
+	public static function get_square_category_id( $catalog_item ) {
+		$catalog_category_id = null;
+		// Try to get the category from the reporting category first.
+		$catalog_category = $catalog_item->getReportingCategory();
+
+		// If no reporting category, try to get the first category from the categories list.
+		if ( empty( $catalog_category ) ) {
+			$catalog_categories = $catalog_item->getCategories();
+			if ( ! empty( $catalog_categories ) ) {
+				$catalog_category = $catalog_categories[0];
+			}
+		}
+
+		// If we have a category, get the ID.
+		if ( ! empty( $catalog_category ) ) {
+			$catalog_category_id = $catalog_category->getId();
+		}
+
+		return $catalog_category_id;
+	}
 }
