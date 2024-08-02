@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 4.7.1
+Stable tag: 4.7.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.7.2 - 2024-07-29 =
+* Fix - Check if dependencies are loaded before showing onboarding process.
+* Fix - Ensure the product category syncs properly between the Square and WooCommerce store.
+* Dev - Fix QIT E2E tests and add support for a few new test types.
 
 = 4.7.1 - 2024-07-22 =
 * Fix - Remove double encoding from the redirect_url param in the oauth connect url.

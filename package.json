@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.7.1",
+  "version": "4.7.2",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run archive",
@@ -22,11 +22,13 @@
     "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
     "woorelease": "npm run build",
     "env": "wp-env",
+    "env:install-plugins": "./tests/bin/install-plugins.sh",
     "env:start": "wp-env start",
     "env:stop": "wp-env stop",
     "env:clean": "wp-env clean",
     "env:destroy": "wp-env destroy",
-    "test:e2e": "npx playwright test --config=tests/e2e/config/playwright.config.js"
+    "test:e2e": "npx playwright test --config=tests/e2e/config/playwright.config.js",
+    "postenv:start": "bash ./tests/e2e/config/env-post-setup.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.1",

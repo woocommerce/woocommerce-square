@@ -6,6 +6,7 @@ module.exports = {
 		jQuery: false,
 		wp: false,
 		wc: false,
+		wcSquareSettings: false,
 	},
 	settings: {
 		jsdoc: { mode: 'typescript' },
