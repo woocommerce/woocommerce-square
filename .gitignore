@@ -21,3 +21,4 @@ docker/logs
 /playwright-report/
 /playwright/.cache/
 tests/e2e/test-results
+test-plugins/

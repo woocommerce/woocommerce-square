@@ -98,6 +98,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 	await page.goto('/product/oneplus-8/');
 	await page.locator('#wpadminbar li#wp-admin-bar-edit a').click();
 	await expect(page.locator('#title')).toBeVisible();
+	await page.waitForTimeout(2000);
 	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
 
 	const productId = await page.locator("#post_ID").inputValue();
@@ -118,6 +119,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 	// Validate the stock count is updated.
 	await page.goto(`/wp-admin/post.php?post=${productId}&action=edit`);
 	await expect(page.locator('#title')).toBeVisible();
+	await page.waitForTimeout(2000);
 	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
 	await page.locator('.inventory_tab').click();
 	await expect(await page.locator('#_stock').inputValue()).toEqual('60');
@@ -138,6 +140,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 	await page.goto('/product/oneplus-8/');
 	await page.locator('#wpadminbar li#wp-admin-bar-edit a').click();
 	await expect(page.locator('#title')).toBeVisible();
+	await page.waitForTimeout(2000);
 	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
 
 	const productId = await page.locator("#post_ID").inputValue();
@@ -148,6 +151,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 	// Sync inventory from Square on the product edit screen.
 	await page.goto(`/wp-admin/post.php?post=${productId}&action=edit`);
 	await expect(page.locator('#title')).toBeVisible();
+	await page.waitForTimeout(2000);
 	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
 	await page.locator('.inventory_tab').click();
 	await expect(await page.locator('.sync-stock-from-square')).toBeVisible();
@@ -155,9 +159,10 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 		'Sync inventory'
 	);
 	await page.locator('.sync-stock-from-square').click();
-	await page.waitForTimeout(5000); // This is required to wait for the ajax request.
+	await page.waitForTimeout(6000); // This is required to wait for the ajax request.
 	await page.goto(`/wp-admin/post.php?post=${productId}&action=edit`);
 	await expect(page.locator('#title')).toBeVisible();
+	await page.waitForTimeout(2000);
 	await page.locator('#woocommerce-product-data .blockUI.blockOverlay').first().waitFor({ state: 'detached' });
 	await page.locator('.inventory_tab').click();
 	await expect(page.locator('#_stock')).not.toBeEditable();

@@ -52,7 +52,7 @@ test( 'Gift card - Partial payment', async ( { page } ) => {
 
 	await page.locator( '#square-gift-card-apply-btn' ).click();
 
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 
 	await page.locator( '#place_order' ).click();
 
