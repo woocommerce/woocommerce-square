@@ -72,6 +72,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.7.3 - 2024-08-05 =
+* Fix - Inconsistency in the height of Express Payment Button and compliance with the new Woo Express Payment Method Styling API.
+* Fix - Ensure the "Uncaught TypeError" JavaScript console error does not occur for out-of-stock products.
+* Fix - Ensure compatibility with WooPayments extension.
+* Dev - Bump WooCommerce "tested up to" version 9.1.
+* Dev - Bump WooCommerce minimum supported version to 8.9.
+* Dev - Update NPM packages and node version to v20 to modernize developer experience.
+
 = 4.7.2 - 2024-07-29 =
 * Fix - Check if dependencies are loaded before showing onboarding process.
 * Fix - Ensure the product category syncs properly between the Square and WooCommerce store.
