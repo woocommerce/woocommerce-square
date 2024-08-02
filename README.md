@@ -2,11 +2,11 @@
 
 ## Getting Started
 
-1. Make sure you have `git`, `node`, `npm` installed. We use the node LTS version on our servers, so we recommended 
-using that for development as well -- currently this is version `12.18.2`. 
+1. Make sure you have `git`, `node`, `npm` installed.. 
 1. Clone this repository locally within the plugins directory of WordPress.
+1. Run `nvm use` from the root directory of the repository to install the correct version of Node JS.
 1. Run `npm install` from the root directory of the repository to install dependencies.
-1. Execute `npm run build:dev` from the root directory of the repository.
+1. Execute `npm run build` from the root directory of the repository.
 1. Now go to the local installation, and activate this plugin.
 1. [Signup for a Square sandbox account and input your App ID and Access Token](https://docs.woocommerce.com/document/woocommerce-square/#section-6)
 1. From the dropdown box for location, choose a location(The default value is Default Test Account).

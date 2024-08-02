@@ -84,7 +84,7 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 	 * @return array
 	 */
 	public function get_payment_method_script_handles() {
-		$asset_path   = $this->plugin->get_plugin_path() . '/assets/blocks/build/index.asset.php';
+		$asset_path   = $this->plugin->get_plugin_path() . '/build/index.asset.php';
 		$version      = Plugin::VERSION;
 		$dependencies = array();
 
@@ -94,7 +94,7 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 			$dependencies = is_array( $asset ) && isset( $asset['dependencies'] ) ? $asset['dependencies'] : $dependencies;
 		}
 
-		wp_enqueue_style( 'wc-square-cart-checkout-block', $this->plugin->get_plugin_url() . '/assets/css/frontend/wc-square-cart-checkout-blocks.min.css', array(), Plugin::VERSION );
+		wp_enqueue_style( 'wc-square-cart-checkout-block', $this->plugin->get_plugin_url() . '/build/assets/frontend/wc-square-cart-checkout-blocks.css', array(), Plugin::VERSION );
 		wp_register_script(
 			'wc-square-credit-card-blocks-integration',
 			$this->plugin->get_plugin_url() . '/build/index.js',

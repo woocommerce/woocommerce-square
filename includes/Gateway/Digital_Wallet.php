@@ -339,8 +339,8 @@ class Digital_Wallet {
 			return;
 		}
 
-		wp_enqueue_style( 'wc-square-digital-wallet', $this->gateway->get_plugin()->get_plugin_url() . '/assets/css/frontend/wc-square-digital-wallet.min.css', array(), Plugin::VERSION );
-		wp_enqueue_script( 'wc-square-digital-wallet', $this->gateway->get_plugin()->get_plugin_url() . '/assets/js/frontend/wc-square-digital-wallet.min.js', array( 'jquery' ), Plugin::VERSION, true );
+		wp_enqueue_style( 'wc-square-digital-wallet', $this->gateway->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-digital-wallet.css', array(), Plugin::VERSION );
+		wp_enqueue_script( 'wc-square-digital-wallet', $this->gateway->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-digital-wallet.js', array( 'jquery' ), Plugin::VERSION, true );
 
 		try {
 			/**
