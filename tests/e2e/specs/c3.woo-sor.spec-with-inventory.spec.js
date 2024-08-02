@@ -6,6 +6,7 @@ import {
 	doesProductExist,
 	saveSquareSettings,
 	runWpCliCommand,
+	deleteAllProducts,
 } from '../utils/helper';
 import {
 	listCatalog,
@@ -15,10 +16,12 @@ import {
 	clearSync,
 } from '../utils/square-sandbox';
 
+test.describe.configure({ mode: 'serial' });
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
 
+	await deleteAllProducts( page );
 	await clearSync( page );
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
@@ -110,7 +113,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 		'Fetch stock from Square'
 	);
 	await page.locator('#fetch-stock-with-square').click();
-	await page.locator('._stock_field .spinner').first().waitFor({ state: 'detached' });
+	await page.waitForTimeout(5000); // This is required to wait for the ajax request.
 	await expect(page.locator('#_stock')).toBeEditable();
 	await expect(await page.locator('#_stock').inputValue()).toEqual('56');
 	await page.locator('#_stock').fill('60');
