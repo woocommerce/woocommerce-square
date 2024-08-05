@@ -15,43 +15,50 @@ import {
 	__experimentalUseProductEntityProp as useProductEntityProp,
 } from '@woocommerce/product-editor';
 
-export function Edit({ attributes, clientId, context }) {
-	const blockProps = useWooBlockProps(attributes);
+export function Edit( { attributes, clientId, context } ) {
+	const blockProps = useWooBlockProps( attributes );
 	const stockQuantityId = useInstanceId(
 		BaseControl,
 		'product_stock_quantity'
 	);
 
-	const [manageStock] = useProductEntityProp(
+	const [ manageStock ] = useProductEntityProp(
 		'manage_stock',
 		context.postType
 	);
-	const [stockQuantity, setStockQuantity] = useProductEntityProp(
+	const [ stockQuantity, setStockQuantity ] = useProductEntityProp(
 		'stock_quantity',
 		context.postType
 	);
-	const [productId] = useProductEntityProp('id', context.postType);
-	const [isSquareSynced, setIsSquareSynced] = useProductEntityProp(
+	const [ productId ] = useProductEntityProp( 'id', context.postType );
+	const [ isSquareSynced, setIsSquareSynced ] = useProductEntityProp(
 		'is_square_synced',
 		context.postType
 	);
-	const [isSyncEnabled] = useProductEntityProp(
+	const [ isSyncEnabled ] = useProductEntityProp(
 		'is_sync_enabled',
 		context.postType
 	);
-	const [isInventorySyncEnabled, setIsInventorySyncEnabled] =
-		useProductEntityProp('is_inventory_sync_enabled', context.postType);
-	const [fetchStockNonce] = useProductEntityProp(
+	const [ isInventorySyncEnabled, setIsInventorySyncEnabled ] =
+		useProductEntityProp( 'is_inventory_sync_enabled', context.postType );
+	const [ fetchStockNonce ] = useProductEntityProp(
 		'fetch_stock_nonce',
 		context.postType
 	);
-	const [sor] = useProductEntityProp('sor', context.postType);
-	const [productStatus] = useProductEntityProp('status', context.postType);
-	const [fetchStockProgress, setFetchStockProgress] = useState(false);
-	const [isQuantityDisabled, setIsQuantityDisabled] = useState(true);
-	const [isQuantityNull, setIsQuantityNull] = useState(false);
-	const [canManageStockInSquare, setCanManageStockInSquare] = useState(null);
-	const [isGiftCard] = useProductEntityProp('is_gift_card', context.postType);
+	const [ sor ] = useProductEntityProp( 'sor', context.postType );
+	const [ productStatus ] = useProductEntityProp(
+		'status',
+		context.postType
+	);
+	const [ fetchStockProgress, setFetchStockProgress ] = useState( false );
+	const [ isQuantityDisabled, setIsQuantityDisabled ] = useState( true );
+	const [ isQuantityNull, setIsQuantityNull ] = useState( false );
+	const [ canManageStockInSquare, setCanManageStockInSquare ] =
+		useState( null );
+	const [ isGiftCard ] = useProductEntityProp(
+		'is_gift_card',
+		context.postType
+	);
 	const isPublished = productStatus === 'publish';
 
 	const {
@@ -59,129 +66,131 @@ export function Edit({ attributes, clientId, context }) {
 		error: stockQuantityValidationError,
 		validate: validateStockQuantity,
 	} = useValidation(
-		`stock_quantity-${clientId}`,
+		`stock_quantity-${ clientId }`,
 		async function stockQuantityValidator() {
-			if (manageStock && stockQuantity && stockQuantity < 0) {
+			if ( manageStock && stockQuantity && stockQuantity < 0 ) {
 				return __(
 					'Stock quantity must be a positive number.',
 					'woocommerce-square'
 				);
 			}
 		},
-		[manageStock, stockQuantity]
+		[ manageStock, stockQuantity ]
 	);
 
-	useEffect(() => {
-		if (isGiftCard === 'yes') {
-			setIsSquareSynced(false);
+	useEffect( () => {
+		if ( isGiftCard === 'yes' ) {
+			setIsSquareSynced( false );
 		}
-	}, [isGiftCard]);
+	}, [ isGiftCard ] );
 
-	useEffect(() => {
-		if (manageStock && stockQuantity === null) {
-			setStockQuantity(1);
+	useEffect( () => {
+		if ( manageStock && stockQuantity === null ) {
+			setStockQuantity( 1 );
 		}
-	}, [manageStock, stockQuantity]);
+	}, [ manageStock, stockQuantity ] );
 
-	useEffect(() => {
-		setIsQuantityNull(stockQuantity === null);
-	}, [stockQuantity]);
+	useEffect( () => {
+		setIsQuantityNull( stockQuantity === null );
+	}, [ stockQuantity ] );
 
-	async function fetchStockFromSquare(enableQuantityField = false) {
+	async function fetchStockFromSquare( enableQuantityField = false ) {
 		const fetchStockData = new FormData();
 
 		fetchStockData.append(
 			'action',
 			'wc_square_fetch_product_stock_with_square'
 		);
-		fetchStockData.append('security', fetchStockNonce);
-		fetchStockData.append('product_id', productId);
+		fetchStockData.append( 'security', fetchStockNonce );
+		fetchStockData.append( 'product_id', productId );
 
-		setFetchStockProgress(true);
-		setCanManageStockInSquare(null);
+		setFetchStockProgress( true );
+		setCanManageStockInSquare( null );
 
-		let response = await fetch(window.ajaxurl, {
+		let response = await fetch( window.ajaxurl, {
 			method: 'POST',
 			body: fetchStockData,
-		});
+		} );
 
 		response = await response.json();
 
-		if (response.success) {
+		if ( response.success ) {
 			const { quantity, manage_stock } = response.data;
 
-			if (enableQuantityField) {
-				setIsQuantityDisabled(false);
+			if ( enableQuantityField ) {
+				setIsQuantityDisabled( false );
 			}
 
-			setCanManageStockInSquare(manage_stock);
+			setCanManageStockInSquare( manage_stock );
 
-			if (manage_stock === false) {
-				setIsInventorySyncEnabled(false);
-				setIsQuantityDisabled(true);
+			if ( manage_stock === false ) {
+				setIsInventorySyncEnabled( false );
+				setIsQuantityDisabled( true );
 			}
 
-			if (quantity !== null) {
-				setStockQuantity(Number(quantity));
-				setIsQuantityNull(false);
+			if ( quantity !== null ) {
+				setStockQuantity( Number( quantity ) );
+				setIsQuantityNull( false );
 			} else {
-				setIsQuantityNull(true);
+				setIsQuantityNull( true );
 			}
 		}
 
-		setFetchStockProgress(false);
+		setFetchStockProgress( false );
 	}
 
-	if (isSquareSynced && canManageStockInSquare === false) {
+	if ( isSquareSynced && canManageStockInSquare === false ) {
 		return (
-			<div {...blockProps}>
-				<div style={{ color: '#a00' }}>
-					{__(
+			<div { ...blockProps }>
+				<div style={ { color: '#a00' } }>
+					{ __(
 						'Inventory tracking is disabled for this product. Enable it from the Square dashboard.',
 						'woocommerce-square'
-					)}
+					) }
 				</div>
 			</div>
 		);
 	}
 
-	if (!manageStock) {
+	if ( ! manageStock ) {
 		return null;
 	}
 
-	if (isSquareSynced && isQuantityNull) {
+	if ( isSquareSynced && isQuantityNull ) {
 		return null;
 	}
 
 	return (
-		<div {...blockProps}>
+		<div { ...blockProps }>
 			<div className="wp-block-columns">
 				<div className="wp-block-column">
 					<BaseControl
-						id={stockQuantityId}
-						className={stockQuantityValidationError && 'has-error'}
-						help={stockQuantityValidationError ?? ''}
+						id={ stockQuantityId }
+						className={
+							stockQuantityValidationError && 'has-error'
+						}
+						help={ stockQuantityValidationError ?? '' }
 					>
 						<InputControl
-							id={stockQuantityId}
+							id={ stockQuantityId }
 							name="stock_quantity"
-							ref={stockQuantityRef}
-							label={__(
+							ref={ stockQuantityRef }
+							label={ __(
 								'Available quantity',
 								'woocommerce-square'
-							)}
-							value={stockQuantity}
-							onChange={setStockQuantity}
-							onBlur={validateStockQuantity}
+							) }
+							value={ stockQuantity }
+							onChange={ setStockQuantity }
+							onBlur={ validateStockQuantity }
 							type="number"
-							min={0}
+							min={ 0 }
 							disabled={
 								isSquareSynced &&
 								manageStock &&
 								isQuantityDisabled
 							}
 						/>
-						{isPublished &&
+						{ isPublished &&
 							isSyncEnabled &&
 							isInventorySyncEnabled &&
 							isSquareSynced &&
@@ -191,15 +200,21 @@ export function Edit({ attributes, clientId, context }) {
 									<Button
 										variant="link"
 										href="#"
-										onClick={() => fetchStockFromSquare()}
-										isBusy={fetchStockProgress}
+										onClick={ () => fetchStockFromSquare() }
+										isBusy={ fetchStockProgress }
 									>
-										{`${__('Managed by Square', 'woocommerce-square')} (${__('Sync stock from Square', 'woocommerce-square')})`}
+										{ `${ __(
+											'Managed by Square',
+											'woocommerce-square'
+										) } (${ __(
+											'Sync stock from Square',
+											'woocommerce-square'
+										) })` }
 									</Button>
 								</p>
-							)}
+							) }
 
-						{isPublished &&
+						{ isPublished &&
 							isSyncEnabled &&
 							isInventorySyncEnabled &&
 							isSquareSynced &&
@@ -208,17 +223,17 @@ export function Edit({ attributes, clientId, context }) {
 								<p>
 									<Button
 										variant="link"
-										text={__(
+										text={ __(
 											'Fetch stock from Square',
 											'woocommerce-square'
-										)}
-										onClick={() =>
-											fetchStockFromSquare(true)
+										) }
+										onClick={ () =>
+											fetchStockFromSquare( true )
 										}
-										isBusy={fetchStockProgress}
+										isBusy={ fetchStockProgress }
 									/>
 								</p>
-							)}
+							) }
 					</BaseControl>
 				</div>
 				<div className="wp-block-column" />
