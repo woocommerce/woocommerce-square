@@ -601,8 +601,8 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$image_extension = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_use_svg', true ) ? '.svg' : '.png';
 
 		// first, is the image available within the plugin?
-		if ( is_readable( $this->get_plugin()->get_plugin_path() . '/assets/images/cash-app' . $image_extension ) ) {
-			return \WC_HTTPS::force_https_url( $this->get_plugin()->get_plugin_url() . '/assets/images/cash-app' . $image_extension );
+		if ( is_readable( $this->get_plugin()->get_plugin_path() . '/build/images/cash-app' . $image_extension ) ) {
+			return \WC_HTTPS::force_https_url( $this->get_plugin()->get_plugin_url() . '/build/images/cash-app' . $image_extension );
 		}
 
 		// Fall back to framework image URL.

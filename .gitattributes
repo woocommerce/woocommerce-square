@@ -6,6 +6,8 @@ docs                    export-ignore
 mode_modules            export-ignore
 wordpress-org-assets    export-ignore
 tests                   export-ignore
+src                     export-ignore
+test-plugins            export-ignore
 
 # Files
 .distignore             export-ignore

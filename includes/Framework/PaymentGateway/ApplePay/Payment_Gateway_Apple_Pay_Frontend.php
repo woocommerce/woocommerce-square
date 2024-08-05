@@ -104,9 +104,9 @@ class Payment_Gateway_Apple_Pay_Frontend {
 	 */
 	public function enqueue_scripts() {
 
-		wp_enqueue_style( 'wc-square-apple-pay', $this->get_plugin()->get_plugin_url() . '/assets/css/frontend/wc-square-payment-gateway-apple-pay.css', array(), $this->get_plugin()->get_version() ); // TODO: min
+		wp_enqueue_style( 'wc-square-apple-pay', $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-payment-gateway-apple-pay.css', array(), $this->get_plugin()->get_version() ); // TODO: min
 
-		wp_enqueue_script( 'wc-square-apple-pay', $this->get_plugin()->get_plugin_url() . '/assets/js/frontend/wc-square-payment-gateway-apple-pay.min.js', array( 'jquery' ), $this->get_plugin()->get_version(), true );
+		wp_enqueue_script( 'wc-square-apple-pay', $this->get_plugin()->get_plugin_url() . '/build/assets/frontend/wc-square-payment-gateway-apple-pay.js', array( 'jquery' ), $this->get_plugin()->get_version(), true );
 
 		/**
 		 * Filters the Apple Pay JS handler params.
