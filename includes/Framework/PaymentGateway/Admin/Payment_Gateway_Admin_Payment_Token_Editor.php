@@ -83,10 +83,10 @@ class Payment_Gateway_Admin_Payment_Token_Editor {
 		}
 
 		// Stylesheet
-		wp_enqueue_style( 'payment-gateway-token-editor', $this->get_gateway()->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-token-editor.min.css', array(), Plugin::VERSION );
+		wp_enqueue_style( 'payment-gateway-token-editor', $this->get_gateway()->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payment-gateway-token-editor.css', array(), Plugin::VERSION );
 
 		// Main editor script
-		wp_enqueue_script( 'payment-gateway-token-editor', $this->get_gateway()->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-payment-gateway-token-editor.min.js', array( 'jquery' ), Plugin::VERSION, true );
+		wp_enqueue_script( 'payment-gateway-token-editor', $this->get_gateway()->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payment-gateway-token-editor.js', array( 'jquery' ), Plugin::VERSION, true );
 
 		wp_localize_script(
 			'payment-gateway-token-editor',

@@ -30,7 +30,6 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await savePaymentGatewaySettings( page );
 
 	// Create product.
-
 	if ( ! ( await doesProductExist( baseURL, 'simple-product' ) ) ) {
 		await createProduct( page, {
 			name: 'Simple Product',
@@ -66,7 +65,7 @@ for ( const isBlock of isBlockCheckout ) {
 
 		await visitCheckout( page, isBlock );
 		await fillAddressFields( page, isBlock );
-		await fillCreditCardFields( page, null, isBlock );
+		await fillCreditCardFields( page, true, isBlock );
 		await placeOrder( page, isBlock );
 
 		await expect(
@@ -85,6 +84,15 @@ for ( const isBlock of isBlockCheckout ) {
 			)
 		).toBeVisible();
 
-		// @todo: Add test to check if the order is captured.
+		page.on('dialog', dialog => dialog.accept());
+		await page.locator('button.wc-square-credit-card-capture').click();
+
+		// Verify order status and capture status.
+		await expect(page.locator('#order_status')).toHaveValue(
+			'wc-processing'
+		);
+		await expect(
+			page.getByText('Square Capture total of')
+		).toBeVisible();
 	} );
 }

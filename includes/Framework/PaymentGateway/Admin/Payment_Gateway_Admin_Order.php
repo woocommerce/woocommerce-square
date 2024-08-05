@@ -119,7 +119,7 @@ class Payment_Gateway_Admin_Order {
 	 */
 	protected function enqueue_edit_order_assets( \WC_Order $order ) {
 
-		wp_enqueue_script( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/js/admin/wc-square-payment-gateway-admin-order.min.js', array( 'jquery' ), Plugin::VERSION, true );
+		wp_enqueue_script( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payment-gateway-admin-order.js', array( 'jquery' ), Plugin::VERSION, true );
 
 		wp_localize_script(
 			'payment-gateway-admin-order',
@@ -136,7 +136,7 @@ class Payment_Gateway_Admin_Order {
 			)
 		);
 
-		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/assets/css/admin/wc-square-payment-gateway-admin-order.min.css', array(), Plugin::VERSION );
+		wp_enqueue_style( 'payment-gateway-admin-order', $this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payment-gateway-admin-order.css', array(), Plugin::VERSION );
 	}
 
 
