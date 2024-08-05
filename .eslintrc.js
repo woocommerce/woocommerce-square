@@ -1,10 +1,11 @@
 module.exports = {
-	extends: ['plugin:@woocommerce/eslint-plugin/recommended'],
+	extends: [ 'plugin:@woocommerce/eslint-plugin/recommended' ],
 	globals: {
 		_: false,
 		Backbone: false,
 		jQuery: false,
 		wp: false,
+		wc: false,
 		wcSquareSettings: false,
 	},
 	settings: {
@@ -20,7 +21,7 @@ module.exports = {
 		],
 		'import/resolver': {
 			node: {
-				extensions: ['.js', '.jsx', '.ts', '.tsx'],
+				extensions: [ '.js', '.jsx', '.ts', '.tsx' ],
 			},
 		},
 	},
@@ -40,7 +41,7 @@ module.exports = {
 	},
 	overrides: [
 		{
-			files: ['**/assets/blocks/**/**.js'],
+			files: [ '**/assets/blocks/**/**.js' ],
 			globals: {
 				jQuery: true,
 				browser: true,

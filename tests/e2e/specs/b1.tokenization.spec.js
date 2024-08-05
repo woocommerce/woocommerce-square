@@ -44,12 +44,13 @@ for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
 	test( title + 'Payment Gateway - Customer Profiles', async ( { page } ) => {
+		await deleteAllPaymentMethods( page );
 		await page.goto( '/product/simple-product' );
 		await page.locator( '.single_add_to_cart_button' ).click();
 		await visitCheckout( page, isBlock );
 
 		await fillAddressFields( page, isBlock );
-		await fillCreditCardFields( page, null, isBlock );
+		await fillCreditCardFields( page, true, isBlock );
 
 		if ( isBlock ) {
 			await page
@@ -73,6 +74,7 @@ for ( const isBlock of isBlockCheckout ) {
 			await page.locator(
 				'tr.payment-method td.woocommerce-PaymentMethod span'
 			)
+			.first()
 		).toHaveText( '• • •1111' );
 	} );
 
@@ -86,10 +88,12 @@ for ( const isBlock of isBlockCheckout ) {
 				.locator( '.wc-block-checkout__payment-method .wc-block-components-radio-control' )
 				.first()
 				.locator( 'label' )
+				.first()
 				.click();
 		} else {
 			await page
 				.locator( 'input[id^="wc-square-credit-card-payment-token-"]' )
+				.first()
 				.check();
 		}
 		await placeOrder( page, isBlock );

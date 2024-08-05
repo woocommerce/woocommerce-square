@@ -79,7 +79,7 @@ test( 'Purchase Gift card product', async ( { page } ) => {
 	await expect( await productData.getByText( /Emily Doe/i ) ).toBeVisible();
 	await expect( await productData.getByText( /Happy Birthday!/i ) ).toBeVisible();
 	await fillAddressFields( page, false );
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 	await placeOrder( page, false );
 
 	await expect( page.getByText( "Sender's name: John Doe" ) ).toBeVisible();
@@ -152,7 +152,7 @@ test( 'Reload Gift Card', async ( { page } ) => {
 	await expect( page.getByText( process.env.PURCHASED_GAN ) ).toBeVisible();
 
 	await fillAddressFields( page, false );
-	await fillCreditCardFields( page, null, false );
+	await fillCreditCardFields( page, true, false );
 	await placeOrder( page, false );
 	await expect(
 		page.getByText( `Gift card number: ${ process.env.PURCHASED_GAN }` )
