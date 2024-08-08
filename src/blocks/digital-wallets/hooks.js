@@ -122,7 +122,6 @@ export function useGooglePay(payments, paymentRequest) {
 
 		(async () => {
 			try {
-				await payments.googlePay(paymentRequest);
 				const __googlePay = await payments.googlePay(paymentRequest);
 				await __googlePay.attach(googlePayRef.current, {
 					buttonColor: getSquareServerData().googlePayColor,
@@ -156,7 +155,6 @@ export function useApplePay(payments, paymentRequest) {
 
 		(async () => {
 			try {
-				await payments.applePay(paymentRequest);
 				const __applePay = await payments.applePay(paymentRequest);
 
 				setApplePay(__applePay);
@@ -209,10 +207,6 @@ export function usePaymentProcessing(
 	useEffect(
 		() =>
 			onPaymentSetup(() => {
-				if (!tokenResult) {
-					return;
-				}
-
 				async function handlePaymentProcessing() {
 					let response = { type: emitResponse.responseTypes.SUCCESS };
 
