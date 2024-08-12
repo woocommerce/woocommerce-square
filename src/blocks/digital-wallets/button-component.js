@@ -152,7 +152,7 @@ const ButtonComponent = () => {
 
 	// Default button height aligns with Woo defaults
 	let buttonHeight = '48';
-	if (typeof buttonAttributes !== 'undefined') {
+	if ( typeof buttonAttributes !== 'undefined' ) {
 		buttonHeight = buttonAttributes?.height || buttonHeight;
 	}
 
@@ -160,7 +160,7 @@ const ButtonComponent = () => {
 		<>
 			{ ! isApplePayDisabled && (
 				<div
-					style={{ height: `${buttonHeight}px` }}
+					style={ { height: `${ buttonHeight }px` } }
 					tabIndex={ 0 }
 					role="button"
 					id="apple-pay-button"
@@ -180,7 +180,7 @@ const ButtonComponent = () => {
 			) }
 			{ ! isGooglePayDisabled && (
 				<div
-					style={{ height: `${buttonHeight}px` }}
+					style={ { height: `${ buttonHeight }px` } }
 					tabIndex={ 0 }
 					role="button"
 					ref={ googlePaybuttonRef }

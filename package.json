@@ -7,11 +7,11 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.7.1",
+  "version": "4.7.2",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run archive",
-    "build:dev": "composer install && grunt && npm run build:webpack",
+    "build:dev": "composer install && npm run build:webpack",
     "build:webpack": "rimraf build/* && wp-scripts build",
     "build-watch:webpack": "rimraf build/* && wp-scripts start",
     "lint:js": "wp-scripts lint-js src/ --ext js",
