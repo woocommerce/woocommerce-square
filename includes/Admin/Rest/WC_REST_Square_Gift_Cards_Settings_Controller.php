@@ -75,17 +75,17 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 				'callback'            => array( $this, 'save_settings' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'args'                => array(
-					'enabled'     => array(
+					'enabled'                => array(
 						'description'       => __( 'Enable Square payment gateway.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'title'       => array(
+					'title'                  => array(
 						'description'       => __( 'Square payment gateway title.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'description' => array(
+					'description'            => array(
 						'description'       => __( 'Square payment gateway description.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
@@ -95,7 +95,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'placeholder_id' => array(
+					'placeholder_id'         => array(
 						'description'       => __( 'ID of the placeholder media.', 'woocommerce-square' ),
 						'type'              => 'integer',
 						'sanitize_callback' => '',

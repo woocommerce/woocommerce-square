@@ -25,7 +25,9 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
 
-	const [ defaultPlaceholderUrl, setDefaultPlaceholderUrl ] = useState( wcSquareSettings.gcPlaceholderUrl );
+	const [ defaultPlaceholderUrl, setDefaultPlaceholderUrl ] = useState(
+		wcSquareSettings.gcPlaceholderUrl
+	);
 
 	const { enabled, is_default_placeholder } = giftCardsGatewaySettings;
 
@@ -34,21 +36,30 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 	}
 
 	function openMediaLibrary() {
-		const imageUploader = wp.media( {
-			title: __( 'Select or Upload an image to use as the Gift card placeholder:' ),
-			library : {
-				type : 'image'
-			},
-			button: {
-				text: 'Use this image'
-			},
-			multiple: false
-		} ).on( 'select', function() {
-			const attachment = imageUploader.state().get( 'selection' ).first().toJSON();
+		const imageUploader = wp
+			.media( {
+				title: __(
+					'Select or Upload an image to use as the Gift card placeholder:',
+					'woocommerce-square'
+				),
+				library: {
+					type: 'image',
+				},
+				button: {
+					text: 'Use this image',
+				},
+				multiple: false,
+			} )
+			.on( 'select', function () {
+				const attachment = imageUploader
+					.state()
+					.get( 'selection' )
+					.first()
+					.toJSON();
 
-			setGiftCardData( { placeholder_id: attachment.id } );
-			setDefaultPlaceholderUrl( attachment.url );
-		} );
+				setGiftCardData( { placeholder_id: attachment.id } );
+				setDefaultPlaceholderUrl( attachment.url );
+			} );
 
 		imageUploader.open();
 	}
@@ -135,20 +146,29 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 									checked={ is_default_placeholder === 'yes' }
 									onChange={ ( value ) =>
 										setGiftCardData( {
-											is_default_placeholder: value ? 'yes' : 'no',
+											is_default_placeholder: value
+												? 'yes'
+												: 'no',
 										} )
 									}
 								/>
 								<img
 									style={ { maxWidth: '350px' } }
 									src={ defaultPlaceholderUrl }
+									alt={ __(
+										'Preview of the Gift card placeholder',
+										'woocommerce-square'
+									) }
 								/>
 								<Button
-									variant='link'
+									variant="link"
 									onClick={ openMediaLibrary }
 									style={ { width: 'auto' } }
 								>
-									{ __( 'Replace image', 'woocommerce-square' ) }
+									{ __(
+										'Replace image',
+										'woocommerce-square'
+									) }
 								</Button>
 							</InputWrapper>
 						</>
