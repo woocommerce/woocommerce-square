@@ -22,7 +22,7 @@ import { getSquareServerData } from '../square-utils';
  * If the checkout has errors, we send `has-checkout-errors` to the server-side so that the status
  * of the request can be set to 'ERROR' before gateway validation is done.
  *
- * @param {Function}          onPaymentProcessing  Callback for registering observers on the payment processing event
+ * @param {Function}          onPaymentSetup       Callback for registering observers on the payment processing event
  * @param {EmitResponseProps} emitResponse         Helpers for observer response objects
  * @param {SquareContext}     squareContext        Square payment form context variable
  * @param {Function}          getPaymentMethodData CreateNonce function
@@ -30,7 +30,7 @@ import { getSquareServerData } from '../square-utils';
  * @param {Function}          verifyBuyer          VerifyBuyer function
  */
 export const usePaymentProcessing = (
-	onPaymentProcessing,
+	onPaymentSetup,
 	emitResponse,
 	squareContext,
 	getPaymentMethodData,
@@ -106,10 +106,10 @@ export const usePaymentProcessing = (
 			return response;
 		};
 
-		const unsubscribe = onPaymentProcessing( processCheckout );
+		const unsubscribe = onPaymentSetup(processCheckout);
 		return unsubscribe;
 	}, [
-		onPaymentProcessing,
+		onPaymentSetup,
 		emitResponse.responseTypes.SUCCESS,
 		emitResponse.responseTypes.ERROR,
 		createNonce,
