@@ -6,6 +6,7 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework\Square_Helper;
+use WooCommerce\Square\Handlers\Products;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
@@ -202,12 +203,12 @@ class Gift_Card extends Payment_Gateway {
 	 *
 	 * @since 4.2.0
 	 */
-	public function add_gift_card_image_placeholder() {
+	public function add_gift_card_image_placeholder( $settings ) {
 		if ( ! \WooCommerce\Square\Handlers\Products::should_use_default_gift_card_placeholder_image() ) {
 			return;
 		}
 
-		$placeholder_image = get_option( 'wc_square_gift_card_placeholder_id', false );
+		$placeholder_image = Products::get_gift_card_default_placeholder_id();
 
 		if ( ! empty( $placeholder_image ) ) {
 			if ( ! is_numeric( $placeholder_image ) ) {
@@ -226,7 +227,8 @@ class Gift_Card extends Payment_Gateway {
 		}
 
 		if ( ! file_exists( $filename ) ) {
-			update_option( 'wc_square_gift_card_placeholder_id', 0 );
+			$settings['placeholder_id'] = 0;
+			update_option( 'woocommerce_gift_cards_pay_settings', $settings );
 			return;
 		}
 
@@ -242,11 +244,13 @@ class Gift_Card extends Payment_Gateway {
 		$attach_id = wp_insert_attachment( $attachment, $filename );
 
 		if ( is_wp_error( $attach_id ) ) {
-			update_option( 'wc_square_gift_card_placeholder_id', 0 );
+			$settings['placeholder_id'] = 0;
+			update_option( 'woocommerce_gift_cards_pay_settings', $settings );
 			return;
 		}
 
-		update_option( 'wc_square_gift_card_placeholder_id', $attach_id );
+		$settings['placeholder_id'] = $attach_id;
+		update_option( 'woocommerce_gift_cards_pay_settings', $settings );
 
 		// Make sure that this file is included, as wp_generate_attachment_metadata() depends on it.
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -265,7 +269,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @param int $post_id Attachment ID of the media being deleted.
 	 */
 	public function delete_gift_card_image_placeholder( $post_id ) {
-		$attachment_id      = (int) get_option( 'wc_square_gift_card_placeholder_id' );
+		$attachment_id      = Products::get_gift_card_default_placeholder_id();
 		$gift_card_settings = get_option( 'woocommerce_gift_cards_pay_settings', array() );
 
 		if ( $attachment_id !== $post_id ) {
@@ -274,10 +278,9 @@ class Gift_Card extends Payment_Gateway {
 
 		if ( isset( $gift_card_settings['is_default_placeholder'] ) && 'yes' === $gift_card_settings['is_default_placeholder'] ) {
 			$gift_card_settings['is_default_placeholder'] = 'no';
+			$gift_card_settings['placeholder_id']         = 0;
 
-			if ( update_option( 'woocommerce_gift_cards_pay_settings', $gift_card_settings ) ) {
-				delete_option( 'wc_square_gift_card_placeholder_id' );
-			}
+			update_option( 'woocommerce_gift_cards_pay_settings', $gift_card_settings );
 		}
 	}
 

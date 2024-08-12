@@ -2,7 +2,8 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { ToggleControl } from '@wordpress/components';
+import { ToggleControl, Button } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 import parse from 'html-react-parser';
 
 /**
@@ -24,13 +25,33 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
 
+	const [ defaultPlaceholderUrl, setDefaultPlaceholderUrl ] = useState( wcSquareSettings.gcPlaceholderUrl );
+
 	const { enabled, is_default_placeholder } = giftCardsGatewaySettings;
 
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return null;
 	}
 
-	const mediaId = 0;
+	function openMediaLibrary() {
+		const imageUploader = wp.media( {
+			title: __( 'Select or Upload an image to use as the Gift card placeholder:' ),
+			library : {
+				type : 'image'
+			},
+			button: {
+				text: 'Use this image'
+			},
+			multiple: false
+		} ).on( 'select', function() {
+			const attachment = imageUploader.state().get( 'selection' ).first().toJSON();
+
+			setGiftCardData( { placeholder_id: attachment.id } );
+			setDefaultPlaceholderUrl( attachment.url );
+		} );
+
+		imageUploader.open();
+	}
 
 	return (
 		<>
@@ -120,8 +141,15 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 								/>
 								<img
 									style={ { maxWidth: '350px' } }
-									src={ `${wcSquareSettings.homeUrl}/wp-content/plugins/woocommerce-square/src/images/gift-card-featured-image.png`}
+									src={ defaultPlaceholderUrl }
 								/>
+								<Button
+									variant='link'
+									onClick={ openMediaLibrary }
+									style={ { width: 'auto' } }
+								>
+									{ __( 'Replace image', 'woocommerce-square' ) }
+								</Button>
 							</InputWrapper>
 						</>
 					) }

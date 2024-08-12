@@ -48,6 +48,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 			'title',
 			'description',
 			'is_default_placeholder',
+			'placeholder_id',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -92,6 +93,11 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 					'is_default_placeholder' => array(
 						'description'       => __( 'Indicates if a Gift card product should use the default placeholder provided by the plugin.', 'woocommerce-square' ),
 						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'placeholder_id' => array(
+						'description'       => __( 'ID of the placeholder media.', 'woocommerce-square' ),
+						'type'              => 'integer',
 						'sanitize_callback' => '',
 					),
 				),

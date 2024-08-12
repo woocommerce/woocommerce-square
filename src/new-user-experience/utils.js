@@ -61,6 +61,7 @@ export const getGiftCardsSettingsData = async () => {
 	const giftCard = {
 		enabled: settings.enabled || GIFT_CARDS_DEFAULT_STATE.enabled,
 		is_default_placeholder: settings.is_default_placeholder || GIFT_CARDS_DEFAULT_STATE.is_default_placeholder,
+		placeholder_id: settings.placeholder_id || GIFT_CARDS_DEFAULT_STATE.placeholder_id,
 	};
 
 	return { giftCard };
