@@ -104,6 +104,9 @@ export async function fillAddressFields( page, isBlock = true ) {
 
 	if ( isBlock ) {
 		await page.waitForTimeout( 1500 );
+		if ( await page.locator( '.wc-block-components-address-card__edit' ).isVisible() ) {
+			await page.locator( '.wc-block-components-address-card__edit' ).click();
+		}
 		await page
 			.locator( '#email' )
 			.fill( customer.email );
@@ -231,34 +234,30 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 
 	let frame = '';
 
-	if ( isBlock && await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).isVisible() ) {
-		await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).click();
-		frame = '.sq-card-iframe-container .sq-card-component'
-	} else if ( await page.locator( 'label[for="payment_method_square_credit_card"]' ).isVisible() ) {
-		await page.locator( 'label[for="payment_method_square_credit_card"]' ).click();
+	if ( isBlock ) {
+		frame = '.sq-card-iframe-container .sq-card-component';
+		if ( await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).isVisible() ) {
+			await page.locator( 'label[for="radio-control-wc-payment-method-options-square_credit_card"]' ).click();
+		}
+	} else {
 		frame = '#wc-square-credit-card-container .sq-card-component';
+		if ( await page.locator( 'label[for="payment_method_square_credit_card"]' ).isVisible() ) {
+			await page.locator( 'label[for="payment_method_square_credit_card"]' ).click();
+		}
 	}
 
 	// Fill credit card details.
-	const creditCardInputField = await page
-		.frameLocator( frame )
-		.locator('#cardNumber');
+	const frameLocator = await page.frameLocator(frame).first();
+	const creditCardInputField = await frameLocator.locator('#cardNumber');
+	await creditCardInputField.waitFor({ state: 'visible' });
 
 	await creditCardInputField.fill(creditCard.valid);
 
-	await page
-		.frameLocator( frame )
-		.locator('#expirationDate')
-		.fill(getRandomExpiryDate());
+	await frameLocator.locator('#expirationDate').fill(getRandomExpiryDate());
 
-	await page
-		.frameLocator( frame )
-		.locator('#cvv')
-		.fill(creditCard.cvv);
+	await frameLocator.locator('#cvv').fill(creditCard.cvv);
 
-	const postalCodeInputField = await page
-		.frameLocator( frame )
-		.locator('#postalCode');
+	const postalCodeInputField = await frameLocator.locator('#postalCode');
 
 	await postalCodeInputField.waitFor({ state: 'visible' });
 	await postalCodeInputField.fill(creditCard.postalCode);
@@ -267,20 +266,19 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 export async function placeOrder( page, isBlock = true ) {
 	if ( isBlock ) {
 		await page.waitForTimeout( 2000 );
-		await page.locator( '.wc-block-components-checkout-place-order-button' ).click();
-	} else {
-		await page.locator( '#place_order' ).click();
 	}
+	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
 }
 
 export async function deleteAllPaymentMethods( page ) {
 	await page.goto( '/my-account/payment-methods/' );
 
 	if ( await page.locator( '.woocommerce-MyAccount-paymentMethods' ).isVisible() ) {
-		const removeBtns = await page.$$( '.payment-method-actions .delete' );
+		const rows = await page.locator(".payment-method-actions .delete");
+		const count = await rows.count();
 
-		for ( const button of removeBtns ) {
-			await button.click();
+		for (let i = 0; i < count; i++) {
+			await rows.nth(0).click();
 			await expect( await page.getByText( 'Payment method deleted.' ) ).toBeVisible();
 		}
 	}
@@ -538,6 +536,99 @@ export async function setStepsLocalStorage( page ) {
 	await page.evaluate( ( val ) => localStorage.setItem( 'step', val ), 'payment-complete' );
 	await page.evaluate( ( val ) => localStorage.setItem( 'backStep', val ), 'payment-methods' );
 	await page.reload();
+}
+
+/**
+ * Create Pre-Order Product.
+ *
+ * @param {Page}   page    Playwright page object
+ * @param {Object} options Product options
+ *
+ * @returns {number} Product ID
+ */
+export async function createPreOrderProduct(page, options = {}) {
+	await page.goto('/wp-admin/post-new.php?post_type=product');
+	const product = {
+		regularPrice: '10',
+		preOrderFee: '5',
+		whenToCharge: 'upon_release',
+		availabilityDate: getNextDay(),
+		...options,
+	};
+
+	// Set product title.
+	await page.locator('#title').fill('Pre-Order Product');
+	await page.locator('#title').blur();
+	await page.locator('#sample-permalink').waitFor();
+
+	// Set product data.
+	await page.locator('.wc-tabs > li > a', { hasText: 'General' }).click();
+	await page.locator('#_regular_price').fill(product.regularPrice);
+
+	// Enable Deposits.
+	await page.locator('.wc-tabs > li > a', { hasText: 'Pre-orders' }).click();
+	await page.locator('#_wc_pre_orders_enabled').check();
+	await page
+		.locator('#_wc_pre_orders_availability_datetime')
+		.fill(product.availabilityDate);
+	await page.locator('#_wc_pre_orders_fee').fill(product.preOrderFee);
+	await page
+		.locator('#_wc_pre_orders_when_to_charge')
+		.selectOption(product.whenToCharge);
+
+	await page.locator('#publish').waitFor();
+	await page.locator('#publish').click();
+	await expect(
+		page.getByText('Product published. View Product')
+	).toBeVisible();
+	const productId = await page.locator('#post_ID').inputValue();
+	return productId;
+}
+
+/**
+ * Get next day date.
+ */
+function getNextDay() {
+	const date = new Date();
+	date.setDate(date.getDate() + 1);
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	const hours = String(date.getHours()).padStart(2, '0');
+	const minutes = String(date.getMinutes()).padStart(2, '0');
+	return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+/**
+ * Complete the Pre-Order.
+ *
+ * @param {Page}   page    Playwright page object
+ * @param {string} orderId Order ID
+ */
+export async function completePreOrder(page, orderId) {
+	await page.goto(`/wp-admin/admin.php?page=wc_pre_orders`);
+	await page
+		.locator(
+			`#the-list th.check-column input[name="order_id[]"][value="${orderId}"]`
+		)
+		.check();
+	await page.locator('#bulk-action-selector-top').selectOption('complete');
+	await page.locator('#doaction').click();
+}
+
+/**
+ * Subscription renewal.
+ * 
+ * @param {Page} page Playwright page object.
+ */
+export async function renewSubscription(page) {
+	await page.on('dialog', (dialog) => dialog.accept());
+	await page.locator("select[name='wc_order_action']").selectOption('wcs_process_renewal');
+	await page.locator('#actions button.wc-reload').click();
+	await expect(
+		page.locator('#message.updated.notice.notice-success').first()
+	).toContainText('Subscription updated.');
+	await expect(page.locator('#order_status')).toHaveValue('wc-active');
 }
 
 /**
