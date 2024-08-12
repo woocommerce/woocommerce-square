@@ -4,13 +4,13 @@ on:
     branches:
       - smoke-testing
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
     branches:
       - trunk
 
 jobs:
   e2e:
-    if: "${{ ( github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'needs: e2e testing') ) ||  github.event_name == 'push' }}"
+    if: "${{ ( github.event_name == 'pull_request' ) ||  github.event_name == 'push' }}"
     runs-on: ubuntu-latest
     env:
       WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
@@ -18,8 +18,9 @@ jobs:
       SQUARE_APPLICATION_ID: ${{ secrets.SQUARE_APPLICATION_ID }}
       SQUARE_ACCESS_TOKEN: ${{ secrets.SQUARE_ACCESS_TOKEN }}
       SQUARE_LOCATION_ID: ${{ secrets.SQUARE_LOCATION_ID }}
+      GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
     permissions:
-      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
@@ -37,18 +38,47 @@ jobs:
       - name: Install playwright
         run: npx playwright install
 
+      # Use compiled versions to avoid need for npm and composer installation and build step.
+      - name: Install required WP plugins
+        run: |
+          gh release download --repo woocommerce/woocommerce-pre-orders --pattern  woocommerce-pre-orders.zip --dir ./test-plugins
+          gh release download --repo woocommerce/woocommerce-subscriptions --pattern  woocommerce-subscriptions.zip --dir ./test-plugins
+          cd ./test-plugins
+          unzip -o woocommerce-pre-orders.zip
+          unzip -o woocommerce-subscriptions.zip
+          cd ..
+
       - name: Set the core version
         if: "${{ contains(github.event.pull_request.labels.*.name, 'needs: WP RC test') }}"
         id: run-rc-test
         run: ./tests/bin/set-core-version.js WordPress/WordPress#master
 
       - name: Setup E2E environment
-        run: npm run test:env:start
+        run: npm run env:start
 
       - name: Run E2E tests
         id: square_e2e_tests
         if: ${{ github.event_name == 'pull_request' }}
-        run: npm run test:e2e-run
+        run: npm run test:e2e
+
+      - name: Remove existing labels
+        uses: actions/github-script@v6
+        continue-on-error: true
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: ['status: e2e tests passing']
+            })
+
+            github.rest.issues.removeLabel({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: ['status: e2e tests failing']
+            })
 
       - name: Update Success Label
         if: |
@@ -58,12 +88,6 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['needs: e2e testing']
-            })
             github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -79,12 +103,6 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['needs: e2e testing']
-            })
             github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -94,7 +112,7 @@ jobs:
 
       - name: Run E2E Smoke Test
         if: ${{ github.event_name == 'push' }}
-        run: npm run test:e2e-run
+        run: npm run test:e2e
 
       - uses: actions/upload-artifact@v3
         if: always()

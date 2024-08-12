@@ -248,7 +248,8 @@ class Product {
 			$product->set_description( $product_description );
 		}
 
-		$category_id = Category::get_category_id_by_square_id( $catalog_item->getCategoryId() );
+		$square_category_id = Category::get_square_category_id( $catalog_item );
+		$category_id        = Category::get_category_id_by_square_id( $square_category_id );
 
 		if ( $category_id ) {
 			wp_set_object_terms( $product->get_id(), intval( $category_id ), 'product_cat' );
@@ -256,7 +257,7 @@ class Product {
 			$message = sprintf(
 				/* translators: Placeholder: %s category ID */
 				__( 'Square category with id (%s) was not imported to your Store. Please run Import Products from Square settings.', 'woocommerce-square' ),
-				$catalog_item->getCategoryId()
+				$square_category_id
 			);
 
 			$records = Records::get_records();
