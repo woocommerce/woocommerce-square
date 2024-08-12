@@ -202,6 +202,10 @@ class Gift_Card extends Payment_Gateway {
 	 * @since 4.2.0
 	 */
 	public function add_gift_card_image_placeholder() {
+		if ( ! \WooCommerce\Square\Handlers\Products::should_use_default_gift_card_placeholder_image() ) {
+			return;
+		}
+
 		$placeholder_image = get_option( 'wc_square_gift_card_placeholder_id', false );
 
 		if ( ! empty( $placeholder_image ) ) {

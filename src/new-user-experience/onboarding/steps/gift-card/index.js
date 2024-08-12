@@ -24,11 +24,13 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
 
-	const { enabled } = giftCardsGatewaySettings;
+	const { enabled, is_default_placeholder } = giftCardsGatewaySettings;
 
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return null;
 	}
+
+	const mediaId = 0;
 
 	return (
 		<>
@@ -74,27 +76,54 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 					) }
 
 					{ origin === 'settings' && (
-						<InputWrapper
-							label={ __(
-								'Enable / Disable',
-								'woocommerce-square'
-							) }
-						>
-							<SquareCheckboxControl
-								className="gift-card-gateway-toggle-field"
-								data-testid="gift-card-gateway-toggle-field"
+						<>
+							<InputWrapper
 								label={ __(
-									'Enable this payment method.',
+									'Enable / Disable',
 									'woocommerce-square'
 								) }
-								checked={ enabled === 'yes' }
-								onChange={ ( value ) =>
-									setGiftCardData( {
-										enabled: value ? 'yes' : 'no',
-									} )
-								}
-							/>
-						</InputWrapper>
+							>
+								<SquareCheckboxControl
+									className="gift-card-gateway-toggle-field"
+									data-testid="gift-card-gateway-toggle-field"
+									label={ __(
+										'Enable this payment method.',
+										'woocommerce-square'
+									) }
+									checked={ enabled === 'yes' }
+									onChange={ ( value ) =>
+										setGiftCardData( {
+											enabled: value ? 'yes' : 'no',
+										} )
+									}
+								/>
+							</InputWrapper>
+							<InputWrapper
+								label={ __(
+									'Gift card product placeholder image',
+									'woocommerce-square'
+								) }
+							>
+								<SquareCheckboxControl
+									className="gift-card-gateway-product-placeholder-toggle-field"
+									data-testid="gift-card-gateway-product-placeholder-toggle-field"
+									label={ __(
+										'Enable to use the following image as the default placeholder for gift card products.',
+										'woocommerce-square'
+									) }
+									checked={ is_default_placeholder === 'yes' }
+									onChange={ ( value ) =>
+										setGiftCardData( {
+											is_default_placeholder: value ? 'yes' : 'no',
+										} )
+									}
+								/>
+								<img
+									style={ { maxWidth: '350px' } }
+									src={ `${wcSquareSettings.homeUrl}/wp-content/plugins/woocommerce-square/src/images/gift-card-featured-image.png`}
+								/>
+							</InputWrapper>
+						</>
 					) }
 				</div>
 			</Section>

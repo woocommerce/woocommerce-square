@@ -1256,6 +1256,10 @@ class Products {
 	 * @return string
 	 */
 	public function filter_gift_card_product_featured_image_placeholder( $image, $product, $size ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $image;
+		}
+
 		if ( has_post_thumbnail( $product->get_id() ) ) {
 			return $image;
 		}
@@ -1294,6 +1298,10 @@ class Products {
 	 * @return string
 	 */
 	public function filter_single_product_featured_image_placeholder( $html ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $html;
+		}
+
 		$product_id = get_the_ID();
 
 		if ( ! $product_id ) {
@@ -1509,6 +1517,10 @@ class Products {
 	 * @return string
 	 */
 	public function gift_card_product_image_id( $image_id, $product ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $image_id;
+		}
+
 		if ( ! Product::is_gift_card( $product ) ) {
 			return $image_id;
 		}
@@ -1526,5 +1538,30 @@ class Products {
 		}
 
 		return $image_id;
+	}
+
+	/**
+	 * Returns true if a gift card product should use the provided
+	 * default placeholder image.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public static function should_use_default_gift_card_placeholder_image() {
+		$settings   = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$is_enabled = isset( $settings['enabled'] ) && 'yes' === $settings['enabled'];
+
+		if ( ! $is_enabled ) {
+			return false;
+		}
+
+		$should_use_placeholder = isset( $settings['is_default_placeholder'] ) && 'yes' === $settings['is_default_placeholder'];
+
+		if ( ! $should_use_placeholder ) {
+			return false;
+		}
+
+		return true;
 	}
 }
