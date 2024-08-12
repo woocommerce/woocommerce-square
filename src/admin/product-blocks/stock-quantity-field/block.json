@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "woocommerce-square/stock-quantity-field",
+	"version": "0.1.0",
+	"title": "Square stock quantity field",
+	"category": "widgets",
+	"icon": "flag",
+	"description": "A block to add stock quantity field to the product editor.",
+	"supports": {
+		"html": false,
+		"inserter": false
+	},
+	"attributes": {},
+	"textdomain": "woocommerce-square",
+	"editorScript": "file:./index.js"
+}
