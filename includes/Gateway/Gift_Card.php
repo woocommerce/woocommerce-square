@@ -43,7 +43,8 @@ class Gift_Card extends Payment_Gateway {
 			)
 		);
 
-		add_action( 'init', array( $this, 'add_gift_card_image_placeholder' ) );
+		add_action( 'wc_square_woocommerce_gift_cards_pay_settings_settings_updated', array( $this, 'add_gift_card_image_placeholder' ) );
+		add_action( 'delete_attachment', array( $this, 'delete_gift_card_image_placeholder' ) );
 		add_action( 'wp_ajax_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
 		add_action( 'wp_ajax_nopriv_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
 		add_action( 'wp_ajax_wc_square_gift_card_remove', array( $this, 'remove_gift_card' ) );
@@ -253,6 +254,31 @@ class Gift_Card extends Payment_Gateway {
 		// Generate the metadata for the attachment, and update the database record.
 		$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
 		wp_update_attachment_metadata( $attach_id, $attach_data );
+	}
+
+	/**
+	 * Disables the `Gift card product placeholder image` setting when the
+	 * gift card placeholder image is deleted from the library.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $post_id Attachment ID of the media being deleted.
+	 */
+	public function delete_gift_card_image_placeholder( $post_id ) {
+		$attachment_id      = (int) get_option( 'wc_square_gift_card_placeholder_id' );
+		$gift_card_settings = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+
+		if ( $attachment_id !== $post_id ) {
+			return;
+		}
+
+		if ( isset( $gift_card_settings['is_default_placeholder'] ) && 'yes' === $gift_card_settings['is_default_placeholder'] ) {
+			$gift_card_settings['is_default_placeholder'] = 'no';
+
+			if ( update_option( 'woocommerce_gift_cards_pay_settings', $gift_card_settings ) ) {
+				delete_option( 'wc_square_gift_card_placeholder_id' );
+			}
+		}
 	}
 
 	/**

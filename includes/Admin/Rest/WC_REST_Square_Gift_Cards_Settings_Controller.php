@@ -126,6 +126,14 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 		}
 
 		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
+
+		/**
+		 * Action triggered when the Gift card payment settings are updated.
+		 *
+		 * @since x.x.x
+		 */
+		do_action( 'wc_square_' . self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME . '_settings_updated', $settings );
+
 		wp_send_json_success();
 	}
 }
