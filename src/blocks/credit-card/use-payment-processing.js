@@ -106,7 +106,7 @@ export const usePaymentProcessing = (
 			return response;
 		};
 
-		const unsubscribe = onPaymentSetup(processCheckout);
+		const unsubscribe = onPaymentSetup( processCheckout );
 		return unsubscribe;
 	}, [
 		onPaymentSetup,
