@@ -248,7 +248,8 @@ test.describe('Cash App Pay Tests', () => {
 		// Confirm that the Cash App Pay is not visible on block-checkout page.
 		await visitCheckout(page, true);
 		await fillAddressFields(page, true);
-		await page.locator('#billing-country').locator('input').fill('India');
+		await page.locator('#billing-country').selectOption('IN');
+		await page.locator('#billing-country').blur();
 		await page.waitForTimeout(1500);
 		const blockPayMethod = await page.locator(
 			'label[for="radio-control-wc-payment-method-options-square_cash_app_pay"]'
