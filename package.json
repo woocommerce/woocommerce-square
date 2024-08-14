@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.7.2",
+  "version": "4.7.3",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run archive",

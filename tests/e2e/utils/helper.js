@@ -121,8 +121,7 @@ export async function fillAddressFields( page, isBlock = true ) {
 			.fill( customer.addr1 );
 		await page
 			.locator( '#billing-country' )
-			.locator( 'input' )
-			.fill( customer.countryBlock );
+			.selectOption( customer.country );
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-city' )
@@ -130,8 +129,7 @@ export async function fillAddressFields( page, isBlock = true ) {
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-state' )
-			.locator( 'input' )
-			.fill( customer.stateBlock );
+			.selectOption( customer.state );
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-postcode' )
