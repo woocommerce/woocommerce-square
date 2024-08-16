@@ -79,7 +79,7 @@ class Products {
 		);
 
 		// Get gift card features status.
-		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$gift_card_settings      = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
 		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
@@ -1549,7 +1549,7 @@ class Products {
 	 * @return bool
 	 */
 	public static function should_use_default_gift_card_placeholder_image() {
-		$settings   = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$settings   = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$is_enabled = isset( $settings['enabled'] ) && 'yes' === $settings['enabled'];
 
 		if ( ! $is_enabled ) {
@@ -1573,7 +1573,7 @@ class Products {
 	 * @return int
 	 */
 	public static function get_gift_card_default_placeholder_id() {
-		$settings = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$settings = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 
 		return (int) ( $settings['placeholder_id'] ?? 0 );
 	}

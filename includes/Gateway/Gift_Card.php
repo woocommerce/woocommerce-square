@@ -14,6 +14,13 @@ use WooCommerce\Square\Gateway;
 
 class Gift_Card extends Payment_Gateway {
 	/**
+	 * Square settings option name.
+	 *
+	 * @var string
+	 */
+	const SQUARE_PAYMENT_SETTINGS_OPTION_NAME = 'woocommerce_gift_cards_pay_settings';
+
+	/**
 	 * @var API API base instance
 	 */
 	private $api;
@@ -228,7 +235,7 @@ class Gift_Card extends Payment_Gateway {
 
 		if ( ! file_exists( $filename ) ) {
 			$settings['placeholder_id'] = 0;
-			update_option( 'woocommerce_gift_cards_pay_settings', $settings );
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 			return;
 		}
 
@@ -245,12 +252,12 @@ class Gift_Card extends Payment_Gateway {
 
 		if ( is_wp_error( $attach_id ) ) {
 			$settings['placeholder_id'] = 0;
-			update_option( 'woocommerce_gift_cards_pay_settings', $settings );
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 			return;
 		}
 
 		$settings['placeholder_id'] = $attach_id;
-		update_option( 'woocommerce_gift_cards_pay_settings', $settings );
+		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 
 		// Make sure that this file is included, as wp_generate_attachment_metadata() depends on it.
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -270,7 +277,7 @@ class Gift_Card extends Payment_Gateway {
 	 */
 	public function delete_gift_card_image_placeholder( $post_id ) {
 		$attachment_id      = Products::get_gift_card_default_placeholder_id();
-		$gift_card_settings = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$gift_card_settings = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 
 		if ( $attachment_id !== $post_id ) {
 			return;
@@ -280,7 +287,7 @@ class Gift_Card extends Payment_Gateway {
 			$gift_card_settings['is_default_placeholder'] = 'no';
 			$gift_card_settings['placeholder_id']         = 0;
 
-			update_option( 'woocommerce_gift_cards_pay_settings', $gift_card_settings );
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $gift_card_settings );
 		}
 	}
 
