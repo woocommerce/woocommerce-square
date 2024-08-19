@@ -169,6 +169,10 @@ export const OnboardingApp = () => {
 						<BusinessLocation />
 						{ settings.locations.length ? (
 							<SquareSettingsSaveButton
+								label={ __(
+									settings.locations.length === 1 ? 'Confirm' : 'Next',
+									'woocommerce-square'
+								) }
 								afterSaveLabel={ __(
 									'Changes Saved!',
 									'woocommerce-square'
