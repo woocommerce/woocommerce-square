@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 4.7.2
+Stable tag: 4.7.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.7.3 - 2024-08-13 =
+* Fix - Inconsistency in the height of Express Payment Button and compliance with the new Woo Express Payment Method Styling API.
+* Fix - Ensure the "Uncaught TypeError" JavaScript console error does not occur for out-of-stock products.
+* Fix - Ensure compatibility with WooPayments extension.
+* Dev - Bump WooCommerce "tested up to" version 9.1.
+* Dev - Bump WooCommerce minimum supported version to 8.9.
+* Dev - Update NPM packages and node version to v20 to modernize developer experience.
 
 = 4.7.2 - 2024-07-29 =
 * Fix - Check if dependencies are loaded before showing onboarding process.

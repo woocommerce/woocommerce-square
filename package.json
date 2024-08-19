@@ -7,10 +7,10 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.7.2",
+  "version": "4.7.3",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
-    "build": "composer install --no-dev && npm run build:webpack && npm run archive",
+    "build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
     "build:dev": "composer install && npm run build:webpack",
     "build:webpack": "rimraf build/* && wp-scripts build",
     "build-watch:webpack": "rimraf build/* && wp-scripts start",
@@ -18,6 +18,7 @@
     "lint:js:fix": "wp-scripts lint-js src/ --ext js --fix",
     "phpcompat": "./vendor/bin/phpcs --standard=phpcs-compat.xml.dist -p .",
     "update-deps": "npm install -g rimraf && rimraf node_modules && rimraf npm-shrinkwrap.json && npm install && npm shrinkwrap --dev",
+    "makepot": "wpi18n makepot --domain-path i18n/languages --pot-file woocommerce-square.pot --type plugin --main-file woocommerce-square.php --exclude node_modules,tests,docs",
     "archive": "composer archive --file=$npm_package_name --format=zip",
     "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
     "woorelease": "npm run build",
@@ -37,7 +38,8 @@
     "@wordpress/env": "^10.0.0",
     "@wordpress/scripts": "^28.2.0",
     "copy-webpack-plugin": "^12.0.2",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "node-wp-i18n": "^1.2.7"
   },
   "engines": {
     "node": ">=20",
