@@ -169,8 +169,8 @@ export const OnboardingApp = () => {
 						<BusinessLocation />
 						{ settings.locations.length ? (
 							<SquareSettingsSaveButton
+								// eslint-disable-next-line
 								label={ __(
-									// eslint-disable-next-line
 									settings.locations.length === 1 ? 'Confirm' : 'Next',
 									'woocommerce-square'
 								) }
