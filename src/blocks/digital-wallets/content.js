@@ -6,48 +6,107 @@ import { useEffect, useState } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import DigitalWalletContext from './context';
-import ButtonComponent from './button-component';
-import { getSquareServerData } from '../square-utils';
+import { tokenize } from './utils';
+import { getSquareServerData } from '../square-utils/utils';
+import {
+	useSquare,
+	usePaymentRequest,
+	useShippingContactChangeHandler,
+	useShippingOptionChangeHandler,
+	useGooglePay,
+	useApplePay,
+	usePaymentProcessing,
+} from './hooks';
 
-const Content = ( props ) => {
-	const [ payments, setPayments ] = useState( null );
-	const { onCheckoutFail } = props.eventRegistration;
-	const { onClose } = props;
+const Content = ( {
+	billing,
+	shippingData,
+	onClick,
+	onClose,
+	onSubmit,
+	setExpressPaymentError,
+	emitResponse,
+	eventRegistration: { onPaymentSetup, onCheckoutFail },
+} ) => {
+	const { needsShipping } = shippingData;
+	const payments = useSquare();
+	const paymentRequest = usePaymentRequest( payments, needsShipping );
+	const [ googlePay, googlePayRef ] = useGooglePay(
+		payments,
+		paymentRequest
+	);
+	const [ applePay, applePayRef ] = useApplePay( payments, paymentRequest );
+	const [ tokenResult, setTokenResult ] = useState( false );
+
+	useShippingContactChangeHandler( paymentRequest );
+	useShippingOptionChangeHandler( paymentRequest );
+	usePaymentProcessing(
+		payments,
+		billing,
+		tokenResult,
+		emitResponse,
+		onPaymentSetup
+	);
 
 	useEffect( () => {
-		const applicationId = getSquareServerData().applicationId;
-		const locationId = getSquareServerData().locationId;
-
-		if ( ! window.Square ) {
-			return;
-		}
-
-		try {
-			const __payments = window.Square.payments(
-				applicationId,
-				locationId
-			);
-			setPayments( __payments );
-		} catch ( e ) {
-			console.error( e );
-		}
-	}, [] );
-
-	useEffect( () => {
-		const unsubscribeOnCheckoutFail = onCheckoutFail( () => {
+		const unsubscribe = onCheckoutFail( () => {
 			onClose();
 			return true;
 		} );
+		return unsubscribe;
+	}, [ onCheckoutFail ] );
 
-		return unsubscribeOnCheckoutFail;
-	}, [ onCheckoutFail ] ); // eslint-disable-line react-hooks/exhaustive-deps
+	const isGooglePayDisabled =
+		getSquareServerData().hideButtonOptions.includes( 'google' );
+	const isApplePayDisabled =
+		getSquareServerData().hideButtonOptions.includes( 'apple' );
+
+	function onClickHandler( buttonInstance ) {
+		if ( ! buttonInstance ) {
+			return;
+		}
+
+		setExpressPaymentError( '' );
+		onClick();
+
+		( async () => {
+			const __tokenResult = await tokenize( buttonInstance );
+
+			if ( ! __tokenResult ) {
+				onClose();
+			} else {
+				setTokenResult( __tokenResult );
+				onSubmit();
+			}
+		} )();
+	}
+
+	const googlePayExpressButton = ! isGooglePayDisabled && (
+		<div // eslint-disable-line jsx-a11y/click-events-have-key-events
+			tabIndex={ 0 }
+			role="button"
+			ref={ googlePayRef }
+			onClick={ () => onClickHandler( googlePay ) }
+		></div>
+	);
+
+	const applePayExpressButton = ! isApplePayDisabled && (
+		<div // eslint-disable-line jsx-a11y/click-events-have-key-events
+			tabIndex={ 0 }
+			role="button"
+			ref={ applePayRef }
+			onClick={ () => onClickHandler( applePay ) }
+			className="apple-pay-button wc-square-wallet-buttons"
+		>
+			<span className="text"></span>
+			<span className="logo"></span>
+		</div>
+	);
 
 	return (
 		<>
-			<DigitalWalletContext.Provider value={ { payments, props } }>
-				<ButtonComponent />
-			</DigitalWalletContext.Provider>
+			{ applePayExpressButton }
+			{ googlePayExpressButton }
 		</>
 	);
 };

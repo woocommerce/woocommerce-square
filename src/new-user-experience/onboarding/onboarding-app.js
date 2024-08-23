@@ -169,6 +169,13 @@ export const OnboardingApp = () => {
 						<BusinessLocation />
 						{ settings.locations.length ? (
 							<SquareSettingsSaveButton
+								// eslint-disable-next-line @wordpress/i18n-no-variables
+								label={ __(
+									settings.locations.length === 1
+										? 'Confirm'
+										: 'Next',
+									'woocommerce-square'
+								) }
 								afterSaveLabel={ __(
 									'Changes Saved!',
 									'woocommerce-square'
