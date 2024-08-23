@@ -81,7 +81,7 @@ class WooCommerce_Square_Loader {
 	 */
 	protected function __construct() {
 		add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
-		add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_features_compatibility' ) );
 		/*
 		 * Bootstrap the extension on plugins_loaded.
 		 *
@@ -442,11 +442,13 @@ class WooCommerce_Square_Loader {
 	}
 
 	/**
-	 * Declares support for HPOS.
+	 * Declares support for WooCommerce features.
 	 */
-	public function declare_hpos_compatibility() {
+	public function declare_features_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+
+			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
 

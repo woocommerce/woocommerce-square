@@ -2,6 +2,7 @@
 
 # Set permalink structure.
 wp-env run tests-wordpress chmod -c ugo+w /var/www/html
+wp-env run tests-cli wp option update woocommerce_block_product_tour_shown yes
 wp-env run tests-cli wp post create --post_type=page --post_content='<!-- wp:shortcode -->[woocommerce_checkout]<!-- /wp:shortcode -->' --post_title="Checkout Old" --post_status=publish
 wp-env run tests-cli wp rewrite structure '/%postname%/' --hard
 
