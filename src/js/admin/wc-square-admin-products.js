@@ -577,6 +577,30 @@ jQuery( document ).ready( ( $ ) => {
 			toggleSyncProductMeta( $( e.target ).val() );
 		} ).trigger( 'change' );
 
+		// Sync stock from the Square.
+		$('#woocommerce-product-data').on(
+			'click',
+			'.sync-stock-from-square',
+			(event) => {
+				event.preventDefault();
+				const productId = $(event.target).data('product-id');
+				const $spinner = $('.sync-stock-spinner.spinner');
+				const data = {
+					action: 'wc_square_fetch_product_stock_with_square',
+					security:
+						wc_square_admin_products.fetch_product_stock_with_square_nonce,
+					product_id: productId,
+				};
+
+				$spinner.css('visibility', 'visible');
+
+				$.post(wc_square_admin_products.ajax_url, data, () => {
+					$spinner.css('visibility', 'hidden');
+					window.location.reload();
+				});
+			}
+		);
+
 		$( '#product-type, #_square_gift_card' ).on( 'change', function() {
 			const productType = $( '#product-type' ).val();
 			const squareGiftCardCheckbox = $( '#_square_gift_card' );
