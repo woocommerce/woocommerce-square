@@ -22,8 +22,8 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 8.9
- * WC tested up to: 9.1
+ * WC requires at least: 9.0
+ * WC tested up to: 9.2
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -55,7 +55,7 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_WP_VERSION = '6.4';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '8.9';
+	const MINIMUM_WC_VERSION = '9.0';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
@@ -81,7 +81,7 @@ class WooCommerce_Square_Loader {
 	 */
 	protected function __construct() {
 		add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
-		add_action( 'before_woocommerce_init', array( $this, 'declare_hpos_compatibility' ) );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_features_compatibility' ) );
 		/*
 		 * Bootstrap the extension on plugins_loaded.
 		 *
@@ -442,11 +442,13 @@ class WooCommerce_Square_Loader {
 	}
 
 	/**
-	 * Declares support for HPOS.
+	 * Declares support for WooCommerce features.
 	 */
-	public function declare_hpos_compatibility() {
+	public function declare_features_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+
+			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
 
