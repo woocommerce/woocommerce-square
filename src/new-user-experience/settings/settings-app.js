@@ -30,7 +30,6 @@ export const SettingsApp = () => {
 
 	const [ initialState, setInitialState ] = useState( false );
 	const [ isFormDirty, setIsFormDirty ] = useState( false );
-	const [ envUpdated, setEnvUpdated ] = useState( false );
 
 	const {
 		enable_sandbox = 'no',
@@ -49,6 +48,13 @@ export const SettingsApp = () => {
 	useEffect( () => {
 		if ( ! squareSettingsLoaded ) {
 			return;
+		}
+
+		// Store the initially saved environment in local storage.
+		if ( enable_sandbox === 'yes' ) {
+			localStorage.setItem( 'wc_square_env', 'sandbox' );
+		} else {
+			localStorage.setItem( 'wc_square_env', 'production' );
 		}
 
 		setInitialState( settings );
@@ -102,7 +108,6 @@ export const SettingsApp = () => {
 					required
 					value={ enable_sandbox }
 					onChange={ ( value ) => {
-						setEnvUpdated( true );
 						setSquareSettingData( { enable_sandbox: value } );
 					} }
 					options={ [
@@ -140,14 +145,17 @@ export const SettingsApp = () => {
 						variant="button-primary"
 						className="button-primary"
 						href={
-							is_connected && ! envUpdated
+							is_connected &&
+							localStorage.getItem( 'wc_square_env' ) ===
+								'production'
 								? disconnection_url
 								: connection_url
 						}
 						isBusy={ isSquareSettingsSaving }
 						disabled={ ! wcSquareSettings.depsCheck }
 					>
-						{ is_connected && ! envUpdated
+						{ is_connected &&
+						localStorage.getItem( 'wc_square_env' ) === 'production'
 							? __(
 									'Disconnect from Square',
 									'woocommerce-square'
