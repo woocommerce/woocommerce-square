@@ -14,7 +14,7 @@ const squareDigitalWalletsMethod = {
 	name: 'square-credit-card',
 	title: 'Square',
 	description: __(
-		'This will show users the ApplePay, GooglePay, or Stripe Link button depending on their browser and logged in status.',
+		'This will show users the Apple Pay and/or Google Pay buttons depending on their browser and logged in status.',
 		'woocommerce-square'
 	),
 	gatewayId: 'square_credit_card',
