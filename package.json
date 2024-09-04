@@ -1,60 +1,61 @@
 {
-  "name": "woocommerce-square",
-  "description": "Square for WooCommerce.",
-  "license": "GPL-3.0-or-later",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/woocommerce/woocommerce-square.git"
-  },
-  "title": "WooCommerce Square",
-  "version": "4.7.3",
-  "homepage": "https://woocommerce.com/products/woocommerce-square/",
-  "scripts": {
-    "build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
-    "build:dev": "composer install && npm run build:webpack",
-    "build:webpack": "rimraf build/* && wp-scripts build",
-    "build-watch:webpack": "rimraf build/* && wp-scripts start",
-    "lint:js": "wp-scripts lint-js src/ --ext js",
-    "lint:js:fix": "wp-scripts lint-js src/ --ext js --fix",
-    "phpcompat": "./vendor/bin/phpcs --standard=phpcs-compat.xml.dist -p .",
-    "update-deps": "npm install -g rimraf && rimraf node_modules && rimraf npm-shrinkwrap.json && npm install && npm shrinkwrap --dev",
-    "makepot": "wpi18n makepot --domain-path i18n/languages --pot-file woocommerce-square.pot --type plugin --main-file woocommerce-square.php --exclude node_modules,tests,docs",
-    "archive": "composer archive --file=$npm_package_name --format=zip",
-    "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
-    "woorelease": "npm run build",
-    "env": "wp-env",
-    "env:install-plugins": "./tests/bin/install-plugins.sh",
-    "env:start": "wp-env start",
-    "env:stop": "wp-env stop",
-    "env:clean": "wp-env clean",
-    "env:destroy": "wp-env destroy",
-    "test:e2e": "npx playwright test --config=tests/e2e/config/playwright.config.js",
-    "postenv:start": "bash ./tests/e2e/config/env-post-setup.sh"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.44.1",
-    "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.1",
-    "@woocommerce/eslint-plugin": "^2.3.0",
-    "@wordpress/env": "^10.0.0",
-    "@wordpress/scripts": "^24.6.0",
-    "copy-webpack-plugin": "^12.0.2",
-    "dotenv": "^16.4.5",
-    "node-wp-i18n": "^1.2.7"
-  },
-  "engines": {
-    "node": ">=20",
-    "npm": ">=10"
-  },
-  "config": {
-    "wp_org_slug": "woocommerce-square"
-  },
-  "dependencies": {
-    "@codeamp/block-components": "^0.0.1-beta.13",
-    "@woocommerce/product-editor": "^1.4.0",
-    "@woocommerce/tracks": "^1.3.0",
-    "@wordpress/data": "^7.6.0",
-    "@wordpress/icons": "^10.1.0",
-    "html-react-parser": "^5.1.10",
-    "uuid": "^9.0.1"
-  }
+	"name": "woocommerce-square",
+	"description": "Square for WooCommerce.",
+	"license": "GPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/woocommerce/woocommerce-square.git"
+	},
+	"title": "WooCommerce Square",
+	"version": "4.7.3",
+	"homepage": "https://woocommerce.com/products/woocommerce-square/",
+	"scripts": {
+		"build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
+		"build:dev": "composer install && npm run build:webpack",
+		"build:webpack": "rimraf build/* && wp-scripts build",
+		"build-watch:webpack": "rimraf build/* && wp-scripts start",
+		"lint:js": "wp-scripts lint-js src/ --ext js",
+		"lint:js:fix": "wp-scripts lint-js src/ --ext js --fix",
+		"phpcompat": "./vendor/bin/phpcs --standard=phpcs-compat.xml.dist -p .",
+		"update-deps": "npm install -g rimraf && rimraf node_modules && rimraf npm-shrinkwrap.json && npm install && npm shrinkwrap --dev",
+		"makepot": "wpi18n makepot --domain-path i18n/languages --pot-file woocommerce-square.pot --type plugin --main-file woocommerce-square.php --exclude node_modules,tests,docs",
+		"archive": "composer archive --file=$npm_package_name --format=zip",
+		"postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name",
+		"woorelease": "npm run build",
+		"env": "wp-env",
+		"env:install-plugins": "./tests/bin/install-plugins.sh",
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"env:clean": "wp-env clean",
+		"env:destroy": "wp-env destroy",
+		"test:e2e": "npx playwright test --config=tests/e2e/config/playwright.config.js",
+		"postenv:start": "bash ./tests/e2e/config/env-post-setup.sh"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.44.1",
+		"@woocommerce/dependency-extraction-webpack-plugin": "^3.0.1",
+		"@woocommerce/eslint-plugin": "^2.3.0",
+		"@wordpress/env": "^10.0.0",
+		"@wordpress/scripts": "^24.6.0",
+		"copy-webpack-plugin": "^12.0.2",
+		"dotenv": "^16.4.5",
+		"node-wp-i18n": "^1.2.7"
+	},
+	"engines": {
+		"node": ">=20",
+		"npm": ">=10"
+	},
+	"config": {
+		"wp_org_slug": "woocommerce-square"
+	},
+	"dependencies": {
+		"@codeamp/block-components": "^0.0.1-beta.13",
+		"@woocommerce/product-editor": "^1.4.0",
+		"@woocommerce/tracks": "^1.3.0",
+		"@wordpress/data": "^7.6.0",
+		"@wordpress/i18n": "^5.6.0",
+		"@wordpress/icons": "^10.1.0",
+		"html-react-parser": "^5.1.10",
+		"uuid": "^9.0.1"
+	}
 }
