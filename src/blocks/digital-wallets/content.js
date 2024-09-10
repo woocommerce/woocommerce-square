@@ -76,7 +76,10 @@ const Content = ( {
 				onClose();
 			} else {
 				setTokenResult( __tokenResult );
-				onSubmit();
+				// Use setTimeout to ensure the tokenResult is set before calling onSubmit. (TODO: find a better way handle this).
+				setTimeout( () => {
+					onSubmit();
+				}, 0 );
 			}
 		} )();
 	}
