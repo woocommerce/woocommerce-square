@@ -121,8 +121,10 @@ export const ComponentCashAppPay = ( props ) => {
 						// Set the nonce.
 						setPaymentNonce( nonce );
 
-						// Place an Order.
-						onSubmit();
+						// Place an Order. Use setTimeout to ensure the nonce is set before submitting. (TODO: find a better way to do this).
+						setTimeout( () => {
+							onSubmit();
+						}, 0 );
 					} else {
 						// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
 						setPaymentNonce( null );
