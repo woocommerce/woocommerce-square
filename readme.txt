@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.8.0 - 2024-08-26 =
+= 4.8.0 - 2024-09-16 =
 * Add - Support for the WooCommerce Product Block Editor.
 * Fix - Address a potential infinite loop issue with the `pull_inventory` step when running a manual synchronization.
 * Fix - Cancelling Google Pay on checkout shows validation errors.
