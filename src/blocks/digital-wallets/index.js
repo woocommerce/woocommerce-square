@@ -9,7 +9,7 @@ const squareDigitalWalletsMethod = {
 	name: 'square-credit-card',
 	paymentMethodId: 'square_credit_card',
 	content: <Content />,
-	edit: <MockButtons />,
+	edit: <Content />,
 	canMakePayment: () => {
 		const isSquareConnected =
 			getSquareServerData().applicationId &&

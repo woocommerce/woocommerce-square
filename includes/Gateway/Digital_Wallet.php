@@ -60,6 +60,7 @@ class Digital_Wallet {
 
 		if ( 'yes' === $gateway->get_option( 'enabled', 'no' ) && $this->is_digital_wallet_enabled() ) {
 			add_action( 'wp', array( $this, 'init' ) );
+			add_action( 'admin_init', array( $this, 'init' ) );
 			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		}
 
@@ -125,7 +126,7 @@ class Digital_Wallet {
 			add_action( 'before_woocommerce_pay', array( $this, 'render_button' ) );
 		}
 
-		$page            = $this->get_current_page();
+		$page            = is_admin() ? 'checkout' : $this->get_current_page();
 		$payment_request = false;
 
 		try {
