@@ -380,7 +380,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// Enqueue the necessary scripts & styles
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) ); // <=-- <=--
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 		// add API request logging
 		$this->add_api_request_logging();
