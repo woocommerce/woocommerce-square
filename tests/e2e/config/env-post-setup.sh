@@ -12,3 +12,6 @@ wp-env run tests-cli wp theme activate storefront
 # Enable the Square gateway.
 wp-env run tests-cli wp wc payment_gateway update square_credit_card --user=1 --enabled=1
 wp-env run tests-cli wp transient delete --all
+
+# Keep using old product editor.
+wp-env run tests-cli wp option update woocommerce_feature_product_block_editor_enabled no --user=1
