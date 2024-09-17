@@ -63,8 +63,12 @@ export async function createProduct( page, product, save = true, newEditor = fal
 	if ( newEditor ) {
 		await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=advanced&section=features' );
 		await page.locator( '#woocommerce_feature_product_block_editor_enabled' ).check();
-		await page.locator( '.woocommerce-save-button' ).click();
-		await expect( await page.getByText( 'Your settings have been saved' ) ).toBeVisible();
+
+		const saveButton = await page.locator( '.woocommerce-save-button' );
+		if ( ! await saveButton.isDisabled() ) {
+			saveButton.click();
+			await expect( await page.getByText( 'Your settings have been saved' ) ).toBeVisible();
+		}
 
 		await page.goto( '/wp-admin/admin.php?page=wc-admin&path=%2Fadd-product' );
 
@@ -72,7 +76,6 @@ export async function createProduct( page, product, save = true, newEditor = fal
 
 		await page.locator( '[data-template-block-id="product-name"] input[name="name"]' ).fill( product.name );
 
-		await page.locator( '#woocommerce-product-tab__pricing' ).click();
 		await page.locator( 'input[name="regular_price"]' ).fill( product.regularPrice );
 
 		await page.locator( '#woocommerce-product-tab__inventory' ).click();
@@ -155,8 +158,7 @@ export async function fillAddressFields( page, isBlock = true ) {
 			.fill( customer.addr1 );
 		await page
 			.locator( '#billing-country' )
-			.locator( 'input' )
-			.fill( customer.countryBlock );
+			.selectOption( customer.country );
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-city' )
@@ -164,8 +166,7 @@ export async function fillAddressFields( page, isBlock = true ) {
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-state' )
-			.locator( 'input' )
-			.fill( customer.stateBlock );
+			.selectOption( customer.state );
 		await page.waitForTimeout( 1500 );
 		await page
 			.locator( '#billing-postcode' )

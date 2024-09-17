@@ -18,6 +18,7 @@ import {
 	selectPaymentMethod,
 	placeCashAppPayOrder,
 	savePaymentGatewaySettings,
+	runWpCliCommand,
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
@@ -43,6 +44,10 @@ test.describe('Pre-Orders Tests', () => {
 		await saveCashAppPaySettings(page, {
 			transactionType: 'charge',
 		});
+
+		await runWpCliCommand(
+			'wp option update woocommerce_feature_product_block_editor_enabled "no"'
+		);
 	});
 
 	test('[Charge upon release] Square Credit Card should work with Pre-Orders', async ({

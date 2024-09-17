@@ -15,13 +15,13 @@ import {
  * @return {Object} Returns the Square window object.
  */
 export function useSquare() {
-	const [payment, setPayments] = useState(null);
+	const [ payment, setPayments ] = useState( null );
 
-	useEffect(() => {
+	useEffect( () => {
 		const applicationId = getSquareServerData().applicationId;
 		const locationId = getSquareServerData().locationId;
 
-		if (!window.Square) {
+		if ( ! window.Square ) {
 			return;
 		}
 
@@ -30,11 +30,11 @@ export function useSquare() {
 				applicationId,
 				locationId
 			);
-			setPayments(__payments);
-		} catch (e) {
-			console.error(e);
+			setPayments( __payments );
+		} catch ( e ) {
+			console.error( e );
 		}
-	}, []);
+	}, [] );
 
 	return payment;
 }
@@ -47,26 +47,26 @@ export function useSquare() {
  *                                is required or not.
  * @return {Object} The payment request object.
  */
-export function usePaymentRequest(payments, needsShipping) {
-	const [paymentRequest, setPaymentRequest] = useState(null);
+export function usePaymentRequest( payments, needsShipping ) {
+	const [ paymentRequest, setPaymentRequest ] = useState( null );
 
-	useEffect(() => {
-		if (!payments) {
+	useEffect( () => {
+		if ( ! payments ) {
 			return;
 		}
 
-		const createPaymentRequest = async (payments) => {
+		const createPaymentRequest = async () => {
 			const __paymentRequestJson = await getPaymentRequest();
-			const __paymentRequestObject = JSON.parse(__paymentRequestJson);
+			const __paymentRequestObject = JSON.parse( __paymentRequestJson );
 			const __paymentRequest = payments.paymentRequest(
 				__paymentRequestObject
 			);
 
-			setPaymentRequest(__paymentRequest);
+			setPaymentRequest( __paymentRequest );
 		};
 
-		createPaymentRequest(payments);
-	}, [payments, needsShipping]);
+		createPaymentRequest();
+	}, [ payments, needsShipping ] );
 
 	return paymentRequest;
 }
@@ -77,15 +77,16 @@ export function usePaymentRequest(payments, needsShipping) {
  * @param {Object} paymentRequest The payment request object.
  * @return {Function} Function to remove the listener on unmount.
  */
-export function useShippingContactChangeHandler(paymentRequest) {
-	useEffect(() => {
+export function useShippingContactChangeHandler( paymentRequest ) {
+	useEffect( () => {
 		paymentRequest?.addEventListener(
 			'shippingcontactchanged',
-			(shippingContact) => handleShippingAddressChanged(shippingContact)
+			( shippingContact ) =>
+				handleShippingAddressChanged( shippingContact )
 		);
-	}, [paymentRequest]);
+	}, [ paymentRequest ] );
 
-	return () => paymentRequest?.removeListener('shippingcontactchanged');
+	return () => paymentRequest?.removeListener( 'shippingcontactchanged' );
 }
 
 /**
@@ -94,14 +95,14 @@ export function useShippingContactChangeHandler(paymentRequest) {
  * @param {Object} paymentRequest The payment request object.
  * @return {Function} Function to remove the listener on unmount.
  */
-export function useShippingOptionChangeHandler(paymentRequest) {
-	useEffect(() => {
-		paymentRequest?.addEventListener('shippingoptionchanged', (option) =>
-			handleShippingOptionChanged(option)
+export function useShippingOptionChangeHandler( paymentRequest ) {
+	useEffect( () => {
+		paymentRequest?.addEventListener( 'shippingoptionchanged', ( option ) =>
+			handleShippingOptionChanged( option )
 		);
-	}, [paymentRequest]);
+	}, [ paymentRequest ] );
 
-	return () => paymentRequest?.removeListener('shippingoptionchanged');
+	return () => paymentRequest?.removeListener( 'shippingoptionchanged' );
 }
 
 /**
@@ -111,30 +112,30 @@ export function useShippingOptionChangeHandler(paymentRequest) {
  * @param {Object} paymentRequest The payment request object.
  * @return {Array} Array containing the Google Pay instance and its reference.
  */
-export function useGooglePay(payments, paymentRequest) {
-	const [googlePay, setGooglePay] = useState(null);
-	const googlePayRef = useRef(null);
+export function useGooglePay( payments, paymentRequest ) {
+	const [ googlePay, setGooglePay ] = useState( null );
+	const googlePayRef = useRef( null );
 
-	useEffect(() => {
-		if (!(payments && paymentRequest)) {
+	useEffect( () => {
+		if ( ! ( payments && paymentRequest ) ) {
 			return;
 		}
 
-		(async () => {
+		( async () => {
 			try {
-				const __googlePay = await payments.googlePay(paymentRequest);
-				await __googlePay.attach(googlePayRef.current, {
+				const __googlePay = await payments.googlePay( paymentRequest );
+				await __googlePay.attach( googlePayRef.current, {
 					buttonColor: getSquareServerData().googlePayColor,
 					buttonSizeMode: 'fill',
 					buttonType: 'long',
-				});
+				} );
 
-				setGooglePay(__googlePay);
-			} catch (e) {}
-		})();
-	}, [payments, paymentRequest]);
+				setGooglePay( __googlePay );
+			} catch ( e ) {}
+		} )();
+	}, [ payments, paymentRequest ] );
 
-	return [googlePay, googlePayRef];
+	return [ googlePay, googlePayRef ];
 }
 
 /**
@@ -144,47 +145,50 @@ export function useGooglePay(payments, paymentRequest) {
  * @param {Object} paymentRequest The payment request object.
  * @return {Array} Array containing the Apple Pay instance and its reference.
  */
-export function useApplePay(payments, paymentRequest) {
-	const [applePay, setApplePay] = useState(null);
-	const applePayRef = useRef(null);
+export function useApplePay( payments, paymentRequest ) {
+	const [ applePay, setApplePay ] = useState( null );
+	const applePayRef = useRef( null );
 
-	useEffect(() => {
-		if (!(payments && paymentRequest)) {
+	useEffect( () => {
+		if ( ! ( payments && paymentRequest ) ) {
 			return;
 		}
 
-		(async () => {
+		( async () => {
 			try {
-				const __applePay = await payments.applePay(paymentRequest);
+				const __applePay = await payments.applePay( paymentRequest );
 
-				setApplePay(__applePay);
-			} catch (e) {}
-		})();
-	}, [payments, paymentRequest]);
+				setApplePay( __applePay );
+			} catch ( e ) {}
+		} )();
+	}, [ payments, paymentRequest ] );
 
-	useEffect(() => {
-		if (!applePayRef?.current || !applePay) {
+	useEffect( () => {
+		if ( ! applePayRef?.current || ! applePay ) {
 			return;
 		}
 
 		const color = getSquareServerData().applePayColor;
 		const type = getSquareServerData().applePayType;
 
-		if (type !== 'plain') {
-			applePayRef.current.querySelector('.text').innerText =
-				`${type.charAt(0).toUpperCase()}${type.slice(1)} with`;
+		if ( type !== 'plain' ) {
+			applePayRef.current.querySelector( '.text' ).innerText = `${ type
+				.charAt( 0 )
+				.toUpperCase() }${ type.slice( 1 ) } with`;
 			applePayRef.current.classList.add(
 				'wc-square-wallet-button-with-text'
 			);
 		}
 
-		applePayRef.current.style.cssText += `-apple-pay-button-type: ${type};`;
-		applePayRef.current.style.cssText += `-apple-pay-button-style: ${color};`;
+		applePayRef.current.style.cssText += `-apple-pay-button-type: ${ type };`;
+		applePayRef.current.style.cssText += `-apple-pay-button-style: ${ color };`;
 		applePayRef.current.style.display = 'block';
-		applePayRef.current.classList.add(`wc-square-wallet-button-${color}`);
-	}, [applePay, applePayRef]);
+		applePayRef.current.classList.add(
+			`wc-square-wallet-button-${ color }`
+		);
+	}, [ applePay, applePayRef ] );
 
-	return [applePay, applePayRef];
+	return [ applePay, applePayRef ];
 }
 
 /**
@@ -202,15 +206,15 @@ export function usePaymentProcessing(
 	emitResponse,
 	onPaymentSetup
 ) {
-	const verificationDetails = buildVerificationDetails(billing);
+	const verificationDetails = buildVerificationDetails( billing );
 
 	useEffect(
 		() =>
-			onPaymentSetup(() => {
+			onPaymentSetup( () => {
 				async function handlePaymentProcessing() {
 					let response = { type: emitResponse.responseTypes.SUCCESS };
 
-					if (!tokenResult) {
+					if ( ! tokenResult ) {
 						response = {
 							type: emitResponse.responseTypes.FAILURE,
 						};
@@ -254,16 +258,16 @@ export function usePaymentProcessing(
 
 					response.meta = {
 						paymentMethodData: {
-							[`${keyPrefix}-card-type`]: method || '',
-							[`${keyPrefix}-last-four`]: card?.last4 || '',
-							[`${keyPrefix}-exp-month`]:
+							[ `${ keyPrefix }-card-type` ]: method || '',
+							[ `${ keyPrefix }-last-four` ]: card?.last4 || '',
+							[ `${ keyPrefix }-exp-month` ]:
 								card?.expMonth?.toString() || '',
-							[`${keyPrefix}-exp-year`]:
+							[ `${ keyPrefix }-exp-year` ]:
 								card?.expYear?.toString() || '',
-							[`${keyPrefix}-payment-postcode`]:
+							[ `${ keyPrefix }-payment-postcode` ]:
 								card?.postalCode || '',
-							[`${keyPrefix}-payment-nonce`]: token || '',
-							[`${keyPrefix}-buyer-verification-token`]:
+							[ `${ keyPrefix }-payment-nonce` ]: token || '',
+							[ `${ keyPrefix }-buyer-verification-token` ]:
 								verificationToken || '',
 							shipping_method: shippingOption.id ?? false,
 						},
@@ -273,10 +277,10 @@ export function usePaymentProcessing(
 							last_name: billingContact.familyName ?? '',
 							company: '',
 							address_1: billingContact.addressLines
-								? billingContact.addressLines[0]
+								? billingContact.addressLines[ 0 ]
 								: '',
 							address_2: billingContact.addressLines
-								? billingContact.addressLines[1]
+								? billingContact.addressLines[ 1 ]
 								: '',
 							city: billingContact.city ?? '',
 							state: billingContact.state ?? '',
@@ -289,10 +293,10 @@ export function usePaymentProcessing(
 							last_name: shippingContact.familyName ?? '',
 							company: '',
 							address_1: shippingContact.addressLines
-								? shippingContact.addressLines[0]
+								? shippingContact.addressLines[ 0 ]
 								: '',
 							address_2: shippingContact.addressLines
-								? shippingContact.addressLines[1]
+								? shippingContact.addressLines[ 1 ]
 								: '',
 							city: shippingContact.city ?? '',
 							state: shippingContact.state ?? '',
@@ -303,25 +307,27 @@ export function usePaymentProcessing(
 					};
 
 					wp.data
-						.dispatch('wc/store/cart')
-						.setBillingAddress(response.meta.billingAddress);
+						.dispatch( 'wc/store/cart' )
+						.setBillingAddress( response.meta.billingAddress );
 
 					const needsShipping = wp.data
-						.select('wc/store/cart')
+						.select( 'wc/store/cart' )
 						.getNeedsShipping();
 
-					if (needsShipping) {
+					if ( needsShipping ) {
 						wp.data
-							.dispatch('wc/store/cart')
-							.setShippingAddress(response.meta.shippingAddress);
+							.dispatch( 'wc/store/cart' )
+							.setShippingAddress(
+								response.meta.shippingAddress
+							);
 
 						const shippingRates = wp.data
-							.select('wc/store/cart')
+							.select( 'wc/store/cart' )
 							.getShippingRates();
 
 						if (
-							!shippingRates.some(
-								(shippingRatePackage) =>
+							! shippingRates.some(
+								( shippingRatePackage ) =>
 									shippingRatePackage.shipping_rates.length
 							)
 						) {
@@ -335,7 +341,7 @@ export function usePaymentProcessing(
 				}
 
 				return handlePaymentProcessing();
-			}),
-		[onPaymentSetup, billing.billingData, tokenResult]
+			} ),
+		[ onPaymentSetup, billing.billingData, tokenResult ]
 	);
 }

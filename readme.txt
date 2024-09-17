@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 4.7.2
+Stable tag: 4.8.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,25 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.0 - 2024-09-16 =
+* Add - Support for the WooCommerce Product Block Editor.
+* Fix - Address a potential infinite loop issue with the `pull_inventory` step when running a manual synchronization.
+* Fix - Cancelling Google Pay on checkout shows validation errors.
+* Fix - Missing gift card order item meta during re-order.
+* Fix - Ensure we don't hardcode the database prefix in queries we run.
+* Fix - Replace the use of deprecated hook `wcs_renewal_order_meta` with `wc_subscriptions_renewal_order_data`.
+* Update - Change the business location button text based on the location count.
+* Dev - Bump WooCommerce "tested up to" version 9.2.
+* Dev - Bump WooCommerce minimum supported version to 9.0.
+
+= 4.7.3 - 2024-08-19 =
+* Fix - Inconsistency in the height of Express Payment Button and compliance with the new Woo Express Payment Method Styling API.
+* Fix - Ensure the "Uncaught TypeError" JavaScript console error does not occur for out-of-stock products.
+* Fix - Ensure compatibility with WooPayments extension.
+* Dev - Bump WooCommerce "tested up to" version 9.1.
+* Dev - Bump WooCommerce minimum supported version to 8.9.
+* Dev - Update NPM packages and node version to v20 to modernize developer experience.
 
 = 4.7.2 - 2024-07-29 =
 * Fix - Check if dependencies are loaded before showing onboarding process.
