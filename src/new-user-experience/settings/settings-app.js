@@ -223,7 +223,9 @@ export const SettingsApp = () => {
 			<SquareSettingsSaveButton
 				label={ __( 'Save changes', 'woocommerce-square' ) }
 				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
-				afterSaveCallback={ () => window.location.reload() }
+				afterSaveCallback={ () =>
+					document.querySelector( '.woocommerce-save-button' ).click()
+				}
 				disabled={ ! wcSquareSettings.depsCheck }
 			/>
 		</>
