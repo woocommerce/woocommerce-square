@@ -18,11 +18,20 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	const page = await browser.newPage();
 
 	await clearSync( page );
+
+	await browser.close();
+} );
+
+test( 'OnePlus 8 pushed to Square with inventory', async ( { page, baseURL } ) => {
+	test.slow();
+
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
-	await page.locator( '#wc_square_system_of_record' ).selectOption( { label: 'WooCommerce' } );
-	await page.locator( '#wc_square_enable_inventory_sync' ).check();
-	await page.locator( '.woocommerce-save-button' ).click();
+	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
+	await page.getByTestId( 'push-inventory-field' ).check();
+	await page.getByTestId( 'square-settings-save-button' ).click();
+
+	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 
 	if ( ! ( await doesProductExist( baseURL, 'oneplus-8' ) ) ) {
 		await createProduct(
@@ -50,19 +59,8 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 			.filter( { hasText: 'Publish' } )
 			.click();
 
-		await page
-			.locator( '.woocommerce-product-publish-panel__header .components-button' )
-			.filter( { hasText: 'Publish' } )
-			.click();
-
-		await expect( await page.getByText( 'OnePlus 8 is now live.' ) ).toBeVisible();
+		await expect( await page.getByText( 'Product published.' ).first() ).toBeVisible();
 	}
-
-	await browser.close();
-} );
-
-test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
-	test.slow();
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 

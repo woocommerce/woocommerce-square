@@ -43,8 +43,8 @@ class Product_Editor_Compatibility {
 		);
 
 		add_action(
-			'woocommerce_block_template_area_product-form_after_add_block_product-sku-field',
-			array( $this, 'add_inventory_control' )
+			'woocommerce_block_template_area_product-form_after_add_block_product-track-stock',
+			array( $this, 'add_inventory_control' ),
 		);
 
 		add_action(
