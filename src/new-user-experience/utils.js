@@ -165,6 +165,9 @@ export const getSquareSettings = async () => {
 		disconnection_url:
 			settings.disconnection_url ||
 			SQUARE_SETTINGS_DEFAULT_STATE.disconnection_url,
+		access_tokens:
+			settings.access_tokens ||
+			SQUARE_SETTINGS_DEFAULT_STATE.access_tokens,
 		connection_url:
 			settings.connection_url ||
 			SQUARE_SETTINGS_DEFAULT_STATE.connection_url,
