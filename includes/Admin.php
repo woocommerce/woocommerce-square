@@ -26,6 +26,7 @@ namespace WooCommerce\Square;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Admin\Analytics\Revenue;
+use WooCommerce\Square\Handlers\Products;
 use WooCommerce\Square\Handlers\Product;
 
 /**
@@ -161,6 +162,8 @@ class Admin {
 				Plugin::VERSION
 			);
 
+			wp_enqueue_media();
+
 			wp_enqueue_script(
 				'wc-square-admin-settings',
 				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-settings.js',
@@ -233,15 +236,22 @@ class Admin {
 				)
 			);
 
+			$gift_card_placeholder_url = Products::get_gift_card_default_placeholder_url();
+
+			if ( empty( $gift_card_placeholder_url ) ) {
+				$gift_card_placeholder_url = WC_SQUARE_PLUGIN_URL . 'build/images/gift-card-featured-image.png';
+			}
+
 			wp_localize_script(
 				'woocommerce-square-settings-js',
 				'wcSquareSettings',
 				array(
-					'nonce'     => wp_create_nonce( 'wc_square_settings' ),
-					'homeUrl'   => home_url(),
-					'adminUrl'  => admin_url(),
-					'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-					'depsCheck' => $this->get_plugin()->get_dependency_handler()->meets_php_dependencies(),
+					'nonce'            => wp_create_nonce( 'wc_square_settings' ),
+					'homeUrl'          => home_url(),
+					'adminUrl'         => admin_url(),
+					'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+					'depsCheck'        => $this->get_plugin()->get_dependency_handler()->meets_php_dependencies(),
+					'gcPlaceholderUrl' => esc_url( $gift_card_placeholder_url ),
 				)
 			);
 
