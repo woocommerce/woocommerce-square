@@ -112,6 +112,7 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	sync_interval: '0.25',
 	is_connected: false,
 	disconnection_url: '',
+	access_tokens: [],
 	connection_url: '',
 	connection_url_wizard: '',
 	connection_url_sandbox: '',
