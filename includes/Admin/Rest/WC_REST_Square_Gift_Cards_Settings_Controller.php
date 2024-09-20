@@ -130,7 +130,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 		/**
 		 * Action triggered when the Gift card payment settings are updated.
 		 *
-		 * @since x.x.x
+		 * @since 4.8.1
 		 */
 		do_action( 'wc_square_' . Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME . '_settings_updated', $settings );
 
