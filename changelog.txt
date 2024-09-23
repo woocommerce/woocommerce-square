@@ -1,5 +1,13 @@
 *** WooCommerce Square Changelog ***
 
+= 4.8.1 - 2024-09-23 =
+* Fix - Confirmation popup no longer appears when saving the Square settings.
+* Fix - Connection settings now persist previous connection when toggling between Production and Sandbox.
+* Fix - Prevent gift card image from being forced upon a site.
+* Fix - Update URL linking to Square Developer dashboard in sandbox settings.
+* Dev - Bump WooCommerce "tested up to" version 9.3.
+* Dev - Bump WooCommerce minimum supported version to 9.1.
+
 = 4.8.0 - 2024-09-16 =
 * Add - Support for the WooCommerce Product Block Editor.
 * Fix - Address a potential infinite loop issue with the `pull_inventory` step when running a manual synchronization.
