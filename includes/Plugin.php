@@ -140,6 +140,36 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
 		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
+
+		add_filter( 'woocommerce_order_class', array( $this, 'order_class' ), 20 );
+	}
+
+	/**
+	 * Replaces the default WooCommerce order class with the Square order class.
+	 *
+	 * This is to prevent deprecation notices from being thrown due to the use of
+	 * dynamic properties in the WooCommerce order class.
+	 *
+	 * The Square order classes include property definitions for the properties.
+	 *
+	 * Runs on the hook 'woocommerce_order_class, 20'.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $order_class_name The class name used for WooCommerce orders.
+	 * @return string The modified class name.
+	 */
+	public function order_class( $order_class_name ) {
+		// Remove leading slash from class name to normalize the namespace.
+		$order_class_name = ltrim( $order_class_name, '\\' );
+
+		if ( 'WC_Order' === $order_class_name ) {
+			return 'WooCommerce\\Square\\WC_Order_Square';
+		} elseif ( 'Automattic\\WooCommerce\\Admin\\Overrides\\Order' === $order_class_name ) {
+			return 'WooCommerce\\Square\\WC_Order_Admin_Override_Square';
+		}
+
+		return $order_class_name;
 	}
 
 	/**
