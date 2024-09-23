@@ -87,7 +87,7 @@ class WC_Order_Square extends \WC_Order {
 	 *
 	 * @param mixed $the_order Post object or post ID of the order.
 	 *
-	 * @return bool|WC_Order|WC_Order_Refund|WC_Order_Square
+	 * @return bool|WC_Order|WC_Order_Refund|WC_Order_Square|WC_Order_Admin_Override_Square
 	 */
 	public static function wc_get_order( $the_order ) {
 		return \wc_get_order( $the_order );
