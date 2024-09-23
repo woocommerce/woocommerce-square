@@ -30,7 +30,6 @@ export const SettingsApp = () => {
 
 	const [ initialState, setInitialState ] = useState( false );
 	const [ isFormDirty, setIsFormDirty ] = useState( false );
-	const [ envUpdated, setEnvUpdated ] = useState( false );
 
 	const {
 		enable_sandbox = 'no',
@@ -39,6 +38,7 @@ export const SettingsApp = () => {
 		is_connected = false,
 		connection_url = '',
 		disconnection_url = '',
+		access_tokens = [],
 		locations = [],
 	} = settings;
 
@@ -102,7 +102,6 @@ export const SettingsApp = () => {
 					required
 					value={ enable_sandbox }
 					onChange={ ( value ) => {
-						setEnvUpdated( true );
 						setSquareSettingData( { enable_sandbox: value } );
 					} }
 					options={ [
@@ -140,14 +139,14 @@ export const SettingsApp = () => {
 						variant="button-primary"
 						className="button-primary"
 						href={
-							is_connected && ! envUpdated
+							access_tokens?.production
 								? disconnection_url
 								: connection_url
 						}
 						isBusy={ isSquareSettingsSaving }
 						disabled={ ! wcSquareSettings.depsCheck }
 					>
-						{ is_connected && ! envUpdated
+						{ access_tokens?.production
 							? __(
 									'Disconnect from Square',
 									'woocommerce-square'
@@ -223,7 +222,9 @@ export const SettingsApp = () => {
 			<SquareSettingsSaveButton
 				label={ __( 'Save changes', 'woocommerce-square' ) }
 				afterSaveLabel={ __( 'Changes Saved!', 'woocommerce-square' ) }
-				afterSaveCallback={ () => window.location.reload() }
+				afterSaveCallback={ () =>
+					document.querySelector( '.woocommerce-save-button' ).click()
+				}
 				disabled={ ! wcSquareSettings.depsCheck }
 			/>
 		</>

@@ -54,6 +54,8 @@ const digitalWalletsReducer = (
 export const GIFT_CARDS_DEFAULT_STATE = {
 	enabled: 'no',
 	title: __( 'Square Gift Cards', 'woocommerce-square' ),
+	is_default_placeholder: 'no',
+	placeholder_id: 0,
 	description: __(
 		'Allow customers to purchase and redeem gift cards during checkout.',
 		'woocommerce-square'
@@ -110,6 +112,7 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	sync_interval: '0.25',
 	is_connected: false,
 	disconnection_url: '',
+	access_tokens: [],
 	connection_url: '',
 	connection_url_wizard: '',
 	connection_url_sandbox: '',
