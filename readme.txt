@@ -1,7 +1,7 @@
 === WooCommerce Square ===
 Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
-Requires at least: 6.4
+Requires at least: 6.5
 Tested up to: 6.6
 Requires PHP: 7.4
 Stable tag: 4.8.1
