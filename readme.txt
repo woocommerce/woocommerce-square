@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 4.8.0
+Stable tag: 4.8.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.1 - 2024-09-23 =
+* Fix - Confirmation popup no longer appears when saving the Square settings.
+* Fix - Connection settings now persist previous connection when toggling between Production and Sandbox.
+* Fix - Prevent gift card image from being forced upon a site.
+* Fix - Update URL linking to Square Developer dashboard in sandbox settings.
+* Dev - Bump WooCommerce "tested up to" version 9.3.
+* Dev - Bump WooCommerce minimum supported version to 9.1.
 
 = 4.8.0 - 2024-09-16 =
 * Add - Support for the WooCommerce Product Block Editor.
