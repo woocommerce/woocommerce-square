@@ -43,8 +43,7 @@ export const OnboardingHeader = () => {
 								exited_on_step: stepData.step,
 							}
 						);
-						window.location.href =
-							wc.wcSettings.getAdminLink( '' );
+						window.location.href = wc.wcSettings.getAdminLink( '' );
 					} }
 				>
 					<Close />
