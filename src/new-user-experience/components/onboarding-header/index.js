@@ -2,7 +2,7 @@
 /**
  * External dependencies.
  */
-import { Button, Flex, FlexBlock, FlexItem } from '@wordpress/components';
+import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -20,38 +20,36 @@ export const OnboardingHeader = () => {
 
 	return (
 		<div className="woo-square-onboarding__header">
-			<Flex direction={ [ 'column', 'row' ] }>
-				<FlexItem className="flexItem backBtn">
-					{ backStep && (
-						<Button
-							data-testid="previous-step-button"
-							onClick={ () => setStep( backStep ) }
-						>
-							<Back />
-							<span>{ __( 'Back', 'woocommerce-square' ) }</span>
-						</Button>
-					) }
-				</FlexItem>
-				<FlexBlock className="wizardTitle">
-					<Square />
-				</FlexBlock>
-				<FlexItem className="flexItem closeWizard">
+			<div className="flexItem backBtn">
+				{ backStep && (
 					<Button
-						onClick={ () => {
-							queueRecordEvent(
-								ONBOARDING_TRACK_EVENTS.EXIT_CLICKED,
-								{
-									exited_on_step: stepData.step,
-								}
-							);
-							window.location.href =
-								wc.wcSettings.getAdminLink( '' );
-						} }
+						data-testid="previous-step-button"
+						onClick={ () => setStep( backStep ) }
 					>
-						<Close />
+						<Back />
+						<span>{ __( 'Back', 'woocommerce-square' ) }</span>
 					</Button>
-				</FlexItem>
-			</Flex>
+				) }
+			</div>
+			<div className="wizardTitle">
+				<Square />
+			</div>
+			<div className="flexItem closeWizard">
+				<Button
+					onClick={ () => {
+						queueRecordEvent(
+							ONBOARDING_TRACK_EVENTS.EXIT_CLICKED,
+							{
+								exited_on_step: stepData.step,
+							}
+						);
+						window.location.href =
+							wc.wcSettings.getAdminLink( '' );
+					} }
+				>
+					<Close />
+				</Button>
+			</div>
 		</div>
 	);
 };

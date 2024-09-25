@@ -126,42 +126,6 @@ body {
 	margin-bottom: 15px;
 }
 
-.woo-square-onboarding__cover {
-	width: 400px;
-	max-width: 100%;
-	margin: 0;
-	text-align: center;
-	position: relative;
-
-	&.payment-complete,
-	&.payment-methods {
-		width: 100%;
-	}
-
-	&.payment-methods,
-	&.payment-complete {
-		.woo-square-onbarding__payment-settings__intro {
-			max-width: 592px;
-
-			@media screen and (max-width: 1800px) {
-				max-width: 80%;
-				left: 40%;
-			}
-		}
-	}
-
-	&:not(.payment-methods):not(.payment-complete) {
-		margin: 100px auto 50px;
-	}
-
-	.woo-square-wizard__fields {
-		width: 450px;
-		max-width: 100%;
-		margin: auto;
-		text-align: left;
-	}
-}
-
 .woo-square-loader {
     position: absolute;
     left: 0;
