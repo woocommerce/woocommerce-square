@@ -159,13 +159,25 @@ export const OnboardingApp = () => {
 		setSettingsLoaded( true );
 	}
 
+	const SettingsWrapper = ( { children } ) => {
+		return (
+			<div className="woo-square-onboarding__settings-wrapper">
+				{ children }
+			</div>
+		)
+	};
+
 	return (
 		<>
 			<OnboardingHeader />
 			<div className={ 'woo-square-onboarding__cover ' + step }>
-				{ step === 'connect-square' && <ConnectSetup /> }
+				{ step === 'connect-square' && (
+					<SettingsWrapper>
+						<ConnectSetup />
+					</SettingsWrapper>
+				) }
 				{ step === 'business-location' && (
-					<>
+					<SettingsWrapper>
 						<BusinessLocation />
 						{ settings.locations.length ? (
 							<SquareSettingsSaveButton
@@ -192,12 +204,12 @@ export const OnboardingApp = () => {
 								} }
 							/>
 						) : null }
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'payment-methods' && <PaymentMethods /> }
 				{ step === 'payment-complete' && <PaymentComplete /> }
 				{ step === 'credit-card' && (
-					<>
+					<SettingsWrapper>
 						<CreditCardSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="credit-card-settings-save-button"
@@ -208,10 +220,10 @@ export const OnboardingApp = () => {
 								} )();
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'digital-wallets' && (
-					<>
+					<SettingsWrapper>
 						<DigitalWalletsSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="digital-wallets-settings-save-button"
@@ -229,10 +241,10 @@ export const OnboardingApp = () => {
 								} )();
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'gift-card' && (
-					<>
+					<SettingsWrapper>
 						<GiftCardSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="gift-card-settings-save-button"
@@ -243,10 +255,10 @@ export const OnboardingApp = () => {
 								} )();
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'cash-app' && (
-					<>
+					<SettingsWrapper>
 						<CashAppSetup />
 						<PaymentGatewaySettingsSaveButton
 							data-testid="cash-app-settings-save-button"
@@ -257,10 +269,10 @@ export const OnboardingApp = () => {
 								} )();
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'sync-settings' && (
-					<>
+					<SettingsWrapper>
 						<ConfigureSync />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
@@ -298,10 +310,10 @@ export const OnboardingApp = () => {
 								setStep( 'payment-complete' );
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'advanced-settings' && (
-					<>
+					<SettingsWrapper>
 						<AdvancedSettings />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
@@ -317,10 +329,10 @@ export const OnboardingApp = () => {
 								setStep( 'payment-complete' );
 							} }
 						/>
-					</>
+					</SettingsWrapper>
 				) }
 				{ step === 'sandbox-settings' && (
-					<>
+					<SettingsWrapper>
 						<SandboxSettings />
 						{ sandboxConnected &&
 							( businessLocationLoaded ||
@@ -382,7 +394,7 @@ export const OnboardingApp = () => {
 							{ sandboxConnectLabel }
 							{ isVerifyingConnection && <Spinner /> }
 						</p>
-					</>
+					</SettingsWrapper>
 				) }
 			</div>
 		</>

@@ -495,15 +495,18 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 		display: flex !important;
 		flex-direction: row !important;
 		flex-wrap: wrap !important;
+		align-items: flex-start;
 
 		@media screen and (min-width: 1280px) {
 			justify-content: flex-start;
 		}
 
-		.iconBox {
-			@media screen and (min-width: 1280px) {
+		button {
+			margin: 0 0 1.25rem 0 !important;
+		}
 
-			}
+		.components-divider {
+			margin: 30px 0 !important;
 		}
 
 		.contentBox {
@@ -524,4 +527,10 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 			}
 		}
 	}
+}
+
+.woo-square-onboarding__settings-wrapper {
+	max-width: 400px;
+	// margin: 0 auto;
+	margin: 100px auto 50px;
 }
