@@ -468,7 +468,8 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 			position: sticky;
 			top: 240px;
 			max-width: 400px;
-			margin-left: 40px;
+			margin-right: 100px;
+			float: right;
 		}
 
 		@media screen and (min-width: 1280px) and (min-height: 992px) {
@@ -478,7 +479,7 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 		@media screen and (min-width: 1920px) {
 			position: sticky;
 			top: 460px;
-			margin-left: 114px;
+			margin-right: 200px;
 		}
 
 		&--title {
