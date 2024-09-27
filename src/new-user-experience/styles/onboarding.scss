@@ -458,7 +458,7 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 			padding: 60px 85px;
 		}
 
-		@media screen and (min-height: 992px) and (min-width: 1280px) {
+		@media screen and (min-height: 720px) and (min-width: 1280px) {
 			top: 5vh;
 		}
 	}
@@ -466,14 +466,10 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 	.woo-square-onboarding__payment-complete__intro {
 		@media screen and (min-width: 1280px) {
 			position: sticky;
-			top: 240px;
+			top: 30vh;
 			max-width: 400px;
 			margin-right: 100px;
 			float: right;
-		}
-
-		@media screen and (min-width: 1280px) and (min-height: 992px) {
-			top: 25vh;
 		}
 
 		@media screen and (min-width: 1920px) {

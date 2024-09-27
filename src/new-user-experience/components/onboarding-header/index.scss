@@ -62,6 +62,7 @@
 	@include is-below-mobile() {
 		top: 46px;
 		height: 46px;
+		position: absolute;
 	}
 
 	@include is-mobile {
