@@ -79,9 +79,6 @@ export const PaymentComplete = () => {
 							) }
 						</Button>
 					</div>
-					<div className="woo-square-onboarding__payment-complete__center-icon">
-						<RightArrowInCircle />
-					</div>
 				</div>
 				<div className="woo-square-onboarding__payment-complete--right">
 					<div className="woo-square-onboarding__payment-complete__toggles">
@@ -101,10 +98,10 @@ export const PaymentComplete = () => {
 						<Divider margin="10" />
 
 						<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
-							<FlexItem className="flexItem iconBox">
+							<FlexItem className="iconBox">
 								<Sync />
 							</FlexItem>
-							<FlexBlock className="flexItem contentBox">
+							<FlexBlock className="contentBox">
 								<b>
 									{ __(
 										'Synchronize Your Inventory',
@@ -145,10 +142,10 @@ export const PaymentComplete = () => {
 								<Divider margin="10" />
 
 								<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
-									<FlexItem className="flexItem iconBox">
+									<FlexItem className="iconBox">
 										<Manage />
 									</FlexItem>
-									<FlexBlock className="flexItem contentBox">
+									<FlexBlock className="contentBox">
 										<b>
 											{ __(
 												'Manage Payment Methods',

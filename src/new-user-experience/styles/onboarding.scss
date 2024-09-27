@@ -372,3 +372,159 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 .woo-square-onbarding__payment-settings__intro--title-icon {
 	margin-left: 16px;
 }
+
+// Payment complete.
+.woo-square-onboarding__payment-complete {
+	display: block;
+	padding: 1rem;
+
+	@media screen and (min-width: 1280px) {
+		display: flex;
+		padding: 0;
+	}
+
+	&--left,
+	&--right {
+		@media screen and (min-width: 1280px) {
+			width: 50%;
+		}
+
+		.woo-square-setting__section-description {
+			text-align: center;
+
+			@media screen and (min-width: 1280px) {
+				text-align: left;
+			}
+		}
+	}
+
+	&--left {
+		margin-top: 2rem;
+
+		@media screen and (min-width: 1280px) {
+			margin-top: 0;
+			padding: 2rem;
+		}
+	}
+
+	&--right {
+		position: relative;
+		margin-top: 3rem;
+
+		@media screen and (min-width: 1280px) {
+			margin-top: 0;
+
+			&:after {
+				display: block;
+				content: '';
+				position: absolute;
+				background-color: #F0F0F1;
+				top: 0;
+				left: 0;
+				width: 100%;
+				min-height: 750px;
+				height: 100%;
+				z-index: 0;
+			}
+		}
+
+		@media screen and (min-width: 1280px) and (min-height: 750px) {
+			&:after {
+				height: calc(100vh - 112px);
+			}
+		}
+
+		.woo-square-setting__section-title {
+			@media screen and (min-width: 1280px) {
+				text-align: left;
+			}
+		}
+	}
+
+	&__toggles {
+		@media screen and (min-width: 1280px) {
+			position: relative;
+			transform: translateX(-3rem);
+			z-index: 1;
+			border: 0.5px solid #bfbfbf;
+			padding: 30px 42px;
+			background-color: #fff;
+			max-width: 687px;
+		}
+
+		@media screen and (min-width: 1920px) {
+			position: relative;
+			top: 140px;
+			padding: 60px 85px;
+		}
+
+		@media screen and (min-height: 992px) and (min-width: 1280px) {
+			top: 5vh;
+		}
+	}
+
+	.woo-square-onboarding__payment-complete__intro {
+		@media screen and (min-width: 1280px) {
+			position: sticky;
+			top: 240px;
+			max-width: 400px;
+			margin-left: 40px;
+		}
+
+		@media screen and (min-width: 1280px) and (min-height: 992px) {
+			top: 25vh;
+		}
+
+		@media screen and (min-width: 1920px) {
+			position: sticky;
+			top: 460px;
+			margin-left: 114px;
+		}
+
+		&--title {
+			color: #000;
+			font-weight: 600;
+			font-size: 30px;
+			line-height: 35.8px;
+			text-align: center;
+
+			@media screen and (min-width: 1280px) {
+				text-align: left;
+			}
+		}
+	}
+
+	.woo-square-onboarding__payment-setting-row {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: wrap !important;
+
+		@media screen and (min-width: 1280px) {
+			justify-content: flex-start;
+		}
+
+		.iconBox {
+			@media screen and (min-width: 1280px) {
+
+			}
+		}
+
+		.contentBox {
+			flex: 1;
+			margin-left: 18px;
+
+			@media screen and (min-width: 1920px) {
+				max-width: 314px;
+			}
+		}
+
+		.settings-fields {
+			flex-basis: 100%;
+
+			@media screen and (min-width: 1920px) {
+				flex-basis: auto;
+				margin-left: auto;
+			}
+		}
+	}
+}
