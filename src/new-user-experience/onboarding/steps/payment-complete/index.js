@@ -39,10 +39,10 @@ export const PaymentComplete = () => {
 
 	return (
 		<>
-			<div className="woo-square-onbarding__payment-settings">
-				<div className="woo-square-onbarding__payment-settings--left">
-					<div className="woo-square-onbarding__payment-settings__intro">
-						<div className="woo-square-onbarding__payment-settings__intro--title">
+			<div className="woo-square-onboarding__payment-complete">
+				<div className="woo-square-onboarding__payment-complete--left">
+					<div className="woo-square-onboarding__payment-complete__intro">
+						<div className="woo-square-onboarding__payment-complete__intro--title">
 							{ __( 'Congratulations,', 'woocommerce-square' ) }
 							<br />
 							{ __(
@@ -79,12 +79,12 @@ export const PaymentComplete = () => {
 							) }
 						</Button>
 					</div>
-					<div className="woo-square-onbarding__payment-settings__center-icon">
+					<div className="woo-square-onboarding__payment-complete__center-icon">
 						<RightArrowInCircle />
 					</div>
 				</div>
-				<div className="woo-square-onbarding__payment-settings--right">
-					<div className="woo-square-onbarding__payment-settings__toggles">
+				<div className="woo-square-onboarding__payment-complete--right">
+					<div className="woo-square-onboarding__payment-complete__toggles">
 						<SectionTitle
 							title={ __(
 								'Synchronize your Items and Inventory',
@@ -100,7 +100,7 @@ export const PaymentComplete = () => {
 
 						<Divider margin="10" />
 
-						<Flex direction={ [ 'column', 'row' ] }>
+						<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
 							<FlexItem className="flexItem iconBox">
 								<Sync />
 							</FlexItem>
@@ -118,7 +118,7 @@ export const PaymentComplete = () => {
 									) }
 								</p>
 							</FlexBlock>
-							<FlexItem>
+							<FlexItem className="settings-fields">
 								<Button
 									data-testid="configure-sync-button"
 									variant="secondary"
@@ -144,7 +144,7 @@ export const PaymentComplete = () => {
 							<>
 								<Divider margin="10" />
 
-								<Flex direction={ [ 'column', 'row' ] }>
+								<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
 									<FlexItem className="flexItem iconBox">
 										<Manage />
 									</FlexItem>
@@ -162,7 +162,7 @@ export const PaymentComplete = () => {
 											) }
 										</p>
 									</FlexBlock>
-									<FlexItem>
+									<FlexItem className="settings-fields">
 										{ creditCardEnabled === 'yes' && (
 											<Button
 												data-testid="credit-card-settings-button"
