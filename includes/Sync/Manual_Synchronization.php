@@ -1158,6 +1158,15 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$response_data = $this->get_attr( 'catalog_objects_search_response_data', null );
 
+			if ( ! empty( $response_data ) ) {
+				$response_data = ApiHelper::getJsonHelper()->mapClass( json_decode( $response_data ), 'Square\\Models\\SearchCatalogObjectsResponse' );
+
+				// If the response data is invalid, reset it.
+				if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
+					$response_data = null;
+				}
+			}
+
 			if ( ! $response_data ) {
 
 				wc_square()->log( 'Generating a new catalog search request' );
@@ -1176,10 +1185,6 @@ class Manual_Synchronization extends Stepped_Job {
 				$response_data = $response->get_data();
 
 				$this->set_attr( 'catalog_objects_search_response_data', wp_json_encode( $response_data ) );
-
-			} else {
-
-				$response_data = ApiHelper::deserialize( $response_data, new SearchCatalogObjectsResponse() );
 			}
 
 			if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
