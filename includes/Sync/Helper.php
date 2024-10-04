@@ -106,7 +106,7 @@ class Helper {
 
 			if ( ! empty( $location_overrides ) ) {
 				$location_ids = array_map(
-					function( $location_override ) {
+					function ( $location_override ) {
 						return $location_override->getLocationId();
 					},
 					$location_overrides
