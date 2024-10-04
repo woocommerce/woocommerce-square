@@ -100,14 +100,27 @@ class Helper {
 
 		/** @var \Square\Models\CatalogObject $catalog_object */
 		foreach ( $catalog_objects as $catalog_object ) {
-			$variation_data     = $catalog_object->getItemVariationData();
-			$location_overrides = $variation_data->getLocationOverrides();
+			$variation_data      = $catalog_object->getItemVariationData();
+			$location_overrides  = $variation_data->getLocationOverrides();
+			$configured_location = wc_square()->get_settings_handler()->get_location_id();
 
 			if ( ! empty( $location_overrides ) ) {
+				$location_ids = array_map(
+					function( $location_override ) {
+						return $location_override->getLocationId();
+					},
+					$location_overrides
+				);
+
+				if ( ! in_array( $configured_location, $location_ids, true ) ) {
+					$catalog_objects_tracking[ $catalog_object->getId() ] = $variation_data->getTrackInventory();
+					continue;
+				}
+
 				foreach ( $location_overrides as $location_override ) {
 					$location_id = $location_override->getLocationId();
 
-					if ( wc_square()->get_settings_handler()->get_location_id() === $location_id ) {
+					if ( $configured_location === $location_id ) {
 						if ( ! is_null( $location_override->getTrackInventory() ) ) {
 							$catalog_objects_tracking[ $catalog_object->getId() ] = $location_override->getTrackInventory();
 						} else {
