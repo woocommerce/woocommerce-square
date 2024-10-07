@@ -278,6 +278,22 @@ body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
 		@include is-desktop() {
 			text-align: left;
 		}
+
+		@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+			font-size: 1.5rem;
+		}
+	}
+
+	.woo-square-setting__input-wrapper--boxed-bg {
+		@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+			padding: 0.5rem 1rem !important;
+		}
+
+		.woo-square-setting__input-label {
+			@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+				font-size: 15px;
+			}
+		}
 	}
 }
 
