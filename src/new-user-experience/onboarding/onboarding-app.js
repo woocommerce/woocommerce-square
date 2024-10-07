@@ -31,6 +31,14 @@ import {
 import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../tracks';
 import { connectToSquare } from '../utils';
 
+const SettingsWrapper = ( { children } ) => {
+	return (
+		<div className="woo-square-onboarding__settings-wrapper">
+			{ children }
+		</div>
+	)
+};
+
 export const OnboardingApp = () => {
 	const [ settingsLoaded, setSettingsLoaded ] = useState( false );
 	const [ sandboxConnectLabel, setSandboxConnectLabel ] = useState( '' );
@@ -158,14 +166,6 @@ export const OnboardingApp = () => {
 	) {
 		setSettingsLoaded( true );
 	}
-
-	const SettingsWrapper = ( { children } ) => {
-		return (
-			<div className="woo-square-onboarding__settings-wrapper">
-				{ children }
-			</div>
-		)
-	};
 
 	return (
 		<>
