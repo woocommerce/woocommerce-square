@@ -15,7 +15,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies.
  */
 import { SectionTitle, SectionDescription } from '../../../components';
-import { RightArrowInCircle, Sync, Manage } from '../../../icons';
+import { Sync, Manage } from '../../../icons';
 import { useSteps, usePaymentGatewaySettings } from '../../hooks';
 import {
 	recordEvent,
@@ -97,7 +97,10 @@ export const PaymentComplete = () => {
 
 						<Divider margin="10" />
 
-						<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
+						<Flex
+							direction={ [ 'column', 'row' ] }
+							className="woo-square-onboarding__payment-setting-row"
+						>
 							<FlexItem className="iconBox">
 								<Sync />
 							</FlexItem>
@@ -141,7 +144,10 @@ export const PaymentComplete = () => {
 							<>
 								<Divider margin="10" />
 
-								<Flex direction={ [ 'column', 'row' ] } className="woo-square-onboarding__payment-setting-row">
+								<Flex
+									direction={ [ 'column', 'row' ] }
+									className="woo-square-onboarding__payment-setting-row"
+								>
 									<FlexItem className="iconBox">
 										<Manage />
 									</FlexItem>

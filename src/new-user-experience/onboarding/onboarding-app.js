@@ -36,7 +36,7 @@ const SettingsWrapper = ( { children } ) => {
 		<div className="woo-square-onboarding__settings-wrapper">
 			{ children }
 		</div>
-	)
+	);
 };
 
 export const OnboardingApp = () => {
