@@ -271,7 +271,7 @@ class Gift_Card extends Payment_Gateway {
 	 * Disables the `Gift card product placeholder image` setting when the
 	 * gift card placeholder image is deleted from the library.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.1
 	 *
 	 * @param int $post_id Attachment ID of the media being deleted.
 	 */

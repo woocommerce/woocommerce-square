@@ -1548,7 +1548,7 @@ class Products {
 	 * Returns true if a gift card product should use the provided
 	 * default placeholder image.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.1
 	 *
 	 * @return bool
 	 */
@@ -1572,7 +1572,7 @@ class Products {
 	/**
 	 * Returns the default placeholder image ID for gift card products.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.1
 	 *
 	 * @return int
 	 */
@@ -1585,7 +1585,7 @@ class Products {
 	/**
 	 * Returns the default placeholder image URL for gift card products.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.1
 	 *
 	 * @return string|bool
 	 */
