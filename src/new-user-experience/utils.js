@@ -60,6 +60,11 @@ export const getGiftCardsSettingsData = async () => {
 
 	const giftCard = {
 		enabled: settings.enabled || GIFT_CARDS_DEFAULT_STATE.enabled,
+		is_default_placeholder:
+			settings.is_default_placeholder ||
+			GIFT_CARDS_DEFAULT_STATE.is_default_placeholder,
+		placeholder_id:
+			settings.placeholder_id || GIFT_CARDS_DEFAULT_STATE.placeholder_id,
 	};
 
 	return { giftCard };
@@ -165,6 +170,9 @@ export const getSquareSettings = async () => {
 		disconnection_url:
 			settings.disconnection_url ||
 			SQUARE_SETTINGS_DEFAULT_STATE.disconnection_url,
+		access_tokens:
+			settings.access_tokens ||
+			SQUARE_SETTINGS_DEFAULT_STATE.access_tokens,
 		connection_url:
 			settings.connection_url ||
 			SQUARE_SETTINGS_DEFAULT_STATE.connection_url,

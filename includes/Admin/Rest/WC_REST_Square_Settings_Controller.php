@@ -174,6 +174,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 
 		// Add the connection parameters to the response.
 		$filtered_settings['is_connected']           = wc_square()->get_gateway()->get_plugin()->get_settings_handler()->is_connected();
+		$filtered_settings['access_tokens']          = wc_square()->get_gateway()->get_plugin()->get_settings_handler()->get_access_tokens();
 		$filtered_settings['connection_url']         = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( false );
 		$filtered_settings['connection_url_wizard']  = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( false, array( 'from' => 'wizard' ) );
 		$filtered_settings['connection_url_sandbox'] = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( true, array( 'from' => 'wizard' ) );
@@ -196,6 +197,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$settings     = array();
 		$keys_to_skip = array(
 			'is_connected',
+			'access_tokens',
 			'locations',
 			'connection_url',
 			'connection_url_wizard',

@@ -6,12 +6,20 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework\Square_Helper;
+use WooCommerce\Square\Handlers\Products;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Gateway;
 
 class Gift_Card extends Payment_Gateway {
+	/**
+	 * Square settings option name.
+	 *
+	 * @var string
+	 */
+	const SQUARE_PAYMENT_SETTINGS_OPTION_NAME = 'woocommerce_gift_cards_pay_settings';
+
 	/**
 	 * @var API API base instance
 	 */
@@ -43,7 +51,8 @@ class Gift_Card extends Payment_Gateway {
 			)
 		);
 
-		add_action( 'init', array( $this, 'add_gift_card_image_placeholder' ) );
+		add_action( 'wc_square_woocommerce_gift_cards_pay_settings_settings_updated', array( $this, 'add_gift_card_image_placeholder' ) );
+		add_action( 'delete_attachment', array( $this, 'delete_gift_card_image_placeholder' ) );
 		add_action( 'wp_ajax_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
 		add_action( 'wp_ajax_nopriv_wc_square_check_gift_card_balance', array( $this, 'apply_gift_card' ) );
 		add_action( 'wp_ajax_wc_square_gift_card_remove', array( $this, 'remove_gift_card' ) );
@@ -201,8 +210,12 @@ class Gift_Card extends Payment_Gateway {
 	 *
 	 * @since 4.2.0
 	 */
-	public function add_gift_card_image_placeholder() {
-		$placeholder_image = get_option( 'wc_square_gift_card_placeholder_id', false );
+	public function add_gift_card_image_placeholder( $settings ) {
+		if ( ! \WooCommerce\Square\Handlers\Products::should_use_default_gift_card_placeholder_image() ) {
+			return;
+		}
+
+		$placeholder_image = Products::get_gift_card_default_placeholder_id();
 
 		if ( ! empty( $placeholder_image ) ) {
 			if ( ! is_numeric( $placeholder_image ) ) {
@@ -221,7 +234,8 @@ class Gift_Card extends Payment_Gateway {
 		}
 
 		if ( ! file_exists( $filename ) ) {
-			update_option( 'wc_square_gift_card_placeholder_id', 0 );
+			$settings['placeholder_id'] = 0;
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 			return;
 		}
 
@@ -237,11 +251,13 @@ class Gift_Card extends Payment_Gateway {
 		$attach_id = wp_insert_attachment( $attachment, $filename );
 
 		if ( is_wp_error( $attach_id ) ) {
-			update_option( 'wc_square_gift_card_placeholder_id', 0 );
+			$settings['placeholder_id'] = 0;
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 			return;
 		}
 
-		update_option( 'wc_square_gift_card_placeholder_id', $attach_id );
+		$settings['placeholder_id'] = $attach_id;
+		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 
 		// Make sure that this file is included, as wp_generate_attachment_metadata() depends on it.
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -249,6 +265,30 @@ class Gift_Card extends Payment_Gateway {
 		// Generate the metadata for the attachment, and update the database record.
 		$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
 		wp_update_attachment_metadata( $attach_id, $attach_data );
+	}
+
+	/**
+	 * Disables the `Gift card product placeholder image` setting when the
+	 * gift card placeholder image is deleted from the library.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @param int $post_id Attachment ID of the media being deleted.
+	 */
+	public function delete_gift_card_image_placeholder( $post_id ) {
+		$attachment_id      = Products::get_gift_card_default_placeholder_id();
+		$gift_card_settings = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+
+		if ( $attachment_id !== $post_id ) {
+			return;
+		}
+
+		if ( isset( $gift_card_settings['is_default_placeholder'] ) && 'yes' === $gift_card_settings['is_default_placeholder'] ) {
+			$gift_card_settings['is_default_placeholder'] = 'no';
+			$gift_card_settings['placeholder_id']         = 0;
+
+			update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $gift_card_settings );
+		}
 	}
 
 	/**
