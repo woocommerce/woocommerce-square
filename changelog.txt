@@ -1,5 +1,11 @@
 *** WooCommerce Square Changelog ***
 
+= 4.8.2 - 2024-10-14 =
+* Add - Title, Description, and Gateway ID props to the express payment method.
+* Dev - Bump WooCommerce "tested up to" version 9.4.
+* Dev - Bump WooCommerce minimum supported version to 9.2.
+* Dev - Bump WordPress minimum supported version to 6.5.
+
 = 4.8.1 - 2024-09-23 =
 * Fix - Confirmation popup no longer appears when saving the Square settings.
 * Fix - Connection settings now persist previous connection when toggling between Production and Sandbox.
