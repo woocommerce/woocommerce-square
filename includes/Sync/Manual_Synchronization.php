@@ -537,10 +537,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$products_map = Product::get_square_meta( $product_ids, 'square_item_id' );
 
+		$search_response = null;
 		if ( ! empty( $in_progress['unprocessed_search_response'] ) ) {
-			$search_response = ApiHelper::deserialize( $in_progress['unprocessed_search_response'], new SearchCatalogObjectsResponse() );
-		} else {
+			$search_response = ApiHelper::getJsonHelper()->mapClass( json_decode( $in_progress['unprocessed_search_response'] ), 'Square\\Models\\SearchCatalogObjectsResponse' );
+		}
 
+		if ( ! $search_response ) {
 			$response = wc_square()->get_api()->search_catalog_objects(
 				array(
 					'cursor'       => $this->get_attr( 'search_products_cursor' ),
@@ -1158,6 +1160,15 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$response_data = $this->get_attr( 'catalog_objects_search_response_data', null );
 
+			if ( ! empty( $response_data ) ) {
+				$response_data = ApiHelper::getJsonHelper()->mapClass( json_decode( $response_data ), 'Square\\Models\\SearchCatalogObjectsResponse' );
+
+				// If the response data is invalid, reset it.
+				if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
+					$response_data = null;
+				}
+			}
+
 			if ( ! $response_data ) {
 
 				wc_square()->log( 'Generating a new catalog search request' );
@@ -1176,10 +1187,6 @@ class Manual_Synchronization extends Stepped_Job {
 				$response_data = $response->get_data();
 
 				$this->set_attr( 'catalog_objects_search_response_data', wp_json_encode( $response_data ) );
-
-			} else {
-
-				$response_data = ApiHelper::deserialize( $response_data, new SearchCatalogObjectsResponse() );
 			}
 
 			if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
@@ -1411,7 +1418,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// if a response was never cleared, we likely had a timeout
 		if ( null !== $in_progress['response_data'] ) {
-			$response_data = ApiHelper::deserialize( $in_progress['response_data'], new BatchRetrieveInventoryCountsResponse() );
+			$response_data = ApiHelper::getJsonHelper()->mapClass( json_decode( $in_progress['response_data'] ), 'Square\\Models\\BatchRetrieveInventoryCountsResponse' );
 		}
 
 		// if the saved response was somehow corrupted, start over
