@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.8.1",
+  "version": "4.8.2",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
@@ -53,6 +53,7 @@
     "@woocommerce/product-editor": "^1.4.0",
     "@woocommerce/tracks": "^1.3.0",
     "@wordpress/data": "^7.6.0",
+    "@wordpress/i18n": "^5.6.0",
     "@wordpress/icons": "^10.1.0",
     "html-react-parser": "^5.1.10",
     "uuid": "^9.0.1"
