@@ -537,10 +537,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$products_map = Product::get_square_meta( $product_ids, 'square_item_id' );
 
+		$search_response = null;
 		if ( ! empty( $in_progress['unprocessed_search_response'] ) ) {
-			$search_response = ApiHelper::deserialize( $in_progress['unprocessed_search_response'], new SearchCatalogObjectsResponse() );
-		} else {
+			$search_response = ApiHelper::getJsonHelper()->mapClass( json_decode( $in_progress['unprocessed_search_response'] ), 'Square\\Models\\SearchCatalogObjectsResponse' );
+		}
 
+		if ( ! $search_response ) {
 			$response = wc_square()->get_api()->search_catalog_objects(
 				array(
 					'cursor'       => $this->get_attr( 'search_products_cursor' ),
@@ -786,72 +788,44 @@ class Manual_Synchronization extends Stepped_Job {
 			)
 		);
 
-		if ( null === $in_progress['unprocessed_upsert_response'] ) {
+		foreach ( $objects as $product_id => $object ) {
 
-			// need all three items to restore from in-progress
-			if ( ! empty( $in_progress['batches'] ) && ! empty( $in_progress['staged_product_ids'] ) && ! empty( $in_progress['total_object_count'] ) ) {
-
-				$staged_product_ids = $in_progress['staged_product_ids'];
-				$total_object_count = $in_progress['total_object_count'];
-				$batches            = array_map(
-					static function ( $batch_data ) {
-						return ApiHelper::deserialize( $batch_data );
-					},
-					$in_progress['batches']
-				);
+			if ( in_array( $product_id, $staged_product_ids, true ) ) {
+				continue;
 			}
 
-			foreach ( $objects as $product_id => $object ) {
+			if ( ! $object instanceof CatalogObject ) {
+				$object = $this->convert_to_catalog_object( $object );
+			}
 
-				if ( in_array( $product_id, $staged_product_ids, true ) ) {
-					continue;
-				}
+			$product                                  = wc_get_product( $product_id );
+			$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
 
-				if ( ! $object instanceof CatalogObject ) {
-					$object = $this->convert_to_catalog_object( $object );
-				}
+			$catalog_item = new Catalog_Item( $product, $is_delete_action );
+			$batch        = $catalog_item->get_batch( $object );
+			$object_count = $catalog_item->get_batch_object_count();
 
-				$product                                  = wc_get_product( $product_id );
-				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
-
-				$catalog_item = new Catalog_Item( $product, $is_delete_action );
-				$batch        = $catalog_item->get_batch( $object );
-				$object_count = $catalog_item->get_batch_object_count();
-
-				if ( $this->get_max_objects_total() >= $object_count + $total_object_count ) {
-					$batches[]            = $batch;
-					$total_object_count  += $object_count;
-					$staged_product_ids[] = $product_id;
-				} else {
-					break;
-				}
+			if ( $this->get_max_objects_total() >= $object_count + $total_object_count ) {
+				$batches[]            = $batch;
+				$total_object_count  += $object_count;
+				$staged_product_ids[] = $product_id;
+			} else {
+				break;
 			}
 		}
 
-		$upsert_response = null;
-
-		if ( null !== $in_progress['unprocessed_upsert_response'] ) {
-			$upsert_response = ApiHelper::deserialize( $in_progress['unprocessed_upsert_response'], new BatchUpsertCatalogObjectsResponse() );
-		}
+		$start           = microtime( true );
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+		$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
+		$upsert_response = $response->get_data();
 
 		if ( ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
-
-			$start = microtime( true );
-
-			$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' );
-			$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
-			$upsert_response = $response->get_data();
-
-			if ( ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
-				throw new \Exception( 'API response data is missing' );
-			}
-
-			$duration = number_format( microtime( true ) - $start, 2 );
-
-			wc_square()->log( 'Upserted ' . count( $upsert_response->getObjects() ) . ' objects in ' . $duration . 's' );
-
-			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $response, JSON_PRETTY_PRINT );
+			throw new \Exception( 'API response data is missing' );
 		}
+
+		$duration = number_format( microtime( true ) - $start, 2 );
+
+		wc_square()->log( 'Upserted ' . count( $upsert_response->getObjects() ) . ' objects in ' . $duration . 's' );
 
 		// update local square meta for newly upserted objects
 		if ( ! $is_delete_action && $upsert_response instanceof BatchUpsertCatalogObjectsResponse && is_array( $upsert_response->getIdMappings() ) ) {
@@ -1000,11 +974,8 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @return CatalogObject
 	 */
 	protected function convert_to_catalog_object( $object_data ) {
-		$object_data_string = is_string( $object_data ) ? $object_data : wp_json_encode( $object_data );
-		$object_data_obj    = is_string( $object_data ) ? json_decode( $object_data ) : $object_data;
-
-		$catalog_object = new CatalogObject( $object_data_obj->type, $object_data_obj->id );
-		$object         = ApiHelper::deserialize( $object_data_string, $catalog_object );
+		$object_data_obj = is_string( $object_data ) ? json_decode( $object_data ) : $object_data;
+		$object          = ApiHelper::getJsonHelper()->mapClass( $object_data_obj, 'Square\\Models\\CatalogObject' );
 
 		return $object instanceof CatalogObject ? $object : null;
 	}
@@ -1158,6 +1129,15 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$response_data = $this->get_attr( 'catalog_objects_search_response_data', null );
 
+			if ( ! empty( $response_data ) ) {
+				$response_data = ApiHelper::getJsonHelper()->mapClass( json_decode( $response_data ), 'Square\\Models\\SearchCatalogObjectsResponse' );
+
+				// If the response data is invalid, reset it.
+				if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
+					$response_data = null;
+				}
+			}
+
 			if ( ! $response_data ) {
 
 				wc_square()->log( 'Generating a new catalog search request' );
@@ -1176,10 +1156,6 @@ class Manual_Synchronization extends Stepped_Job {
 				$response_data = $response->get_data();
 
 				$this->set_attr( 'catalog_objects_search_response_data', wp_json_encode( $response_data ) );
-
-			} else {
-
-				$response_data = ApiHelper::deserialize( $response_data, new SearchCatalogObjectsResponse() );
 			}
 
 			if ( ! $response_data instanceof SearchCatalogObjectsResponse ) {
@@ -1411,7 +1387,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// if a response was never cleared, we likely had a timeout
 		if ( null !== $in_progress['response_data'] ) {
-			$response_data = ApiHelper::deserialize( $in_progress['response_data'], new BatchRetrieveInventoryCountsResponse() );
+			$response_data = ApiHelper::getJsonHelper()->mapClass( json_decode( $in_progress['response_data'] ), 'Square\\Models\\BatchRetrieveInventoryCountsResponse' );
 		}
 
 		// if the saved response was somehow corrupted, start over
@@ -1681,7 +1657,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @return int
 	 */
 	protected function get_max_objects_to_retrieve() {
-		$max = $this->get_attr( 'max_objects_to_retrieve', 100 );
+		$max = $this->get_attr( 'max_objects_to_retrieve', 50 );
 
 		/**
 		 * Filters the maximum number of objects to retrieve in a single sync job.
