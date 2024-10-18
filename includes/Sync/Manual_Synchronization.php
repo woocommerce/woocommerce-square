@@ -1002,11 +1002,8 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @return CatalogObject
 	 */
 	protected function convert_to_catalog_object( $object_data ) {
-		$object_data_string = is_string( $object_data ) ? $object_data : wp_json_encode( $object_data );
-		$object_data_obj    = is_string( $object_data ) ? json_decode( $object_data ) : $object_data;
-
-		$catalog_object = new CatalogObject( $object_data_obj->type, $object_data_obj->id );
-		$object         = ApiHelper::deserialize( $object_data_string, $catalog_object );
+		$object_data_obj = is_string( $object_data ) ? json_decode( $object_data ) : $object_data;
+		$object          = ApiHelper::getJsonHelper()->mapClass( $object_data_obj, 'Square\\Models\\CatalogObject' );
 
 		return $object instanceof CatalogObject ? $object : null;
 	}
