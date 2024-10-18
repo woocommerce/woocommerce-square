@@ -1657,7 +1657,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @return int
 	 */
 	protected function get_max_objects_to_retrieve() {
-		$max = $this->get_attr( 'max_objects_to_retrieve', 100 );
+		$max = $this->get_attr( 'max_objects_to_retrieve', 50 );
 
 		/**
 		 * Filters the maximum number of objects to retrieve in a single sync job.
