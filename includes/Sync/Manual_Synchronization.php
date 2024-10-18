@@ -815,7 +815,7 @@ class Manual_Synchronization extends Stepped_Job {
 		}
 
 		$start           = microtime( true );
-		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' );
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 		$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
 		$upsert_response = $response->get_data();
 
