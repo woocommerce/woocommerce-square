@@ -788,72 +788,44 @@ class Manual_Synchronization extends Stepped_Job {
 			)
 		);
 
-		if ( null === $in_progress['unprocessed_upsert_response'] ) {
+		foreach ( $objects as $product_id => $object ) {
 
-			// need all three items to restore from in-progress
-			if ( ! empty( $in_progress['batches'] ) && ! empty( $in_progress['staged_product_ids'] ) && ! empty( $in_progress['total_object_count'] ) ) {
-
-				$staged_product_ids = $in_progress['staged_product_ids'];
-				$total_object_count = $in_progress['total_object_count'];
-				$batches            = array_map(
-					static function ( $batch_data ) {
-						return ApiHelper::deserialize( $batch_data );
-					},
-					$in_progress['batches']
-				);
+			if ( in_array( $product_id, $staged_product_ids, true ) ) {
+				continue;
 			}
 
-			foreach ( $objects as $product_id => $object ) {
+			if ( ! $object instanceof CatalogObject ) {
+				$object = $this->convert_to_catalog_object( $object );
+			}
 
-				if ( in_array( $product_id, $staged_product_ids, true ) ) {
-					continue;
-				}
+			$product                                  = wc_get_product( $product_id );
+			$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
 
-				if ( ! $object instanceof CatalogObject ) {
-					$object = $this->convert_to_catalog_object( $object );
-				}
+			$catalog_item = new Catalog_Item( $product, $is_delete_action );
+			$batch        = $catalog_item->get_batch( $object );
+			$object_count = $catalog_item->get_batch_object_count();
 
-				$product                                  = wc_get_product( $product_id );
-				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
-
-				$catalog_item = new Catalog_Item( $product, $is_delete_action );
-				$batch        = $catalog_item->get_batch( $object );
-				$object_count = $catalog_item->get_batch_object_count();
-
-				if ( $this->get_max_objects_total() >= $object_count + $total_object_count ) {
-					$batches[]            = $batch;
-					$total_object_count  += $object_count;
-					$staged_product_ids[] = $product_id;
-				} else {
-					break;
-				}
+			if ( $this->get_max_objects_total() >= $object_count + $total_object_count ) {
+				$batches[]            = $batch;
+				$total_object_count  += $object_count;
+				$staged_product_ids[] = $product_id;
+			} else {
+				break;
 			}
 		}
 
-		$upsert_response = null;
-
-		if ( null !== $in_progress['unprocessed_upsert_response'] ) {
-			$upsert_response = ApiHelper::deserialize( $in_progress['unprocessed_upsert_response'], new BatchUpsertCatalogObjectsResponse() );
-		}
+		$start           = microtime( true );
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' );
+		$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
+		$upsert_response = $response->get_data();
 
 		if ( ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
-
-			$start = microtime( true );
-
-			$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' );
-			$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
-			$upsert_response = $response->get_data();
-
-			if ( ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
-				throw new \Exception( 'API response data is missing' );
-			}
-
-			$duration = number_format( microtime( true ) - $start, 2 );
-
-			wc_square()->log( 'Upserted ' . count( $upsert_response->getObjects() ) . ' objects in ' . $duration . 's' );
-
-			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $response, JSON_PRETTY_PRINT );
+			throw new \Exception( 'API response data is missing' );
 		}
+
+		$duration = number_format( microtime( true ) - $start, 2 );
+
+		wc_square()->log( 'Upserted ' . count( $upsert_response->getObjects() ) . ' objects in ' . $duration . 's' );
 
 		// update local square meta for newly upserted objects
 		if ( ! $is_delete_action && $upsert_response instanceof BatchUpsertCatalogObjectsResponse && is_array( $upsert_response->getIdMappings() ) ) {
