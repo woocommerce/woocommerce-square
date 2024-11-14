@@ -344,6 +344,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						}
 					}
 
+					// @TODO check if we've already checked options in "update_catalog_item()" why do we need to check again?
 					if ( $option_id && $option_value_id ) {
 						$option_value_object = new \Square\Models\CatalogItemOptionValueForItemVariation();
 						$option_value_object->setItemOptionId( $option_id );
