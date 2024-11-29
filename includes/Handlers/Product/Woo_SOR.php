@@ -130,7 +130,6 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					// If name does not exist, create a new option in Square.
 					// If name exists, check if all values are present in Square.
 					// If not, create the missing values.
-					// @todo Prevent re-calls for each iteration, store the data in a transient?
 					$option        = wc_square()->get_api()->create_options_and_values( $option_id, $attribute_name, $attribute_option_values );
 					$options_ids[] = $option->getId();
 				}
@@ -303,9 +302,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				$variation_name = array();
 
 				/**
-				 * We cannot assign the name of the variation here because it's a dynamic option product.
-				 * Square will automatically set the variation name based on the selected options.
-				 * Our responsibility is only to set the `item_option_values` for the variation.
+				 * Set the `item_option_values` for the variation.
 				 *
 				 * Retrieve the options data from the transient. At this point, the options data
 				 * should already be available, as we have already created the necessary options
@@ -344,7 +341,6 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						}
 					}
 
-					// @TODO check if we've already checked options in "update_catalog_item()" why do we need to check again?
 					if ( $option_id && $option_value_id ) {
 						$option_value_object = new \Square\Models\CatalogItemOptionValueForItemVariation();
 						$option_value_object->setItemOptionId( $option_id );
