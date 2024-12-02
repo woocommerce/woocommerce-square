@@ -28,7 +28,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Payment Gateway > Transaction Type > Authorization', async ( {
+test( 'Payment Gateway > Transaction Type > Authorization @general', async ( {
 	page,
 } ) => {
 	await page.goto( '/product/simple-product' );

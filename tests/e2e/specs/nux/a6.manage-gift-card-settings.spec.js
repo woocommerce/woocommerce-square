@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { visitOnboardingPage, isToggleChecked, setStepsLocalStorage } from '../../utils/helper';
 
-test( 'Can configure gift card settings via Onboarding', async ( { page } ) => {
+test( 'Can configure gift card settings via Onboarding @general', async ( { page } ) => {
 	await visitOnboardingPage( page );
 	await setStepsLocalStorage( page );
 

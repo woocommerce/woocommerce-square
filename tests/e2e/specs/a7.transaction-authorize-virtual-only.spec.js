@@ -50,7 +50,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only', async ( {
+test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only @general', async ( {
 	page,
 } ) => {
 	await page.goto( '/product/virtual-product' );
@@ -80,7 +80,7 @@ test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only', async
 	).toBeVisible();
 } );
 
-test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only but charge', async ( {
+test( 'Payment Gateway > Transaction Type > Authorization + Virtual Only but charge @general', async ( {
 	page,
 } ) => {
 	await page.goto(

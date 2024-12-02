@@ -39,7 +39,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 
 let orderId;
 
-test( 'Gift card - Full payment', async ( { page } ) => {
+test( 'Gift card - Full payment @giftcard', async ( { page } ) => {
 	await page.goto( '/product/dollar-product' );
 	await page.locator( '.single_add_to_cart_button' ).click();
 

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { fillCreditCardFields } from '../utils/helper';
 
-test( 'Payment Gateway - Add payment method', async ( { page } ) => {
+test( 'Payment Gateway - Add payment method @general', async ( { page } ) => {
 	await page.goto( '/my-account/payment-methods' );
 	await expect(
 		await page.getByText( 'No saved methods found.' )

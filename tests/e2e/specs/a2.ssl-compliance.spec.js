@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test( 'Verify WooCommerce Square Integration for SSL Compliance', async ( {
+test( 'Verify WooCommerce Square Integration for SSL Compliance @general', async ( {
 	page,
 } ) => {
 	const sslError = `WooCommerce Square: WooCommerce is not being forced over SSL; your customers' payment data may be at risk.`;

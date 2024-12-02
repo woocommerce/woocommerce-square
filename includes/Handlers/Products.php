@@ -133,7 +133,6 @@ class Products {
 			add_filter( 'woocommerce_get_item_data', array( $this, 'add_sent_to_email_to_cart_item' ), 10, 2 );
 			add_filter( 'woocommerce_add_to_cart_sold_individually_found_in_cart', array( $this, 'limit_gift_card_quantity_in_cart' ), 10, 2 );
 			add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'filter_needs_processing' ), 10, 2 );
-			add_filter( 'woocommerce_loop_add_to_cart_link', array( $this, 'filter_shop_page_add_to_cart_button' ), 10, 3 );
 			add_filter( 'woocommerce_single_product_image_thumbnail_html', array( $this, 'filter_single_product_featured_image_placeholder' ) );
 			add_filter( 'woocommerce_product_get_image', array( $this, 'filter_gift_card_product_featured_image_placeholder' ), 10, 3 );
 
@@ -1218,33 +1217,6 @@ class Products {
 		}
 
 		return $item_data;
-	}
-
-	/**
-	 * Replaces the `Add to cart` button on the shop page
-	 * to `Buy Gift Card` for a gift card product.
-	 *
-	 * @param string      $html    Add to Cart button HTML.
-	 * @param \WC_Product $product WooCommerce product.
-	 * @param array       $args    Attributes for the button.
-	 */
-	public function filter_shop_page_add_to_cart_button( $html, $product, $args ) {
-		if ( ! is_shop() ) {
-			return $html;
-		}
-
-		/** @var \WC_Product $product */
-		if ( ! Product::is_gift_card( $product ) ) {
-			return $html;
-		}
-
-		return sprintf(
-			'<a href="%s" class="%s" %s>%s</a>',
-			esc_url( $product->get_permalink() ),
-			'button wp-element-button',
-			isset( $args['attributes'] ) ? wc_implode_html_attributes( $args['attributes'] ) : '',
-			esc_html__( 'Buy Gift Card', 'woocommerce-square' )
-		);
 	}
 
 	/**

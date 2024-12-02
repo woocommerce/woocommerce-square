@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { visitOnboardingPage, setStepsLocalStorage } from '../../utils/helper';
 
-test( 'Can configure digital wallet settings via Onboarding', async ( { page } ) => {
+test( 'Can configure digital wallet settings via Onboarding @general', async ( { page } ) => {
 	await visitOnboardingPage( page );
 	await setStepsLocalStorage( page );
 
