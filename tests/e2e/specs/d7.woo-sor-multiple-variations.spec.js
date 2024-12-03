@@ -50,6 +50,11 @@ test.beforeAll( 'Setup', async () => {
 		`wp wc product_attribute_term create ${ sizeAttributeId?.trim() } --name=M --user=admin`
 	);
 
+	// Keep using classic editor.
+	await runWpCliCommand(
+		'wp option update woocommerce_feature_product_block_editor_enabled "no"'
+	);
+
 	await browser.close();
 } );
 
