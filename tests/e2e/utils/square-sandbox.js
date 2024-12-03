@@ -129,13 +129,18 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		category = catalogObject.categories[0]?.id;
 	}
 
-	const variations = catalogObject.item_data.variations.map( variation => {
-		return {
-			id: variation.id,
-			sku: variation.item_variation_data.sku,
-			price: variation.item_variation_data.price_money.amount,
+	const variations = catalogObject.item_data.variations.map(
+		( variation ) => {
+			return {
+				id: variation.id,
+				name: variation.item_variation_data.name || '',
+				sku: variation.item_variation_data.sku,
+				price: variation.item_variation_data.price_money.amount,
+				item_option_values:
+					variation.item_variation_data.item_option_values || [],
+			};
 		}
-	} );
+	);
 
 	return {
 		catalogId,

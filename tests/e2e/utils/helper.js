@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+import { listCatalog } from './square-sandbox';
 const { promisify } = require('util');
 const execAsync = promisify(require('child_process').exec);
 
@@ -390,6 +391,33 @@ export async function deleteAllProducts( page, permanent = true ) {
 	}
 }
 
+/**
+ * Deletes all product Attributes from WooCommerce.
+ *
+ * @param {Object} page Playwright page object.
+ */
+export async function deleteAllProductAttributes( page ) {
+	await page.goto(
+		'/wp-admin/edit.php?post_type=product&page=product_attributes'
+	);
+	if (
+		await page
+			.locator( 'table.attributes-table tr td strong a' )
+			.first()
+			.isVisible()
+	) {
+		const acceptDialog = ( dialog ) => dialog.accept();
+		page.on( 'dialog', acceptDialog );
+		const attributeRows = await page.locator( 'table.attributes-table tr' );
+		const count = await attributeRows.count();
+		for ( let i = 0; i < count - 1; i++ ) {
+			await attributeRows.nth( 1 ).locator( 'strong a' ).hover();
+			await attributeRows.nth( 1 ).locator( 'a.delete' ).click();
+		}
+		page.removeListener( 'dialog', acceptDialog );
+	}
+}
+
 
 /**
  * Save Cash App Pay payment settings
@@ -676,9 +704,53 @@ export async function runWpCliCommand(command) {
 		`npm --silent run env run tests-cli -- ${command}`
 	);
 
+	console.log(stdout);
+	if (stdout) {
+		return stdout;
+	}
+
 	if (!stderr) {
 		return true;
 	}
 	console.error(stderr);
 	return false;
+}
+
+/**
+ * Get Catalog data from Square.
+ *
+ * @param {Object} page              Playwright page object.
+ * @param {number} maxProcessingTime Maximum processing time.
+ */
+export async function getCatalogData( page, maxProcessingTime = 90000 ) {
+	const MAX_PROCESSING_TIME = maxProcessingTime;
+	const POLLING_INTERVAL_BETWEEN_RETRIES = 3000;
+
+	const getCatalogDataInner = async () => {
+		const result = await listCatalog();
+		return result;
+	};
+
+	// Expose getCatalogData function to page context
+	await page.exposeFunction( 'getCatalogDataInner', getCatalogDataInner );
+
+	const startTime = Date.now();
+	let catalogData = null;
+
+	while ( Date.now() - startTime < MAX_PROCESSING_TIME ) {
+		const result = await getCatalogDataInner();
+		if ( result?.objects?.length > 0 ) {
+			catalogData = result;
+			break;
+		}
+		await page.waitForTimeout( POLLING_INTERVAL_BETWEEN_RETRIES );
+	}
+
+	if ( ! catalogData ) {
+		throw new Error(
+			`No catalog items found after ${ MAX_PROCESSING_TIME }ms of polling`
+		);
+	}
+
+	return catalogData;
 }
