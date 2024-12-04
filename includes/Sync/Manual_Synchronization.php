@@ -1321,6 +1321,8 @@ class Manual_Synchronization extends Stepped_Job {
 		// set this before processing so nothing is missed during processing
 		wc_square()->get_sync_handler()->set_inventory_last_synced_at();
 
+		$product_import = new Product_Import();
+
 		foreach ( $products_to_update as $product ) {
 
 			try {
@@ -1357,6 +1359,22 @@ class Manual_Synchronization extends Stepped_Job {
 				}
 
 				Product::update_from_square( $product, $square_object->getItemData(), false );
+
+				$data = $product_import->extract_product_data( $square_object, $product );
+
+				/**
+				 * Filters the data that is used to create update a WooCommerce product during import.
+				 *
+				 * @since 2.0.0
+				 *
+				 * @param array $data product data
+				 * @param \Square\Models\CatalogObject $object the catalog object from the Square API
+				 * @param Product_Import $this import class instance
+				 */
+				$data = apply_filters( 'woocommerce_square_create_product_data', $data, $square_object, $this );
+
+				// Update the product, this will update/create the variations as well.
+				$product_import->update_product( $product, $data );
 
 				$image_id = Product::get_catalog_item_thumbnail_id( $square_object );
 				Product::update_image_from_square( $product, $image_id );
