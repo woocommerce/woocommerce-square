@@ -456,7 +456,7 @@ class Product_Import extends Stepped_Job {
 	 * @param array $data the Square catalog object data
 	 * @return int|null
 	 */
-	private function update_product( $product, $data ) {
+	public function update_product( $product, $data ) {
 		global $wpdb;
 		$product_id = $product->get_id();
 
@@ -549,7 +549,7 @@ class Product_Import extends Stepped_Job {
 	 * @return array|null
 	 * @throws \Exception
 	 */
-	protected function extract_product_data( $catalog_object, $product = null ) {
+	public function extract_product_data( $catalog_object, $product = null ) {
 
 		$variations = $catalog_object->getItemData()->getVariations() ? $catalog_object->getItemData()->getVariations() : array();
 
