@@ -208,9 +208,6 @@ class Interval_Polling extends Stepped_Job {
 					} else {
 
 						try {
-							$thumbnail_image_id = Product::get_catalog_item_thumbnail_id( $object );
-							Product::update_from_square( $product, $object->getItemData(), false );
-
 							$data = $product_import->extract_product_data( $object, $product );
 
 							/**
@@ -226,8 +223,6 @@ class Interval_Polling extends Stepped_Job {
 
 							// Update the product, this will update/create the variations as well.
 							$product_import->update_product( $product, $data );
-
-							Product::update_image_from_square( $product, $thumbnail_image_id );
 
 							$products_updated[] = $product->get_id();
 
