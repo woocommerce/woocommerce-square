@@ -1307,6 +1307,11 @@ class Manual_Synchronization extends Stepped_Job {
 				}
 			}
 
+			// if no variation was found, check if the parent product exists.
+			if ( ! $found_product && $maybe_parent_product ) {
+				$found_product = $maybe_parent_product;
+			}
+
 			if ( $found_product && in_array( $found_product->get_id(), $synced_product_ids, false ) ) { // phpcs:disable WordPress.PHP.StrictInArray.FoundNonStrictFalse
 
 				Product::set_square_item_id( $found_product, $object->getId() );
