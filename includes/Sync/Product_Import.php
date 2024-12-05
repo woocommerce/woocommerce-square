@@ -558,14 +558,47 @@ class Product_Import extends Stepped_Job {
 			return null;
 		}
 
-		$square_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
-		$category_id        = Category::get_category_id_by_square_id( $square_category_id );
+		$square_category_id  = Category::get_square_category_id( $catalog_object->getItemData() );
+		$category_id         = Category::get_category_id_by_square_id( $square_category_id );
+		$product_name        = $catalog_object->getItemData()->getName();
+		$product_description = Product::get_catalog_item_description( $catalog_object->getItemData() );
+
+		if ( $product ) {
+			/**
+			 * Allow overriding product name during import from Square
+			 *
+			 * @since 3.3.0
+			 *
+			 * @param string                           $product_name Product name to update.
+			 * @param \SquareConnect\Model\CatalogItem $catalog_object Catalog item being imported.
+			 * @param \WC_Product                      $product Product being updated.
+			 * @return false|string String to override the product name, false to disable updating
+			 *                      and keep existing name.
+			 * @since 3.3.0
+			 */
+			$product_name = apply_filters( 'wc_square_update_product_set_name', $product_name, $catalog_object, $product );
+
+			/**
+			 * Allow overriding product description during import from Square
+			 *
+			 * @since 3.3.0
+			 *
+			 * @param string                           $product_description Product description to update.
+			 * @param \SquareConnect\Model\CatalogItem $catalog_object Catalog item being imported.
+			 * @param \WC_Product                      $product Product being updated.
+			 *
+			 * @return false|string String to override the product description, false to disable updating
+			 *                      and keep existing description.
+			 * @since 3.3.0
+			 */
+			$product_description = apply_filters( 'wc_square_update_product_set_description', $product_description, $catalog_object, $product );
+		}
 
 		$data = array(
-			'title'       => $catalog_object->getItemData()->getName(),
+			'title'       => $product_name,
 			'type'        => ( 1 === count( $variations ) && ! ( $product && $product instanceof \WC_Product_Variable ) ) ? 'simple' : 'variable',
 			'sku'         => '', // make sure to reset SKU when simple product is updated to variable.
-			'description' => Product::get_catalog_item_description( $catalog_object->getItemData() ),
+			'description' => $product_description,
 			'image_id'    => Product::get_catalog_item_thumbnail_id( $catalog_object ),
 			'categories'  => array( $category_id ),
 			'square_meta' => array(
