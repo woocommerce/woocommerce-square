@@ -292,10 +292,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		if ( 'variation' === $product->get_type() ) {
 			$options_data_transient = get_transient( 'wc_square_options_data' );
 			$parent_product         = wc_get_product( $product->get_parent_id() );
-			$variation_items        = $parent_product->get_attributes();
+			$attributes             = $parent_product->get_attributes();
+			$variation_items        = $product->get_attributes();
 			$variation_item_values  = array();
 
-			if ( 1 === count( $variation_items ) ) {
+			if ( 1 === count( $attributes ) ) {
 				// Set the name of the variation if it's a single variation.
 				$variation_data->setName( reset( $variation_items ) );
 			} else {
