@@ -58,7 +58,7 @@ test.describe('Cash App Pay Inventory Sync Tests', () => {
 		await browser.close();
 	});
 
-	test.skip('Product inventory should be sync for order placed by Cash App Pay', async ({
+	test.skip('Product inventory should be sync for order placed by Cash App Pay @cashapp @sync', async ({
 		browser,
 		page,
 		baseURL,

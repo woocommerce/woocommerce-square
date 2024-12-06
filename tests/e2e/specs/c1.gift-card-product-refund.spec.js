@@ -48,7 +48,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Purchase Gift card product', async ( { page } ) => {
+test( 'Purchase Gift card product @giftcard', async ( { page } ) => {
 	page.on('dialog', dialog => dialog.accept());
 	const { giftCardSender } = dummy;
 

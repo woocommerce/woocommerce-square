@@ -22,7 +22,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'OnePlus 8 pushed to Square with inventory', async ( { page, baseURL } ) => {
+test( 'OnePlus 8 pushed to Square with inventory @sync', async ( { page, baseURL } ) => {
 	test.slow();
 
 	await deleteAllCatalogItems();
@@ -102,7 +102,7 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page, baseURL } ) =
 	expect( inventory ).toHaveProperty( 'counts[0].quantity', '62' );
 } );
 
-test( 'Update inventory from Woo to Square', async ( { page } ) => {
+test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
 	await page
 		.locator( 'a.row-title' )

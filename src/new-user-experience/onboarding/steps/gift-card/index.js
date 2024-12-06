@@ -2,7 +2,8 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { ToggleControl } from '@wordpress/components';
+import { ToggleControl, Button } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 import parse from 'html-react-parser';
 
 /**
@@ -24,10 +25,43 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 		setGiftCardData,
 	} = usePaymentGatewaySettings();
 
-	const { enabled } = giftCardsGatewaySettings;
+	const [ defaultPlaceholderUrl, setDefaultPlaceholderUrl ] = useState(
+		wcSquareSettings.gcPlaceholderUrl
+	);
+
+	const { enabled, is_default_placeholder } = giftCardsGatewaySettings;
 
 	if ( ! giftCardsGatewaySettingsLoaded ) {
 		return null;
+	}
+
+	function openMediaLibrary() {
+		const imageUploader = wp
+			.media( {
+				title: __(
+					'Select or Upload an image to use as the Gift card placeholder:',
+					'woocommerce-square'
+				),
+				library: {
+					type: 'image',
+				},
+				button: {
+					text: 'Use this image',
+				},
+				multiple: false,
+			} )
+			.on( 'select', function () {
+				const attachment = imageUploader
+					.state()
+					.get( 'selection' )
+					.first()
+					.toJSON();
+
+				setGiftCardData( { placeholder_id: attachment.id } );
+				setDefaultPlaceholderUrl( attachment.url );
+			} );
+
+		imageUploader.open();
 	}
 
 	return (
@@ -74,27 +108,70 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 					) }
 
 					{ origin === 'settings' && (
-						<InputWrapper
-							label={ __(
-								'Enable / Disable',
-								'woocommerce-square'
-							) }
-						>
-							<SquareCheckboxControl
-								className="gift-card-gateway-toggle-field"
-								data-testid="gift-card-gateway-toggle-field"
+						<>
+							<InputWrapper
 								label={ __(
-									'Enable this payment method.',
+									'Enable / Disable',
 									'woocommerce-square'
 								) }
-								checked={ enabled === 'yes' }
-								onChange={ ( value ) =>
-									setGiftCardData( {
-										enabled: value ? 'yes' : 'no',
-									} )
-								}
-							/>
-						</InputWrapper>
+							>
+								<SquareCheckboxControl
+									className="gift-card-gateway-toggle-field"
+									data-testid="gift-card-gateway-toggle-field"
+									label={ __(
+										'Enable this payment method.',
+										'woocommerce-square'
+									) }
+									checked={ enabled === 'yes' }
+									onChange={ ( value ) =>
+										setGiftCardData( {
+											enabled: value ? 'yes' : 'no',
+										} )
+									}
+								/>
+							</InputWrapper>
+							<InputWrapper
+								label={ __(
+									'Gift card product placeholder image',
+									'woocommerce-square'
+								) }
+							>
+								<SquareCheckboxControl
+									className="gift-card-gateway-product-placeholder-toggle-field"
+									data-testid="gift-card-gateway-product-placeholder-toggle-field"
+									label={ __(
+										'Enable to use the following image as the default placeholder for gift card products.',
+										'woocommerce-square'
+									) }
+									checked={ is_default_placeholder === 'yes' }
+									onChange={ ( value ) =>
+										setGiftCardData( {
+											is_default_placeholder: value
+												? 'yes'
+												: 'no',
+										} )
+									}
+								/>
+								<img
+									style={ { maxWidth: '350px' } }
+									src={ defaultPlaceholderUrl }
+									alt={ __(
+										'Preview of the Gift card placeholder',
+										'woocommerce-square'
+									) }
+								/>
+								<Button
+									variant="link"
+									onClick={ openMediaLibrary }
+									style={ { width: 'auto' } }
+								>
+									{ __(
+										'Replace image',
+										'woocommerce-square'
+									) }
+								</Button>
+							</InputWrapper>
+						</>
 					) }
 				</div>
 			</Section>

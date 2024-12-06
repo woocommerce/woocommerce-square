@@ -40,7 +40,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Gift card - Partial payment', async ( { page } ) => {
+test( 'Gift card - Partial payment @giftcard', async ( { page } ) => {
 	page.on('dialog', dialog => dialog.accept());
 	await page.goto( '/product/simple-product' );
 	await page.locator( '.single_add_to_cart_button' ).click();

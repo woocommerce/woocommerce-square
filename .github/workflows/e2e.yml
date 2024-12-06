@@ -8,10 +8,17 @@ on:
     branches:
       - trunk
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e:
     if: "${{ ( github.event_name == 'pull_request' ) ||  github.event_name == 'push' }}"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        type: [ '@general', '@cashapp', '@sync', '@giftcard' ]
     env:
       WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
       WP_ADMIN_PASSWORD: ${{ secrets.WP_ADMIN_PASSWORD }}
@@ -21,6 +28,7 @@ jobs:
       GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
     permissions:
       pull-requests: write
+    name: E2E tests (${{ matrix.type }})
     steps:
       - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
@@ -58,8 +66,13 @@ jobs:
 
       - name: Run E2E tests
         id: square_e2e_tests
-        if: ${{ github.event_name == 'pull_request' }}
-        run: npm run test:e2e
+        if: ${{ github.event_name == 'pull_request' && matrix.type != '@general' }}
+        run: npm run test:e2e -- --grep ${{ matrix.type }}
+
+      - name: Run E2E tests (General)
+        id: square_e2e_tests_general
+        if: ${{ github.event_name == 'pull_request' && matrix.type == '@general' }}
+        run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
       - name: Remove existing labels
         uses: actions/github-script@v6
@@ -83,7 +96,7 @@ jobs:
       - name: Update Success Label
         if: |
           always() &&
-          steps.square_e2e_tests.conclusion == 'success'
+          ( steps.square_e2e_tests.conclusion == 'success' || steps.square_e2e_tests_general.conclusion == 'success' )
         uses: actions/github-script@v6
         continue-on-error: true
         with:
@@ -98,7 +111,7 @@ jobs:
       - name: Update Failure Label
         if: |
           always() &&
-          steps.square_e2e_tests.conclusion == 'failure'
+          ( steps.square_e2e_tests.conclusion == 'failure' || steps.square_e2e_tests_general.conclusion == 'failure' )
         uses: actions/github-script@v6
         continue-on-error: true
         with:
@@ -111,8 +124,12 @@ jobs:
             })
 
       - name: Run E2E Smoke Test
-        if: ${{ github.event_name == 'push' }}
-        run: npm run test:e2e
+        if: ${{ github.event_name == 'push' && matrix.type != '@general' }}
+        run: npm run test:e2e -- --grep ${{ matrix.type }}
+
+      - name: Run E2E Smoke Test (General)
+        if: ${{ github.event_name == 'push' && matrix.type == '@general' }}
+        run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
       - uses: actions/upload-artifact@v3
         if: always()

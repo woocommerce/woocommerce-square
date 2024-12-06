@@ -80,7 +80,7 @@ class Products {
 		);
 
 		// Get gift card features status.
-		$gift_card_settings      = get_option( 'woocommerce_gift_cards_pay_settings', array() );
+		$gift_card_settings      = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
 		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
@@ -133,7 +133,6 @@ class Products {
 			add_filter( 'woocommerce_get_item_data', array( $this, 'add_sent_to_email_to_cart_item' ), 10, 2 );
 			add_filter( 'woocommerce_add_to_cart_sold_individually_found_in_cart', array( $this, 'limit_gift_card_quantity_in_cart' ), 10, 2 );
 			add_filter( 'woocommerce_order_item_needs_processing', array( $this, 'filter_needs_processing' ), 10, 2 );
-			add_filter( 'woocommerce_loop_add_to_cart_link', array( $this, 'filter_shop_page_add_to_cart_button' ), 10, 3 );
 			add_filter( 'woocommerce_single_product_image_thumbnail_html', array( $this, 'filter_single_product_featured_image_placeholder' ) );
 			add_filter( 'woocommerce_product_get_image', array( $this, 'filter_gift_card_product_featured_image_placeholder' ), 10, 3 );
 
@@ -1221,33 +1220,6 @@ class Products {
 	}
 
 	/**
-	 * Replaces the `Add to cart` button on the shop page
-	 * to `Buy Gift Card` for a gift card product.
-	 *
-	 * @param string      $html    Add to Cart button HTML.
-	 * @param \WC_Product $product WooCommerce product.
-	 * @param array       $args    Attributes for the button.
-	 */
-	public function filter_shop_page_add_to_cart_button( $html, $product, $args ) {
-		if ( ! is_shop() ) {
-			return $html;
-		}
-
-		/** @var \WC_Product $product */
-		if ( ! Product::is_gift_card( $product ) ) {
-			return $html;
-		}
-
-		return sprintf(
-			'<a href="%s" class="%s" %s>%s</a>',
-			esc_url( $product->get_permalink() ),
-			'button wp-element-button',
-			isset( $args['attributes'] ) ? wc_implode_html_attributes( $args['attributes'] ) : '',
-			esc_html__( 'Buy Gift Card', 'woocommerce-square' )
-		);
-	}
-
-	/**
 	 * Adds a custom gift card placeholder image to products that are marked
 	 * as a gift card.
 	 *
@@ -1260,6 +1232,10 @@ class Products {
 	 * @return string
 	 */
 	public function filter_gift_card_product_featured_image_placeholder( $image, $product, $size ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $image;
+		}
+
 		if ( has_post_thumbnail( $product->get_id() ) ) {
 			return $image;
 		}
@@ -1268,7 +1244,7 @@ class Products {
 			return $image;
 		}
 
-		$placeholder_image_id = get_option( 'wc_square_gift_card_placeholder_id', 0 );
+		$placeholder_image_id = self::get_gift_card_default_placeholder_id();
 
 		$default_attr = array(
 			'class' => 'woocommerce-placeholder wp-post-image',
@@ -1298,6 +1274,10 @@ class Products {
 	 * @return string
 	 */
 	public function filter_single_product_featured_image_placeholder( $html ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $html;
+		}
+
 		$product_id = get_the_ID();
 
 		if ( ! $product_id ) {
@@ -1318,7 +1298,7 @@ class Products {
 			return $html;
 		}
 
-		$placeholder_image_id = get_option( 'wc_square_gift_card_placeholder_id', false );
+		$placeholder_image_id = self::get_gift_card_default_placeholder_id();
 
 		if ( wp_attachment_is_image( $placeholder_image_id ) ) {
 			$html = wc_get_gallery_image_html( $placeholder_image_id, true );
@@ -1513,6 +1493,10 @@ class Products {
 	 * @return string
 	 */
 	public function gift_card_product_image_id( $image_id, $product ) {
+		if ( ! self::should_use_default_gift_card_placeholder_image() ) {
+			return $image_id;
+		}
+
 		if ( ! Product::is_gift_card( $product ) ) {
 			return $image_id;
 		}
@@ -1522,7 +1506,7 @@ class Products {
 		}
 
 		if ( empty( $image_id ) ) {
-			$placeholder_image_id = get_option( 'wc_square_gift_card_placeholder_id', 0 );
+			$placeholder_image_id = self::get_gift_card_default_placeholder_id();
 
 			if ( $placeholder_image_id ) {
 				$image_id = $placeholder_image_id;
@@ -1530,5 +1514,66 @@ class Products {
 		}
 
 		return $image_id;
+	}
+
+	/**
+	 * Returns true if a gift card product should use the provided
+	 * default placeholder image.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @return bool
+	 */
+	public static function should_use_default_gift_card_placeholder_image() {
+		$settings   = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+		$is_enabled = isset( $settings['enabled'] ) && 'yes' === $settings['enabled'];
+
+		if ( ! $is_enabled ) {
+			return false;
+		}
+
+		$should_use_placeholder = isset( $settings['is_default_placeholder'] ) && 'yes' === $settings['is_default_placeholder'];
+
+		if ( ! $should_use_placeholder ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns the default placeholder image ID for gift card products.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @return int
+	 */
+	public static function get_gift_card_default_placeholder_id() {
+		$settings = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+
+		return (int) ( $settings['placeholder_id'] ?? 0 );
+	}
+
+	/**
+	 * Returns the default placeholder image URL for gift card products.
+	 *
+	 * @since 4.8.1
+	 *
+	 * @return string|bool
+	 */
+	public static function get_gift_card_default_placeholder_url() {
+		$placeholder_id = self::get_gift_card_default_placeholder_id();
+
+		if ( ! $placeholder_id ) {
+			return '';
+		}
+
+		$attachment = get_post( $placeholder_id );
+
+		if ( ! $attachment ) {
+			return '';
+		}
+
+		return wp_get_attachment_url( $attachment->ID );
 	}
 }

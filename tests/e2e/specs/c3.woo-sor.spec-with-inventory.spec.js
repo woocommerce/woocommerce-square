@@ -50,26 +50,39 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
+test( 'OnePlus 8 pushed to Square with inventory @sync', async ( { page } ) => {
 	test.slow();
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 
-	const result = await new Promise( ( resolve ) => {
-		let intervalId = setInterval( async () => {
-			await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
-			const __result = await listCatalog();
-			if ( __result.objects ) {
-				clearInterval( intervalId );
-				resolve( __result );
-			}
-		}, 3000 );
-	} );
+	const MAX_PROCESSING_TIME = 90000;
+	const POLLING_INTERVAL_BETWEEN_RETRIES = 3000;
 
-	const {
-		name,
-		variations,
-	} = extractCatalogInfo( result.objects[0] );
+	const getCatalogData = async () => {
+		const result = await listCatalog();
+		return result;
+	};
+
+	// Expose getCatalogData function to page context
+	await page.exposeFunction('getCatalogData', getCatalogData);
+
+	const startTime = Date.now();
+	let catalogData = null;
+
+	while ( Date.now() - startTime < MAX_PROCESSING_TIME ) {
+		const result = await getCatalogData();
+		if ( result?.objects?.length > 0 ) {
+			catalogData = result;
+			break;
+		}
+		await page.waitForTimeout( POLLING_INTERVAL_BETWEEN_RETRIES );
+	}
+
+	if ( ! catalogData ) {
+		throw new Error( `No catalog items found after ${MAX_PROCESSING_TIME}ms of polling` );
+	}
+
+	const { name, variations } = extractCatalogInfo( catalogData.objects[0] );
 
 	expect( name ).toEqual( 'OnePlus 8' );
 	expect( variations[ 0 ].sku ).toEqual( 'oneplus-8' );
@@ -77,16 +90,22 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
 
 	let inventory = await retrieveInventoryCount( variations[ 0 ].id );
 
+	// Poll for inventory data if not immediately available
 	if ( ! inventory.counts ) {
-		await new Promise( ( resolve ) => {
-			const inventoryIntervalId = setInterval( async () => {
-				inventory = await retrieveInventoryCount( variations[ 0 ].id );
-				if ( inventory.counts ) {
-					clearInterval( inventoryIntervalId );
-					resolve();
-				}
-			}, 4000 );
-		} );
+		// Expose retrieveInventoryCount to page context
+		await page.exposeFunction('retrieveInventoryCountInPage', retrieveInventoryCount);
+		
+		inventory = await page.waitForFunction(
+			async ( variationId ) => {
+				const inventoryData = await window.retrieveInventoryCountInPage( variationId );
+				return inventoryData.counts ? inventoryData : null;
+			},
+			variations[ 0 ].id,
+			{
+				timeout: MAX_PROCESSING_TIME,
+				polling: POLLING_INTERVAL_BETWEEN_RETRIES
+			}
+		).then( result => result.jsonValue() );
 	}
 
 	expect( inventory ).toHaveProperty( 'counts' );
@@ -94,7 +113,7 @@ test( 'OnePlus 8 pushed to Square with inventory', async ( { page } ) => {
 } );
 
 
-test('Sync Inventory stock from Square on the product edit screen - (SOR WooCommerce - Stock management enabled)', async ({
+test('Sync Inventory stock from Square on the product edit screen - (SOR WooCommerce - Stock management enabled) @sync', async ({
 	page,
 }) => {
 	await page.goto('/product/oneplus-8/');
@@ -136,7 +155,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR WooComm
 });
 
 
-test('Sync Inventory stock from Square on the product edit screen - (SOR WooCommerce - Stock management disabled)', async ({
+test('Sync Inventory stock from Square on the product edit screen - (SOR WooCommerce - Stock management disabled) @sync', async ({
 	page,
 }) => {
 	await page.goto('/product/oneplus-8/');

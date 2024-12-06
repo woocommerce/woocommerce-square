@@ -5,6 +5,7 @@
 
 namespace WooCommerce\Square\Admin\Rest;
 
+use WooCommerce\Square\Gateway\Gift_Card;
 use WP_REST_Server;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -17,13 +18,6 @@ defined( 'ABSPATH' ) || exit;
  * @since 4.7.0
  */
 class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_Controller {
-
-	/**
-	 * Square settings option name.
-	 *
-	 * @var string
-	 */
-	const SQUARE_PAYMENT_SETTINGS_OPTION_NAME = 'woocommerce_gift_cards_pay_settings';
 
 	/**
 	 * Endpoint path.
@@ -47,6 +41,8 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 			'enabled',
 			'title',
 			'description',
+			'is_default_placeholder',
+			'placeholder_id',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -73,19 +69,29 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 				'callback'            => array( $this, 'save_settings' ),
 				'permission_callback' => array( $this, 'check_permission' ),
 				'args'                => array(
-					'enabled'     => array(
+					'enabled'                => array(
 						'description'       => __( 'Enable Square payment gateway.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'title'       => array(
+					'title'                  => array(
 						'description'       => __( 'Square payment gateway title.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
-					'description' => array(
+					'description'            => array(
 						'description'       => __( 'Square payment gateway description.', 'woocommerce-square' ),
 						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'is_default_placeholder' => array(
+						'description'       => __( 'Indicates if a Gift card product should use the default placeholder provided by the plugin.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'placeholder_id'         => array(
+						'description'       => __( 'ID of the placeholder media.', 'woocommerce-square' ),
+						'type'              => 'integer',
 						'sanitize_callback' => '',
 					),
 				),
@@ -99,7 +105,7 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 	 * @return WP_REST_Response
 	 */
 	public function get_settings() {
-		$square_settings   = get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+		$square_settings   = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$filtered_settings = array_intersect_key( $square_settings, array_flip( $this->allowed_params ) );
 
 		return new WP_REST_Response( $filtered_settings );
@@ -119,7 +125,15 @@ class WC_REST_Square_Gift_Cards_Settings_Controller extends WC_Square_REST_Base_
 			$settings[ $key ] = $new_value;
 		}
 
-		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
+		update_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
+
+		/**
+		 * Action triggered when the Gift card payment settings are updated.
+		 *
+		 * @since 4.8.1
+		 */
+		do_action( 'wc_square_' . Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME . '_settings_updated', $settings );
+
 		wp_send_json_success();
 	}
 }
