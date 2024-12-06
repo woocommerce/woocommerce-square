@@ -299,6 +299,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			if ( 1 === count( $attributes ) ) {
 				// Set the name of the variation if it's a single variation.
 				$variation_data->setName( reset( $variation_items ) );
+				$variation_data->setItemOptionValues( null );
 			} else {
 				// If there are multiple attributes, the name of the variation is the combination of all attribute values.
 				$variation_name = array();
@@ -383,7 +384,6 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 				// Set the name of the variation as the combination of all attribute values.
 				$variation_data->setName( implode( ', ', $variation_name ) );
-
 				$variation_data->setItemOptionValues( $variation_item_values );
 			}
 		}
