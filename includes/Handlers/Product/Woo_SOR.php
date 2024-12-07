@@ -106,7 +106,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				// Loop through the attributes to create options and values at Square.
 				foreach ( $attributes as $attribute_id => $attribute ) {
 
-					$attribute_name = $attribute->get_name(); //wow it gives pa_size which saved me!
+					$attribute_name = $attribute->get_name();
 					// Check if its a taxonomy-based attribute.
 					$attribute_option_values = array();
 					if ( taxonomy_exists( $attribute_id ) ) {
