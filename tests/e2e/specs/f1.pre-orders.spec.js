@@ -155,8 +155,7 @@ test.describe('Pre-Orders Tests @general', () => {
 		).toEqual('wc-processing');
 	});
 
-	// TODO: Fix this test and investigate why it's failing.
-	test.skip('[Upfront Charge] Square Cash App Pay should work with Pre-Orders @cashapp', async ({
+	test('[Upfront Charge] Square Cash App Pay should work with Pre-Orders @cashapp', async ({
 		browser,
 		page: adminPage,
 	}) => {

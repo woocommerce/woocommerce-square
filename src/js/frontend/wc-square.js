@@ -813,4 +813,97 @@ jQuery( document ).ready( ( $ ) => {
 	}
 
 	window.WC_Square_Payment_Form_Handler = WC_Square_Payment_Form_Handler;
+
+	/**
+	 * Handles Classic Checkout error notice positioning and scrolling for
+	 * Square Credit Card payment method, improving the user experience by
+	 * ensuring payment gateway errors are always visible without requiring
+	 * the user to scroll.
+	 */
+	class WC_Square_Classic_Checkout_Error_Handler {
+		static SELECTORS = {
+			PAYMENT_METHOD_CHECKBOX: '#payment_method_square_credit_card',
+			PAYMENT_METHOD_FORM: '#payment',
+			ERROR_NOTICE: '.woocommerce-NoticeGroup-checkout',
+		};
+
+		/**
+		 * Bind it to WC `checkout_error` event.
+		 */
+		static init() {
+			$( document.body ).on( 'checkout_error', () => {
+				if ( this.isSquareCreditCardPaymentSelected() ) {
+					this.handleCheckoutError();
+				}
+			} );
+		}
+
+		/**
+		 * Reposition and scroll to notice if it is offscreen.
+		 */
+		static handleCheckoutError() {
+			this.repositionNotice();
+			this.cancelAllScrolling();
+			if ( this.isNoticeOffscreen() ) {
+				this.scrollToNotice();
+			}
+		}
+
+		/**
+		 * Checks if Square Credit Card payment method is selected.
+		 *
+		 * @return {boolean} True if Square payment is selected
+		 */
+		static isSquareCreditCardPaymentSelected() {
+			const $paymentMethod = $( this.SELECTORS.PAYMENT_METHOD_CHECKBOX );
+			return $paymentMethod.length > 0 && $paymentMethod.is( ':checked' );
+		}
+
+		/**
+		 * Moves checkout notice above payment method form.
+		 */
+		static repositionNotice() {
+			const $notice = $( this.SELECTORS.ERROR_NOTICE );
+			const $paymentForm = $( this.SELECTORS.PAYMENT_METHOD_FORM );
+
+			if ( $notice.length && $paymentForm.length ) {
+				$notice.insertBefore( $paymentForm );
+			}
+		}
+
+		/**
+		 * WooCommerce triggers a scroll to the top of the page after
+		 * `checkout_error` event is triggered. This cancels all scrolling in the page.
+		 */
+		static cancelAllScrolling() {
+			$( 'html, body' ).stop();
+		}
+
+		/**
+		 * Check if error notice is offscreen.
+		 *
+		 * @return {boolean} True if error notice is offscreen.
+		 */
+		static isNoticeOffscreen() {
+			const $notice = $( this.SELECTORS.ERROR_NOTICE );
+			return $notice.length &&
+				(
+					$notice[ 0 ].getBoundingClientRect().bottom <= 0 ||
+					$notice[ 0 ].getBoundingClientRect().top >= window.innerHeight
+				);
+		}
+
+		/**
+		 * Scrolls to error notice if it is not visible on the viewport.
+		 */
+		static scrollToNotice() {
+			const $notice = $( this.SELECTORS.ERROR_NOTICE );
+			$notice[ 0 ].scrollIntoView( {
+				behavior: 'smooth',
+				block: 'start',
+			} );
+		}
+	}
+
+	WC_Square_Classic_Checkout_Error_Handler.init();
 } );
