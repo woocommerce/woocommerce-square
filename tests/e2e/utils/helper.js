@@ -379,7 +379,7 @@ export async function doSquareRefund( page, amount = '' ) {
  */
 export async function deleteAllProducts( page, permanent = true ) {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
-	if ( ! await page.locator( '#cb-select-all-1' ).isVisible() ) {
+	if ( ! await page.locator( '#bulk-action-selector-top' ).isVisible() ) {
 		return;
 	}
 	await page.locator( '#cb-select-all-1' ).check();

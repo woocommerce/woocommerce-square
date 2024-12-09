@@ -49,6 +49,22 @@ const throwCustomError = (
 	);
 };
 
+const get = {
+	productAttributes: async ( params ) => {
+		const response = await api
+			.get( 'products/attributes', params )
+			.then( ( res ) => res )
+			.catch( ( error ) => {
+				throwCustomError(
+					error,
+					'Something went wrong when trying to list all product attributes.'
+				);
+			} );
+
+		return response.data;
+	},
+};
+
 const create = {
 	product: async ( product ) => {
 		const response = await api.post( 'products', product );
@@ -76,6 +92,7 @@ const create = {
 };
 
 module.exports = {
+	get,
 	create,
 	constructWith,
 };
