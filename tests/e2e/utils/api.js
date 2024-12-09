@@ -50,6 +50,19 @@ const throwCustomError = (
 };
 
 const get = {
+	product: async ( id ) => {
+		const response = await api
+			.get( `products/${ id }` )
+			.then( ( res ) => res )
+			.catch( ( error ) => {
+				throwCustomError(
+					error,
+					'Something went wrong when trying to get a product.'
+				);
+			} );
+
+		return response.data;
+	},
 	productAttributes: async ( params ) => {
 		const response = await api
 			.get( 'products/attributes', params )
@@ -62,6 +75,35 @@ const get = {
 			} );
 
 		return response.data;
+	},
+	productVariations: async ( productId ) => {
+		const response = await api
+			.get( `products/${ productId }/variations` )
+			.then( ( res ) => res )
+			.catch( ( error ) => {
+				throwCustomError(
+					error,
+					'Something went wrong when trying to list all product variations.'
+				);
+			} );
+
+		return response.data;
+	},
+};
+
+const update = {
+	product: async ( productId, payload ) => {
+		const response = await api.put( `products/${ productId }`, payload );
+
+		return response.data.id;
+	},
+	productVariation: async ( productId, variationId, payload ) => {
+		const response = await api.put(
+			`products/${ productId }/variations/${ variationId }`,
+			payload
+		);
+
+		return response.data.id;
 	},
 };
 
@@ -94,5 +136,6 @@ const create = {
 module.exports = {
 	get,
 	create,
+	update,
 	constructWith,
 };

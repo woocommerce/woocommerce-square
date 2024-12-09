@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
-import { get } from '../utils/api';
+import { get, update } from '../utils/api';
 
 import {
 	deleteAllProductAttributes,
@@ -12,10 +12,12 @@ import {
 	deleteAllCatalogItems,
 	extractCatalogInfo,
 	clearSync,
+	listCatalog,
 } from '../utils/square-sandbox';
 import {
 	createVariableProduct,
 	createVariations,
+	updateVariableProduct,
 } from '../utils/variable-products';
 
 let colorAttributeId;
@@ -106,7 +108,12 @@ test.beforeAll( 'Setup', async () => {
 	await browser.close();
 } );
 
-test.beforeEach( 'Clear sync', async ( { page } ) => {
+test.beforeEach( 'Clear sync', async ( { page }, testInfo ) => {
+	if (
+		testInfo.title === 'Variable product updated and pushed to Square @sync'
+	) {
+		return;
+	}
 	await deleteAllProducts( page );
 	await deleteAllCatalogItems();
 	await clearSync( page );
@@ -114,7 +121,9 @@ test.beforeEach( 'Clear sync', async ( { page } ) => {
 
 test.slow();
 
-test( '[1 Global Attribute] Variable product pushed to Square @sync', async ( { page } ) => {
+test( '[1 Global Attribute] Variable product pushed to Square @sync', async ( {
+	page,
+} ) => {
 	const randomNum = Math.floor( Math.random() * 1000 );
 	const productName = `Variable Product ${ randomNum } (1 Global Attribute)`;
 	const product = {
@@ -166,7 +175,7 @@ test( '[1 Global Attribute] Variable product pushed to Square @sync', async ( { 
 	expect( variations[ 0 ].name ).toEqual( 'red' );
 } );
 
-test( 'Variable product (1 Custom Attribute) pushed to Square @sync', async ( {
+test( '[1 Custom Attribute] Variable product pushed to Square @sync', async ( {
 	page,
 } ) => {
 	const randomNum = Math.floor( Math.random() * 1000 );
@@ -221,7 +230,7 @@ test( 'Variable product (1 Custom Attribute) pushed to Square @sync', async ( {
 	expect( variations[ 0 ].name ).toEqual( 'Green' );
 } );
 
-test( 'Variable product (2 Global Attributes) pushed to Square @sync', async ( {
+test( '[2 Global Attributes] Variable product pushed to Square @sync', async ( {
 	page,
 } ) => {
 	const randomNum = Math.floor( Math.random() * 1000 );
@@ -330,7 +339,7 @@ test( 'Variable product (2 Global Attributes) pushed to Square @sync', async ( {
 	} );
 } );
 
-test( 'Variable product (2 Custom Attributes) pushed to Square @sync', async ( {
+test( '[2 Custom Attributes] Variable product pushed to Square @sync', async ( {
 	page,
 } ) => {
 	const randomNum = Math.floor( Math.random() * 1000 );
@@ -439,116 +448,219 @@ test( 'Variable product (2 Custom Attributes) pushed to Square @sync', async ( {
 	} );
 } );
 
-test( 'Variable product (1 Global Attribute + 1 Custom Attribute) pushed to Square @sync', async ( {
-	page,
-} ) => {
-	const randomNum = Math.floor( Math.random() * 1000 );
-	const productName = `Variable Product ${ randomNum } (1 Global Attribute + 1 Custom Attribute)`;
-	const product = {
-		name: productName,
-		description: 'This is a variable product',
-	};
-	const attributes = [
-		{
-			id: colorAttributeId,
-			visible: true,
-			variation: true,
-			options: [ 'Red', 'Blue' ],
-		},
-		{
-			name: 'Custom Size',
-			visible: true,
-			variation: true,
-			options: [ 'S', 'M' ],
-		},
-	];
+test.describe( '[1 Global Attribute + 1 Custom Attribute]', () => {
+	let productId = 142;
+	test( 'Variable product pushed to Square @sync', async ( { page } ) => {
+		const randomNum = Math.floor( Math.random() * 1000 );
+		const productName = `Variable Product ${ randomNum } (1 Global Attribute + 1 Custom Attribute)`;
+		const product = {
+			name: productName,
+			description: 'This is a variable product',
+		};
+		const attributes = [
+			{
+				id: colorAttributeId,
+				visible: true,
+				variation: true,
+				options: [ 'Red', 'Blue' ],
+			},
+			{
+				name: 'Custom Size',
+				visible: true,
+				variation: true,
+				options: [ 'S', 'M' ],
+			},
+		];
 
-	const productId = await createVariableProduct( product, attributes );
+		productId = await createVariableProduct( product, attributes );
 
-	const productAttributes = [
-		{
-			regular_price: '9.99',
-			sku: `variable-product-${ productId }-red-s`,
-			attributes: [
-				{
-					id: colorAttributeId,
-					option: 'Red',
-				},
-				{
-					name: 'Custom Size',
-					option: 'S',
-				},
-			],
-		},
-		{
-			regular_price: '10.99',
-			sku: `variable-product-${ productId }-red-m`,
-			attributes: [
-				{
-					id: colorAttributeId,
-					option: 'Red',
-				},
-				{
-					name: 'Custom Size',
-					option: 'M',
-				},
-			],
-		},
-		{
-			regular_price: '11.99',
-			sku: `variable-product-${ productId }-blue-s`,
-			attributes: [
-				{
-					id: colorAttributeId,
-					option: 'Blue',
-				},
-				{
-					name: 'Custom Size',
-					option: 'S',
-				},
-			],
-		},
-		{
-			regular_price: '12.99',
-			sku: `variable-product-${ productId }-blue-m`,
-			attributes: [
-				{
-					id: colorAttributeId,
-					option: 'Blue',
-				},
-				{
-					name: 'Custom Size',
-					option: 'M',
-				},
-			],
-		},
-	];
-	const variationIds = await createVariations( productId, productAttributes );
+		const productAttributes = [
+			{
+				regular_price: '9.99',
+				sku: `variable-product-${ productId }-red-s`,
+				attributes: [
+					{
+						id: colorAttributeId,
+						option: 'Red',
+					},
+					{
+						name: 'Custom Size',
+						option: 'S',
+					},
+				],
+			},
+			{
+				regular_price: '10.99',
+				sku: `variable-product-${ productId }-red-m`,
+				attributes: [
+					{
+						id: colorAttributeId,
+						option: 'Red',
+					},
+					{
+						name: 'Custom Size',
+						option: 'M',
+					},
+				],
+			},
+			{
+				regular_price: '11.99',
+				sku: `variable-product-${ productId }-blue-s`,
+				attributes: [
+					{
+						id: colorAttributeId,
+						option: 'Blue',
+					},
+					{
+						name: 'Custom Size',
+						option: 'S',
+					},
+				],
+			},
+			{
+				regular_price: '12.99',
+				sku: `variable-product-${ productId }-blue-m`,
+				attributes: [
+					{
+						id: colorAttributeId,
+						option: 'Blue',
+					},
+					{
+						name: 'Custom Size',
+						option: 'M',
+					},
+				],
+			},
+		];
+		const variationIds = await createVariations(
+			productId,
+			productAttributes
+		);
 
-	await page.goto( `/wp-admin/post.php?post=${ productId }&action=edit`, {
-		waitUntil: 'networkidle',
+		await page.goto( `/wp-admin/post.php?post=${ productId }&action=edit`, {
+			waitUntil: 'networkidle',
+		} );
+		await page.locator( '.general_tab' ).click();
+		await page.locator( '#_wc_square_synced' ).check();
+		await page.locator( '#publish' ).click();
+		await expect( page.getByText( 'Product updated' ) ).toBeVisible();
+
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-settings&tab=square&section=update'
+		);
+
+		const catalogData = await getCatalogData( page );
+		const { name, variations } = extractCatalogInfo(
+			catalogData.objects[ 0 ]
+		);
+		expect( name ).toEqual( productName );
+		expect( variations.length ).toEqual( 4 );
+		const skus = productAttributes.map( ( attribute ) => attribute.sku );
+		variations.forEach( ( variation ) => {
+			expect( skus.includes( variation.sku ) ).toBeTruthy();
+			expect( variation.item_option_values.length ).toBe( 2 );
+		} );
 	} );
-	await page.locator( '.general_tab' ).click();
-	await page.locator( '#_wc_square_synced' ).check();
-	await page.locator( '#publish' ).click();
-	await expect( page.getByText( 'Product updated' ) ).toBeVisible();
 
-	await page.goto(
-		'/wp-admin/admin.php?page=wc-settings&tab=square&section=update'
-	);
+	test( 'Variable product updated and pushed to Square @sync', async ( {
+		page,
+	} ) => {
+		if ( ! productId ) {
+			throw new Error( 'Product ID is required to update a product.' );
+		}
 
-	const catalogData = await getCatalogData( page );
-	const { name, variations } = extractCatalogInfo( catalogData.objects[ 0 ] );
-	expect( name ).toEqual( productName );
-	expect( variations.length ).toEqual( 4 );
-	const skus = productAttributes.map( ( attribute ) => attribute.sku );
-	variations.forEach( ( variation ) => {
-		expect( skus.includes( variation.sku ) ).toBeTruthy();
-		expect( variation.item_option_values.length ).toBe( 2 );
+		const attributes = [
+			{
+				id: sizeAttributeId,
+				visible: true,
+				variation: true,
+				options: [ 'S', 'M' ],
+			},
+		];
+
+		await updateVariableProduct( { id: productId }, attributes );
+		const productVariations = await get.productVariations( productId );
+
+		for ( let i = 0; i < productVariations.length; i++ ) {
+			const variation = productVariations[ i ];
+			await update.productVariation( productId, variation.id, {
+				attributes: [
+					...variation.attributes,
+					{
+						id: sizeAttributeId,
+						option: 'S',
+					},
+				],
+			} );
+		}
+
+		const newAttributes = [
+			{
+				regular_price: '13.99',
+				sku: `variable-product-${ productId }-blue-m-m`,
+				attributes: [
+					{
+						id: colorAttributeId,
+						option: 'Blue',
+					},
+					{
+						id: sizeAttributeId,
+						option: 'M',
+					},
+					{
+						name: 'Custom Size',
+						option: 'M',
+					},
+				],
+			},
+		];
+		await createVariations( productId, newAttributes );
+
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-settings&tab=square&section=update'
+		);
+
+		const MAX_PROCESSING_TIME = 120000;
+		const POLLING_INTERVAL_BETWEEN_RETRIES = 3000;
+
+		const getCatalogDataInner = async () => {
+			const result = await listCatalog();
+			return result;
+		};
+
+		// Expose getCatalogData function to page context
+		await page.exposeFunction( 'getCatalogDataInner', getCatalogDataInner );
+
+		const startTime = Date.now();
+		let catalogData = null;
+
+		while ( Date.now() - startTime < MAX_PROCESSING_TIME ) {
+			const result = await getCatalogDataInner();
+			if (
+				result?.objects?.length > 0 &&
+				result.objects[ 0 ]?.item_data?.variations.length === 5
+			) {
+				catalogData = result;
+				break;
+			}
+			await page.waitForTimeout( POLLING_INTERVAL_BETWEEN_RETRIES );
+		}
+
+		if ( ! catalogData ) {
+			throw new Error(
+				`Catalog item not updated after ${ MAX_PROCESSING_TIME }ms of polling`
+			);
+		}
+
+		const { variations } = extractCatalogInfo( catalogData.objects[ 0 ] );
+		expect( variations.length ).toEqual( 5 );
+		variations.forEach( ( variation ) => {
+			expect( variation.item_option_values.length ).toBe( 3 );
+		} );
 	} );
 } );
 
-test( 'Variable product (2 Global Attributes + 1 Custom Attribute) pushed to Square @sync', async ( {
+test( '[2 Global Attributes + 1 Custom Attribute] Variable product pushed to Square @sync', async ( {
 	page,
 } ) => {
 	const randomNum = Math.floor( Math.random() * 1000 );
