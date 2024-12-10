@@ -23,8 +23,8 @@ import {
 let colorAttributeId;
 let sizeAttributeId;
 
-test.slow();
 test.beforeAll( 'Setup', async () => {
+	test.setTimeout( 240000 );
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
 
@@ -371,7 +371,7 @@ test( '[Woo SOR] Merchant should able to sync products with multiple variations 
 		'/wp-admin/admin.php?page=wc-settings&tab=square&section=update'
 	);
 
-	const catalogData = await getCatalogData( page, 120000, 6 );
+	const catalogData = await getCatalogData( page, 150000, 6 );
 
 	for ( const object of catalogData.objects ) {
 		const { name, variations } = extractCatalogInfo( object );
