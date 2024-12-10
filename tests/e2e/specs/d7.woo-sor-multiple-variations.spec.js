@@ -237,7 +237,7 @@ const createProducts = async ( page, products ) => {
 	return productData;
 };
 
-test( '[Woo SOR] Merchant should able to sync products with multiple variations', async ( {
+test( '[Woo SOR] Merchant should able to sync products with multiple variations @sync', async ( {
 	page,
 } ) => {
 	// Increase timeout for this test
