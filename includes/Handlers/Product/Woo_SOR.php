@@ -321,7 +321,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$taxonomy_exists  = true;
 					} else {
 						// For custom attributes, simply use the cleaned-up attribute ID
-						$attribute_name   = ucwords( str_replace( '-', ' ', $attribute_id ) ); // what if merchant changes the name?
+						$attribute_name   = ucwords( str_replace( '-', ' ', $attribute_id ) );
 						$attribute_id     = $attribute_name;
 						$variation_name[] = $attribute_value;
 					}
