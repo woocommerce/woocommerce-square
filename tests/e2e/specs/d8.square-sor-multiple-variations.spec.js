@@ -90,6 +90,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 		} )
 		.click();
 
+	await page.waitForTimeout( 1000 );
 	await expect( page.locator( '#product-type' ) ).toHaveValue( 'variable' );
 	await page.locator( 'li.attribute_tab a' ).click();
 	await expect(
@@ -107,6 +108,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 		} )
 		.click();
 
+	await page.waitForTimeout( 1000 );
 	await expect( page.locator( '#product-type' ) ).toHaveValue( 'variable' );
 	await page.locator( 'li.attribute_tab a' ).click();
 	await expect(
