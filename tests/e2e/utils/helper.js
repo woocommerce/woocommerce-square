@@ -723,8 +723,9 @@ export async function runWpCliCommand(command) {
  *
  * @param {Object} page              Playwright page object.
  * @param {number} maxProcessingTime Maximum processing time.
+ * @param {number} expectedObjects   Expected objects.
  */
-export async function getCatalogData( page, maxProcessingTime = 90000 ) {
+export async function getCatalogData( page, maxProcessingTime = 90000, expectedObjects = 1 ) {
 	const MAX_PROCESSING_TIME = maxProcessingTime;
 	const POLLING_INTERVAL_BETWEEN_RETRIES = 3000;
 
@@ -741,7 +742,7 @@ export async function getCatalogData( page, maxProcessingTime = 90000 ) {
 
 	while ( Date.now() - startTime < MAX_PROCESSING_TIME ) {
 		const result = await getCatalogDataInner();
-		if ( result?.objects?.length > 0 ) {
+		if ( result?.objects?.length === expectedObjects ) {
 			catalogData = result;
 			break;
 		}
@@ -755,4 +756,34 @@ export async function getCatalogData( page, maxProcessingTime = 90000 ) {
 	}
 
 	return catalogData;
+}
+
+/**
+ * Runs a scheduled action in WooCommerce.
+ *
+ * @param {Object} page                            The Puppeteer page object.
+ * @param {string} [action='wc_square_job_runner'] The action to run. Defaults to 'wc_square_job_runner'.
+ */
+export async function runScheduledAction(
+	page,
+	action = 'wc_square_job_runner'
+) {
+	// Trigger the subscription renewal.
+	await page.goto(
+		'wp-admin/tools.php?page=action-scheduler&status=pending&s=' + action
+	);
+
+	const actionLocator = page.getByRole( 'cell', { name: action } ).first();
+	if ( ! ( await actionLocator.isVisible() ) ) {
+		return;
+	}
+
+	const actionRow = await actionLocator.locator( '..' );
+	await actionRow.hover();
+	await actionRow.getByRole( 'link', { name: 'Run' } ).click();
+	// Wait for the action to be processed.
+	await page.waitForTimeout( 1500 );
+	await expect(
+		page.getByText( 'Successfully executed action' )
+	).toBeVisible();
 }

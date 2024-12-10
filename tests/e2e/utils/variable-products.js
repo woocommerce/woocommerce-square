@@ -3,15 +3,15 @@ const api = require( './api' );
 /**
  * Create a variable product using the WooCommerce REST API.
  *
- * @param {{ name: string, visible: boolean, variation: boolean, options: string[] }[]} attributes List of attributes. See [Product - Attributes properties](https://woocommerce.github.io/woocommerce-rest-api-docs/#product-attributes-properties).
+ * @param {{ name: string, visible: boolean, variation: boolean, options: string[] }[]} product Product object to create.
  * @return {Promise<number>} ID of the created variable product
  */
-async function createVariableProduct( product, attributes = [] ) {
+async function createVariableProduct( product ) {
 	const payload = {
 		name: product.name,
 		description: product.description || 'This is a variable product',
 		type: 'variable',
-		attributes,
+		attributes: product.attributes || [],
 	};
 
 	const productId = await api.create.product( payload );
