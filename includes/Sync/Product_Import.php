@@ -766,20 +766,22 @@ class Product_Import extends Stepped_Job {
 			}
 
 			$attributes[] = array(
-				'name'         => $option_name,
+				'name'         => str_replace( 'pa_', '', $option_name ),
 				'slug'         => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
 				'is_variation' => true,
 				'option'       => $option_matched,
+				'pa_prefix'    => strpos( $option_name, 'pa_' ) !== false,
 			);
 		}
 
 		if ( ! $variation_options ) {
 			$attribute_name = ! empty( reset( $this->woo_attributes ) ) ? reset( $this->woo_attributes )->get_name() : 'Attribute';
 			$attributes[]   = array(
-				'name'         => $attribute_name,
-				'slug'         => sanitize_title( $attribute_name ),
+				'name'         => str_replace( 'pa_', '', $attribute_name ),
+				'slug'         => str_replace( 'pa_', '', sanitize_title( $attribute_name ) ),
 				'is_variation' => true,
 				'option'       => $variation_data->getName(),
+				'pa_prefix'    => strpos( $attribute_name, 'pa_' ) !== false,
 			);
 		}
 
@@ -842,11 +844,12 @@ class Product_Import extends Stepped_Job {
 			}
 
 			$data_attributes[] = array(
-				'name'      => $option_name,
+				'name'      => str_replace( 'pa_', '', $option_name ),
 				'slug'      => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
 				'visible'   => true,
 				'variation' => true,
 				'options'   => $option_values,
+				'pa_prefix' => strpos( $option_name, 'pa_' ) !== false,
 			);
 		}
 
@@ -865,11 +868,12 @@ class Product_Import extends Stepped_Job {
 
 		$attribute_name = ! empty( reset( $this->woo_attributes ) ) ? reset( $this->woo_attributes )->get_name() : 'Attribute';
 		$attributes[]   = array(
-			'name'      => $attribute_name,
+			'name'      => str_replace( 'pa_', '', $attribute_name ),
 			'slug'      => str_replace( 'pa_', '', sanitize_title( $attribute_name ) ),
 			'visible'   => true,
 			'variation' => true,
 			'options'   => wp_list_pluck( $variations, 'name' ),
+			'pa_prefix' => strpos( $attribute_name, 'pa_' ) !== false,
 		);
 
 		return $attributes;
@@ -973,8 +977,40 @@ class Product_Import extends Stepped_Job {
 				}
 
 				if ( $taxonomy ) {
-
 					$is_taxonomy = 1;
+
+				} else if ( isset( $attribute['pa_prefix'] ) && $attribute['pa_prefix'] ) {
+					// Create new taxonomy attribute.
+					$is_taxonomy = 1;
+					$taxonomy    = wc_attribute_taxonomy_name( $attribute_slug );
+
+					if ( ! taxonomy_exists( $taxonomy ) ) {
+						$attribute_name = ucfirst( wc_clean( $attribute['name'] ) );
+						
+						$attribute_args = array(
+							'label' => $attribute_name,
+							'name'  => $attribute_name,
+							'slug'  => $attribute_slug,
+						);
+
+						$attribute_id = wc_create_attribute( $attribute_args );
+
+						if ( is_wp_error( $attribute_id ) ) {
+							throw new \Exception( $attribute_id->get_error_message() );
+						}
+
+						// Register the taxonomy.
+						register_taxonomy(
+							$taxonomy,
+							'product',
+							array(
+								'hierarchical' => true,
+								'show_ui'      => false,
+								'query_var'    => true,
+								'rewrite'      => false,
+							)
+						);						
+					}
 				}
 
 				if ( $is_taxonomy ) {
