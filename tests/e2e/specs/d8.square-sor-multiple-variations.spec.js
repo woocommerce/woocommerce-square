@@ -92,13 +92,40 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 
 	await page.waitForTimeout( 1000 );
 	await expect( page.locator( '#product-type' ) ).toHaveValue( 'variable' );
+	await page.locator( 'li.attribute_tab a' ).waitFor();
 	await page.locator( 'li.attribute_tab a' ).click();
 	await expect(
-		page.locator( '.woocommerce_attribute h3', { hasText: 'pa_color' } )
+		page.locator( '.woocommerce_attribute h3', { hasText: 'Color' } )
 	).toBeVisible();
 	await expect(
-		page.locator( '.woocommerce_attribute h3', { hasText: 'pa_size' } )
+		page.locator( '.woocommerce_attribute h3', { hasText: 'Size' } )
 	).toBeVisible();
+
+	await page.locator( 'li.variations_tab a' ).click();
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[0]"]' )
+	).toHaveValue( 'blue' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[0]"]' )
+	).toHaveValue( 'm' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[1]"]' )
+	).toHaveValue( 'blue' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[1]"]' )
+	).toHaveValue( 's' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[2]"]' )
+	).toHaveValue( 'red' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[2]"]' )
+	).toHaveValue( 'm' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[3]"]' )
+	).toHaveValue( 'red' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[3]"]' )
+	).toHaveValue( 's' );
 
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
 	await page
@@ -110,16 +137,54 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 
 	await page.waitForTimeout( 1000 );
 	await expect( page.locator( '#product-type' ) ).toHaveValue( 'variable' );
+	await page.locator( 'li.attribute_tab a' ).waitFor();
 	await page.locator( 'li.attribute_tab a' ).click();
 	await expect(
-		page.locator( '.woocommerce_attribute h3', { hasText: 'pa_color' } )
+		page.locator( '.woocommerce_attribute h3', { hasText: 'Color' } )
 	).toBeVisible();
 	await expect(
-		page.locator( '.woocommerce_attribute h3', { hasText: 'pa_size' } )
+		page.locator( '.woocommerce_attribute h3', { hasText: 'Size' } )
 	).toBeVisible();
 	await expect(
 		page.locator( '.woocommerce_attribute h3', {
 			hasText: 'Custom Material',
 		} )
 	).toBeVisible();
+	await page.locator( 'li.variations_tab a' ).click();
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[0]"]' )
+	).toHaveValue( 'blue' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[0]"]' )
+	).toHaveValue( 'm' );
+	await expect(
+		page.locator( 'select[name="attribute_custom-material[0]"]' )
+	).toHaveValue( 'Cotton' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[1]"]' )
+	).toHaveValue( 'blue' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[1]"]' )
+	).toHaveValue( 's' );
+	await expect(
+		page.locator( 'select[name="attribute_custom-material[1]"]' )
+	).toHaveValue( 'Cotton' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[2]"]' )
+	).toHaveValue( 'red' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[2]"]' )
+	).toHaveValue( 'm' );
+	await expect(
+		page.locator( 'select[name="attribute_custom-material[2]"]' )
+	).toHaveValue( 'Cotton' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_color[3]"]' )
+	).toHaveValue( 'red' );
+	await expect(
+		page.locator( 'select[name="attribute_pa_size[3]"]' )
+	).toHaveValue( 's' );
+	await expect(
+		page.locator( 'select[name="attribute_custom-material[3]"]' )
+	).toHaveValue( 'Cotton' );
 } );

@@ -423,7 +423,7 @@ export async function getItemOptions() {
 export async function createVariableProductsInSquare() {
 	let jsonString = JSON.stringify( multiVariations );
 	const options = await getItemOptions();
-	console.log( options );
+
 	Object.keys( options ).forEach( ( key ) => {
 		jsonString = jsonString.replace(
 			new RegExp( key, 'g' ),
@@ -431,7 +431,6 @@ export async function createVariableProductsInSquare() {
 		);
 	} );
 	const variations = JSON.parse( jsonString );
-	console.log( jsonString );
 
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/batch-upsert';
 	const method = 'POST';
@@ -453,6 +452,5 @@ export async function createVariableProductsInSquare() {
 	} );
 
 	const res = await response.json();
-	console.log( res );
 	return res;
 }
