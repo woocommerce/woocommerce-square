@@ -312,12 +312,15 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				 * and values in the parent product above.
 				 */
 				foreach ( $variation_items as $attribute_id => $attribute_value ) {
+					// If the attribute value is empty, set it to 'Any'.
+					$attribute_value = empty( $attribute_value ) ? 'Any' : $attribute_value;
+
 					// Check if it's a global attribute (taxonomy-based, e.g., "pa_color")
 					$taxonomy_exists = false;
 					if ( taxonomy_exists( $attribute_id ) ) {
 						// Use wc_attribute_label for global attributes
 						$attribute_name   = $attribute_id;
-						$variation_name[] = $attribute_value = get_term_by( 'slug', $attribute_value, $attribute_id )->name;
+						$variation_name[] = $attribute_value = 'Any' === $attribute_value ? 'Any' : get_term_by( 'slug', $attribute_value, $attribute_id )->name;
 						$taxonomy_exists  = true;
 					} else {
 						// For custom attributes, simply use the cleaned-up attribute ID
@@ -360,6 +363,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 							// Get all attribute values from the parent product.
 							$attribute_option_values = $parent_product->get_attribute( $attribute_id );
 							$attribute_option_values = array_map( 'trim', explode( '|', $attribute_option_values ) );
+						}
+
+						// If the attribute value is 'Any', add it to the attribute option values.
+						if ( 'Any' === $attribute_value && ! in_array( 'Any', $attribute_option_values, true ) ) {
+							$attribute_option_values[] = 'Any';
 						}
 
 						$option    = wc_square()->get_api()->create_options_and_values( $option_id, $attribute_name, $attribute_option_values );
