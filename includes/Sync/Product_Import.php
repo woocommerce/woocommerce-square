@@ -986,7 +986,6 @@ class Product_Import extends Stepped_Job {
 
 					if ( ! taxonomy_exists( $taxonomy ) ) {
 						$attribute_name = ucfirst( wc_clean( $attribute['name'] ) );
-						
 						$attribute_args = array(
 							'label' => $attribute_name,
 							'name'  => $attribute_name,
