@@ -979,7 +979,7 @@ class Product_Import extends Stepped_Job {
 				if ( $taxonomy ) {
 					$is_taxonomy = 1;
 
-				} else if ( isset( $attribute['pa_prefix'] ) && $attribute['pa_prefix'] ) {
+				} elseif ( isset( $attribute['pa_prefix'] ) && $attribute['pa_prefix'] ) {
 					// Create new taxonomy attribute.
 					$is_taxonomy = 1;
 					$taxonomy    = wc_attribute_taxonomy_name( $attribute_slug );
@@ -996,7 +996,7 @@ class Product_Import extends Stepped_Job {
 						$attribute_id = wc_create_attribute( $attribute_args );
 
 						if ( is_wp_error( $attribute_id ) ) {
-							throw new \Exception( $attribute_id->get_error_message() );
+							throw new \Exception( esc_html( $attribute_id->get_error_message() ) );
 						}
 
 						// Register the taxonomy.
@@ -1009,7 +1009,7 @@ class Product_Import extends Stepped_Job {
 								'query_var'    => true,
 								'rewrite'      => false,
 							)
-						);						
+						);
 					}
 				}
 
