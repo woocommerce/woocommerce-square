@@ -749,7 +749,15 @@ export async function getCatalogData( page, maxProcessingTime = 90000, expectedO
 		await page.waitForTimeout( POLLING_INTERVAL_BETWEEN_RETRIES );
 	}
 
+	await page.goto(
+		'/wp-admin/admin.php?page=wc-status&tab=logs&view=single_file&file_id=square-2024-12-18'
+	);
+
 	if ( ! catalogData ) {
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-status&tab=logs&view=single_file&file_id=square-2024-12-18'
+		);
+		await page.waitForTimeout( 5000 );
 		throw new Error(
 			`No catalog items found after ${ MAX_PROCESSING_TIME }ms of polling`
 		);

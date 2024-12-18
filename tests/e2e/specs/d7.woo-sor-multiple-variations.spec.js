@@ -237,7 +237,7 @@ const createProducts = async ( page, products ) => {
 	return productData;
 };
 
-test( '[Woo SOR] Merchant should able to sync products with multiple variations @sync', async ( {
+test( '[Woo SOR] Merchant should able to sync products with multiple variations @sync @syncTemp', async ( {
 	page,
 } ) => {
 	// Increase timeout for this test
@@ -357,6 +357,12 @@ test( '[Woo SOR] Merchant should able to sync products with multiple variations 
 		.getByTestId( 'sync-settings-field' )
 		.selectOption( { label: 'WooCommerce' } );
 	await page.getByTestId( 'push-inventory-field' ).check();
+	await page
+		.locator( '.woo-square-setting__input-wrapper--boxed', {
+			hasText: 'Enable Logging',
+		} )
+		.locator( 'input.components-form-toggle__input' )
+		.check();
 	await saveSquareSettings( page );
 
 	await page.goto(

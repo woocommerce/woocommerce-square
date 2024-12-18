@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        type: [ '@general', '@cashapp', '@sync', '@giftcard' ]
+        type: [ '@general', '@cashapp', '@syncTemp', '@giftcard' ]
     env:
       WP_ADMIN_USERNAME: ${{ secrets.WP_ADMIN_USERNAME }}
       WP_ADMIN_PASSWORD: ${{ secrets.WP_ADMIN_PASSWORD }}
