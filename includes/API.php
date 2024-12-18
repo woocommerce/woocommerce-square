@@ -703,7 +703,7 @@ class API extends Base {
 
 		// Push option object to Square to create a new one. Used timestamp as idempotency_key.
 		try {
-			$new_option = $this->upsert_catalog_object( time(), $option );
+			$new_option = $this->upsert_catalog_object( md5( serialize( $option ) ) . time() . '_upsert_option', $option ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
 			$id_mappings = $new_option->get_data()->getIdMappings();
 
