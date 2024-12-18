@@ -43,7 +43,7 @@ const ConnectSquareAccount = async ( page ) => {
 	);
 };
 
-test( 'Connect a Square account @general @cashapp @giftcard @sync @syncTemp', async ( {
+test( 'Connect a Square account @general @cashapp @giftcard @sync', async ( {
 	page,
 } ) => {
 	await ConnectSquareAccount( page );
