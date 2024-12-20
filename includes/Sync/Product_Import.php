@@ -730,7 +730,8 @@ class Product_Import extends Stepped_Job {
 		foreach ( $variation_options as $variation_option ) {
 			$option_id       = $variation_option->getItemOptionId();
 			$option_value_id = $variation_option->getItemOptionValueId();
-			$options_data    = get_option( 'wc_square_options_data' );
+			$result          = wc_square()->get_api()->retrieve_options_data();
+			$options_data    = isset( $result[1] ) ? $result[1] : array();
 
 			if ( isset( $options_data[ $option_id ] ) && isset( $options_data[ $option_id ]['value_ids'][ $option_value_id ] ) ) {
 				$option_name    = $options_data[ $option_id ]['name'];
@@ -762,7 +763,7 @@ class Product_Import extends Stepped_Job {
 					'value_ids' => $option_value_ids,
 				);
 
-				update_option( 'wc_square_options_data', $options_data );
+				set_transient( 'wc_square_options_data', $options_data );
 			}
 
 			$attributes[] = array(
@@ -817,7 +818,8 @@ class Product_Import extends Stepped_Job {
 		foreach ( $options as $option ) {
 			$option_id = $option->getItemOptionId();
 
-			$options_data = get_option( 'wc_square_options_data' );
+			$result       = wc_square()->get_api()->retrieve_options_data();
+			$options_data = isset( $result[1] ) ? $result[1] : array();
 
 			if ( isset( $options_data[ $option_id ] ) && isset( $options_data[ $option_id ]['values'] ) ) {
 				$option_name   = $options_data[ $option_id ]['name'];
@@ -840,7 +842,7 @@ class Product_Import extends Stepped_Job {
 					'values'    => $option_values,
 					'value_ids' => array_combine( $option_value_ids, $option_values ),
 				);
-				update_option( 'wc_square_options_data', $options_data );
+				set_transient( 'wc_square_options_data', $options_data );
 			}
 
 			$data_attributes[] = array(

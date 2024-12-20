@@ -98,7 +98,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				count( $attributes ) > 1
 			) {
 				$options_ids  = array();
-				$options_data = get_option( 'wc_square_options_data' );
+				$result       = wc_square()->get_api()->retrieve_options_data();
+				$options_data = isset( $result[1] ) ? $result[1] : array();
 
 				// Set the product as a dynamic options product.
 				update_post_meta( $product->get_id(), '_dynamic_options', true );
@@ -290,7 +291,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		 * @see https://github.com/woocommerce/woocommerce-square/issues/570
 		 */
 		if ( 'variation' === $product->get_type() ) {
-			$options_data          = get_option( 'wc_square_options_data' );
+			$result                = wc_square()->get_api()->retrieve_options_data();
+			$options_data          = isset( $result[1] ) ? $result[1] : array();
 			$parent_product        = wc_get_product( $product->get_parent_id() );
 			$attributes            = $parent_product->get_attributes();
 			$variation_items       = $product->get_attributes();
