@@ -606,7 +606,7 @@ class API extends Base {
 	 * @throws \Exception
 	 */
 	public function retrieve_options_data( $cursor = '', $refresh = false ) {
-		$options_data = get_transient( 'wc_square_options_data' );
+		$options_data = get_option( 'wc_square_options_data' );
 
 		// Stop if transient exists and we don't want to refresh.
 		if ( $options_data && ! $refresh ) {
@@ -643,7 +643,7 @@ class API extends Base {
 
 		$cursor = $response->get_data()->getCursor();
 		if ( ! $cursor ) {
-			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+			update_option( 'wc_square_options_data', $options_data );
 		}
 
 		return array( $response, $options_data, $cursor );
@@ -723,13 +723,13 @@ class API extends Base {
 				$option_values[]    = $option_value->getItemOptionValueData()->getName();
 			}
 
-			$options_data_transient               = get_transient( 'wc_square_options_data' );
-			$options_data_transient[ $option_id ] = array(
+			$options_data               = get_option( 'wc_square_options_data' );
+			$options_data[ $option_id ] = array(
 				'name'      => $attribute_name,
 				'values'    => $option_values,
 				'value_ids' => array_combine( $option_value_ids, $option_values ),
 			);
-			set_transient( 'wc_square_options_data', $options_data_transient, DAY_IN_SECONDS );
+			update_option( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 
 		} catch ( \Exception $e ) {
 			/**
@@ -739,7 +739,7 @@ class API extends Base {
 			 * This is required to reactivate `fetch_all_options` step to get the latest data.
 			 */
 			update_option( 'woocommerce_square_refresh_sync_cycle', true );
-			delete_transient( 'wc_square_options_data' );
+			delete_option( 'wc_square_options_data' );
 
 			// Log the error and throw it.
 			wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );

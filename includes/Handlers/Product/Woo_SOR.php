@@ -97,8 +97,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			if (
 				count( $attributes ) > 1
 			) {
-				$options_ids            = array();
-				$options_data_transient = get_transient( 'wc_square_options_data' );
+				$options_ids  = array();
+				$options_data = get_option( 'wc_square_options_data' );
 
 				// Set the product as a dynamic options product.
 				update_post_meta( $product->get_id(), '_dynamic_options', true );
@@ -117,10 +117,10 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					}
 
 					// Check if Square already has the option created with the same name.
-					// To do so, we can check if we already have the name in transient,
+					// To do so, we can check if we already have the name in options/transient,
 					// if yes, use the relative Square ID.
 					$option_id = false;
-					foreach ( $options_data_transient as $transient_option_id => $option_data_transient ) {
+					foreach ( $options_data as $transient_option_id => $option_data_transient ) {
 						if ( $option_data_transient['name'] === $attribute_name ) {
 							$option_id = $transient_option_id;
 							break;
@@ -290,11 +290,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		 * @see https://github.com/woocommerce/woocommerce-square/issues/570
 		 */
 		if ( 'variation' === $product->get_type() ) {
-			$options_data_transient = get_transient( 'wc_square_options_data' );
-			$parent_product         = wc_get_product( $product->get_parent_id() );
-			$attributes             = $parent_product->get_attributes();
-			$variation_items        = $product->get_attributes();
-			$variation_item_values  = array();
+			$options_data          = get_option( 'wc_square_options_data' );
+			$parent_product        = wc_get_product( $product->get_parent_id() );
+			$attributes            = $parent_product->get_attributes();
+			$variation_items       = $product->get_attributes();
+			$variation_item_values = array();
 
 			if ( 1 === count( $attributes ) ) {
 				// Set the name of the variation if it's a single variation.
@@ -329,7 +329,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_name[] = $attribute_value;
 					}
 
-					foreach ( $options_data_transient as $option_id_transient => $option_data_transient ) {
+					foreach ( $options_data as $option_id_transient => $option_data_transient ) {
 						$option_id       = '';
 						$option_value_id = '';
 
