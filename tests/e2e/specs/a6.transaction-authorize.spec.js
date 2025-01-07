@@ -57,7 +57,7 @@ const isBlockCheckout = [ true, false ];
 for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
-	test( title + 'Payment Gateway > Transaction Type > Authorization', async ( {
+	test( title + 'Payment Gateway > Transaction Type > Authorization @general', async ( {
 		page,
 	} ) => {
 		await page.goto( '/product/simple-product' );

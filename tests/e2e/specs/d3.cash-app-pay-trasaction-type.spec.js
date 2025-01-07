@@ -12,7 +12,7 @@ import {
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay Tests', () => {
+test.describe('Cash App Pay Tests @cashapp', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();

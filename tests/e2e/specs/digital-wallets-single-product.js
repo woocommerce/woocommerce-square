@@ -26,7 +26,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Digital Wallet - Single Product Page', async () => {
+test( 'Digital Wallet - Single Product Page @general', async () => {
 	test.slow();
 	const browser = await firefox.launch();
 	const page = await browser.newPage();

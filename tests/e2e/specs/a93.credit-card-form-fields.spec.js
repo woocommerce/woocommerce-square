@@ -22,7 +22,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	}
 } );
 
-test( 'Verify square credit card form fields', async ( { page } ) => {
+test( 'Verify square credit card form fields @general', async ( { page } ) => {
 	await page.goto( '/product/simple-product' );
 	await page.locator( '.single_add_to_cart_button' ).click();
 	// Confirm that the Credit card is not visible on checkout page.

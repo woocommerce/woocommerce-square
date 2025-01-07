@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test( 'Enable/Disable Payment Gateway in WooCommerce Settings', async ( {
+test( 'Enable/Disable Payment Gateway in WooCommerce Settings @general', async ( {
 	page,
 } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );

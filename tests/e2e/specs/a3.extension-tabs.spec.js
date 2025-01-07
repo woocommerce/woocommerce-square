@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test( 'Check Square extension related tabs and settings should appear.', async ( {
+test( 'Check Square extension related tabs and settings should appear. @general', async ( {
 	page,
 } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings' );

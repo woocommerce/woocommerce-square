@@ -14,7 +14,7 @@ import {
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay Tests', () => {
+test.describe('Cash App Pay Tests @cashapp', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
@@ -334,6 +334,9 @@ test.describe('Cash App Pay Tests', () => {
 			const page = await context.newPage();
 			await page.goto('/product/simple-product');
 			await page.locator('.single_add_to_cart_button').click();
+			await expect(
+				page.getByRole('link', { name: 'View cart' }).first()
+			).toBeVisible();
 			await visitCheckout(page, true);
 			await fillAddressFields(page, true);
 			await selectPaymentMethod(page, 'square_cash_app_pay', true);
