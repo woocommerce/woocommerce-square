@@ -317,6 +317,9 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		};
 
+		const productType = $( '#product-type' ).val();
+		toggleSyncProductMeta( productType );
+
 		// fire once on page load
 		handleAttributes( syncCheckboxID );
 
@@ -569,13 +572,6 @@ jQuery( document ).ready( ( $ ) => {
 		// initial page load handling.
 		} ).trigger( 'change' );
 
-		$( '#woocommerce-product-data' ).on( 'woocommerce_variations_loaded', function() {
-			const productType = $( '#product-type' ).val();
-			toggleSyncProductMeta( productType );
-			triggerUpdate();
-			handleGiftCard();
-		} );
-
 		$( '#product-type' ).on( 'change', function( e ) {
 			toggleSyncProductMeta( $( e.target ).val() );
 			triggerUpdate();
@@ -645,6 +641,8 @@ jQuery( document ).ready( ( $ ) => {
 				}
 			}
 		}
+
+		handleGiftCard();
 
 		$( '#product-type, #_square_gift_card' ).on( 'change', handleGiftCard );
 
