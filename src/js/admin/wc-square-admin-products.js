@@ -569,13 +569,17 @@ jQuery( document ).ready( ( $ ) => {
 		// initial page load handling.
 		} ).trigger( 'change' );
 
-		// trigger an update if the product type changes.
-		$( '#product-type' ).on( 'change', ( e ) => {
-			if ( 'complete' === document.readyState ) {
-				triggerUpdate();
-			}
+		$( '#woocommerce-product-data' ).on( 'woocommerce_variations_loaded', function() {
+			const productType = $( '#product-type' ).val();
+			toggleSyncProductMeta( productType );
+			triggerUpdate();
+			handleGiftCard();
+		} );
+
+		$( '#product-type' ).on( 'change', function( e ) {
 			toggleSyncProductMeta( $( e.target ).val() );
-		} ).trigger( 'change' );
+			triggerUpdate();
+		} );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -601,7 +605,7 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		);
 
-		$( '#product-type, #_square_gift_card' ).on( 'change', function() {
+		function handleGiftCard() {
 			const productType = $( '#product-type' ).val();
 			const squareGiftCardCheckbox = $( '#_square_gift_card' );
 			const isGiftCard = squareGiftCardCheckbox.prop( 'checked' );
@@ -640,7 +644,9 @@ jQuery( document ).ready( ( $ ) => {
 					$( 'label[for="_downloadable"]' ).hide();
 				}
 			}
-		} ).trigger( 'change' );
+		}
+
+		$( '#product-type, #_square_gift_card' ).on( 'change', handleGiftCard );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -677,7 +683,7 @@ jQuery( document ).ready( ( $ ) => {
 		} );
 
 		/**
-		 * Hides unnecessary meta fields when Variatble product is set as Gift Card.
+		 * Hides unnecessary meta fields when Variable product is set as Gift Card.
 		 * @returns void
 		 */
 		function observeVariations() {
