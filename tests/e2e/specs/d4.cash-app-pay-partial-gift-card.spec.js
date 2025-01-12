@@ -1,4 +1,5 @@
 import { test, expect, devices, chromium } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	clearCart,
 	createProduct,
@@ -69,8 +70,7 @@ test.describe('Cash App Pay - Gift Card Tests @cashapp @giftcard', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );
@@ -107,8 +107,7 @@ test.describe('Cash App Pay - Gift Card Tests @cashapp @giftcard', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );
@@ -146,8 +145,7 @@ test.describe('Cash App Pay - Gift Card Tests @cashapp @giftcard', () => {
 			transactionType: 'authorization',
 		});
 
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );
