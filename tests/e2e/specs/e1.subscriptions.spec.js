@@ -18,7 +18,7 @@ import {
 	savePaymentGatewaySettings,
 } from '../utils/helper';
 
-test.describe('Subscriptions Tests', () => {
+test.describe('Subscriptions Tests @general', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();

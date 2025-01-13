@@ -789,7 +789,7 @@ class Settings extends \WC_Settings_API {
 
 		$section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : false;  // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		if ( ! ( $this->is_admin_settings_screen() || ( $this->is_admin_settings_screen() && 'update' !== $section ) || $force ) ) {
+		if ( ! ( ( $this->is_admin_settings_screen() && 'update' !== $section ) || $force ) ) {
 			$this->locations = get_transient( $locations_transient_key );
 		}
 

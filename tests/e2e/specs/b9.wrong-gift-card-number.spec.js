@@ -41,7 +41,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Wrong gift card number during reload', async ( { page } ) => {
+test( 'Wrong gift card number during reload @giftcard', async ( { page } ) => {
 	const { giftCard } = dummy;
 	await page.goto( '/shop' );
 	await page.getByText( 'Buy Gift Card' ).click();

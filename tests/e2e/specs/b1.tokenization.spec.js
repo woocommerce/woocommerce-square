@@ -43,7 +43,7 @@ const isBlockCheckout = [ true, false ];
 for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
-	test( title + 'Payment Gateway - Customer Profiles', async ( { page } ) => {
+	test( title + 'Payment Gateway - Customer Profiles @general', async ( { page } ) => {
 		await deleteAllPaymentMethods( page );
 		await page.goto( '/product/simple-product' );
 		await page.locator( '.single_add_to_cart_button' ).click();
@@ -78,7 +78,7 @@ for ( const isBlock of isBlockCheckout ) {
 		).toHaveText( '• • •1111' );
 	} );
 
-	test( title + 'Checkout using saved card', async ( { page } ) => {
+	test( title + 'Checkout using saved card @general', async ( { page } ) => {
 		await page.goto( '/product/simple-product' );
 		await page.locator( '.single_add_to_cart_button' ).click();
 		await visitCheckout( page, isBlock );

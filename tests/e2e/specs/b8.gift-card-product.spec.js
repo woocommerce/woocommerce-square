@@ -50,7 +50,7 @@ test.beforeEach( async () => {
 	await clearCart( page );
 } );
 
-test( 'Purchase Gift card product', async ( { page } ) => {
+test( 'Purchase Gift card product @giftcard', async ( { page } ) => {
 	const { giftCardSender } = dummy;
 
 	await page.goto( '/shop' );
@@ -125,7 +125,7 @@ test( 'Purchase Gift card product', async ( { page } ) => {
 	process.env.PURCHASED_GAN = match[ 0 ];
 } );
 
-test( 'Gift card recipient email', async ( { page } ) => {
+test( 'Gift card recipient email @giftcard', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=email-log' );
 	await page.locator( '.view-content a' ).first().dispatchEvent( 'click' );
 	await expect( await page.locator( '#template_container' ).getByText( 'woocommerce-square Gift Card received!' ) ).toBeVisible();
@@ -135,7 +135,7 @@ test( 'Gift card recipient email', async ( { page } ) => {
 	await expect( await page.locator( '#template_container' ).getByText( 'We look forward to seeing you soon at http://localhost:8889' ) ).toBeVisible();
 } );
 
-test( 'Reload Gift Card', async ( { page } ) => {
+test( 'Reload Gift Card @giftcard', async ( { page } ) => {
 	if ( ! process.env.PURCHASED_GAN ) {
 		test.skip();
 	}

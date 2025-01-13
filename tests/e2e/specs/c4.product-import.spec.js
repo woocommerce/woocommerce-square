@@ -40,7 +40,7 @@ test.beforeAll( 'Setup', async () => {
 	await browser.close();
 } );
 
-test( 'Import Cap from Square', async ( { page, baseURL } ) => {
+test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	test.slow();
 	page.on('dialog', dialog => dialog.accept());
 	await importProducts( page );
@@ -73,7 +73,7 @@ test( 'Import Cap from Square', async ( { page, baseURL } ) => {
 	await expect( await page.getByText( 'Category: Hats' ) ).toBeVisible();
 } );
 
-test('Sync Inventory stock from Square on the product edit screen - (SOR Square)', async ({
+test('Sync Inventory stock from Square on the product edit screen - (SOR Square) @sync', async ({
 	page,
 }) => {
 	await page.goto('/product/cap/');
@@ -107,7 +107,7 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR Square)
 });
 
 
-test( 'Handle missing products', async ( { page } ) => {
+test( 'Handle missing products @sync', async ( { page } ) => {
 	await deleteAllCatalogItems();
 	await clearSync( page );
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );

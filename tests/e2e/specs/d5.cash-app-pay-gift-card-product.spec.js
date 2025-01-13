@@ -15,7 +15,7 @@ import {
 import dummy from '../dummy-data';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay - Gift Card Product Tests', () => {
+test.describe('Cash App Pay - Gift Card Product Tests @cashapp @giftcard', () => {
 	const isBlock = false;
 	test.beforeAll( 'Setup', async ( { baseURL } ) => {
 		const browser = await chromium.launch();
@@ -134,7 +134,7 @@ test.describe('Cash App Pay - Gift Card Product Tests', () => {
 
 	test( 'Gift card recipient email', async ( { page } ) => {
 		await page.goto( '/wp-admin/admin.php?page=email-log' );
-		await page.locator( '.view-content a' ).first().dispatchEvent( 'click' );
+		await page.locator( 'tr', { hasText: /Gift Card!/ } ).locator( '.view-content a' ).first().dispatchEvent( 'click' );
 		await expect( await page.locator( '#template_container' ).getByText( 'woocommerce-square Gift Card received!' ) ).toBeVisible();
 		await expect( await page.locator( '#template_container' ).getByText( 'Hey Emily Doe, you just received a gift card!' ) ).toBeVisible();
 		await expect( await page.locator( '#wc-square-gift-card-email__card-balance' ) ).toContainText( '$25.00' )

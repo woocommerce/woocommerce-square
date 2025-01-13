@@ -44,7 +44,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Payment Gateway > Transaction Type > Authorization + Capture Paid Orders', async ( {
+test( 'Payment Gateway > Transaction Type > Authorization + Capture Paid Orders @general', async ( {
 	page,
 } ) => {
 	await page.goto( '/product/simple-product' );
