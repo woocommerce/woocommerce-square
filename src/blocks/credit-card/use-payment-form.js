@@ -59,7 +59,7 @@ export const usePaymentForm = (
 
 		if ( intent === 'CHARGE' ) {
 			newVerificationDetails.amount = (
-				billing.cartTotal.value / 100
+				billing.currency.code == 'JPY' ? billing.cartTotal.value : billing.cartTotal.value / 100
 			).toString();
 			newVerificationDetails.currencyCode = billing.currency.code;
 		}

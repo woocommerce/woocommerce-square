@@ -136,9 +136,10 @@ export const createPaymentRequest = async ( payments ) => {
  * @return {Object} Formatted data required to verify the buyer.
  */
 export const buildVerificationDetails = ( billing ) => {
+  const cartTotal = billing.cartTotal.value;
 	return {
 		intent: 'CHARGE',
-		amount: ( billing.cartTotal.value / 100 ).toString(),
+		amount: ( billing.currency.code == 'JPY' ? cartTotal : cartTotal / 100 ).toString(),
 		currencyCode: billing.currency.code,
 		billingContact: {
 			familyName: billing.billingData.last_name || '',
