@@ -25,7 +25,7 @@
 		<tr>
 			<th colspan="3" data-export-label="">
 				<?php echo esc_html( $gateway->get_method_title() ); ?>
-				<?php echo wc_help_tip( __( 'This section contains configuration settings for this gateway.', 'woocommerce-square' ) ); ?>
+				<?php echo wc_help_tip( esc_html__( 'This section contains configuration settings for this gateway.', 'woocommerce-square' ) ); ?>
 			</th>
 		</tr>
 	</thead>

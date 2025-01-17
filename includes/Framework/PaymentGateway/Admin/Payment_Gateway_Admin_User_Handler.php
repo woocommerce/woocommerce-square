@@ -299,6 +299,7 @@ class Payment_Gateway_Admin_User_Handler {
 			$label = esc_html__( 'Customer ID', 'woocommerce-square' );
 
 			// If the plugin has multiple gateways configured for multiple environments, append the environment name to keep things straight
+			/* translators: %s: environment name */
 			$label .= ( $this->has_multiple_environments() ) ? ' ' . sprintf( esc_html__( '(%s)', 'woocommerce-square' ), $gateway->get_environment_name() ) : '';
 
 			$fields[] = array(

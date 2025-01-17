@@ -96,7 +96,7 @@ class Connection {
 	public function handle_connected() {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended - Setting variable, nonce checked next line.
-		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+		$nonce = isset( $_GET['_wpnonce'] ) ? wc_clean( wp_unslash( $_GET['_wpnonce'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$from = isset( $_GET['from'] ) ? wc_clean( wp_unslash( $_GET['from'] ) ) : '';
