@@ -217,6 +217,7 @@ class Payment_Gateway_Admin_User_Handler {
 
 		$plugin_title = trim( str_replace( 'WooCommerce', '', $this->get_plugin()->get_plugin_name() ) );
 
+		/* translators: %s: plugin title */
 		$title = sprintf( esc_html__( '%s Payment Tokens', 'woocommerce-square' ), $plugin_title );
 
 		/**

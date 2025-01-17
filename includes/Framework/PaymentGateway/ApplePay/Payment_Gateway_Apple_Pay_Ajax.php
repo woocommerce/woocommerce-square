@@ -122,6 +122,7 @@ class Payment_Gateway_Apple_Pay_AJAX {
 
 		} catch ( \Exception $e ) {
 
+			/* translators: %s: error message */
 			$this->get_handler()->log( sprintf( esc_html__( 'Could not validate merchant. %s', 'woocommerce-square' ), $e->getMessage() ) );
 
 			wp_send_json_error( array(
