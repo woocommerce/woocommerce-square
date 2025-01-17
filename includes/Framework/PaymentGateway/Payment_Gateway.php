@@ -2539,7 +2539,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
-			/* translators %s transaction ID. */
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2572,7 +2572,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
-			/* translators %s transaction ID. */
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2786,7 +2786,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
-			/* translators %s transaction ID. */
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 

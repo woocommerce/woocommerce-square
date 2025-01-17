@@ -639,7 +639,7 @@ class Digital_Wallet {
 		check_ajax_referer( 'wc-square-get-payment-request', 'security' );
 
 		$payment_request = array();
-		$context         = ! empty( $_POST['context'] ) ? wc_clean( wp_unslash( $_POST['context'] ) ) : '';
+		$context         = ! empty( $_POST['context'] ) ? wc_clean( wp_unslash( $_POST['context'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		try {
 			if ( 'product' === $context ) {

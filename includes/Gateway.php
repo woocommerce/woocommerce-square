@@ -184,7 +184,7 @@ class Gateway extends Payment_Gateway_Direct {
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
-			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );

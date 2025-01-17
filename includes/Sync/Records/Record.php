@@ -86,7 +86,7 @@ class Record {
 			);
 		}
 
-		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) );
+		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$data = wp_parse_args(
 			(array) $data,
 			array(
@@ -321,7 +321,7 @@ class Record {
 	 */
 	public function get_date( $format = 'Y-m-d H:i:s' ) {
 
-		return date( (string) $format, $this->get_timestamp() );
+		return date( (string) $format, $this->get_timestamp() ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 	}
 
 
