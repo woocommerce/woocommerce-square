@@ -27,7 +27,6 @@ jobs:
         
         exclude-directories: |
           .github
-          .eslintignore
           node_modules
           vendor
           tests
@@ -35,7 +34,18 @@ jobs:
           build
           build
           assets
-        
+
+        exclude-files: |
+          .eslintignore
+          .eslintrc.js
+          .gitignore
+          .nvmrc
+          .gitattributes
+          .phpcs.xml.dist
+          .wp-env.json
+          .prettierrc
+          .stylelintrc
+
         ignore-warnings: false
         
         ignore-errors: false
