@@ -553,6 +553,11 @@ class Products {
 		if ( is_string( $square_synced ) ) {
 			$errors = $this->check_product_sync_errors( $product );
 			if ( 'no' === $square_synced || empty( $errors ) ) {
+				if ( 'yes' === $square_synced && $product->is_type( 'variable' ) && wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+					// if syncing inventory with Square, parent variable products don't manage stock
+					$product->set_manage_stock( false );
+				}
+
 				Product::set_synced_with_square( $product, $square_synced );
 			} elseif ( ! empty( $errors ) ) {
 				foreach ( $errors as $error ) {
