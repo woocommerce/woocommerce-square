@@ -314,6 +314,9 @@ jQuery( document ).ready( ( $ ) => {
 										false,
 										verificationResult
 									);
+								})
+								.catch(error => {
+									this.handle_errors([ error ]);
 								});
 						});
 					} else {
@@ -421,7 +424,10 @@ jQuery( document ).ready( ( $ ) => {
 							false,
 							verificationResult
 						);
-				});
+					})
+					.catch(error => {
+						this.handle_errors([ error ]);
+					});;
 			});
 		}
 
