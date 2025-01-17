@@ -2,6 +2,7 @@
  * External dependencies
  */
 const { test, expect, chromium } = require('@playwright/test');
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 /**
  * Internal dependencies
@@ -57,8 +58,7 @@ test.describe('Subscriptions Tests @general', () => {
 					test.skip();
 				}
 
-				await page.goto('/product/simple-subscription-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-subscription-product' );
 				await expect(
 					page.getByRole('link', { name: 'View cart' }).first()
 				).toBeVisible();
@@ -100,8 +100,7 @@ test.describe('Subscriptions Tests @general', () => {
 			title +
 				'Customer can sign up to subscription using Saved CreditCard',
 			async ({ page }) => {
-				await page.goto('/product/simple-subscription-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-subscription-product' );
 				await expect(
 					page.getByRole('link', { name: 'View cart' }).first()
 				).toBeVisible();
