@@ -613,7 +613,7 @@ class Gift_Card extends Payment_Gateway {
 	public function apply_gift_card() {
 		check_ajax_referer( 'wc-square-apply-gift-card', 'security' );
 
-		$payment_token = isset( $_POST['token'] ) ? wc_clean( wp_unslash( $_POST['token'] ) ) : false;
+		$payment_token = isset( $_POST['token'] ) ? wc_clean( wp_unslash( $_POST['token'] ) ) : false; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		if ( ! $payment_token ) {
 			wp_send_json_error();

@@ -839,7 +839,7 @@ class Order {
 		<tr class="square_gift_card item">
 			<td class="thumb">
 				<div style="width: 38px;">
-					<img src="<?php echo esc_url( WC_SQUARE_PLUGIN_URL . '/build/images/gift-card.png' ); ?>" />
+					<img src="<?php echo esc_url( WC_SQUARE_PLUGIN_URL . '/build/images/gift-card.png' ); /* phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */ ?>" />
 				</div>
 			</td>
 			<td class="name">

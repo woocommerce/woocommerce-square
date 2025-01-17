@@ -301,7 +301,7 @@ class API extends Base {
 			throw new \Exception( 'Image file is not readable' );
 		}
 
-		$image = file_get_contents( $image_path );
+		$image = file_get_contents( $image_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 
 		$headers = array(
 			'accept'         => 'application/json',
