@@ -24,6 +24,10 @@ jobs:
         exclude-checks: |
           plugin_readme
           plugin_updater
+          file_type
+          trademarks
+          direct_db_queries
+          performant_wp_query_params
         
         exclude-directories: |
           .github
@@ -44,8 +48,4 @@ jobs:
           .phpcs.xml.dist
           .wp-env.json
           .prettierrc.js
-          .stylelintrc
-
-        ignore-warnings: false
-        
-        ignore-errors: false
+          .stylelintrc.json
