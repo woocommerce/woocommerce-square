@@ -16,7 +16,6 @@
 		<!-- We do not comply with these right now. -->
 		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
 		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />
-		<exclude name="WordPress.DateTime.RestrictedFunctions.date_date" />
 		<exclude name="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents" />
 		<exclude name="WooCommerce.Commenting.CommentTags.AuthorTag" />
 		<exclude name="WooCommerce.Commenting.CommentTags.CopyrightTag" />
@@ -56,5 +55,9 @@
 	<rule ref="WooCommerce.Commenting">
 		<!-- It wants @since to contain defined version and does not allow just x.x.x -->
 		<exclude name="WooCommerce.Commenting.CommentHooks.MissingSinceVersionComment"/>
-	</rule>	
+	</rule>
+
+	<rule ref="WordPress.DateTime.RestrictedFunctions">
+		<exclude name="WordPress.DateTime.RestrictedFunctions.date_date"/>
+	</rule>
 </ruleset>
