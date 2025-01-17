@@ -21,11 +21,11 @@ jobs:
     - name: Run plugin check
       uses: wordpress/plugin-check-action@v1
       with:
-        exclude-checks:
+        exclude-checks: |
           plugin_readme
           plugin_updater
         
-        exclude-directories:
+        exclude-directories: |
           .github
           node_modules
           vendor
