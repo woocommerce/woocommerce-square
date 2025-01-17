@@ -56,8 +56,4 @@
 		<!-- It wants @since to contain defined version and does not allow just x.x.x -->
 		<exclude name="WooCommerce.Commenting.CommentHooks.MissingSinceVersionComment"/>
 	</rule>
-
-	<rule ref="WordPress.DateTime.RestrictedFunctions">
-		<exclude name="WordPress.DateTime.RestrictedFunctions.date_date"/>
-	</rule>
 </ruleset>

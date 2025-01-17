@@ -43,7 +43,7 @@ jobs:
           .gitattributes
           .phpcs.xml.dist
           .wp-env.json
-          .prettierrc
+          .prettierrc.js
           .stylelintrc
 
         ignore-warnings: false
