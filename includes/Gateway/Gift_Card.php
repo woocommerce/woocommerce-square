@@ -653,7 +653,7 @@ class Gift_Card extends Payment_Gateway {
 	 */
 	public static function is_new() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		return isset( $_POST['square-gift-card-buying-option'] ) ? 'new' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false;
+		return isset( $_POST['square-gift-card-buying-option'] ) ? 'new' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 
 	/**
@@ -665,6 +665,6 @@ class Gift_Card extends Payment_Gateway {
 	 */
 	public static function is_load() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		return isset( $_POST['square-gift-card-buying-option'] ) ? 'load' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false;
+		return isset( $_POST['square-gift-card-buying-option'] ) ? 'load' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 }
