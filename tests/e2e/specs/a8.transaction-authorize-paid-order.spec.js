@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { test, expect } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	createProduct,
 	doesProductExist,
@@ -47,8 +48,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 test( 'Payment Gateway > Transaction Type > Authorization + Capture Paid Orders @general', async ( {
 	page,
 } ) => {
-	await page.goto( '/product/simple-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+	await addOneOrMoreProductToCart( page, 'simple-product' );
 
 	await visitCheckout( page, false );
 	await fillAddressFields( page, false );

@@ -94,9 +94,8 @@ test.describe('Cash App Pay Inventory Sync Tests', () => {
 			...iPhone,
 		});
 		const mobilePage = await context.newPage();
-		await mobilePage.goto('/product/sample-product-with-inventory/');
 		mobilePage.on('dialog', (dialog) => dialog.accept());
-		await mobilePage.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( mobilePage, 'sample-product-with-inventory' );
 		await visitCheckout(mobilePage, isBlock);
 		await fillAddressFields(mobilePage, isBlock);
 		await selectPaymentMethod(mobilePage, 'square_cash_app_pay', isBlock);
