@@ -20,9 +20,15 @@ jobs:
           plugin_readme
           plugin_updater
         
-        include-directories:
-          includes
-          templates
+        exclude-directories:
+          .github
+          node_modules
+          vendor
+          tests
+          bin
+          build
+          build
+          assets
         
         ignore-warnings: false
         
