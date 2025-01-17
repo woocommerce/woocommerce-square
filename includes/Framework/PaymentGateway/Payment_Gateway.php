@@ -2888,6 +2888,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// add transaction id if there is one
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$order_note .= ' ' . sprintf( esc_html__( 'Transaction ID %s', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 

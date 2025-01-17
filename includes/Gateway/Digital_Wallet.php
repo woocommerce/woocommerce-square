@@ -643,9 +643,9 @@ class Digital_Wallet {
 
 		try {
 			if ( 'product' === $context ) {
-				$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0;
-				$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1;
-				$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array();
+				$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 				try {
 					$payment_request = $this->get_product_payment_request( $product_id, $quantity, $attributes );
@@ -678,9 +678,9 @@ class Digital_Wallet {
 		check_ajax_referer( 'wc-square-add-to-cart', 'security' );
 
 		try {
-			$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0;
-			$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1;
-			$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array();
+			$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			try {
 				$payment_request = $this->get_product_payment_request( $product_id, $quantity, $attributes, true );
@@ -838,7 +838,7 @@ class Digital_Wallet {
 		if ( WC()->cart->needs_shipping() || $is_pay_for_order_page ) {
 			if ( ! empty( $_POST['shipping_contact'] ) ) {
 				$shipping_address = wp_parse_args(
-					wc_clean( wp_unslash( $_POST['shipping_contact'] ) ),
+					wc_clean( wp_unslash( $_POST['shipping_contact'] ) ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					array(
 						'countryCode' => null,
 						'state'       => null,

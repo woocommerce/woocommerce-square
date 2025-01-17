@@ -341,7 +341,7 @@ class Record {
 
 		try {
 
-			$date      = new \DateTime( date( (string) $format, $this->get_timestamp() ), new \DateTimeZone( 'UTC' ) );
+			$date      = new \DateTime( date( (string) $format, $this->get_timestamp() ), new \DateTimeZone( 'UTC' ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 			$timezone  = new \DateTimeZone( wc_timezone_string() );
 			$offset    = $timezone->getOffset( $date );
 			$timestamp = $date->getTimestamp() + $offset;
@@ -351,7 +351,7 @@ class Record {
 			$timestamp = $this->get_timestamp();
 		}
 
-		return date( (string) $format, $timestamp );
+		return date( (string) $format, $timestamp ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 	}
 
 
