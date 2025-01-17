@@ -799,7 +799,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		);
 
 		if ( $this->is_test_environment() ) {
-			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 );
+			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 			$defaults['csc']    = '123';
 		}
 
