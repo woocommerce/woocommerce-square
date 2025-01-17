@@ -86,7 +86,7 @@ class Record {
 			);
 		}
 
-		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date, WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC
 		$data = wp_parse_args(
 			(array) $data,
 			array(
