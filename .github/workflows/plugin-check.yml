@@ -27,6 +27,7 @@ jobs:
         
         exclude-directories: |
           .github
+          .eslintignore
           node_modules
           vendor
           tests
