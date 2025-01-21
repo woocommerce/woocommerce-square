@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.8.4
+Stable tag: 4.8.5
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.5 - 2025-01-20 =
+* Fix - Unblock the Checkout page UI, and show a generic error when buyer verification fails.
+* Fix - Ensure inventory sync works correctly for variable products when Square sync is enabled through quick or bulk edit.
+* Dev - Bump WooCommerce "tested up to" version 9.6.
+* Dev - Bump WooCommerce minimum supported version to 9.4.
+* Dev - Use the `@woocommerce/e2e-utils-playwright` NPM package for E2E tests.
+* Dev - Updates GitHub `actions/cache`, `actions/upload` and `actions/download` to v4 due to deprecation.
 
 = 4.8.4 - 2024-12-09 =
 * Fix - Resolved the product duplication issue on the Square side when WooCommerce is set as the SOR.
