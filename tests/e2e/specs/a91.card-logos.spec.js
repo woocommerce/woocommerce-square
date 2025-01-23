@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import { savePaymentGatewaySettings } from '../utils/helper';
 
 
 test( 'Payment Gateway - Accepted Card Logos @general', async ( { page } ) => {
-	await page.goto( '/product/simple-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+	await addOneOrMoreProductToCart( page, 'simple-product' );
 	await page.goto( '/checkout-old' );
 
 	await expect(
