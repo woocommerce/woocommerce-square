@@ -71,24 +71,32 @@ class Products {
 
 		$this->plugin = $plugin;
 
-		// add common errors
-		$this->product_errors = array(
-			/* translators: Placeholder: %s - product name */
-			'missing_sku'           => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
-		);
-
 		// Get gift card features status.
 		$gift_card_settings      = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
+		add_action( 'init', array( $this, 'register_common_errors' ) );
 		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
 
 		// add hooks
 		$this->add_products_edit_screen_hooks();
 		$this->add_product_edit_screen_hooks();
 		$this->add_product_sync_hooks();
+	}
+
+	/**
+	 * Loads register common errors.
+	 *
+	 * @since x.x.x
+	 */
+	public function register_common_errors() {
+		// Add common errors.
+		$this->product_errors = array(
+			/* translators: Placeholder: %s - product name */
+			'missing_sku'           => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
+			/* translators: Placeholder: %s - product name */
+			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
+		);
 	}
 
 	/**
