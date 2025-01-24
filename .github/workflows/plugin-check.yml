@@ -9,7 +9,7 @@ on: # rebuild any PRs and main branch changes
     branches:
       - trunk
       - develop
-      - add/plugin-check
+      - add/plugin-check # We'll want to remove this prior to the PR #271 being merged
 
 jobs:
   test:
