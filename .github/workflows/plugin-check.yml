@@ -9,7 +9,6 @@ on: # rebuild any PRs and main branch changes
     branches:
       - trunk
       - develop
-      - add/plugin-check # We'll want to remove this prior to the PR #271 being merged
 
 jobs:
   test:
@@ -30,7 +29,7 @@ jobs:
           performant_wp_query_params
           enqueued_scripts_in_footer
           plugin_header_text_domain
-        
+
         exclude-directories: |
           .github
           node_modules
