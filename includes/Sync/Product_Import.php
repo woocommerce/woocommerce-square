@@ -285,9 +285,9 @@ class Product_Import extends Stepped_Job {
 				$product = Product::get_product_by_square_variation_id( $catalog_object->getId() );
 
 				if ( $product && $product instanceof \WC_Product ) {
-					$is_tracking_inventory = isset( $catalog_objects_hash[ $catalog_object->getId() ] ) ?
-						$catalog_objects_hash[ $catalog_object->getId() ] :
-						false;
+					$inventory_data        = $catalog_objects_hash[ $catalog_object->getId() ] ?? array();
+					$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+					$sold_out              = $inventory_data['sold_out'] ?? false;
 
 					/* If catalog object is tracked and has a quantity > 0 set in Square. */
 					if ( $is_tracking_inventory && isset( $inventory_hash[ $catalog_object->getId() ] ) ) {
@@ -301,7 +301,7 @@ class Product_Import extends Stepped_Job {
 
 						/* If the catalog object is not tracked in Square at all. */
 					} else {
-						$product->set_stock_status( 'instock' );
+						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 						$product->set_manage_stock( false );
 					}
 
