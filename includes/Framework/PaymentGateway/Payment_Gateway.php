@@ -799,7 +799,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		);
 
 		if ( $this->is_test_environment() ) {
-			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 );
+			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 			$defaults['csc']    = '123';
 		}
 
@@ -2441,6 +2441,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 				$order->add_order_note(
 					sprintf(
+						/* translators: Placeholders: %1$s - refunded amount, %2$s - gift card number */
 						esc_html__( '-%1$s adjusted from the gift card with number %2$s.', 'woocommerce-square' ),
 						wc_price( $float_amount, array( 'currency' => $order->get_currency() ) ),
 						esc_html( $gan )
@@ -2538,6 +2539,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2570,7 +2572,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
-			/* translators %s transaction ID. */
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2784,6 +2786,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2885,6 +2888,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// add transaction id if there is one
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$order_note .= ' ' . sprintf( esc_html__( 'Transaction ID %s', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -3554,6 +3558,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				'label'       => __( 'Capture Paid Orders', 'woocommerce-square' ),
 				'type'        => 'checkbox',
 				'description' => sprintf(
+					/* translators: %s - list of order statuses */
 					esc_html__( 'Automatically capture orders when they are changed to %s.', 'woocommerce-square' ),
 					esc_html( ! empty( $paid_statuses ) ? Square_Helper::list_array_items( $paid_statuses, $conjuction ) : __( 'a paid status', 'woocommerce-square' ) )
 				),
@@ -4717,7 +4722,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( $this->icon ) {
 
 			// use icon provided by filter
-			$icon = sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" />', esc_url( \WC_HTTPS::force_https_url( $this->icon ) ), esc_attr( $this->get_title() ), esc_attr( $this->get_id_dasherized() ) );
+			$icon = sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" />', esc_url( \WC_HTTPS::force_https_url( $this->icon ) ), esc_attr( $this->get_title() ), esc_attr( $this->get_id_dasherized() ) ); // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 		}
 
 		// credit card images
@@ -4729,7 +4734,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				$card_type = Payment_Gateway_Helper::normalize_card_type( $card_type );
 
 				if ( $url = $this->get_payment_method_image_url( $card_type ) ) {
-					$icon .= sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" width="40" height="25" style="width: 40px; height: 25px;" />', esc_url( $url ), esc_attr( $card_type ), esc_attr( $this->get_id_dasherized() ) );
+					$icon .= sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" width="40" height="25" style="width: 40px; height: 25px;" />', esc_url( $url ), esc_attr( $card_type ), esc_attr( $this->get_id_dasherized() ) ); // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 				}
 			}
 		}

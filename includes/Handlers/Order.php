@@ -839,7 +839,7 @@ class Order {
 		<tr class="square_gift_card item">
 			<td class="thumb">
 				<div style="width: 38px;">
-					<img src="<?php echo esc_url( WC_SQUARE_PLUGIN_URL . '/build/images/gift-card.png' ); ?>" />
+					<img src="<?php echo esc_url( WC_SQUARE_PLUGIN_URL . '/build/images/gift-card.png' ); /* phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage */ ?>" />
 				</div>
 			</td>
 			<td class="name">
@@ -1093,7 +1093,7 @@ class Order {
 			return;
 		}
 
-		$nonce = isset( $_POST['check_submission'] ) ? wc_clean( wp_unslash( $_POST['check_submission'] ) ) : '';
+		$nonce = isset( $_POST['check_submission'] ) ? wc_clean( wp_unslash( $_POST['check_submission'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		if ( ! wp_verify_nonce( $nonce, 'wc_verify_email' ) ) {
 			return;
@@ -1109,9 +1109,9 @@ class Order {
 			}
 
 			if ( is_callable( array( $order, 'set_' . $key ) ) ) {
-				$props[ $key ] = isset( $_POST[ $key ] ) ? wc_clean( wp_unslash( $_POST[ $key ] ) ) : '';
+				$props[ $key ] = isset( $_POST[ $key ] ) ? wc_clean( wp_unslash( $_POST[ $key ] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			} else {
-				$order->update_meta_data( $key, wc_clean( wp_unslash( $_POST[ $key ] ) ) );
+				$order->update_meta_data( $key, wc_clean( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			}
 		}
 
