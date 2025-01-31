@@ -52,10 +52,10 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_PHP_VERSION = '7.4.0';
 
 	/** minimum WordPress version required by this plugin */
-	const MINIMUM_WP_VERSION = '6.5';
+	const MINIMUM_WP_VERSION = '6.6';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '9.4';
+	const MINIMUM_WC_VERSION = '9.5';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
