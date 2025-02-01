@@ -48,7 +48,7 @@ class Performance_Logger {
 			self::$timers[ $key ] = array(
 				'time'   => microtime( true ),
 				'memory' => memory_get_usage(),
-            );
+			);
 		}
 	}
 
@@ -80,14 +80,14 @@ class Performance_Logger {
 			: sprintf( '%.2fKB', $memory_bytes / 1024 );
 
 		$plugin->log(
-            sprintf(
-                '[Performance] %s %s in %s with %s of memory usage',
-                $key,
-                $is_error ? 'failed' : 'completed',
-                $time_format,
-                $memory_format
-            )
-        );
+			sprintf(
+				'[Performance] %s %s in %s with %s of memory usage',
+				$key,
+				$is_error ? 'failed' : 'completed',
+				$time_format,
+				$memory_format
+			)
+		);
 
 		unset( self::$timers[ $key ] );
 	}
