@@ -1,0 +1,35 @@
+sequenceDiagram
+    title: Square Payment Gateway - Frontend Performance Logging Points
+
+    Customer->>WC_Square_Payment_Form_Handler: Loads checkout page
+    
+    Note over WC_Square_Payment_Form_Handler: Start: initialize_payment_form
+    WC_Square_Payment_Form_Handler->>Square API: Initialize Square.js
+    Square API-->>WC_Square_Payment_Form_Handler: Form ready
+    Note over WC_Square_Payment_Form_Handler: End: initialize_payment_form
+    
+    Customer->>WC_Square_Payment_Form_Handler: Submits payment form
+
+    Note over WC_Square_Payment_Form_Handler: Start: validate_payment_data
+    WC_Square_Payment_Form_Handler->>WC_Square_Payment_Form_Handler: Check if processing
+    WC_Square_Payment_Form_Handler->>WC_Square_Payment_Form_Handler: Check for existing nonce
+
+    alt Has Tokenized Card ID
+        WC_Square_Payment_Form_Handler->>WC: Get Token
+        WC-->>WC_Square_Payment_Form_Handler: Token
+        Note over WC_Square_Payment_Form_Handler,Square API: Start: verify_buyer
+        WC_Square_Payment_Form_Handler->>Square API: verifyBuyer()
+        Square API-->>WC_Square_Payment_Form_Handler: Verification token
+        Note over WC_Square_Payment_Form_Handler,Square API: End: verify_buyer
+    else New Card
+        Note over WC_Square_Payment_Form_Handler,Square API: Start: generate_payment_nonce
+        WC_Square_Payment_Form_Handler->>Square API: Request payment nonce
+        Square API-->>WC_Square_Payment_Form_Handler: Payment nonce
+        Note over WC_Square_Payment_Form_Handler,Square API: End: generate_payment_nonce
+    end
+
+    Note over WC_Square_Payment_Form_Handler: End: validate_payment_data
+
+    WC_Square_Payment_Form_Handler->>WC: Submit form with nonce/token
+    
+    WC-->>Customer: Order Confirmation
