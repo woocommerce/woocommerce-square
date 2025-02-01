@@ -175,7 +175,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin() );
 			return $force_tokenization;
 		} catch ( \Exception $e ) {
-			Performance_Logger::end('force_tokenization', $this->get_gateway()->get_plugin(), true);
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin(), true );
 			throw $e;
 		}
 	}
@@ -249,7 +249,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 			add_filter( 'wc_payment_gateway_' . $this->get_gateway()->get_id() . '_get_order', array( $this, 'get_order' ) );
 
 			$this->get_gateway()->process_payment( Order_Compatibility::get_prop( $order, 'id' ) );
-		
+
 			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin() );
 		} catch ( \Exception $e ) {
 			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin(), true );

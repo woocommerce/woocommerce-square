@@ -111,7 +111,7 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin() );
 			return $force_tokenization;
 		} catch ( \Exception $e ) {
-			Performance_Logger::end('force_tokenization', $this->get_gateway()->get_plugin(), true);
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin(), true );
 			throw $e;
 		}
 	}

@@ -541,7 +541,7 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 	 * @throws \Exception network timeouts, etc
 	 */
 	protected function do_credit_card_transaction( $order, $response = null ) {
-		Performance_Logger::start('payment_transaction', $this->get_plugin());
+		Performance_Logger::start( 'payment_transaction', $this->get_plugin() );
 
 		try {
 			// Generate a new transaction ref if the order payment is split using multiple payment methods.

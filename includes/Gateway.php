@@ -398,7 +398,7 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @throws \Exception
 	 */
 	protected function do_transaction( $order ) {
-		Performance_Logger::start( 'create_order', $this->get_plugin());
+		Performance_Logger::start( 'create_order', $this->get_plugin() );
 		$is_error = false;
 
 		// if there is no associated Square order ID, create one

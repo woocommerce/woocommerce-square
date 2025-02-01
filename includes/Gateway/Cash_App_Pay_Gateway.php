@@ -1066,7 +1066,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @throws \Exception
 	 */
 	protected function do_transaction( $order ) {
-		Performance_Logger::start( 'create_order', $this->get_plugin());
+		Performance_Logger::start( 'create_order', $this->get_plugin() );
 		$is_error = false;
 
 		// if there is no associated Square order ID, create one
@@ -1125,7 +1125,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @throws \Exception network timeouts, etc
 	 */
 	protected function do_payment_method_transaction( $order, $response = null ) {
-		Performance_Logger::start('payment_transaction', $this->get_plugin());
+		Performance_Logger::start( 'payment_transaction', $this->get_plugin() );
 
 		try {
 			// Generate a new transaction ref if the order payment is split using multiple payment methods.

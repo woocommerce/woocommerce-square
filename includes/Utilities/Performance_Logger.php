@@ -33,7 +33,7 @@ defined( 'ABSPATH' ) || exit;
 class Performance_Logger {
 
 	/** @var array Stores timer start times indexed by key */
-	private static $timers = [];
+	private static $timers = array();
 
 	/**
 	 * Starts a timer for performance tracking.
@@ -45,10 +45,10 @@ class Performance_Logger {
 	 */
 	public static function start( $key, $plugin ) {
 		if ( $plugin->get_settings_handler() && $plugin->get_settings_handler()->is_debug_enabled() ) {
-			self::$timers[ $key ] = [
+			self::$timers[ $key ] = array(
 				'time'   => microtime( true ),
 				'memory' => memory_get_usage(),
-			];
+            );
 		}
 	}
 
@@ -66,26 +66,28 @@ class Performance_Logger {
 			return;
 		}
 
-		$duration = microtime( true ) - self::$timers[ $key ]['time'];
+		$duration     = microtime( true ) - self::$timers[ $key ]['time'];
 		$memory_bytes = memory_get_usage() - self::$timers[ $key ]['memory'];
 
 		// Format duration: Show milliseconds if < 1 second, otherwise show seconds
-		$time_format = $duration < 1 
+		$time_format = $duration < 1
 			? sprintf( '%.0fms', $duration * 1000 )
 			: sprintf( '%.3fs', $duration );
 
 		// Format memory: Show MB if > 1MB, otherwise KB
-		$memory_format = $memory_bytes > 1048576 
+		$memory_format = $memory_bytes > 1048576
 			? sprintf( '%.2fMB', $memory_bytes / 1048576 )
 			: sprintf( '%.2fKB', $memory_bytes / 1024 );
 
-		$plugin->log( sprintf(
-			'[Performance] %s %s in %s with %s of memory usage',
-			$key,
-			$is_error ? 'failed' : 'completed',
-			$time_format,
-			$memory_format
-		) );
+		$plugin->log(
+            sprintf(
+                '[Performance] %s %s in %s with %s of memory usage',
+                $key,
+                $is_error ? 'failed' : 'completed',
+                $time_format,
+                $memory_format
+            )
+        );
 
 		unset( self::$timers[ $key ] );
 	}
@@ -108,6 +110,6 @@ class Performance_Logger {
 	 * @since {next_version}
 	 */
 	public static function reset() {
-		self::$timers = [];
+		self::$timers = array();
 	}
-} 
+}
