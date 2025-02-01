@@ -44,6 +44,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.billing_details_message_wrapper = $( '#square-pay-for-order-billing-details-wrapper' );
 			this.orderId = args.order_id;
 			this.ajax_get_order_amount_nonce = args.ajax_get_order_amount_nonce;
+			this.metrics = {};
 
 			if ( $( 'form.checkout' ).length ) {
 				this.form = $( 'form.checkout' );
@@ -216,6 +217,7 @@ jQuery( document ).ready( ( $ ) => {
 			}
 
 			this.log( 'Building payment form' );
+			this.start( 'initialize_payment_form' );
 
 			const { applicationId, locationId } = this.get_form_params();
 			this.payments = window.Square.payments( applicationId, locationId ); // eslint-disable-line no-undef
@@ -235,12 +237,14 @@ jQuery( document ).ready( ( $ ) => {
 				postalCode: defaultPostalCode, // Default postal code value.
 			} ).then( ( card ) => {
 				if ( ! document.getElementById( 'wc-square-credit-card-container' ) ) {
+					this.end( 'initialize_payment_form', true );
 					return;
 				}
 
 				card.attach( '#wc-square-credit-card-container' );
 				this.payment_form = card;
 				this.log( 'Payment form loaded' );
+				this.end( 'initialize_payment_form' );
 			} );
 		}
 
@@ -264,12 +268,16 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since 2.0.0
 		 */
 		validate_payment_data() {
+			this.start( 'validate_payment_data' );
+
 			if ( ! this.payment_token_status ) {
 				this.payment_token_status = true;
+				this.end( 'validate_payment_data' );
 				return true;
 			}
 
 			if ( this.form.is( '.processing' ) ) {
+				this.end( 'validate_payment_data' );
 				// bail when already processing.
 				return false;
 			}
@@ -277,6 +285,7 @@ jQuery( document ).ready( ( $ ) => {
 			// let through if nonce is already present - nonce is only present on non-tokenized payments.
 			if ( this.has_nonce() ) {
 				this.log( 'Payment nonce present, placing order' );
+				this.end( 'validate_payment_data' );
 				return true;
 			}
 
@@ -285,11 +294,12 @@ jQuery( document ).ready( ( $ ) => {
 			if ( tokenized_card_id ) {
 				if ( this.has_verification_token() ) {
 					this.log( 'Tokenized payment verification token present, placing order' );
+					this.end( 'validate_payment_data' );
 					return true;
 				}
 
 				this.log( 'Requesting verification token for tokenized payment' );
-
+				this.end( 'validate_payment_data' );
 				this.block_ui();
 
 				fetch( `${ wc_checkout_params.ajax_url }?action=wc_square_credit_card_get_token_by_id&token_id=${ tokenized_card_id }&nonce=${ this.payment_token_nonce }` )
@@ -301,9 +311,10 @@ jQuery( document ).ready( ( $ ) => {
 					}
 				} )
 				.then( ( { success, data: token } ) => {
+					this.start( 'verify_buyer' );
 					if ( success ) {
 						this.log( 'Requesting verification token for tokenized payment' );
-	
+
 						this.block_ui();
 	
 						this.get_verification_details().then((verificationDetails) => {
@@ -314,14 +325,17 @@ jQuery( document ).ready( ( $ ) => {
 										false,
 										verificationResult
 									);
+									this.end( 'verify_buyer' );
 								})
 								.catch(error => {
 									this.handle_errors([ error ]);
+									this.end( 'verify_buyer', true );
 								});
 						});
 					} else {
 						this.payment_token_status = false;
 						this.form.trigger( 'submit' );
+						this.end( 'verify_buyer', true );
 						this.log( token );
 					}
 				} );
@@ -332,6 +346,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.log( 'Requesting payment nonce' );
 			this.block_ui();
 			this.handleSubmission();
+			this.end( 'validate_payment_data' );
 			return false;
 		}
 
@@ -339,16 +354,19 @@ jQuery( document ).ready( ( $ ) => {
 		 * Generates Square payment token and submits form.
 		 */
 		handleSubmission() {
+			this.start( 'generate_payment_nonce' );
 			const tokenPromise = this.payment_form.tokenize();
 			tokenPromise.then( tokenResult => {
 				const { token, details, status } = tokenResult;
 
 				if ( status === 'OK' ) {
 					this.handle_card_nonce_response( token, details );
+					this.end( 'generate_payment_nonce' );
 				} else {
 					if ( tokenResult.errors ) {
 						this.handle_errors( tokenResult.errors )
 					}
+					this.end( 'generate_payment_nonce', true );
 				}
 			} );
 		}
@@ -761,6 +779,51 @@ jQuery( document ).ready( ( $ ) => {
 				console.error( 'Square Error: ' + message );
 			} else {
 				console.log( 'Square: ' + message );
+			}
+		}
+
+		/**
+		 * Start timing a performance metric
+		 * 
+		 * @param {string} key Name of the metric to time
+		 */
+		start(key) {
+			// if logging is disabled, bail.
+			if ( ! this.logging_enabled ) {
+				return;
+			}
+
+			this.metrics[key] = {
+				time: performance.now(),
+				memory: process.memoryUsage().heapUsed,
+			};
+		}
+
+		/**
+		 * End timing a performance metric
+		 * 
+		 * @param {string} key Name of the metric to stop timing
+		 * @param {boolean} is_error Whether the metric was captured during an error
+		 */
+		end(key, is_error = false) {
+			if (this.metrics[key]) {
+				const duration = performance.now() - this.metrics[key].time;
+				const memory_bytes = process.memoryUsage().heapUsed - this.metrics[key].memory;
+
+				// Format duration: Show milliseconds if < 1 second, otherwise show seconds
+				const time_format = duration < 1000 
+					? `${Math.round(duration)}ms`
+					: `${(duration/1000).toFixed(3)}s`;
+
+				// Format memory: Show MB if > 1MB, otherwise KB
+				const memory_format = memory_bytes > 1048576 
+					? `${(memory_bytes / 1048576).toFixed(2)}MB`
+					: `${(memory_bytes / 1024).toFixed(2)}KB`;
+
+				// Send to server using existing log_data infrastructure
+				this.log_data(`[Performance] ${key} ${is_error ? 'failed' : 'completed'} in ${time_format} with ${memory_format} of memory usage`, 'performance');
+
+				delete this.metrics[key];
 			}
 		}
 
