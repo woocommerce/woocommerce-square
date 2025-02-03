@@ -55,5 +55,5 @@
 	<rule ref="WooCommerce.Commenting">
 		<!-- It wants @since to contain defined version and does not allow just x.x.x -->
 		<exclude name="WooCommerce.Commenting.CommentHooks.MissingSinceVersionComment"/>
-	</rule>	
+	</rule>
 </ruleset>

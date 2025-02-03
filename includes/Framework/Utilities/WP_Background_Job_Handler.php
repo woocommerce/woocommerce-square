@@ -270,7 +270,7 @@ abstract class Background_Job_Handler {
 		}
 
 		// generate a unique ID for the job
-		$job_id = md5( microtime() . mt_rand() );
+		$job_id = md5( microtime() . wp_rand() );
 
 		/**
 		 * Filter new background job attributes
@@ -641,6 +641,7 @@ abstract class Background_Job_Handler {
 		// adds every 5 minutes to the existing schedules.
 		$schedules[ $this->identifier . '_cron_interval' ] = array(
 			'interval' => MINUTE_IN_SECONDS * $interval,
+			/* translators: %d: interval in minutes */
 			'display'  => sprintf( esc_html__( 'Every %d Minutes', 'woocommerce-square' ), $interval ),
 		);
 

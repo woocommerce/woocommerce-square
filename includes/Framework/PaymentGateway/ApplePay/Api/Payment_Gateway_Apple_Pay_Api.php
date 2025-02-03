@@ -112,7 +112,7 @@ class Payment_Gateway_Apple_Pay_API extends SquareFramework\Api\Base {
 			return;
 		}
 
-		curl_setopt( $curl_handle, CURLOPT_SSLCERT, get_option( 'sv_wc_apple_pay_cert_path' ) );
+		curl_setopt( $curl_handle, CURLOPT_SSLCERT, get_option( 'sv_wc_apple_pay_cert_path' ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 	}
 
 
