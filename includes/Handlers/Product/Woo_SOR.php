@@ -229,8 +229,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		}
 
 		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
-			$track_inventory     = $variation_data->getTrackInventory();
-			$location_overrides  = $variation_data->getLocationOverrides();
+			$track_inventory    = $variation_data->getTrackInventory();
+			$location_overrides = $variation_data->getLocationOverrides();
 
 			/*
 			 * Only update track_inventory if it's not set.

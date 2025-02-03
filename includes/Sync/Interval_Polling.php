@@ -281,7 +281,7 @@ class Interval_Polling extends Stepped_Job {
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
 			$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
 			$sold_out              = $inventory_data['sold_out'] ?? false;
-			$product = Product::get_product_by_square_variation_id( $catalog_object_id );
+			$product               = Product::get_product_by_square_variation_id( $catalog_object_id );
 			if ( $product instanceof \WC_Product ) {
 				$manage_stock = $product->get_manage_stock();
 				$stock_status = $product->get_stock_status();
@@ -318,7 +318,7 @@ class Interval_Polling extends Stepped_Job {
 
 						/* If the catalog object is not tracked in Square at all. */
 					} else {
-						$product->set_stock_status( status: $sold_out ? 'outofstock' : 'instock' );
+						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 						$product->set_manage_stock( false );
 					}
 
