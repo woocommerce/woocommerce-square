@@ -178,13 +178,14 @@ test.describe('Subscriptions Tests @general', () => {
 					)
 					.first()
 					.click();
-				await page
+				const methodLocator = await page
 					.locator(
 						'.wc-block-checkout__payment-method .wc-block-components-radio-control'
 					)
 					.locator('input.wc-block-components-radio-control__input')
-					.first()
-					.check();
+				await methodLocator.first().waitFor();
+				await methodLocator.first().check();
+
 				await placeOrder(page, isBlock);
 
 				// verify order received page
