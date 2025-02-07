@@ -4815,7 +4815,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return bool true if the gateway has an account connected, false otherwise.
 	 */
 	public function is_account_connected() {
-		return $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();;
+		return $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}
 
 	/**
