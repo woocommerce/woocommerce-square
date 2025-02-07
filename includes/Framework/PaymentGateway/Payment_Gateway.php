@@ -4807,4 +4807,36 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		}
 	}
 
+	/**
+	 * Check if the gateway has an account connected.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool true if the gateway has an account connected, false otherwise.
+	 */
+	public function is_account_connected() {
+		return $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();;
+	}
+
+	/**
+	 * Returns true if the current gateway environment is configured to 'sandbox'
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool true if the current environment is test environment.
+	 */
+	public function is_in_test_mode() {
+		return $this->get_plugin()->get_settings_handler()->is_sandbox();
+	}
+
+	/**
+	 * Determine if the gateway still requires setup.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool tue if the gateway still requires setup, false otherwise.
+	 */
+	public function needs_setup() {
+		return ( ! $this->is_account_connected() );
+	}
 }
