@@ -1016,7 +1016,7 @@ class Product_Import extends Stepped_Job {
 
 				// Remove 'Any' from options.
 				if ( isset( $attribute['options'] ) && is_array( $attribute['options'] ) ) {
-					$attribute['options'] = array_diff( $attribute['options'], array( 'Any' ) );
+					$attribute['options'] = array_diff( $attribute['options'], array( WC_SQUARE_OPTION_ANY ) );
 				}
 
 				if ( $is_taxonomy ) {
@@ -1298,7 +1298,7 @@ class Product_Import extends Stepped_Job {
 
 				foreach ( $variation['attributes'] as $attribute_key => $attribute ) {
 					// Set empty if attribute is to 'Any' to prevent it from being saved.
-					$attribute['option'] = isset( $attribute['option'] ) && 'Any' !== $attribute['option'] ? $attribute['option'] : '';
+					$attribute['option'] = isset( $attribute['option'] ) && WC_SQUARE_OPTION_ANY !== $attribute['option'] ? $attribute['option'] : '';
 
 					if ( ! isset( $attribute['name'] ) ) {
 						continue;

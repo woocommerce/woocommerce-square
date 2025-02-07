@@ -84,7 +84,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		$attributes = $product->get_attributes();
 
 		$product_variation_ids = $product->get_children();
-		$catalog_variations    = $item_data->getVariations() ? $item_data->getVariations() : array();
+		$catalog_variations    = $item_data->getVariations() ?? array();
 
 		// if dealing with a variable product, try and match the variations
 		if ( $product->is_type( 'variable' ) ) {
@@ -99,7 +99,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			) {
 				$options_ids  = array();
 				$result       = wc_square()->get_api()->retrieve_options_data();
-				$options_data = isset( $result[1] ) ? $result[1] : array();
+				$options_data = $result[1] ?? array();
 
 				// Set the product as a dynamic options product.
 				update_post_meta( $product->get_id(), '_dynamic_options', true );
@@ -315,14 +315,14 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				 */
 				foreach ( $variation_items as $attribute_id => $attribute_value ) {
 					// If the attribute value is empty, set it to 'Any'.
-					$attribute_value = empty( $attribute_value ) ? 'Any' : $attribute_value;
+					$attribute_value = empty( $attribute_value ) ? WC_SQUARE_OPTION_ANY : $attribute_value;
 
 					// Check if it's a global attribute (taxonomy-based, e.g., "pa_color")
 					$taxonomy_exists = false;
 					if ( taxonomy_exists( $attribute_id ) ) {
 						// Use wc_attribute_label for global attributes
 						$attribute_name   = $attribute_id;
-						$variation_name[] = $attribute_value = 'Any' === $attribute_value ? 'Any' : get_term_by( 'slug', $attribute_value, $attribute_id )->name;
+						$variation_name[] = $attribute_value = WC_SQUARE_OPTION_ANY === $attribute_value ? WC_SQUARE_OPTION_ANY : get_term_by( 'slug', $attribute_value, $attribute_id )->name;
 						$taxonomy_exists  = true;
 					} else {
 						// For custom attributes, simply use the cleaned-up attribute ID
@@ -368,8 +368,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						}
 
 						// If the attribute value is 'Any', add it to the attribute option values.
-						if ( 'Any' === $attribute_value && ! in_array( 'Any', $attribute_option_values, true ) ) {
-							$attribute_option_values[] = 'Any';
+						if ( WC_SQUARE_OPTION_ANY === $attribute_value && ! in_array( WC_SQUARE_OPTION_ANY, $attribute_option_values, true ) ) {
+							$attribute_option_values[] = WC_SQUARE_OPTION_ANY;
 						}
 
 						$option    = wc_square()->get_api()->create_options_and_values( $option_id, $attribute_name, $attribute_option_values );
