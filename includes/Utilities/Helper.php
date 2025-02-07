@@ -38,7 +38,7 @@ class Helper {
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification is not required here as this is a helper function
 		if ( isset( $_POST[ $key ] ) ) {
-			return trim( wc_clean( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			return trim( wc_clean( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		}
 
 		return '';
