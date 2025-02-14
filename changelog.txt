@@ -1,5 +1,8 @@
 *** WooCommerce Square Changelog ***
 
+= 4.8.7 - 2025-02-18 =
+* Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
+
 = 4.8.6 - 2025-02-10 =
 * Fix - Resolved "translation loading was triggered too early" issue in WordPress 6.7.
 * Fix - Refresh brand assets.
