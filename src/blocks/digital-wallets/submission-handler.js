@@ -6,7 +6,7 @@ import { select, dispatch } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import { getSquareServerData } from '../square-utils';
+import { getSquareServerData, convertAmount } from '../square-utils';
 
 /**
  * Returns the AJAX URL for a given action.
@@ -139,7 +139,7 @@ export const buildVerificationDetails = ( billing ) => {
   const cartTotal = billing.cartTotal.value;
 	return {
 		intent: 'CHARGE',
-		amount: ( billing.currency.code == 'JPY' ? cartTotal : cartTotal / 100 ).toString(),
+    amount: convertAmount(cartTotal, billing.currency.code).toString(),
 		currencyCode: billing.currency.code,
 		billingContact: {
 			familyName: billing.billingData.last_name || '',

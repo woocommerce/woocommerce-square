@@ -11,6 +11,7 @@ import {
 	handleErrors,
 	log,
 	logData,
+  convertAmount,
 } from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
@@ -59,7 +60,7 @@ export const usePaymentForm = (
 
 		if ( intent === 'CHARGE' ) {
 			newVerificationDetails.amount = (
-				billing.currency.code == 'JPY' ? billing.cartTotal.value : billing.cartTotal.value / 100
+        convertAmount(billing.cartTotal.value, billing.currency.code)
 			).toString();
 			newVerificationDetails.currencyCode = billing.currency.code;
 		}

@@ -1,10 +1,10 @@
-import { getSquareServerData } from '../square-utils';
+import { getSquareServerData, convertAmount } from '../square-utils';
 
 export const buildVerificationDetails = ( billing ) => {
   const cartTotal = billing.cartTotal.value;
 	return {
 		intent: 'CHARGE',
-		amount: ( billing.currency.code == 'JPY' ? cartTotal : cartTotal / 100 ).toString(),
+    amount: convertAmount(cartTotal, billing.currency.code).toString(),
 		currencyCode: billing.currency.code,
 		billingContact: {
 			familyName: billing.billingData.last_name || '',
