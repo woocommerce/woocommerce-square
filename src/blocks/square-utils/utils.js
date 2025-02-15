@@ -135,28 +135,28 @@ const log = ( data, type = 'notice' ) => {
 };
 
 const convertAmount = (amount, currencyCode) => {
-  const currencyDecimals = {
-    JPY: 0,
-    BIF: 0,
-    CLP: 0,
-    DJF: 0,
-    GNF: 0,
-    HUF: 0,
-    JPY: 0,
-    KMF: 0,
-    KRW: 0,
-    MGA: 0,
-    PYG: 0,
-    RWF: 0,
-    VND: 0,
-    VUV: 0,
-    XAF: 0,
-    XOF: 0,
-    XPF: 0,
+  switch (currencyCode) {
+    case 'BIF':
+    case 'CLP':
+    case 'DJF':
+    case 'GNF':
+    case 'HUF':
+    case 'JPY':
+    case 'KMF':
+    case 'KRW':
+    case 'MGA':
+    case 'PYG':
+    case 'RWF':
+    case 'VND':
+    case 'VUV':
+    case 'XAF':
+    case 'XOF':
+    case 'XPF':
+      return amount;
+
+    default:
+      return amount / 100;
   };
-  const decimals = currencyDecimals[currencyCode] || 2;
-  const factor = 10 ** decimals;
-  return amount / factor;
 };
 
 export { getSquareServerData, handleErrors, log, logData, convertAmount };

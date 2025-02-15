@@ -10,7 +10,7 @@ import {
 	getSquareServerData,
 	handleErrors,
 	log,
-	logData,
+  logData,
   convertAmount,
 } from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
@@ -59,9 +59,7 @@ export const usePaymentForm = (
 		};
 
 		if ( intent === 'CHARGE' ) {
-			newVerificationDetails.amount = (
-        convertAmount(billing.cartTotal.value, billing.currency.code)
-			).toString();
+      newVerificationDetails.amount = convertAmount(billing.cartTotal.value, billing.currency.code).toString();
 			newVerificationDetails.currencyCode = billing.currency.code;
 		}
 		return newVerificationDetails;
