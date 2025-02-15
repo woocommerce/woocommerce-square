@@ -134,4 +134,29 @@ const log = ( data, type = 'notice' ) => {
 	}
 };
 
-export { getSquareServerData, handleErrors, log, logData };
+const convertAmount = (amount, currencyCode) => {
+  switch (currencyCode) {
+    case 'BIF':
+    case 'CLP':
+    case 'DJF':
+    case 'GNF':
+    case 'HUF':
+    case 'JPY':
+    case 'KMF':
+    case 'KRW':
+    case 'MGA':
+    case 'PYG':
+    case 'RWF':
+    case 'VND':
+    case 'VUV':
+    case 'XAF':
+    case 'XOF':
+    case 'XPF':
+      return amount;
+
+    default:
+      return amount / 100;
+  };
+};
+
+export { getSquareServerData, handleErrors, log, logData, convertAmount };
