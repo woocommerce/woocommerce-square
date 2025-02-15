@@ -71,24 +71,32 @@ class Products {
 
 		$this->plugin = $plugin;
 
-		// add common errors
-		$this->product_errors = array(
-			/* translators: Placeholder: %s - product name */
-			'missing_sku'           => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
-		);
-
 		// Get gift card features status.
 		$gift_card_settings      = get_option( Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 		$this->gift_card_enabled = $gift_card_settings['enabled'] ?? 'no';
 
+		add_action( 'init', array( $this, 'register_common_errors' ) );
 		add_action( 'current_screen', array( $this, 'add_tabs' ), 99 );
 
 		// add hooks
 		$this->add_products_edit_screen_hooks();
 		$this->add_product_edit_screen_hooks();
 		$this->add_product_sync_hooks();
+	}
+
+	/**
+	 * Loads register common errors.
+	 *
+	 * @since 4.8.6
+	 */
+	public function register_common_errors() {
+		// Add common errors.
+		$this->product_errors = array(
+			/* translators: Placeholder: %s - product name */
+			'missing_sku'           => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
+			/* translators: Placeholder: %s - product name */
+			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
+		);
 	}
 
 	/**
@@ -553,6 +561,11 @@ class Products {
 		if ( is_string( $square_synced ) ) {
 			$errors = $this->check_product_sync_errors( $product );
 			if ( 'no' === $square_synced || empty( $errors ) ) {
+				if ( 'yes' === $square_synced && $product->is_type( 'variable' ) && wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+					// if syncing inventory with Square, parent variable products don't manage stock
+					$product->set_manage_stock( false );
+				}
+
 				Product::set_synced_with_square( $product, $square_synced );
 			} elseif ( ! empty( $errors ) ) {
 				foreach ( $errors as $error ) {
@@ -1131,10 +1144,10 @@ class Products {
 
 		// Add email data.
 		if ( Gift_Card::is_new() && isset( $_POST['square-gift-card-send-to-email'] ) && ! empty( $_POST['square-gift-card-send-to-email'] ) ) {
-			$sender_name = isset( $_POST['square-gift-card-sender-name'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sender-name'] ) ) : '';
-			$email       = isset( $_POST['square-gift-card-send-to-email'] ) ? is_email( wp_unslash( $_POST['square-gift-card-send-to-email'] ) ) : '';
-			$first_name  = isset( $_POST['square-gift-card-sent-to-first-name'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sent-to-first-name'] ) ) : '';
-			$message     = isset( $_POST['square-gift-card-sent-to-message'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sent-to-message'] ) ) : '';
+			$sender_name = isset( $_POST['square-gift-card-sender-name'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sender-name'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$email       = isset( $_POST['square-gift-card-send-to-email'] ) ? is_email( wp_unslash( $_POST['square-gift-card-send-to-email'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$first_name  = isset( $_POST['square-gift-card-sent-to-first-name'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sent-to-first-name'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$message     = isset( $_POST['square-gift-card-sent-to-message'] ) ? wc_clean( wp_unslash( $_POST['square-gift-card-sent-to-message'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			if ( $sender_name ) {
 				$cart_item_data['square-gift-card-sender-name'] = $sender_name;
@@ -1159,7 +1172,7 @@ class Products {
 				throw new Exception( esc_html__( 'The gift card number field is empty.', 'woocommerce-square' ) );
 			}
 
-			$cart_item_data['square-gift-card-gan'] = wc_clean( wp_unslash( $_POST['square-gift-card-gan'] ) );
+			$cart_item_data['square-gift-card-gan'] = wc_clean( wp_unslash( $_POST['square-gift-card-gan'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			$response = $this->get_plugin()->get_gateway()->get_api()->retrieve_gift_card_by_gan( $cart_item_data['square-gift-card-gan'] );
 

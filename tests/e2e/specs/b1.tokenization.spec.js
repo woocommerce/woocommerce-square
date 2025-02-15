@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	fillAddressFields,
@@ -45,8 +46,7 @@ for ( const isBlock of isBlockCheckout ) {
 
 	test( title + 'Payment Gateway - Customer Profiles @general', async ( { page } ) => {
 		await deleteAllPaymentMethods( page );
-		await page.goto( '/product/simple-product' );
-		await page.locator( '.single_add_to_cart_button' ).click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout( page, isBlock );
 
 		await fillAddressFields( page, isBlock );
@@ -79,8 +79,7 @@ for ( const isBlock of isBlockCheckout ) {
 	} );
 
 	test( title + 'Checkout using saved card @general', async ( { page } ) => {
-		await page.goto( '/product/simple-product' );
-		await page.locator( '.single_add_to_cart_button' ).click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout( page, isBlock );
 
 		if ( isBlock ) {

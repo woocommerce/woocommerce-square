@@ -264,7 +264,7 @@ abstract class Base {
 		$query = $this->get_request_query();
 		if ( $query ) {
 
-			$url_parts = parse_url( $uri );
+			$url_parts = parse_url( $uri ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url
 
 			// if the URL already has some query params, add to them
 			if ( ! empty( $url_parts['query'] ) ) {
@@ -645,7 +645,7 @@ abstract class Base {
 			return;
 		}
 
-		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
+		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 	}
 
 	/**
