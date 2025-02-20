@@ -59,7 +59,10 @@ export const usePaymentForm = (
 		};
 
 		if ( intent === 'CHARGE' ) {
-			newVerificationDetails.amount = convertAmount(billing.cartTotal.value, billing.currency.code).toString();
+			newVerificationDetails.amount = convertAmount(
+				billing.cartTotal.value,
+				billing.currency.code
+			).toString();
 			newVerificationDetails.currencyCode = billing.currency.code;
 		}
 		return newVerificationDetails;

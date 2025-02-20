@@ -134,8 +134,8 @@ const log = ( data, type = 'notice' ) => {
 	}
 };
 
-const convertAmount = (amount, currencyCode) => {
-	switch (currencyCode) {
+const convertAmount = ( amount, currencyCode ) => {
+	switch ( currencyCode ) {
 		case 'BIF':
 		case 'CLP':
 		case 'DJF':
@@ -156,7 +156,7 @@ const convertAmount = (amount, currencyCode) => {
 
 		default:
 			return amount / 100;
-	};
+	}
 };
 
 export { getSquareServerData, handleErrors, log, logData, convertAmount };

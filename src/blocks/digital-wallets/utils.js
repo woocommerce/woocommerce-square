@@ -3,7 +3,10 @@ import { getSquareServerData, convertAmount } from '../square-utils';
 export const buildVerificationDetails = ( billing ) => {
 	return {
 		intent: 'CHARGE',
-		amount: convertAmount(billing.cartTotal.value, billing.currency.code).toString(),
+		amount: convertAmount(
+			billing.cartTotal.value,
+			billing.currency.code
+		).toString(),
 		currencyCode: billing.currency.code,
 		billingContact: {
 			familyName: billing.billingData.last_name || '',
