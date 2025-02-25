@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.8.5
+Stable tag: 4.8.6
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.6 - 2025-02-10 =
+* Fix - Resolved "translation loading was triggered too early" issue in WordPress 6.7.
+* Fix - Refresh brand assets.
+* Dev - Bump WooCommerce "tested up to" version 9.7.
+* Dev - Bump WooCommerce minimum supported version to 9.5.
+* Dev - Bump WordPress minimum supported version to 6.6.
+* Dev - Add the WordPress Plugin Check GitHub Action.
 
 = 4.8.5 - 2025-01-20 =
 * Fix - Unblock the Checkout page UI, and show a generic error when buyer verification fails.

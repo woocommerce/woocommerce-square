@@ -302,9 +302,7 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 }
 
 export async function placeOrder( page, isBlock = true ) {
-	if ( isBlock ) {
-		await page.waitForTimeout( 2000 );
-	}
+	await page.waitForTimeout( 2000 );
 	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
 }
 
