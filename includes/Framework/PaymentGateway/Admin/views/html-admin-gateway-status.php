@@ -25,7 +25,7 @@
 		<tr>
 			<th colspan="3" data-export-label="">
 				<?php echo esc_html( $gateway->get_method_title() ); ?>
-				<?php echo wc_help_tip( __( 'This section contains configuration settings for this gateway.', 'woocommerce-square' ) ); ?>
+				<?php echo wc_help_tip( esc_html__( 'This section contains configuration settings for this gateway.', 'woocommerce-square' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</th>
 		</tr>
 	</thead>
@@ -47,7 +47,7 @@
 
 		<tr>
 			<td data-export-label="Environment"><?php esc_html_e( 'Environment', 'woocommerce-square' ); ?>:</td>
-			<td class="help"><?php echo wc_help_tip( __( 'The transaction environment for this gateway.', 'woocommerce-square' ) ); ?></td>
+			<td class="help"><?php echo wc_help_tip( esc_html__( 'The transaction environment for this gateway.', 'woocommerce-square' ) ); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?></td>
 			<td><?php echo esc_html( $environment ); ?></td>
 		</tr>
 
@@ -55,7 +55,7 @@
 
 			<tr>
 				<td data-export-label="Tokenization Enabled"><?php esc_html_e( 'Tokenization Enabled', 'woocommerce-square' ); ?>:</td>
-				<td class="help"><?php echo wc_help_tip( __( 'Displays whether or not tokenization is enabled for this gateway.', 'woocommerce-square' ) ); ?></td>
+				<td class="help"><?php echo wc_help_tip( esc_html__( 'Displays whether or not tokenization is enabled for this gateway.', 'woocommerce-square' ) ); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?></td>
 				<td>
 					<?php if ( $gateway->tokenization_enabled() ) : ?>
 						<mark class="yes">&#10004;</mark>
@@ -69,7 +69,7 @@
 
 		<tr>
 			<td data-export-label="Debug Mode"><?php esc_html_e( 'Debug Mode', 'woocommerce-square' ); ?>:</td>
-			<td class="help"><?php echo wc_help_tip( __( 'Displays whether or not debug logging is enabled for this gateway.', 'woocommerce-square' ) ); ?></td>
+			<td class="help"><?php echo wc_help_tip( esc_html__( 'Displays whether or not debug logging is enabled for this gateway.', 'woocommerce-square' ) ); /* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */ ?></td>
 			<td>
 				<?php if ( $gateway->debug_log() && $gateway->debug_checkout() ) : ?>
 					<?php echo esc_html__( 'Display at Checkout & Log', 'woocommerce-square' ); ?>
