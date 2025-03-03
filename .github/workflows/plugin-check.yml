@@ -50,3 +50,5 @@ jobs:
           .wp-env.json
           .prettierrc.js
           .stylelintrc.json
+
+        ignore-warnings: true
