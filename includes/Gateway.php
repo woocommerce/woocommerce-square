@@ -1131,7 +1131,7 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		// keep track of the retry count
-		if ( $order_id > 0 ) {
+		if ( $order_id > 0 ) { // TODO: look to remove this once fix is in Woo and is our minimum version. See https://github.com/woocommerce/woocommerce/issues/55728 for tracking.
 			$this->update_order_meta( $order, 'retry_count', $retry_count );
 		}
 
