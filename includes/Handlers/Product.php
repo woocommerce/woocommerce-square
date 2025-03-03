@@ -462,13 +462,15 @@ class Product {
 			}
 		}
 
-		$is_inventory_tracking = isset( $inventory_tracking[ $square_id ] ) ? $inventory_tracking[ $square_id ] : true;
+		$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
+		$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? true;
+		$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
 		if ( $is_inventory_tracking ) {
 			$product->set_manage_stock( true );
 			$product->set_stock_quantity( $stock );
 		} else {
-			$product->set_stock_status( 'instock' );
+			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 			$product->set_manage_stock( false );
 		}
 
@@ -512,9 +514,11 @@ class Product {
 			$inventory_tracking = Helper::get_catalog_inventory_tracking( $response->get_data()->getObjects() );
 
 			foreach ( $response->get_data()->getObjects() as $catalog_object ) {
-				$square_id             = $catalog_object->getId();
-				$stock                 = $inventory_hash[ $square_id ] ?? 0;
-				$is_inventory_tracking = isset( $inventory_tracking[ $square_id ] ) ? $inventory_tracking[ $square_id ] : true;
+				$square_id               = $catalog_object->getId();
+				$stock                   = $inventory_hash[ $square_id ] ?? 0;
+				$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
+				$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? true;
+				$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
 				$product_id = $products_map[ $square_id ]['product_id'];
 				$product    = wc_get_product( $product_id );
@@ -527,7 +531,7 @@ class Product {
 					$product->set_manage_stock( true );
 					$product->set_stock_quantity( $stock );
 				} else {
-					$product->set_stock_status( 'instock' );
+					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 					$product->set_manage_stock( false );
 				}
 

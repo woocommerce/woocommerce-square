@@ -229,14 +229,30 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		}
 
 		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+			$track_inventory    = $variation_data->getTrackInventory();
+			$location_overrides = $variation_data->getLocationOverrides();
+
 			/*
 			 * Only update track_inventory if it's not set.
 			 * This will only update inventory tracking on new variations.
 			 * inventory tracking will remain the same for existing variations.
 			 */
-			$track_inventory = $variation_data->getTrackInventory();
-			if ( is_null( $track_inventory ) ) {
+			if ( is_null( $track_inventory ) && is_null( $location_overrides ) ) {
 				$variation_data->setTrackInventory( $product->get_manage_stock() );
+
+				// If the product is not managing stock and is out of stock, set it as sold out.
+				if ( ! $product->get_manage_stock() && 'outofstock' === $product->get_stock_status() ) {
+					$configured_location = wc_square()->get_settings_handler()->get_location_id();
+					$location_override   = new \Square\Models\ItemVariationLocationOverrides();
+					$location_override->setLocationId( $configured_location );
+					// We need to set track_inventory to true to be able to set sold_out to true, without it will be ignored.
+					$location_override->setTrackInventory( true );
+					$location_override->setSoldOut( true );
+					$location_overrides = array( $location_override );
+
+					// Set the location overrides.
+					$variation_data->setLocationOverrides( $location_overrides );
+				}
 			}
 		}
 
