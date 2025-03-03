@@ -87,7 +87,7 @@ class Products {
 	/**
 	 * Loads register common errors.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.6
 	 */
 	public function register_common_errors() {
 		// Add common errors.

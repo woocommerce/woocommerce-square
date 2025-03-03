@@ -182,7 +182,7 @@ test.describe('Subscriptions Tests @general', () => {
 					.locator(
 						'.wc-block-checkout__payment-method .wc-block-components-radio-control'
 					)
-					.locator('input.wc-block-components-radio-control__input')
+					.locator('input.wc-block-components-radio-control__input');
 				await methodLocator.first().waitFor();
 				await methodLocator.first().check();
 
