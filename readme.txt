@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 4.8.7 - 2025-03-04 =
+= 4.8.7 - 2025-03-06 =
 * Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
 * Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
 * Fix - Ensure that Cash App Pay works as expected on mobile devices.
