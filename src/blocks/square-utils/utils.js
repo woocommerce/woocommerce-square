@@ -134,6 +134,13 @@ const log = ( data, type = 'notice' ) => {
 	}
 };
 
+/**
+ * Adjust decimal places based on currency code
+ *
+ * @param {number} amount The amount to convert
+ * @param {string} currencyCode The currency code of the amount
+ * @return {number} The converted amount
+ */
 const convertAmount = ( amount, currencyCode ) => {
 	switch ( currencyCode ) {
 		case 'BIF':
