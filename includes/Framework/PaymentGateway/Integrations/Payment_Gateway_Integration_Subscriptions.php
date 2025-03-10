@@ -253,7 +253,10 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin() );
 		} catch ( \Exception $e ) {
 			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin(), true );
-			throw $e;
+
+			// Make order as failed.
+			$this->get_gateway()->mark_order_as_failed( $order, esc_html__( 'Subscription Renewal: payment token is missing/invalid.', 'woocommerce-square' ) );
+			return;
 		}
 	}
 
