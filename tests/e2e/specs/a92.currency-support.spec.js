@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	visitCheckout,
@@ -26,8 +27,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 test( 'Square credit card should available only for the supported currencies @general', async ( { page } ) => {
 	// Update currency to INR
 	await runWpCliCommand('wp option update woocommerce_currency "INR"');
-	await page.goto( '/product/simple-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+	await addOneOrMoreProductToCart( page, 'simple-product' );
 	// Confirm that the Credit card is not visible on checkout page.
 	await visitCheckout(page, false);
 	await expect(

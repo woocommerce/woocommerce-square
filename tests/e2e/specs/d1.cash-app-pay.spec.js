@@ -1,4 +1,5 @@
 import { test, expect, devices, chromium } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	clearCart,
 	createProduct,
@@ -54,8 +55,7 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 			enabled: false,
 		});
 
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 
 		// Confirm that the Cash App Pay is not visible on checkout page.
 		await visitCheckout(page, false);
@@ -305,8 +305,7 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 					...iPhone,
 				});
 				const page = await context.newPage();
-				await page.goto('/product/simple-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-product' );
 				await visitCheckout(page, isBlock);
 				await fillAddressFields(page, isBlock);
 				await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -332,8 +331,7 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 				...iPhone,
 			});
 			const page = await context.newPage();
-			await page.goto('/product/simple-product');
-			await page.locator('.single_add_to_cart_button').click();
+			await addOneOrMoreProductToCart( page, 'simple-product' );
 			await expect(
 				page.getByRole('link', { name: 'View cart' }).first()
 			).toBeVisible();
@@ -366,9 +364,8 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 		});
 		const page = await context.newPage();
 		await clearCart( page );
-		await page.goto('/product/simple-product');
 		page.on('dialog', dialog => dialog.accept());
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -388,9 +385,8 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
 		page.on('dialog', dialog => dialog.accept());
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
