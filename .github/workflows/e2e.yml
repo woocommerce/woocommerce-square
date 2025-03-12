@@ -49,8 +49,9 @@ jobs:
       # Use compiled versions to avoid need for npm and composer installation and build step.
       - name: Install required WP plugins
         run: |
-          gh release download --repo woocommerce/woocommerce-pre-orders --pattern  woocommerce-pre-orders.zip --dir ./test-plugins
-          gh release download --repo woocommerce/woocommerce-subscriptions --pattern  woocommerce-subscriptions.zip --dir ./test-plugins
+          ls -l
+          gh release download --repo woocommerce/woocommerce-pre-orders --pattern  woocommerce-pre-orders.zip --dir ./wordpress/wp-content/plugins/
+          gh release download --repo woocommerce/woocommerce-subscriptions --pattern  woocommerce-subscriptions.zip --dir ./wordpress/wp-content/plugins/
           cd ./test-plugins
           unzip -o woocommerce-pre-orders.zip
           unzip -o woocommerce-subscriptions.zip
