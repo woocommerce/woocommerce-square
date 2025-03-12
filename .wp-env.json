@@ -10,7 +10,14 @@
 		"tests": {
 			"mappings": {
 				"wp-cli.yml": "./tests/e2e/config/wp-cli.yml"
-			}
+			},
+			"plugins": [
+				"https://downloads.wordpress.org/plugin/woocommerce.zip",
+				"https://downloads.wordpress.org/plugin/email-log.zip",
+				".",
+				"./test-plugins/woocommerce-subscriptions",
+				"./test-plugins/woocommerce-pre-orders"
+			]
 		}
 	},
 	"config": {
