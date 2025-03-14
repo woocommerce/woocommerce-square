@@ -58,15 +58,15 @@ export function usePaymentRequest( payments, needsShipping ) {
 		const createPaymentRequest = async () => {
 			try {
 				const __paymentRequestJson = await getPaymentRequest();
-				const __paymentRequestObject = JSON.parse( __paymentRequestJson );
+				const __paymentRequestObject =
+					JSON.parse( __paymentRequestJson );
 				const __paymentRequest = payments.paymentRequest(
 					__paymentRequestObject
 				);
 
 				setPaymentRequest( __paymentRequest );
 			} catch {
-				// When payment request fails, return.
-				return;
+				// When payment request fails, no action require.
 			}
 		};
 
