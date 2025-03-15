@@ -29,7 +29,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 */
 	public function __construct() {
 		$this->id             = 'wc_square_gift_card_sent';
-		$this->title          = __( 'Square Gift Card sent', 'woocommerce-square' );
+		$this->title          = __( 'Square Gift Card Sent', 'woocommerce-square' );
 		$this->customer_email = true;
 		$this->description    = __( 'This email is sent to the recipient of the Square Gift Card.', 'woocommerce-square' );
 		$this->template_html  = 'emails/gift-card-sent.php';
@@ -44,8 +44,64 @@ class Gift_Card_Sent extends \WC_Email {
 
 		$this->gift_card_email_data = new \stdClass();
 
+		$this->gift_card_email_data->recipient_name = '';
+		$this->gift_card_email_data->sender_message = '';
+
 		// Call parent constructor.
 		parent::__construct();
+
+		add_filter( 'woocommerce_email_preview_placeholders', array( $this, 'set_dummy_placeholders' ), 10, 2 );
+		add_filter( 'woocommerce_email_preview_dummy_order', array( $this, 'set_dummy_order' ), 10, 2 );
+	}
+
+	/**
+	 * Set dummy placeholders for the email.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array  $placeholders Placeholders.
+	 * @param string $email_type Email type.
+	 * @return array
+	 */
+	public function set_dummy_placeholders( $placeholders, $email_type ) {
+		if ( 'WooCommerce\Square\Emails\Gift_Card_Sent' !== $email_type ) {
+			return $placeholders;
+		}
+
+		$placeholders['{square_gift_card_sender_name}'] = 'Kelly';
+
+		return $placeholders;
+	}
+
+	/**
+	 * Set dummy order for the email.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order The WooCommerce order.
+	 * @param string    $email_type Email type.
+	 * @return \WC_Order
+	 */
+	public function set_dummy_order( \WC_Order $order, $email_type ) {
+		if ( 'WooCommerce\Square\Emails\Gift_Card_Sent' !== $email_type ) {
+			return $order;
+		}
+
+		wc_square()->get_gateway()->update_order_meta( $order, 'gift_card_balance', '20' );
+		wc_square()->get_gateway()->update_order_meta( $order, 'gift_card_number', '7783320804609121' );
+
+		$items = $order->get_items();
+
+		foreach ( $items as $item ) {
+			$item->update_meta_data( '_square-gift-card-purchase-type', 'new' );
+			$item->update_meta_data( 'square-gift-card-sender-name', 'Kelly' );
+			$item->update_meta_data( 'square-gift-card-sent-to-message', 'Happy Birthday John!' );
+			$item->update_meta_data( 'square-gift-card-send-to-email', 'kelly@example.com' );
+			$item->update_meta_data( 'square-gift-card-sent-to-first-name', 'John' );
+			$item->save();
+		}
+
+		return $order;
 	}
 
 	/**
@@ -153,6 +209,44 @@ class Gift_Card_Sent extends \WC_Email {
 	}
 
 	/**
+	 * Returns the details of the gift card purchased.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order The Woo Order associated with the gift card purchase.
+	 * @param string    $key   The key of the gift card detail to retrieve.
+	 * @return string
+	 */
+	private function get_gift_card_details( $order, $key = '' ) {
+		if ( empty( $key ) ) {
+			return '';
+		}
+
+		$items  = $order->get_items();
+		$result = array();
+
+		foreach ( $items as $item ) {
+			if ( 'new' !== $item->get_meta( '_square-gift-card-purchase-type' ) ) {
+				continue;
+			}
+
+			$recipient_email = $item->get_meta( 'square-gift-card-send-to-email' );
+
+			if ( ! $recipient_email ) {
+				continue;
+			}
+
+			$result['sender_name']       = $item->get_meta( 'square-gift-card-sender-name' );
+			$result['sender_message']    = $item->get_meta( 'square-gift-card-sent-to-message' );
+			$result['recipient_name']    = $item->get_meta( 'square-gift-card-sent-to-first-name' );
+			$result['gift_card_number']  = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_number' );
+			$result['gift_card_balance'] = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_balance' );
+		}
+
+		return isset( $result[ $key ] ) ? $result[ $key ] : '';
+	}
+
+	/**
 	 * Says if a Gift card was purchased in the order.
 	 *
 	 * @return boolean
@@ -172,14 +266,17 @@ class Gift_Card_Sent extends \WC_Email {
 		return wc_get_template_html(
 			$this->template_html,
 			array(
-				'order'              => $this->object,
-				'gift_card_number'   => $this->get_gift_card_gan( $this->object ),
-				'gift_card_balance'  => $this->get_gift_card_amount( $this->object ),
-				'email_heading'      => $this->get_heading(),
-				'additional_content' => $this->get_additional_content(),
-				'sent_to_admin'      => false,
-				'plain_text'         => false,
-				'email'              => $this,
+				'order'                    => $this->object,
+				'gift_card_number'         => $this->get_gift_card_details( $this->object, 'gift_card_number' ),
+				'gift_card_balance'        => $this->get_gift_card_details( $this->object, 'gift_card_balance' ),
+				'gift_card_sender_message' => $this->get_gift_card_details( $this->object, 'sender_message' ),
+				'gift_card_sender_name'    => $this->get_gift_card_details( $this->object, 'sender_name' ),
+				'gift_card_recipient_name' => $this->get_gift_card_details( $this->object, 'recipient_name' ),
+				'email_heading'            => $this->get_heading(),
+				'additional_content'       => $this->get_additional_content(),
+				'sent_to_admin'            => false,
+				'plain_text'               => false,
+				'email'                    => $this,
 			)
 		);
 	}
@@ -195,14 +292,17 @@ class Gift_Card_Sent extends \WC_Email {
 		return wc_get_template_html(
 			$this->template_plain,
 			array(
-				'order'              => $this->object,
-				'gift_card_number'   => $this->get_gift_card_gan( $this->object ),
-				'gift_card_balance'  => $this->get_gift_card_amount( $this->object ),
-				'email_heading'      => $this->get_heading(),
-				'additional_content' => $this->get_additional_content(),
-				'sent_to_admin'      => false,
-				'plain_text'         => true,
-				'email'              => $this,
+				'order'                    => $this->object,
+				'gift_card_number'         => $this->get_gift_card_details( $this->object, 'gift_card_number' ),
+				'gift_card_balance'        => $this->get_gift_card_details( $this->object, 'gift_card_balance' ),
+				'gift_card_sender_message' => $this->get_gift_card_details( $this->object, 'sender_message' ),
+				'gift_card_sender_name'    => $this->get_gift_card_details( $this->object, 'sender_name' ),
+				'gift_card_recipient_name' => $this->get_gift_card_details( $this->object, 'recipient_name' ),
+				'email_heading'            => $this->get_heading(),
+				'additional_content'       => $this->get_additional_content(),
+				'sent_to_admin'            => false,
+				'plain_text'               => true,
+				'email'                    => $this,
 			)
 		);
 	}

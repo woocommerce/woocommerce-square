@@ -102,16 +102,16 @@ class Email {
 		// init emails if uninitialized
 		$this->init_emails();
 
-		if ( ! array_key_exists( 'wc_square_sync_completed', $emails ) || ! $emails['wc_square_sync_completed'] instanceof Emails\Sync_Completed ) {
-			$emails['wc_square_sync_completed'] = $this->square_sync_completed;
+		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Sync_Completed', $emails ) || ! $emails['WooCommerce\Square\Emails\Sync_Completed'] instanceof Emails\Sync_Completed ) {
+			$emails['WooCommerce\Square\Emails\Sync_Completed'] = $this->square_sync_completed;
 		}
 
-		if ( ! array_key_exists( 'wc_square_access_token_email', $emails ) || ! $emails['wc_square_access_token_email'] instanceof Emails\Sync_Completed ) {
-			$emails['wc_square_access_token_email'] = $this->square_access_token_email;
+		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Access_Token_Email', $emails ) || ! $emails['WooCommerce\Square\Emails\Access_Token_Email'] instanceof Emails\Access_Token_Email ) {
+			$emails['WooCommerce\Square\Emails\Access_Token_Email'] = $this->square_access_token_email;
 		}
 
-		if ( ! array_key_exists( 'wc_square_gift_card_sent', $emails ) || ! $emails['wc_square_gift_card_sent'] instanceof Emails\Sync_Completed ) {
-			$emails['wc_square_gift_card_sent'] = $this->square_gift_card_sent;
+		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Gift_Card_Sent', $emails ) || ! $emails['WooCommerce\Square\Emails\Gift_Card_Sent'] instanceof Emails\Gift_Card_Sent ) {
+			$emails['WooCommerce\Square\Emails\Gift_Card_Sent'] = $this->square_gift_card_sent;
 		}
 
 		return $emails;

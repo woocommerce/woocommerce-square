@@ -8,8 +8,8 @@ echo "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n\n";
 printf(
 	/* translators: %1$s - Gift card recipient's name, %2$s - Gift card sender's name */
 	esc_html__( 'Hey %1$s, %2$s sent you a %3$s gift card!', 'woocommerce-square' ),
-	esc_html( $email->gift_card_email_data->recipient_name ),
-	esc_html( $email->gift_card_email_data->sender_name ),
+	esc_html( $gift_card_recipient_name ),
+	esc_html( $gift_card_sender_name ),
 	esc_html( get_bloginfo( 'name' ) )
 );
 
@@ -26,12 +26,12 @@ echo esc_html(
 
 echo "\n\n----------\n\n";
 
-if ( $email->gift_card_email_data->sender_message ) {
+if ( $gift_card_sender_message ) {
 	printf(
 		/* translators: %1$s - Gift card sender's name, %2$s - Gift card sender's message */
 		esc_html__( '%1$s has a message for you: "%2$s"', 'woocommerce-square' ),
-		esc_html( $email->gift_card_email_data->sender_name ),
-		esc_html( wp_strip_all_tags( wptexturize( $email->gift_card_email_data->sender_message ) ) )
+		esc_html( $gift_card_sender_name ),
+		esc_html( wp_strip_all_tags( wptexturize( $gift_card_sender_message ) ) )
 	);
 	echo "\n\n----------\n\n";
 }
