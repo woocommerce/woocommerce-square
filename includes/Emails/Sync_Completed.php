@@ -37,7 +37,7 @@ class Sync_Completed extends Base_Email {
 		// set properties
 		$this->id             = 'wc_square_sync_completed';
 		$this->customer_email = false;
-		$this->title          = __( 'Square sync completed', 'woocommerce-square' );
+		$this->title          = __( 'Square Sync Completed', 'woocommerce-square' );
 		$this->description    = __( 'This email is sent once a manual sync has been completed between WooCommerce and Square', 'woocommerce-square' );
 		$this->subject        = _x( '[WooCommerce] Square sync completed', 'Email subject', 'woocommerce-square' );
 		$this->heading        = _x( 'Square sync completed for {product_count}', 'Email heading with merge tag placeholder', 'woocommerce-square' );
