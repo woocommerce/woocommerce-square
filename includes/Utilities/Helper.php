@@ -1,6 +1,5 @@
 <?php
 namespace WooCommerce\Square\Utilities;
-use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 defined( 'ABSPATH' ) || exit;
 

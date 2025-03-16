@@ -67,8 +67,8 @@ class WC_Square_Sync_Completed extends Emails\Base_Email {
 		}
 
 		$placeholders['{product_count}']       = esc_html__( '3 products', 'woocommerce-square' );
-		$placeholders['{sync_completed_date}'] = gmdate( wc_date_format(), strtotime( "now" ) );
-		$placeholders['{sync_completed_time}'] = gmdate( wc_time_format(), strtotime( "now" ) );
+		$placeholders['{sync_completed_date}'] = gmdate( wc_date_format(), strtotime( 'now' ) );
+		$placeholders['{sync_completed_time}'] = gmdate( wc_time_format(), strtotime( 'now' ) );
 
 		return $placeholders;
 	}
