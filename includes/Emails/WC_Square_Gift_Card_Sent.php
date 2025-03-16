@@ -1,7 +1,5 @@
 <?php
 
-namespace WooCommerce\Square\Emails;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -11,11 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * An email sent to the recipient of the gift card.
  *
- * @class       Gift_Card_Sent
+ * @class       WC_Square_Gift_Card_Sent
  * @version     4.2.0
  * @extends     WC_Email
  */
-class Gift_Card_Sent extends \WC_Email {
+class WC_Square_Gift_Card_Sent extends \WC_Email {
 	/**
 	 * Convenience object to retrieve email data
 	 * related to gift card.
@@ -64,7 +62,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 * @return array
 	 */
 	public function set_dummy_placeholders( $placeholders, $email_type ) {
-		if ( 'WooCommerce\Square\Emails\Gift_Card_Sent' !== $email_type ) {
+		if ( 'WC_Square_Gift_Card_Sent' !== $email_type ) {
 			return $placeholders;
 		}
 
@@ -83,7 +81,7 @@ class Gift_Card_Sent extends \WC_Email {
 	 * @return \WC_Order
 	 */
 	public function set_dummy_order( \WC_Order $order, $email_type ) {
-		if ( 'WooCommerce\Square\Emails\Gift_Card_Sent' !== $email_type ) {
+		if ( 'WC_Square_Gift_Card_Sent' !== $email_type ) {
 			return $order;
 		}
 

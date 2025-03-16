@@ -40,7 +40,7 @@ class Email {
 	/** @var Emails\Access_Token_Email instance */
 	private $square_access_token_email;
 
-	/** @var Emails\Gift_Card_Sent instance */
+	/** @var WC_Square_Gift_Card_Sent instance */
 	private $square_gift_card_sent;
 
 	/**
@@ -85,7 +85,8 @@ class Email {
 		}
 
 		if ( null === $this->square_gift_card_sent ) {
-			$this->square_gift_card_sent = new Emails\Gift_Card_Sent();
+			include_once WC_SQUARE_PLUGIN_PATH . 'includes/Emails/WC_Square_Gift_Card_Sent.php';
+			$this->square_gift_card_sent = new \WC_Square_Gift_Card_Sent();
 		}
 	}
 
@@ -116,9 +117,8 @@ class Email {
 			$emails[ $key ] = $this->square_access_token_email;
 		}
 
-		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Gift_Card_Sent', $emails ) || ! $emails['WooCommerce\Square\Emails\Gift_Card_Sent'] instanceof Emails\Gift_Card_Sent ) {
-			$key = $should_use_email_improvements ? 'WooCommerce\Square\Emails\Gift_Card_Sent' : 'wc_square_gift_card_sent' ;
-			$emails[ $key ] = $this->square_gift_card_sent;
+		if ( ! array_key_exists( 'WC_Square_Gift_Card_Sent', $emails ) ) {
+			$emails['WC_Square_Gift_Card_Sent'] = new \WC_Square_Gift_Card_Sent();
 		}
 
 		return $emails;
@@ -153,7 +153,7 @@ class Email {
 	 *
 	 * @since 4.2.0
 	 *
-	 * @return Emails\Gift_Card_Sent
+	 * @return WC_Square_Gift_Card_Sent
 	 */
 	public function get_gift_card_sent() {
 		$this->init_emails();
