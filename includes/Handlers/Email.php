@@ -24,6 +24,7 @@
 namespace WooCommerce\Square\Handlers;
 
 use WooCommerce\Square\Emails;
+use WooCommerce\Square\Utilities;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -102,16 +103,22 @@ class Email {
 		// init emails if uninitialized
 		$this->init_emails();
 
+		// check if email improvements should be used.
+		$should_use_email_improvements = Utilities\Helper::should_use_email_improvements();
+
 		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Sync_Completed', $emails ) || ! $emails['WooCommerce\Square\Emails\Sync_Completed'] instanceof Emails\Sync_Completed ) {
-			$emails['WooCommerce\Square\Emails\Sync_Completed'] = $this->square_sync_completed;
+			$key = $should_use_email_improvements ? 'WooCommerce\Square\Emails\Sync_Completed' : 'wc_square_sync_completed';
+			$emails[ $key ] = $this->square_sync_completed;
 		}
 
 		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Access_Token_Email', $emails ) || ! $emails['WooCommerce\Square\Emails\Access_Token_Email'] instanceof Emails\Access_Token_Email ) {
-			$emails['WooCommerce\Square\Emails\Access_Token_Email'] = $this->square_access_token_email;
+			$key = $should_use_email_improvements ? 'WooCommerce\Square\Emails\Access_Token_Email' : 'wc_square_access_token_email';
+			$emails[ $key ] = $this->square_access_token_email;
 		}
 
 		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Gift_Card_Sent', $emails ) || ! $emails['WooCommerce\Square\Emails\Gift_Card_Sent'] instanceof Emails\Gift_Card_Sent ) {
-			$emails['WooCommerce\Square\Emails\Gift_Card_Sent'] = $this->square_gift_card_sent;
+			$key = $should_use_email_improvements ? 'WooCommerce\Square\Emails\Gift_Card_Sent' : 'wc_square_gift_card_sent' ;
+			$emails[ $key ] = $this->square_gift_card_sent;
 		}
 
 		return $emails;

@@ -1,5 +1,6 @@
 <?php
 namespace WooCommerce\Square\Utilities;
+use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -80,5 +81,23 @@ class Helper {
 	public static function get_wc_version() {
 
 		return defined( 'WC_VERSION' ) && WC_VERSION ? WC_VERSION : null;
+	}
+
+	/**
+	 * Helper method to determine if the email improvements feature should be used.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public static function should_use_email_improvements() {
+		$is_enabled  = FeaturesUtil::feature_is_enabled( 'email_improvements' );
+		$woo_version = self::get_wc_version();
+
+		if ( $is_enabled || version_compare( $woo_version, '9.8', '>=' ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }
