@@ -24,7 +24,6 @@
 namespace WooCommerce\Square\Handlers;
 
 use WooCommerce\Square\Emails;
-use WooCommerce\Square\Utilities;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -34,10 +33,10 @@ defined( 'ABSPATH' ) || exit;
  * @since 2.0.0
  */
 class Email {
-	/** @var Emails\Sync_Completed instance */
+	/** @var WC_Square_Sync_Completed instance */
 	private $square_sync_completed;
 
-	/** @var Emails\Access_Token_Email instance */
+	/** @var WC_Square_Access_Token_Email instance */
 	private $square_access_token_email;
 
 	/** @var WC_Square_Gift_Card_Sent instance */
@@ -77,15 +76,17 @@ class Email {
 		$this->init_mailer();
 
 		if ( null === $this->square_sync_completed ) {
-			$this->square_sync_completed = new Emails\Sync_Completed();
+			require_once WC_SQUARE_PLUGIN_PATH . 'includes/Emails/WC_Square_Sync_Completed.php';
+			$this->square_sync_completed = new \WC_Square_Sync_Completed();
 		}
 
 		if ( null === $this->square_access_token_email ) {
-			$this->square_access_token_email = new Emails\Access_Token_Email();
+			require_once WC_SQUARE_PLUGIN_PATH . 'includes/Emails/WC_Square_Access_Token_Email.php';
+			$this->square_access_token_email = new \WC_Square_Access_Token_Email();
 		}
 
 		if ( null === $this->square_gift_card_sent ) {
-			include_once WC_SQUARE_PLUGIN_PATH . 'includes/Emails/WC_Square_Gift_Card_Sent.php';
+			require_once WC_SQUARE_PLUGIN_PATH . 'includes/Emails/WC_Square_Gift_Card_Sent.php';
 			$this->square_gift_card_sent = new \WC_Square_Gift_Card_Sent();
 		}
 	}
@@ -104,16 +105,16 @@ class Email {
 		// init emails if uninitialized
 		$this->init_emails();
 
-		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Sync_Completed', $emails ) || ! $emails['WooCommerce\Square\Emails\Sync_Completed'] instanceof Emails\Sync_Completed ) {
-			$emails['wc_square_sync_completed'] = $this->square_sync_completed;
+		if ( ! array_key_exists( 'Sync_Completed', $emails ) ) {
+			$emails['WC_Square_Sync_Completed'] = $this->square_sync_completed;
 		}
 
-		if ( ! array_key_exists( 'WooCommerce\Square\Emails\Access_Token_Email', $emails ) || ! $emails['WooCommerce\Square\Emails\Access_Token_Email'] instanceof Emails\Access_Token_Email ) {
-			$emails['wc_square_access_token_email'] = $this->square_access_token_email;
+		if ( ! array_key_exists( 'Access_Token_Email', $emails ) ) {
+			$emails['WC_Square_Access_Token_Email'] = $this->square_access_token_email;
 		}
 
 		if ( ! array_key_exists( 'WC_Square_Gift_Card_Sent', $emails ) ) {
-			$emails['WC_Square_Gift_Card_Sent'] = new \WC_Square_Gift_Card_Sent();
+			$emails['WC_Square_Gift_Card_Sent'] = $this->square_gift_card_sent;
 		}
 
 		return $emails;
@@ -124,7 +125,7 @@ class Email {
 	 *
 	 * @since 2.0.0
 	 *
-	 * @return Emails\Sync_Completed
+	 * @return WC_Square_Sync_Completed
 	 */
 	public function get_sync_completed_email() {
 		$this->init_emails();
@@ -136,7 +137,7 @@ class Email {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @return Emails\Access_Token_Email
+	 * @return WC_Square_Access_Token_Email
 	 */
 	public function get_access_token_email() {
 		$this->init_emails();

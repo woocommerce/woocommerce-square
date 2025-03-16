@@ -9,9 +9,7 @@
  * @since 2.0.0
  */
 
-namespace WooCommerce\Square\Emails;
-
-use WooCommerce\Square\Framework\Plugin_Compatibility;
+use WooCommerce\Square\Emails;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -20,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @since 2.0.0
  */
-class Sync_Completed extends Base_Email {
+class WC_Square_Sync_Completed extends Emails\Base_Email {
 	/**
 	 * Email body.
 	 *
@@ -50,6 +48,29 @@ class Sync_Completed extends Base_Email {
 
 		// set default recipient
 		$this->recipient = $this->get_option( 'recipient', get_option( 'admin_email' ) );
+
+		add_filter( 'woocommerce_email_preview_placeholders', array( $this, 'set_dummy_placeholders' ), 10, 2 );
+	}
+
+	/**
+	 * Set dummy placeholders for the email.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array  $placeholders Placeholders.
+	 * @param string $email_type Email type.
+	 * @return array
+	 */
+	public function set_dummy_placeholders( $placeholders, $email_type ) {
+		if ( self::class !== $email_type ) {
+			return $placeholders;
+		}
+
+		$placeholders['{product_count}']       = esc_html__( '3 products', 'woocommerce-square' );
+		$placeholders['{sync_completed_date}'] = gmdate( wc_date_format(), strtotime( "now" ) );
+		$placeholders['{sync_completed_time}'] = gmdate( wc_time_format(), strtotime( "now" ) );
+
+		return $placeholders;
 	}
 
 	/**
