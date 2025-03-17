@@ -59,6 +59,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			'3.7.1',
 			'3.8.3',
 			'4.7.0',
+			'4.9.0',
 		);
 	}
 
@@ -295,14 +296,13 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	}
 
 	/**
-	 * Upgrades to version 4.7.0.
+	 * Upgrades to version 4.9.0.
 	 *
-	 * @since 4.7.0
+	 * @since 4.9.0
 	 */
-	protected function upgrade_to_4_7_0() {
-
+	protected function upgrade_to_4_9_0() {
 		// Skip if already upgraded.
-		if ( get_option( 'wc_square_updated_to_4_7_0' ) ) {
+		if ( get_option( 'wc_square_updated_to_4_9_0' ) ) {
 			return;
 		}
 
@@ -326,8 +326,19 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			false
 		);
 
+		// Show notice to inform users about the "beta" feature about the settings "enable multiple variations sync"
+		add_action( 'admin_notices', function() {
+			if ( current_user_can( 'manage_woocommerce' ) ) {
+				echo '<div class="notice notice-info is-dismissible">';
+				echo '<p><strong>New Feature:</strong> Support for Multiple Variations is now available as a beta feature in v4.9.0!</p>';
+				echo '<p>It is disabled by default but can be enabled via a new setting in <a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=square' ) ) . '">WooCommerce &rarr; Settings &rarr; Square</a> under "Enable Multiple Variations Support".</p>';
+				echo '<p>We plan to make this feature the default in v5.0.0 based on feedback from this release.</p>';
+				echo '</div>';
+			}
+		} );
+
 		// Mark upgrade complete.
-		update_option( 'wc_square_updated_to_4_7_0', true );
+		update_option( 'wc_square_updated_to_4_9_0', true );
 
 		// Skip redirect existing users to the setup wizard on upgrade.
 		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
