@@ -671,6 +671,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Determines whether the products with multiple variations should be synced.
+	 *
+	 * @since 4.9.0
+	 *
+	 * @return bool
+	 */
+	public function is_multiple_variations_sync_enabled() {
+
+		return 'yes' === $this->get_option( 'enable_multivars_sync' );
+	}
+
+	/**
 	 * Returns sync interval in seconds.
 	 * Returns 1 hr = 3600 seconds as default.
 	 *
