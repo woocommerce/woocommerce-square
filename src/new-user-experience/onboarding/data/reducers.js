@@ -108,6 +108,7 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	system_of_record: 'disabled',
 	enable_inventory_sync: 'no',
 	override_product_images: 'no',
+	enable_multivars_sync: 'no',
 	hide_missing_products: 'no',
 	sync_interval: '0.25',
 	is_connected: false,

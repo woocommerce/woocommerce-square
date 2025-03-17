@@ -60,6 +60,7 @@ export const OnboardingApp = () => {
 		system_of_record,
 		enable_inventory_sync,
 		override_product_images,
+		enable_multivars_sync,
 		hide_missing_products,
 		sync_interval,
 		enable_customer_decline_messages,
@@ -272,6 +273,7 @@ export const OnboardingApp = () => {
 										system_of_record,
 										enable_inventory_sync,
 										override_product_images,
+										enable_multivars_sync,
 										hide_missing_products,
 										sync_interval,
 									};

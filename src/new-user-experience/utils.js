@@ -159,6 +159,9 @@ export const getSquareSettings = async () => {
 		override_product_images:
 			settings.override_product_images ||
 			SQUARE_SETTINGS_DEFAULT_STATE.override_product_images,
+			enable_multivars_sync:
+			settings.enable_multivars_sync ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_multivars_sync,
 		hide_missing_products:
 			settings.hide_missing_products ||
 			SQUARE_SETTINGS_DEFAULT_STATE.hide_missing_products,
