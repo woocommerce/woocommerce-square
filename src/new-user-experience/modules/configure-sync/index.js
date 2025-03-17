@@ -41,6 +41,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 		enable_inventory_sync = 'no',
 		override_product_images = 'no',
 		hide_missing_products = 'no',
+		enable_multivars_sync = 'no',
 		sync_interval = '0.25',
 		is_connected = false,
 	} = settings;
@@ -312,6 +313,36 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 						{ ( system_of_record === 'woocommerce' ||
 							system_of_record === 'square' ) && (
 							<>
+								<InputWrapper
+									label={ __(
+										'(Beta) Enable Multiple Variations Support',
+										'woocommerce-square'
+									) }
+									indent={ indent }
+									description={ __(
+										'Enable this beta feature to allow syncing of products with multiple variations in Square.',
+										'woocommerce-square'
+									) }
+								>
+									<SquareCheckboxControl
+										data-testid="pull-inventory-field"
+										checked={
+											enable_multivars_sync === 'yes'
+										}
+										onChange={ ( value ) =>
+											setSquareSettingData( {
+												enable_multivars_sync: value
+													? 'yes'
+													: 'no',
+											} )
+										}
+										label={ __(
+											'Enable syncing of products with multiple variations in Square',
+											'woocommerce-square'
+										) }
+									/>
+								</InputWrapper>
+
 								<InputWrapper
 									label={ __(
 										'Sync interval',
