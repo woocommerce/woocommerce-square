@@ -62,6 +62,12 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @return \stdClass the job object
 	 */
 	public function run() {
+		// Early return if the multiple variations sync is not enabled.
+		if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+			parent::run();
+			return;
+        }
+
 		// If the option is set to refresh the sync cycle, clear the next steps and completed steps.
 		// The refresh is requested when we do not have Square's Dynamic options data ready.
 		$refresh_sync_cycle = get_option( 'woocommerce_square_refresh_sync_cycle', false );
@@ -1415,21 +1421,28 @@ class Manual_Synchronization extends Stepped_Job {
 					$pull_inventory_variation_ids[] = $variation->getId();
 				}
 
-				$data = $product_import->extract_product_data( $square_object, $product );
+				if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+					Product::update_from_square( $product, $square_object->getItemData(), false );
 
-				/**
-				 * Filters the data that is used to create update a WooCommerce product during import.
-				 *
-				 * @since 2.0.0
-				 *
-				 * @param array $data product data
-				 * @param \Square\Models\CatalogObject $square_object the catalog object from the Square API
-				 * @param Manual_Synchronization $this current class instance
-				 */
-				$data = apply_filters( 'woocommerce_square_create_product_data', $data, $square_object, $this );
+					$image_id = Product::get_catalog_item_thumbnail_id( $square_object );
+					Product::update_image_from_square( $product, $image_id );
+				} else {
+					$data = $product_import->extract_product_data( $square_object, $product );
 
-				// Update the product, this will update/create the variations as well.
-				$product_import->update_product( $product, $data );
+					/**
+					 * Filters the data that is used to create update a WooCommerce product during import.
+					 *
+					 * @since 2.0.0
+					 *
+					 * @param array $data product data
+					 * @param \Square\Models\CatalogObject $square_object the catalog object from the Square API
+					 * @param Manual_Synchronization $this current class instance
+					 */
+					$data = apply_filters( 'woocommerce_square_create_product_data', $data, $square_object, $this );
+	
+					// Update the product, this will update/create the variations as well.
+					$product_import->update_product( $product, $data );	
+				}
 
 			} catch ( \Exception $exception ) {
 
@@ -1717,10 +1730,20 @@ class Manual_Synchronization extends Stepped_Job {
 					'refresh_category_mappings',
 					'query_unmapped_categories',
 					'upsert_categories',
-					'fetch_options_data',
-					'update_matched_products',
-					'search_matched_products',
-					'upsert_new_products',
+				);
+
+				// Add 'fetch_options_data' step when multiple variations sync is enabled.
+				if ( wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+					$next_steps[] = 'fetch_options_data';
+				}
+
+				$next_steps = array_merge(
+					$next_steps,
+					array(
+						'update_matched_products',
+						'search_matched_products',
+						'upsert_new_products',
+					)
 				);
 
 				// only handle product inventory if enabled
