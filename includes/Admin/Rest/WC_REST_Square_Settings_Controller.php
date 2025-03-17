@@ -136,7 +136,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'enable_multivars_sync' => array(
+					'enable_multivars_sync'            => array(
 						'description'       => __( 'Enable this beta feature to sync products with multiple variations to Square. (Beta)', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',

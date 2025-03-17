@@ -89,76 +89,72 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			$product_variation_ids = $product->get_children();
 		}
 
-		$catalog_variations = $item_data->getVariations() ?: array();
+		$catalog_variations = $item_data->getVariations() ?: array(); // phpcs:ignore Universal.Operators.DisallowShortTernary.Found
 
 		// if dealing with a variable product, try and match the variations
 		if ( $product->is_type( 'variable' ) ) {
 
 			if ( ! $square_settings->is_multiple_variations_sync_enabled() ) {
 				$product_variation_ids = $product->get_children();
-			} else {
+			} elseif ( count( $attributes ) > 1 ) {
 				/**
 				 * If there are multiple variations, it must be a considered as Dynamic Options supported product.
 				 * Create/Update and Assign Dynamic Options only if a product
 				 * has multiple attributes OR options already exists in Square.
 				 */
-				if (
-					count( $attributes ) > 1
-				) {
-					$options_ids  = array();
-					$result       = wc_square()->get_api()->retrieve_options_data();
-					$options_data = $result[1] ?? array();
+				$options_ids  = array();
+				$result       = wc_square()->get_api()->retrieve_options_data();
+				$options_data = $result[1] ?? array();
 
-					// Set the product as a dynamic options product.
-					update_post_meta( $product->get_id(), '_dynamic_options', true );
+				// Set the product as a dynamic options product.
+				update_post_meta( $product->get_id(), '_dynamic_options', true );
 
-					// Loop through the attributes to create options and values at Square.
-					foreach ( $attributes as $attribute_id => $attribute ) {
+				// Loop through the attributes to create options and values at Square.
+				foreach ( $attributes as $attribute_id => $attribute ) {
 
-						$attribute_name = $attribute->get_name();
-						// Check if its a taxonomy-based attribute.
-						$attribute_option_values = array();
-						if ( taxonomy_exists( $attribute_id ) ) {
-							$terms                   = get_terms( $attribute_id );
-							$attribute_option_values = wp_list_pluck( $terms, 'name' );
-						} else {
-							$attribute_option_values = $attribute->get_options();
-						}
-
-						// Check if Square already has the option created with the same name.
-						// To do so, we can check if we already have the name in options/transient,
-						// if yes, use the relative Square ID.
-						$option_id = false;
-						foreach ( $options_data as $transient_option_id => $option_data_transient ) {
-							if ( $option_data_transient['name'] === $attribute_name ) {
-								$option_id = $transient_option_id;
-								break;
-							}
-						}
-
-						// If name does not exist, create a new option in Square.
-						// If name exists, check if all values are present in Square.
-						// If not, create the missing values.
-						$option        = wc_square()->get_api()->create_options_and_values( $option_id, $attribute_name, $attribute_option_values );
-						$options_ids[] = $option->getId();
+					$attribute_name = $attribute->get_name();
+					// Check if its a taxonomy-based attribute.
+					$attribute_option_values = array();
+					if ( taxonomy_exists( $attribute_id ) ) {
+						$terms                   = get_terms( $attribute_id );
+						$attribute_option_values = wp_list_pluck( $terms, 'name' );
+					} else {
+						$attribute_option_values = $attribute->get_options();
 					}
 
-					// Set the item_option_id for each option to the product.
-					$product_options = array();
-
-					foreach ( $options_ids as $option_id ) {
-						$item_option = new \Square\Models\CatalogItemOptionForItem();
-						$item_option->setItemOptionId( $option_id );
-						$product_options[] = $item_option;
+					// Check if Square already has the option created with the same name.
+					// To do so, we can check if we already have the name in options/transient,
+					// if yes, use the relative Square ID.
+					$option_id = false;
+					foreach ( $options_data as $transient_option_id => $option_data_transient ) {
+						if ( $option_data_transient['name'] === $attribute_name ) {
+							$option_id = $transient_option_id;
+							break;
+						}
 					}
 
-					$catalog_object->getItemData()->setItemOptions( $product_options );
-				} else {
-					// If the product has only one attribute, it's not a dynamic options product.
-					// So, remove the dynamic options meta.
-					delete_post_meta( $product->get_id(), '_dynamic_options' );
-					$catalog_object->getItemData()->setItemOptions( null );
+					// If name does not exist, create a new option in Square.
+					// If name exists, check if all values are present in Square.
+					// If not, create the missing values.
+					$option        = wc_square()->get_api()->create_options_and_values( $option_id, $attribute_name, $attribute_option_values );
+					$options_ids[] = $option->getId();
 				}
+
+				// Set the item_option_id for each option to the product.
+				$product_options = array();
+
+				foreach ( $options_ids as $option_id ) {
+					$item_option = new \Square\Models\CatalogItemOptionForItem();
+					$item_option->setItemOptionId( $option_id );
+					$product_options[] = $item_option;
+				}
+
+				$catalog_object->getItemData()->setItemOptions( $product_options );
+			} else {
+				// If the product has only one attribute, it's not a dynamic options product.
+				// So, remove the dynamic options meta.
+				delete_post_meta( $product->get_id(), '_dynamic_options' );
+				$catalog_object->getItemData()->setItemOptions( null );
 			}
 
 			if ( is_array( $catalog_variations ) ) {
@@ -304,7 +300,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
 				$variation_data->setName( $product->get_name() );
 			} else {
-				
+
 				$result                = wc_square()->get_api()->retrieve_options_data();
 				$options_data          = isset( $result[1] ) ? $result[1] : array();
 				$parent_product        = wc_get_product( $product->get_parent_id() );
