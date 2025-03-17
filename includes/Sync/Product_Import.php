@@ -44,15 +44,23 @@ class Product_Import extends Stepped_Job {
 
 
 	protected function assign_next_steps() {
+		$next_steps = array();
 
-		$this->set_attr(
-			'next_steps',
+		// Add 'fetch_options_data' if Multiple Variations Sync is enabled.
+		if ( wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+			$next_steps[] = 'fetch_options_data';
+		}
+
+		// Add the remaining steps
+		$next_steps = array_merge(
+			$next_steps,
 			array(
-				'fetch_options_data',
 				'import_products',
 				'import_inventory',
 			)
 		);
+
+		$this->set_attr( 'next_steps', $next_steps );
 	}
 
 
@@ -658,14 +666,27 @@ class Product_Import extends Stepped_Job {
 				return null;
 			}
 
-			$options = $catalog_object->getItemData()->getItemOptions() ? $catalog_object->getItemData()->getItemOptions() : array();
-
-			if ( count( $options ) ) {
-				$data['attributes']                      = $this->extract_attributes_from_square_options( $options );
-				$data['custom_meta']['_dynamic_options'] = true;
+			if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+				$data['attributes'] = array(
+					array(
+						'name'      => 'Attribute',
+						'slug'      => 'attribute',
+						'position'  => 0,
+						'visible'   => true,
+						'variation' => true,
+						'options'   => str_replace( '|', ' - ', wp_list_pluck( $data['variations'], 'name' ) ),
+					),
+				);
 			} else {
-				$data['attributes']                      = $this->extract_attributes_from_square_variations( $data['variations'] );
-				$data['custom_meta']['_dynamic_options'] = false;
+				$options = $catalog_object->getItemData()->getItemOptions() ? $catalog_object->getItemData()->getItemOptions() : array();
+
+				if ( count( $options ) ) {
+					$data['attributes']                      = $this->extract_attributes_from_square_options( $options );
+					$data['custom_meta']['_dynamic_options'] = true;
+				} else {
+					$data['attributes']                      = $this->extract_attributes_from_square_variations( $data['variations'] );
+					$data['custom_meta']['_dynamic_options'] = false;
+				}
 			}
 		} else { // simple product
 			try {
@@ -723,68 +744,78 @@ class Product_Import extends Stepped_Job {
 			throw new \Exception( esc_html__( 'Variations with missing SKUs cannot be imported.', 'woocommerce-square' ) );
 		}
 
-		$variation_options = $variation_data->getItemOptionValues();
-
 		$attributes = array();
 
-		foreach ( $variation_options as $variation_option ) {
-			$option_id       = $variation_option->getItemOptionId();
-			$option_value_id = $variation_option->getItemOptionValueId();
-			$result          = wc_square()->get_api()->retrieve_options_data();
-			$options_data    = isset( $result[1] ) ? $result[1] : array();
+		if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+			$attributes = array(
+				array(
+					'name'         => 'Attribute',
+					'is_variation' => true,
+					'option'       => str_replace( '|', ' - ', $variation_data->getName() ),
+				),
+			);
+        } else {
+			$variation_options = $variation_data->getItemOptionValues();		
 
-			if ( isset( $options_data[ $option_id ] ) && isset( $options_data[ $option_id ]['value_ids'][ $option_value_id ] ) ) {
-				$option_name    = $options_data[ $option_id ]['name'];
-				$option_matched = $options_data[ $option_id ]['value_ids'][ $option_value_id ];
-			} else {
-				// Fetch option data from Square.
-				$response    = wc_square()->get_api()->retrieve_catalog_object( $option_id );
-				$option_name = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
-
-				$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
-				$option_matched       = '';
-				$option_values        = array();
-				$option_value_ids     = array();
-
-				foreach ( $option_values_object as $option_value ) {
-					$option_value_name = $option_value->getItemOptionValueData()->getName();
-					$option_values[]   = $option_value_name;
-
-					$option_value_ids[ $option_value->getId() ] = $option_value_name;
-
-					if ( $option_value_id === $option_value->getId() ) {
-						$option_matched = $option_value_name;
+			foreach ( $variation_options as $variation_option ) {
+				$option_id       = $variation_option->getItemOptionId();
+				$option_value_id = $variation_option->getItemOptionValueId();
+				$result          = wc_square()->get_api()->retrieve_options_data();
+				$options_data    = isset( $result[1] ) ? $result[1] : array();
+	
+				if ( isset( $options_data[ $option_id ] ) && isset( $options_data[ $option_id ]['value_ids'][ $option_value_id ] ) ) {
+					$option_name    = $options_data[ $option_id ]['name'];
+					$option_matched = $options_data[ $option_id ]['value_ids'][ $option_value_id ];
+				} else {
+					// Fetch option data from Square.
+					$response    = wc_square()->get_api()->retrieve_catalog_object( $option_id );
+					$option_name = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
+	
+					$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
+					$option_matched       = '';
+					$option_values        = array();
+					$option_value_ids     = array();
+	
+					foreach ( $option_values_object as $option_value ) {
+						$option_value_name = $option_value->getItemOptionValueData()->getName();
+						$option_values[]   = $option_value_name;
+	
+						$option_value_ids[ $option_value->getId() ] = $option_value_name;
+	
+						if ( $option_value_id === $option_value->getId() ) {
+							$option_matched = $option_value_name;
+						}
 					}
+	
+					$options_data[ $option_id ] = array(
+						'name'      => $option_name,
+						'values'    => $option_values,
+						'value_ids' => $option_value_ids,
+					);
+	
+					set_transient( 'wc_square_options_data', $options_data );
 				}
-
-				$options_data[ $option_id ] = array(
-					'name'      => $option_name,
-					'values'    => $option_values,
-					'value_ids' => $option_value_ids,
+	
+				$attributes[] = array(
+					'name'         => str_replace( 'pa_', '', $option_name ),
+					'slug'         => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
+					'is_variation' => true,
+					'option'       => $option_matched,
+					'pa_prefix'    => strpos( $option_name, 'pa_' ) !== false,
 				);
-
-				set_transient( 'wc_square_options_data', $options_data );
 			}
-
-			$attributes[] = array(
-				'name'         => str_replace( 'pa_', '', $option_name ),
-				'slug'         => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
-				'is_variation' => true,
-				'option'       => $option_matched,
-				'pa_prefix'    => strpos( $option_name, 'pa_' ) !== false,
-			);
-		}
-
-		if ( ! $variation_options ) {
-			$attribute_name = ! empty( reset( $this->woo_attributes ) ) ? reset( $this->woo_attributes )->get_name() : 'Attribute';
-			$attributes[]   = array(
-				'name'         => str_replace( 'pa_', '', $attribute_name ),
-				'slug'         => str_replace( 'pa_', '', sanitize_title( $attribute_name ) ),
-				'is_variation' => true,
-				'option'       => $variation_data->getName(),
-				'pa_prefix'    => strpos( $attribute_name, 'pa_' ) !== false,
-			);
-		}
+	
+			if ( ! $variation_options ) {
+				$attribute_name = ! empty( reset( $this->woo_attributes ) ) ? reset( $this->woo_attributes )->get_name() : 'Attribute';
+				$attributes[]   = array(
+					'name'         => str_replace( 'pa_', '', $attribute_name ),
+					'slug'         => str_replace( 'pa_', '', sanitize_title( $attribute_name ) ),
+					'is_variation' => true,
+					'option'       => $variation_data->getName(),
+					'pa_prefix'    => strpos( $attribute_name, 'pa_' ) !== false,
+				);
+			}
+        }
 
 		$data = array(
 			'name'           => $variation_data->getName(),
@@ -1015,7 +1046,11 @@ class Product_Import extends Stepped_Job {
 				}
 
 				// Remove 'Any' from options.
-				if ( isset( $attribute['options'] ) && is_array( $attribute['options'] ) ) {
+				if (
+					wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled()
+					&& isset( $attribute['options'] )
+					&& is_array( $attribute['options'] )
+				) {
 					$attribute['options'] = array_diff( $attribute['options'], array( WC_SQUARE_OPTION_ANY ) );
 				}
 
@@ -1297,8 +1332,10 @@ class Product_Import extends Stepped_Job {
 				$updated_attribute_keys = array();
 
 				foreach ( $variation['attributes'] as $attribute_key => $attribute ) {
-					// Set empty if attribute is to 'Any' to prevent it from being saved.
-					$attribute['option'] = isset( $attribute['option'] ) && WC_SQUARE_OPTION_ANY !== $attribute['option'] ? $attribute['option'] : '';
+					if ( wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
+						// Set empty if attribute is to 'Any' to prevent it from being saved.
+						$attribute['option'] = isset( $attribute['option'] ) && WC_SQUARE_OPTION_ANY !== $attribute['option'] ? $attribute['option'] : '';
+					}
 
 					if ( ! isset( $attribute['name'] ) ) {
 						continue;
