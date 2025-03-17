@@ -15,14 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WC_Square_Gift_Card_Sent extends \WC_Email {
 	/**
-	 * Convenience object to retrieve email data
-	 * related to gift card.
-	 *
-	 * @var null|object
-	 */
-	public $gift_card_email_data = null;
-
-	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -39,11 +31,6 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 			'{square_gift_card_recipient_name}' => '',
 			'{square_gift_card_sender_message}' => '',
 		);
-
-		$this->gift_card_email_data = new \stdClass();
-
-		$this->gift_card_email_data->recipient_name = '';
-		$this->gift_card_email_data->sender_message = '';
 
 		// Call parent constructor.
 		parent::__construct();
@@ -165,14 +152,10 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 				continue;
 			}
 
-			$this->gift_card_email_data->sender_name    = $item->get_meta( 'square-gift-card-sender-name' );
-			$this->gift_card_email_data->recipient_name = $item->get_meta( 'square-gift-card-sent-to-first-name' );
-			$this->gift_card_email_data->sender_message = $item->get_meta( 'square-gift-card-sent-to-message' );
-
-			$this->recipient                                      = $recipient_email;
-			$this->placeholders['{square_gift_card_sender_name}'] = $this->gift_card_email_data->sender_name ? $this->gift_card_email_data->sender_name : $order->get_billing_first_name();
-			$this->placeholders['{square_gift_card_recipient_name}'] = $this->gift_card_email_data->recipient_name;
-			$this->placeholders['{square_gift_card_sender_message}'] = $this->gift_card_email_data->sender_message;
+			$this->recipient                                         = $recipient_email;
+			$this->placeholders['{square_gift_card_sender_name}']    = $item->get_meta( 'square-gift-card-sender-name' ) ? $item->get_meta( 'square-gift-card-sender-name' ) : $order->get_billing_first_name();
+			$this->placeholders['{square_gift_card_recipient_name}'] = $item->get_meta( 'square-gift-card-sent-to-first-name' );
+			$this->placeholders['{square_gift_card_sender_message}'] = $item->get_meta( 'square-gift-card-sent-to-message' );
 			$this->placeholders['{square_gift_card_number}']         = $this->get_gift_card_gan( $order );
 			$this->placeholders['{square_gift_card_balance}']        = $this->get_gift_card_amount( $order );
 
