@@ -53,6 +53,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'enable_inventory_sync',
 			'override_product_images',
 			'hide_missing_products',
+			'enable_multivars_sync',
 			'sync_interval',
 			'is_connected',
 			'locations',
@@ -132,6 +133,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 					),
 					'hide_missing_products'            => array(
 						'description'       => __( 'Hide synced products when not found in Square.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'enable_multivars_sync' => array(
+						'description'       => __( 'Enable this beta feature to sync products with multiple variations to Square. (Beta)', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
