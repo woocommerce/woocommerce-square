@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.8.6
+Stable tag: 4.8.7
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,13 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.7 - 2025-03-06 =
+* Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
+* Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
+* Fix - Ensure that Cash App Pay works as expected on mobile devices.
+* Fix - Ensure that no blank order is created via the "Add Payment Method" when HPOS is enabled.
+* Dev - Disabled warning checks from WordPress Plugin Check Action.
 
 = 4.8.6 - 2025-02-10 =
 * Fix - Resolved "translation loading was triggered too early" issue in WordPress 6.7.

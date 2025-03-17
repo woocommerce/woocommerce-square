@@ -1116,8 +1116,8 @@ class Gateway extends Payment_Gateway_Direct {
 	 * Returns the $order object with a unique transaction ref member added
 	 *
 	 * @since 2.2.1
-	 * @param WC_Order $order the order object
-	 * @return WC_Order order object with member named unique_transaction_ref
+	 * @param \WC_Order $order the order object
+	 * @return \WC_Order order object with member named unique_transaction_ref
 	 */
 	protected function get_order_with_unique_transaction_ref( $order ) {
 		$order_id = $order->get_id();
@@ -1131,7 +1131,9 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		// keep track of the retry count
-		$this->update_order_meta( $order, 'retry_count', $retry_count );
+		if ( $order_id > 0 ) { // TODO: look to remove this once fix is in Woo and is our minimum version. See https://github.com/woocommerce/woocommerce/issues/55728 for tracking.
+			$this->update_order_meta( $order, 'retry_count', $retry_count );
+		}
 
 		$order->unique_transaction_ref = time() . '-' . $order_id . ( $retry_count >= 0 ? '-' . $retry_count : '' );
 		return $order;

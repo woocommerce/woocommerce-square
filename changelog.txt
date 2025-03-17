@@ -1,5 +1,12 @@
 *** WooCommerce Square Changelog ***
 
+= 4.8.7 - 2025-03-06 =
+* Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
+* Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
+* Fix - Ensure that Cash App Pay works as expected on mobile devices.
+* Fix - Ensure that no blank order is created via the "Add Payment Method" when HPOS is enabled.
+* Dev - Disabled warning checks from WordPress Plugin Check Action.
+
 = 4.8.6 - 2025-02-10 =
 * Fix - Resolved "translation loading was triggered too early" issue in WordPress 6.7.
 * Fix - Refresh brand assets.
