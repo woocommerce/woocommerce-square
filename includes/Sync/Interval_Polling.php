@@ -211,7 +211,7 @@ class Interval_Polling extends Stepped_Job {
 							if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
 								$thumbnail_image_id = Product::get_catalog_item_thumbnail_id( $object );
 								Product::update_from_square( $product, $object->getItemData(), false );
-	
+
 								Product::update_image_from_square( $product, $thumbnail_image_id );
 							} else {
 								$data = $product_import->extract_product_data( $object, $product );
