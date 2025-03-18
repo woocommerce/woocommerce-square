@@ -131,6 +131,7 @@ test( 'Gift card recipient email @giftcard', async ( { page } ) => {
 	// Locate and click the "View Content" link in the correct row.
 	await page
 		.locator('tr', { has: page.locator('td.column-subject:has-text("Gift Card!")') })
+		.first()
 		.locator('.view-content a')
 		.dispatchEvent( 'click' );
 
