@@ -132,7 +132,7 @@ test( 'Gift card recipient email @giftcard', async ( { page } ) => {
 	await page
 		.locator('tr', { has: page.locator('td.column-subject:has-text("Gift Card!")') })
 		.locator('.view-content a')
-		.click();
+		.dispatchEvent( 'click' );
 
 	await expect( await page.locator( '#template_container' ).getByText( 'Gift Card received!' ) ).toBeVisible();
 	await expect( await page.locator( '#template_container' ).getByText( 'Hey Emily Doe, you just received a gift card!' ) ).toBeVisible();
