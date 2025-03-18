@@ -329,7 +329,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 		// Show notice to inform users about the "beta" feature about the settings "enable multiple variations sync"
 		add_action(
 			'admin_notices',
-			function() {
+			function () {
 				if ( current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 					echo '<div class="notice notice-info is-dismissible">';
 					echo '<p><strong>New Feature:</strong> Support for Multiple Variations is now available as a beta feature in v4.9.0!</p>';

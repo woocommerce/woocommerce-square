@@ -754,7 +754,7 @@ class Product_Import extends Stepped_Job {
 					'option'       => str_replace( '|', ' - ', $variation_data->getName() ),
 				),
 			);
-        } else {
+		} else {
 			$variation_options = $variation_data->getItemOptionValues();		
 
 			foreach ( $variation_options as $variation_option ) {
@@ -762,7 +762,7 @@ class Product_Import extends Stepped_Job {
 				$option_value_id = $variation_option->getItemOptionValueId();
 				$result          = wc_square()->get_api()->retrieve_options_data();
 				$options_data    = isset( $result[1] ) ? $result[1] : array();
-	
+
 				if ( isset( $options_data[ $option_id ] ) && isset( $options_data[ $option_id ]['value_ids'][ $option_value_id ] ) ) {
 					$option_name    = $options_data[ $option_id ]['name'];
 					$option_matched = $options_data[ $option_id ]['value_ids'][ $option_value_id ];
@@ -770,23 +770,23 @@ class Product_Import extends Stepped_Job {
 					// Fetch option data from Square.
 					$response    = wc_square()->get_api()->retrieve_catalog_object( $option_id );
 					$option_name = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
-	
+
 					$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
 					$option_matched       = '';
 					$option_values        = array();
 					$option_value_ids     = array();
-	
+
 					foreach ( $option_values_object as $option_value ) {
 						$option_value_name = $option_value->getItemOptionValueData()->getName();
 						$option_values[]   = $option_value_name;
-	
+
 						$option_value_ids[ $option_value->getId() ] = $option_value_name;
-	
+
 						if ( $option_value_id === $option_value->getId() ) {
 							$option_matched = $option_value_name;
 						}
 					}
-	
+
 					$options_data[ $option_id ] = array(
 						'name'      => $option_name,
 						'values'    => $option_values,
@@ -795,7 +795,7 @@ class Product_Import extends Stepped_Job {
 	
 					set_transient( 'wc_square_options_data', $options_data );
 				}
-	
+
 				$attributes[] = array(
 					'name'         => str_replace( 'pa_', '', $option_name ),
 					'slug'         => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
@@ -804,7 +804,7 @@ class Product_Import extends Stepped_Job {
 					'pa_prefix'    => strpos( $option_name, 'pa_' ) !== false,
 				);
 			}
-	
+
 			if ( ! $variation_options ) {
 				$attribute_name = ! empty( reset( $this->woo_attributes ) ) ? reset( $this->woo_attributes )->get_name() : 'Attribute';
 				$attributes[]   = array(
@@ -815,7 +815,7 @@ class Product_Import extends Stepped_Job {
 					'pa_prefix'    => strpos( $attribute_name, 'pa_' ) !== false,
 				);
 			}
-        }
+		}
 
 		$data = array(
 			'name'           => $variation_data->getName(),

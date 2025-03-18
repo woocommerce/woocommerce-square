@@ -66,7 +66,7 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! wc_square()->get_settings_handler()->is_multiple_variations_sync_enabled() ) {
 			parent::run();
 			return;
-        }
+		}
 
 		// If the option is set to refresh the sync cycle, clear the next steps and completed steps.
 		// The refresh is requested when we do not have Square's Dynamic options data ready.
@@ -1439,11 +1439,10 @@ class Manual_Synchronization extends Stepped_Job {
 					 * @param Manual_Synchronization $this current class instance
 					 */
 					$data = apply_filters( 'woocommerce_square_create_product_data', $data, $square_object, $this );
-	
-					// Update the product, this will update/create the variations as well.
-					$product_import->update_product( $product, $data );	
-				}
 
+					// Update the product, this will update/create the variations as well.
+					$product_import->update_product( $product, $data );
+				}
 			} catch ( \Exception $exception ) {
 
 				Records::set_record(
