@@ -84,8 +84,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		$square_settings = wc_square()->get_settings_handler();
 
 		if ( $square_settings->is_multiple_variations_sync_enabled() ) {
-			$attributes = $product->get_attributes();
-
+			$attributes            = $product->get_attributes();
 			$product_variation_ids = $product->get_children();
 		}
 
