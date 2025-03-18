@@ -755,7 +755,7 @@ class Product_Import extends Stepped_Job {
 				),
 			);
 		} else {
-			$variation_options = $variation_data->getItemOptionValues();		
+			$variation_options = $variation_data->getItemOptionValues();
 
 			foreach ( $variation_options as $variation_option ) {
 				$option_id       = $variation_option->getItemOptionId();
@@ -792,7 +792,7 @@ class Product_Import extends Stepped_Job {
 						'values'    => $option_values,
 						'value_ids' => $option_value_ids,
 					);
-	
+
 					set_transient( 'wc_square_options_data', $options_data );
 				}
 
