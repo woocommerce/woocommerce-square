@@ -325,7 +325,7 @@ export const ConfigureSync = ( { indent = 0, isDirty = false } ) => {
 									) }
 								>
 									<SquareCheckboxControl
-										data-testid="pull-inventory-field"
+										data-testid="sync-multiple-variations"
 										checked={
 											enable_multivars_sync === 'yes'
 										}
