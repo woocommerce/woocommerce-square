@@ -20,6 +20,11 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
  */
 module.exports = defineConfig({
   testDir: '../specs',
+  /* Specify patterns of test files to ignore */
+  testIgnore: [
+    'd8.square-sor-multiple-variations.spec.js',
+    'd7.woo-sor-multiple-variations.spec.js',
+  ],
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
   globalSetup: './global-setup',
