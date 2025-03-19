@@ -152,8 +152,7 @@ jobs:
         if: always()
         id: check_files
         run: |
-          ls -la playwright-report/
-          ls -la test-results/
+          ls -la tests/e2e/test-results/report
 
           if [ -d "tests/e2e/test-results/report" ]; then
             echo "report_exists=true" >> $GITHUB_OUTPUT
