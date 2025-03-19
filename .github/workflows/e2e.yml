@@ -148,8 +148,19 @@ jobs:
         if: ${{ github.event_name == 'push' && matrix.type == '@general' }}
         run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
-      - uses: actions/upload-artifact@v4
+      - name: Check if report exists
         if: always()
+        id: check_files
+        run: |
+          if [ -d "tests/e2e/test-results/report" ]; then
+            echo "report_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "report_exists=false" >> $GITHUB_OUTPUT
+            echo "No report directory found at tests/e2e/test-results/report for ${{ matrix.type }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.check_files.outputs.report_exists == 'true'
         with:
           name: playwright-report-${{ matrix.type }}
           path: tests/e2e/test-results/report
