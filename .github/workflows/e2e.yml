@@ -152,18 +152,16 @@ jobs:
         if: always()
         id: check_files
         run: |
-          ls -la ./tests/e2e/test-results/report
-
-          if [ -d "tests/e2e/test-results/report" ]; then
+          if [ -d "./tests/e2e/test-results/report" ]; then
             echo "report_exists=true" >> $GITHUB_OUTPUT
           else
             echo "report_exists=false" >> $GITHUB_OUTPUT
-            echo "No report directory found at tests/e2e/test-results/report for ${{ matrix.type }}"
+            echo "No report directory found at ./tests/e2e/test-results/report for ${{ matrix.type }}"
           fi
 
       - uses: actions/upload-artifact@v4
         if: always() && steps.check_files.outputs.report_exists == 'true'
         with:
           name: playwright-report-${{ matrix.type }}
-          path: tests/e2e/test-results/report
+          path: ./tests/e2e/test-results/report
           retention-days: 2
