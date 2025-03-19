@@ -152,7 +152,7 @@ jobs:
         if: always()
         id: check_files
         run: |
-          ls -la tests/e2e/test-results/report
+          ls -la ./tests/e2e/test-results/report
 
           if [ -d "tests/e2e/test-results/report" ]; then
             echo "report_exists=true" >> $GITHUB_OUTPUT
