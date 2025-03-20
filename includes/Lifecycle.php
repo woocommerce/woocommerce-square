@@ -296,13 +296,13 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 	}
 
 	/**
-	 * Upgrades to version 4.9.0.
+	 * Upgrades to version 4.7.0.
 	 *
-	 * @since 4.9.0
+	 * @since 4.7.0
 	 */
-	protected function upgrade_to_4_9_0() {
+	protected function upgrade_to_4_7_0() {
 		// Skip if already upgraded.
-		if ( get_option( 'wc_square_updated_to_4_9_0' ) ) {
+		if ( get_option( 'wc_square_updated_to_4_7_0' ) ) {
 			return;
 		}
 
@@ -326,6 +326,27 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			false
 		);
 
+		// Mark upgrade complete.
+		update_option( 'wc_square_updated_to_4_7_0', true );
+
+		// Skip redirect existing users to the setup wizard on upgrade.
+		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
+
+		// Mark the onboarding wizard as visited for existing users.
+		add_option( 'wc_square_connected_page_visited', true, '', 'no' );
+	}
+
+	/**
+	 * Upgrades to version 4.9.0.
+	 *
+	 * @since 4.9.0
+	 */
+	protected function upgrade_to_4_9_0() {
+		// Skip if already upgraded.
+		if ( get_option( 'wc_square_updated_to_4_9_0' ) ) {
+			return;
+		}
+
 		// Show notice to inform users about the "beta" feature about the settings "enable multiple variations sync"
 		add_action(
 			'admin_notices',
@@ -342,12 +363,6 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 
 		// Mark upgrade complete.
 		update_option( 'wc_square_updated_to_4_9_0', true );
-
-		// Skip redirect existing users to the setup wizard on upgrade.
-		add_option( 'wc_square_show_wizard_on_activation', true, '', 'no' );
-
-		// Mark the onboarding wizard as visited for existing users.
-		add_option( 'wc_square_connected_page_visited', true, '', 'no' );
 	}
 
 	/**
