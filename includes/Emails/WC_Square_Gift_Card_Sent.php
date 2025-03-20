@@ -152,8 +152,8 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 				continue;
 			}
 
-			$this->recipient                                         = $recipient_email;
-			$this->placeholders['{square_gift_card_sender_name}']    = $item->get_meta( 'square-gift-card-sender-name' ) ? $item->get_meta( 'square-gift-card-sender-name' ) : $order->get_billing_first_name();
+			$this->recipient                                      = $recipient_email;
+			$this->placeholders['{square_gift_card_sender_name}'] = $item->get_meta( 'square-gift-card-sender-name' ) ? $item->get_meta( 'square-gift-card-sender-name' ) : $order->get_billing_first_name();
 			$this->placeholders['{square_gift_card_recipient_name}'] = $item->get_meta( 'square-gift-card-sent-to-first-name' );
 			$this->placeholders['{square_gift_card_sender_message}'] = $item->get_meta( 'square-gift-card-sent-to-message' );
 			$this->placeholders['{square_gift_card_number}']         = $this->get_gift_card_gan( $order );
@@ -224,11 +224,11 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 			$result['gift_card_balance'] = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'gift_card_balance' );
 		}
 
-		return isset( $result[ $key ] ) ? $result[ $key ] : '';
+		return $result[ $key ] ?? '';
 	}
 
 	/**
-	 * Says if a Gift card was purchased in the order.
+	 * Check if order contains a gift card.
 	 *
 	 * @return boolean
 	 */
