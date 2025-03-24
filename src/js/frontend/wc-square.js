@@ -795,7 +795,7 @@ jQuery( document ).ready( ( $ ) => {
 
 			this.metrics[key] = {
 				time: performance.now(),
-				memory: process.memoryUsage().heapUsed,
+				memory: performance.memory?.usedJSHeapSize || 0,
 			};
 		}
 
@@ -808,7 +808,7 @@ jQuery( document ).ready( ( $ ) => {
 		end(key, is_error = false) {
 			if (this.metrics[key]) {
 				const duration = performance.now() - this.metrics[key].time;
-				const memory_bytes = process.memoryUsage().heapUsed - this.metrics[key].memory;
+				const memory_bytes = (performance.memory?.usedJSHeapSize || 0) - this.metrics[key].memory;
 
 				// Format duration: Show milliseconds if < 1 second, otherwise show seconds
 				const time_format = duration < 1000 
