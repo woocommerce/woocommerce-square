@@ -639,13 +639,13 @@ class Digital_Wallet {
 		check_ajax_referer( 'wc-square-get-payment-request', 'security' );
 
 		$payment_request = array();
-		$context         = ! empty( $_POST['context'] ) ? wc_clean( wp_unslash( $_POST['context'] ) ) : '';
+		$context         = ! empty( $_POST['context'] ) ? wc_clean( wp_unslash( $_POST['context'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		try {
 			if ( 'product' === $context ) {
-				$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0;
-				$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1;
-				$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array();
+				$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 				try {
 					$payment_request = $this->get_product_payment_request( $product_id, $quantity, $attributes );
@@ -678,9 +678,9 @@ class Digital_Wallet {
 		check_ajax_referer( 'wc-square-add-to-cart', 'security' );
 
 		try {
-			$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0;
-			$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1;
-			$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array();
+			$product_id = ! empty( $_POST['product_id'] ) ? wc_clean( wp_unslash( $_POST['product_id'] ) ) : 0; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$quantity   = ! empty( $_POST['quantity'] ) ? wc_clean( wp_unslash( $_POST['quantity'] ) ) : 1; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$attributes = ! empty( $_POST['attributes'] ) ? wc_clean( wp_unslash( $_POST['attributes'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			try {
 				$payment_request = $this->get_product_payment_request( $product_id, $quantity, $attributes, true );
@@ -838,7 +838,7 @@ class Digital_Wallet {
 		if ( WC()->cart->needs_shipping() || $is_pay_for_order_page ) {
 			if ( ! empty( $_POST['shipping_contact'] ) ) {
 				$shipping_address = wp_parse_args(
-					wc_clean( wp_unslash( $_POST['shipping_contact'] ) ),
+					wc_clean( wp_unslash( $_POST['shipping_contact'] ) ), // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 					array(
 						'countryCode' => null,
 						'state'       => null,
@@ -897,7 +897,7 @@ class Digital_Wallet {
 					$this->update_shipping_method( array( $first_shipping_method_id ) );
 				}
 			} elseif ( ! empty( $_POST['shipping_option'] ) ) {
-				$chosen_methods = array( wc_clean( wp_unslash( $_POST['shipping_option'] ) ) );
+				$chosen_methods = array( wc_clean( wp_unslash( $_POST['shipping_option'] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$this->update_shipping_method( $chosen_methods );
 			}
 		}
@@ -970,7 +970,7 @@ class Digital_Wallet {
 	 */
 	public function filter_checkout_fields( $fields ) {
 		/** Ignoring nonce verification as that is already taken care of in WC_Checkout::process_checkout. */
-		$wallet_type = isset( $_POST['wc-square-digital-wallet-type'] ) ? wc_clean( wp_unslash( $_POST['wc-square-digital-wallet-type'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$wallet_type = isset( $_POST['wc-square-digital-wallet-type'] ) ? wc_clean( wp_unslash( $_POST['wc-square-digital-wallet-type'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		if ( ! $wallet_type ) {
 			return $fields;
@@ -1018,7 +1018,7 @@ class Digital_Wallet {
 	 * @return string
 	 */
 	public function apple_pay_verification_file_location() {
-		return ! empty( $_SERVER['DOCUMENT_ROOT'] ) ? untrailingslashit( wc_clean( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) ) . '/.well-known/apple-developer-merchantid-domain-association' : '';
+		return ! empty( $_SERVER['DOCUMENT_ROOT'] ) ? untrailingslashit( wc_clean( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) ) . '/.well-known/apple-developer-merchantid-domain-association' : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 
 	/**
@@ -1036,7 +1036,7 @@ class Digital_Wallet {
 			return false;
 		}
 
-		$path              = untrailingslashit( wc_clean( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) );
+		$path              = untrailingslashit( wc_clean( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$dir               = '.well-known';
 		$file              = 'apple-developer-merchantid-domain-association';
 		$fullpath          = $path . '/' . $dir . '/' . $file;
@@ -1081,7 +1081,7 @@ class Digital_Wallet {
 		}
 
 		// when settings are being saved, make sure we use the latest values from POST data to check if Apple isn't one of the hidden wallet options
-		$hidden_wallet_options = ! isset( $_POST['woocommerce_square_credit_card_enable_digital_wallets'] ) ? $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ) : ( ! empty( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ? wc_clean( wp_unslash( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ) : array() ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$hidden_wallet_options = ! isset( $_POST['woocommerce_square_credit_card_enable_digital_wallets'] ) ? $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ) : ( ! empty( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ? wc_clean( wp_unslash( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ) : array() ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		if ( in_array( 'apple', $hidden_wallet_options, true ) ) {
 			return;
 		}
@@ -1121,7 +1121,7 @@ class Digital_Wallet {
 	private function register_apple_pay_domain() {
 		$access_token = $this->gateway->get_plugin()->get_settings_handler()->get_access_token();
 		$is_sandbox   = $this->gateway->get_plugin()->get_settings_handler()->is_sandbox();
-		$domain_name  = ! empty( $_SERVER['HTTP_HOST'] ) ? wc_clean( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+		$domain_name  = ! empty( $_SERVER['HTTP_HOST'] ) ? wc_clean( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		$this->gateway->update_option( 'apple_pay_domain_registration_attempted', 'yes' );
 

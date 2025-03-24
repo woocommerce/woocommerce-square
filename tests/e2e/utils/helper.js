@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+
 const { promisify } = require('util');
 const execAsync = promisify(require('child_process').exec);
 
@@ -46,6 +47,7 @@ export async function clearCart( page ) {
 export async function visitCheckout( page, isBlock = true ) {
 	if ( isBlock ) {
 		await page.goto( '/checkout' );
+		await page.locator( 'form.wc-block-checkout__form' ).waitFor();
 	} else {
 		await page.goto( '/checkout-old' );
 	}
@@ -299,9 +301,7 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 }
 
 export async function placeOrder( page, isBlock = true ) {
-	if ( isBlock ) {
-		await page.waitForTimeout( 2000 );
-	}
+	await page.waitForTimeout( 2000 );
 	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
 }
 
@@ -560,6 +560,7 @@ export async function isToggleChecked( page, selector ) {
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
+	await page.waitForTimeout( 2000 );
 }
 
 export async function savePaymentGatewaySettings( page ) {
@@ -653,7 +654,7 @@ export async function completePreOrder(page, orderId) {
 
 /**
  * Subscription renewal.
- * 
+ *
  * @param {Page} page Playwright page object.
  */
 export async function renewSubscription(page) {

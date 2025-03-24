@@ -40,11 +40,11 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Intall Node dependencies
+      - name: Install Node dependencies
         run: npm ci && npm run build
 
       - name: Install playwright
-        run: npx playwright install
+        run: npx playwright install --with-deps chromium
 
       # Use compiled versions to avoid need for npm and composer installation and build step.
       - name: Install required WP plugins
@@ -131,9 +131,9 @@ jobs:
         if: ${{ github.event_name == 'push' && matrix.type == '@general' }}
         run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.type }}
           path: tests/e2e/test-results/report
           retention-days: 2

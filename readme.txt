@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 4.8.3
+Stable tag: 4.8.7
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,38 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.8.7 - 2025-03-06 =
+* Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
+* Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
+* Fix - Ensure that Cash App Pay works as expected on mobile devices.
+* Fix - Ensure that no blank order is created via the "Add Payment Method" when HPOS is enabled.
+* Dev - Disabled warning checks from WordPress Plugin Check Action.
+
+= 4.8.6 - 2025-02-10 =
+* Fix - Resolved "translation loading was triggered too early" issue in WordPress 6.7.
+* Fix - Refresh brand assets.
+* Dev - Bump WooCommerce "tested up to" version 9.7.
+* Dev - Bump WooCommerce minimum supported version to 9.5.
+* Dev - Bump WordPress minimum supported version to 6.6.
+* Dev - Add the WordPress Plugin Check GitHub Action.
+
+= 4.8.5 - 2025-01-20 =
+* Fix - Unblock the Checkout page UI, and show a generic error when buyer verification fails.
+* Fix - Ensure inventory sync works correctly for variable products when Square sync is enabled through quick or bulk edit.
+* Dev - Bump WooCommerce "tested up to" version 9.6.
+* Dev - Bump WooCommerce minimum supported version to 9.4.
+* Dev - Use the `@woocommerce/e2e-utils-playwright` NPM package for E2E tests.
+* Dev - Updates GitHub `actions/cache`, `actions/upload` and `actions/download` to v4 due to deprecation.
+
+= 4.8.4 - 2024-12-09 =
+* Fix - Resolved the product duplication issue on the Square side when WooCommerce is set as the SOR.
+* Fix - Remove `woocommerce_loop_add_to_cart_link` filter to standardize "Buy Gift Card" and "Add to Cart" button styles across themes.
+* Fix - Reposition payment error messages close to Payment Method form on the Classic Checkout page.
+* Dev - Bump WooCommerce "tested up to" version 9.5.
+* Dev - Bump WooCommerce minimum supported version to 9.3.
+* Dev - Group E2E tests using tags and run each group in parallel within the GitHub Actions workflow.
+* Dev - Resolved some failing E2E tests.
 
 = 4.8.3 - 2024-11-11 =
 * Fix – Ensure Square sync works without issues when using cached API responses.
