@@ -104,6 +104,11 @@ class Helper {
 			$location_overrides  = $variation_data->getLocationOverrides();
 			$configured_location = wc_square()->get_settings_handler()->get_location_id();
 
+			$default_data = array(
+				'track_inventory' => $variation_data->getTrackInventory(),
+				'sold_out'        => false,
+			);
+
 			if ( ! empty( $location_overrides ) ) {
 				$location_ids = array_map(
 					function ( $location_override ) {
@@ -113,7 +118,7 @@ class Helper {
 				);
 
 				if ( ! in_array( $configured_location, $location_ids, true ) ) {
-					$catalog_objects_tracking[ $catalog_object->getId() ] = $variation_data->getTrackInventory();
+					$catalog_objects_tracking[ $catalog_object->getId() ] = $default_data;
 					continue;
 				}
 
@@ -121,15 +126,22 @@ class Helper {
 					$location_id = $location_override->getLocationId();
 
 					if ( $configured_location === $location_id ) {
+						$sold_out = $location_override->getSoldOut() ?? false;
 						if ( ! is_null( $location_override->getTrackInventory() ) ) {
-							$catalog_objects_tracking[ $catalog_object->getId() ] = $location_override->getTrackInventory();
+							$catalog_objects_tracking[ $catalog_object->getId() ] = array(
+								'track_inventory' => $location_override->getTrackInventory(),
+								'sold_out'        => $sold_out,
+							);
 						} else {
-							$catalog_objects_tracking[ $catalog_object->getId() ] = $variation_data->getTrackInventory();
+							$catalog_objects_tracking[ $catalog_object->getId() ] = array(
+								'track_inventory' => $variation_data->getTrackInventory(),
+								'sold_out'        => $sold_out,
+							);
 						}
 					}
 				}
 			} else {
-				$catalog_objects_tracking[ $catalog_object->getId() ] = $variation_data->getTrackInventory();
+				$catalog_objects_tracking[ $catalog_object->getId() ] = $default_data;
 			}
 		}
 

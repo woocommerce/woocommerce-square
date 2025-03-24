@@ -4822,7 +4822,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Check if the gateway has an account connected.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.7
 	 *
 	 * @return bool true if the gateway has an account connected, false otherwise.
 	 */
@@ -4833,7 +4833,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns true if the current gateway environment is configured to 'sandbox'
 	 *
-	 * @since x.x.x
+	 * @since 4.8.7
 	 *
 	 * @return bool true if the current environment is test environment.
 	 */
@@ -4844,7 +4844,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Determine if the gateway still requires setup.
 	 *
-	 * @since x.x.x
+	 * @since 4.8.7
 	 *
 	 * @return bool tue if the gateway still requires setup, false otherwise.
 	 */

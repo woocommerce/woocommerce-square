@@ -44,7 +44,7 @@ jobs:
         run: npm ci && npm run build
 
       - name: Install playwright
-        run: npx playwright install
+        run: npx playwright install --with-deps chromium
 
       # Use compiled versions to avoid need for npm and composer installation and build step.
       - name: Install required WP plugins
