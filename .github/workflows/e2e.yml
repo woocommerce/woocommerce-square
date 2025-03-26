@@ -87,7 +87,7 @@ jobs:
               repo: context.repo.repo,
             })
 
-            // Return early if there are no labels;
+            // Return early if there are no labels.
             if ( data.length == 0 ) {
               console.log ( 'Issue has no labels; not attempting to remove any labels' );
               return;
