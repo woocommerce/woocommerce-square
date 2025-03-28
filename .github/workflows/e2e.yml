@@ -80,19 +80,36 @@ jobs:
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
+            const labelsToRemove = ['status: e2e tests passing', 'status: e2e tests failing'];
+
+            const { data } = await github.rest.issues.listLabelsOnIssue({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: ['status: e2e tests passing']
             })
 
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['status: e2e tests failing']
-            })
+            // Return early if there are no labels.
+            if ( data.length == 0 ) {
+              console.log ( 'Issue has no labels; not attempting to remove any labels' );
+              return;
+            }
+
+            // Remove each label if it exists.
+            for ( const labelName of labelsToRemove ) {
+              const labelExists = data.filter( label => label.name === labelName );
+
+              if ( labelExists.length > 0 ) {
+                console.log( `Removing label "${labelName}"...` );
+                await github.rest.issues.removeLabel({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: labelName
+                })
+              } else {
+                console.log( `Label "${labelName}" not found on issue; skipping removal` );
+              }
+            }
 
       - name: Update Success Label
         if: |
@@ -138,3 +155,4 @@ jobs:
           name: playwright-report-${{ matrix.type }}
           path: tests/e2e/test-results/report
           retention-days: 2
+          if-no-files-found: ignore
