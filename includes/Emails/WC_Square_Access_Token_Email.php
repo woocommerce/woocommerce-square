@@ -21,7 +21,7 @@
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  */
 
-namespace WooCommerce\Square\Emails;
+use WooCommerce\Square\Emails;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,7 +30,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @since 2.1.0
  */
-class Access_Token_Email extends Base_Email {
+class WC_Square_Access_Token_Email extends Emails\Base_Email {
 	/**
 	 * Email body.
 	 *
@@ -47,7 +47,7 @@ class Access_Token_Email extends Base_Email {
 		// set properties
 		$this->id             = 'wc_square_access_token_email';
 		$this->customer_email = false;
-		$this->title          = __( 'Square Access Token problems', 'woocommerce-square' );
+		$this->title          = __( 'Square Access Token Problems', 'woocommerce-square' );
 		$this->description    = __( 'This email is sent when problems with Access Token are encountered', 'woocommerce-square' );
 		$this->subject        = _x( '[WooCommerce] There was a problem with your Square Access Token', 'Email subject', 'woocommerce-square' );
 		$this->heading        = _x( 'There was a problem with your Square Access Token', 'Email heading', 'woocommerce-square' );
