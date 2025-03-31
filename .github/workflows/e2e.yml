@@ -30,13 +30,14 @@ jobs:
       pull-requests: write
     name: E2E tests (${{ matrix.type }})
     steps:
-      - uses: actions/checkout@v3
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 # v2.32.0
         with:
           php-version: '7.4'
           tools: composer:v2
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
         with:
           node-version-file: '.nvmrc'
 
@@ -75,29 +76,46 @@ jobs:
         run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
       - name: Remove existing labels
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         with:
           script: |
-            github.rest.issues.removeLabel({
+            const labelsToRemove = ['status: e2e tests passing', 'status: e2e tests failing'];
+
+            const { data } = await github.rest.issues.listLabelsOnIssue({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: ['status: e2e tests passing']
             })
 
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ['status: e2e tests failing']
-            })
+            // Return early if there are no labels.
+            if ( data.length == 0 ) {
+              console.log ( 'Issue has no labels; not attempting to remove any labels' );
+              return;
+            }
+
+            // Remove each label if it exists.
+            for ( const labelName of labelsToRemove ) {
+              const labelExists = data.filter( label => label.name === labelName );
+
+              if ( labelExists.length > 0 ) {
+                console.log( `Removing label "${labelName}"...` );
+                await github.rest.issues.removeLabel({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: labelName
+                })
+              } else {
+                console.log( `Label "${labelName}" not found on issue; skipping removal` );
+              }
+            }
 
       - name: Update Success Label
         if: |
           always() &&
           ( steps.square_e2e_tests.conclusion == 'success' || steps.square_e2e_tests_general.conclusion == 'success' )
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         with:
           script: |
@@ -112,7 +130,7 @@ jobs:
         if: |
           always() &&
           ( steps.square_e2e_tests.conclusion == 'failure' || steps.square_e2e_tests_general.conclusion == 'failure' )
-        uses: actions/github-script@v6
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         with:
           script: |
@@ -131,9 +149,10 @@ jobs:
         if: ${{ github.event_name == 'push' && matrix.type == '@general' }}
         run: npm run test:e2e -- --grep-invert "@cashapp|@sync|@giftcard"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         if: always()
         with:
           name: playwright-report-${{ matrix.type }}
           path: tests/e2e/test-results/report
           retention-days: 2
+          if-no-files-found: ignore
