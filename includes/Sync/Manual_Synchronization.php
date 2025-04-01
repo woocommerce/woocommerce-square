@@ -1523,7 +1523,9 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$catalog_objects_tracking_stats = Helper::get_catalog_objects_tracking_stats( $catalog_object_ids );
 
-		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $is_tracking_inventory ) {
+		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
+			$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+			$sold_out              = $inventory_data['sold_out'] ?? false;
 
 			if ( in_array( $catalog_object_id, $in_progress['processed_variation_ids'], false ) ) { // phpcs:disable WordPress.PHP.StrictInArray.FoundNonStrictFalse
 				continue;
@@ -1545,7 +1547,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 					/* If the catalog object is not tracked in Square at all. */
 				} else {
-					$product->set_stock_status( 'instock' );
+					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 					$product->set_manage_stock( false );
 				}
 

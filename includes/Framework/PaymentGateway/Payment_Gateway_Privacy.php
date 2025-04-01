@@ -46,19 +46,11 @@ class Payment_Gateway_Privacy extends \WC_Abstract_Privacy {
 
 		$this->plugin = $plugin;
 
-		parent::__construct( $plugin->get_plugin_name() );
+		parent::__construct();
 
 		// add the action & filter hooks
 		$this->add_hooks();
-
-		// add the token exporters & erasers
-		// translators: Placeholder %s - Plugin name
-		$this->add_exporter( "wc-{$plugin->get_id_dasherized()}-customer-tokens", sprintf( esc_html__( '%s Payment Tokens', 'woocommerce-square' ), $plugin->get_plugin_name() ), array( $this, 'customer_tokens_exporter' ) );
-
-		// translators: Placeholder %s - Plugin name
-		$this->add_eraser( "wc-{$plugin->get_id_dasherized()}-customer-tokens", sprintf( esc_html__( '%s Payment Tokens', 'woocommerce-square' ), $plugin->get_plugin_name() ), array( $this, 'customer_tokens_eraser' ) );
 	}
-
 
 	/**
 	 * Adds the action & filter hooks.
@@ -66,6 +58,8 @@ class Payment_Gateway_Privacy extends \WC_Abstract_Privacy {
 	 * @since 3.0.0
 	 */
 	protected function add_hooks() {
+		// Initialize data exporters and erasers.
+		add_action( 'init', array( $this, 'register_erasers_exporters' ) );
 
 		// add the gateway data to customer data exports
 		add_filter( 'woocommerce_privacy_export_customer_personal_data', array( $this, 'add_export_customer_data' ), 10, 2 );
@@ -78,6 +72,20 @@ class Payment_Gateway_Privacy extends \WC_Abstract_Privacy {
 
 		// removes the gateway data during an order data erasure
 		add_action( 'woocommerce_privacy_remove_order_personal_data', array( $this, 'remove_order_personal_data' ) );
+	}
+
+	/**
+	 * Initial registration of privacy erasers and exporters.
+	 */
+	public function register_erasers_exporters() {
+		$this->name = $this->plugin->get_plugin_name();
+
+		// add the token exporters & erasers
+		// translators: Placeholder %s - Plugin name
+		$this->add_exporter( "wc-{$this->plugin->get_id_dasherized()}-customer-tokens", sprintf( esc_html__( '%s Payment Tokens', 'woocommerce-square' ), $this->plugin->get_plugin_name() ), array( $this, 'customer_tokens_exporter' ) );
+
+		// translators: Placeholder %s - Plugin name
+		$this->add_eraser( "wc-{$this->plugin->get_id_dasherized()}-customer-tokens", sprintf( esc_html__( '%s Payment Tokens', 'woocommerce-square' ), $this->plugin->get_plugin_name() ), array( $this, 'customer_tokens_eraser' ) );
 	}
 
 
