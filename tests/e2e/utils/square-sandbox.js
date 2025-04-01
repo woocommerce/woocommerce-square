@@ -1,24 +1,26 @@
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
+import multiVariations from '../dummy-data/multi-variations.json';
 
 const squareVersion = '2024-03-20';
 
 /**
  * Returns an object that contains an array of catalog objects.
  *
- * @returns {Object} Response object.
+ * @return {Object} Response object.
  */
 export async function listCatalog() {
-	const url = 'https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM';
+	const url =
+		'https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM';
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const response = await fetch( url, {
 		method: 'GET',
-		headers: headers
+		headers,
 	} );
 
 	return await response.json();
@@ -27,13 +29,14 @@ export async function listCatalog() {
 /**
  * Returns an object that contains an array of category objects.
  *
- * @returns {Object} Response object.
+ * @return {Object} Response object.
  */
 export async function listCategories() {
-	const url = 'https://connect.squareupsandbox.com/v2/catalog/list?types=CATEGORY';
+	const url =
+		'https://connect.squareupsandbox.com/v2/catalog/list?types=CATEGORY';
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
 		'Content-Type': 'application/json',
 	};
 
@@ -49,24 +52,24 @@ export async function listCategories() {
  * Deletes catalog objects by ID.
  *
  * @param {Array} ids Deletes catalog objects by ID.
- * @returns {Object} Response object.
+ * @return {Object} Response object.
  */
 export async function batchDeleteCatalogItem( ids = [] ) {
 	const url = `https://connect.squareupsandbox.com/v2/catalog/batch-delete`;
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const data = {
-		object_ids: ids
+		object_ids: ids,
 	};
 
 	const response = await fetch( url, {
 		method: 'POST',
-		headers: headers,
-		body: JSON.stringify( data )
+		headers,
+		body: JSON.stringify( data ),
 	} );
 
 	return await response.json();
@@ -75,7 +78,7 @@ export async function batchDeleteCatalogItem( ids = [] ) {
 /**
  * Deletes all catalog objects.
  *
- * @returns Response object.
+ * @return Response object.
  */
 export async function deleteAllCatalogItems() {
 	const catalog = await listCatalog();
@@ -92,20 +95,20 @@ export async function deleteAllCatalogItems() {
 /**
  * Retrieves inventory count for a variation.
  *
- * @param {Number} variationId ID of the variation.
- * @returns Response object.
+ * @param {number} variationId ID of the variation.
+ * @return Response object.
  */
 export async function retrieveInventoryCount( variationId ) {
-	const url = `https://connect.squareupsandbox.com/v2/inventory/${variationId}?location_ids=${process.env.SQUARE_LOCATION_ID}`;
+	const url = `https://connect.squareupsandbox.com/v2/inventory/${ variationId }?location_ids=${ process.env.SQUARE_LOCATION_ID }`;
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const response = await fetch( url, {
 		method: 'GET',
-		headers: headers
+		headers,
 	} );
 
 	return await response.json();
@@ -115,7 +118,7 @@ export async function retrieveInventoryCount( variationId ) {
  * Extracts necessary information from a catalog object for ease of use.
  *
  * @param {Object} catalogObject Square catalog object.
- * @returns {Object} Catalog info.
+ * @return {Object} Catalog info.
  */
 export function extractCatalogInfo( catalogObject = {} ) {
 	const catalogId = catalogObject.id;
@@ -125,17 +128,22 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		catalogObject.item_data.description_html ||
 		'';
 	let category = catalogObject.item_data.reporting_category?.id;
-	if (!category) {
-		category = catalogObject.categories[0]?.id;
+	if ( ! category ) {
+		category = catalogObject.categories[ 0 ]?.id;
 	}
 
-	const variations = catalogObject.item_data.variations.map( variation => {
-		return {
-			id: variation.id,
-			sku: variation.item_variation_data.sku,
-			price: variation.item_variation_data.price_money.amount,
+	const variations = catalogObject.item_data.variations.map(
+		( variation ) => {
+			return {
+				id: variation.id,
+				name: variation.item_variation_data.name || '',
+				sku: variation.item_variation_data.sku,
+				price: variation.item_variation_data.price_money.amount,
+				item_option_values:
+					variation.item_variation_data.item_option_values || [],
+			};
 		}
-	} );
+	);
 
 	return {
 		catalogId,
@@ -143,23 +151,29 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		category,
 		description,
 		variations,
-	}
+	};
 }
 
 /**
- * 
- * @param {String} name Name of the variation.
- * @param {String} sku SKU.
- * @param {String} price Price of the variation.
- * @returns {Object}
+ *
+ * @param {string} name  Name of the variation.
+ * @param {string} sku   SKU.
+ * @param {string} price Price of the variation.
+ * @return {Object}
  */
-export async function createCatalogObject( name, sku, price, description = '', categoryId = '' ) {
+export async function createCatalogObject(
+	name,
+	sku,
+	price,
+	description = '',
+	categoryId = ''
+) {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const data = {
@@ -176,29 +190,29 @@ export async function createCatalogObject( name, sku, price, description = '', c
 						item_variation_data: {
 							price_money: {
 								amount: price,
-								currency: 'USD'
+								currency: 'USD',
 							},
 							pricing_type: 'FIXED_PRICING',
-							sku: `${sku}-regular`
+							sku: `${ sku }-regular`,
 						},
-						id: `#${sku}-regular`
-					}
-				]
+						id: `#${ sku }-regular`,
+					},
+				],
 			},
-			id: `#${sku}`
-		}
+			id: `#${ sku }`,
+		},
 	};
 
-	if (categoryId) {
-		data.object.item_data.categories = [{ id: categoryId }];
+	if ( categoryId ) {
+		data.object.item_data.categories = [ { id: categoryId } ];
 		data.object.item_data.reporting_category = { id: categoryId };
 	}
 
-	const response = await fetch(url, {
-		method: method,
-		headers: headers,
-		body: JSON.stringify(data)
-	});
+	const response = await fetch( url, {
+		method,
+		headers,
+		body: JSON.stringify( data ),
+	} );
 
 	return await response.json();
 }
@@ -206,15 +220,15 @@ export async function createCatalogObject( name, sku, price, description = '', c
 /**
  * Create a Category to be used in the catalog.
  *
- * @param {String} name Name of the category.
- * @returns {Object}
+ * @param {string} name Name of the category.
+ * @return {Object}
  */
-export async function createCategory(name) {
+export async function createCategory( name ) {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
 	const headers = {
 		'Square-Version': squareVersion,
-		Authorization: `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
 		'Content-Type': 'application/json',
 	};
 
@@ -225,27 +239,28 @@ export async function createCategory(name) {
 			category_data: {
 				name,
 			},
-			id: `#${name}Category`,
+			id: `#${ name }Category`,
 			present_at_all_locations: true,
 		},
 	};
 
-	const response = await fetch(url, {
+	const response = await fetch( url, {
 		method,
 		headers,
-		body: JSON.stringify(data),
-	});
+		body: JSON.stringify( data ),
+	} );
 
 	return await response.json();
 }
 
 export async function updateCatalogItemInventory( catalogId, inventoryCount ) {
-	const url = 'https://connect.squareupsandbox.com/v2/inventory/changes/batch-create';
+	const url =
+		'https://connect.squareupsandbox.com/v2/inventory/changes/batch-create';
 	const method = 'POST';
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const data = {
@@ -259,16 +274,16 @@ export async function updateCatalogItemInventory( catalogId, inventoryCount ) {
 					state: 'IN_STOCK',
 					quantity: inventoryCount,
 					occurred_at: new Date().toISOString(),
-				}
-			}
+				},
+			},
 		],
 	};
 
-	const response = await fetch(url, {
-		method: method,
-		headers: headers,
-		body: JSON.stringify(data)
-	});
+	const response = await fetch( url, {
+		method,
+		headers,
+		body: JSON.stringify( data ),
+	} );
 
 	return await response.json();
 }
@@ -279,16 +294,18 @@ export async function updateCatalogItemInventory( catalogId, inventoryCount ) {
  * @param {Object} page Playwright page object.
  */
 export async function clearSync( page ) {
-	page.on('dialog', dialog => dialog.accept());
+	page.on( 'dialog', ( dialog ) => dialog.accept() );
 	await page.goto( '/wp-admin/admin.php?page=wc-status&tab=tools' );
-	await page.locator( 'input[form="form_wc_square_clear_background_jobs"]' ).click();
+	await page
+		.locator( 'input[form="form_wc_square_clear_background_jobs"]' )
+		.click();
 }
 
 /**
  * Imports products.
  *
- * @param {Object} page Playwright page object.
- * @param {*} update Says if the products should be updated during import.
+ * @param {Object} page   Playwright page object.
+ * @param {*}      update Says if the products should be updated during import.
  */
 export async function importProducts( page, update = false ) {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square' );
@@ -305,25 +322,25 @@ export async function importProducts( page, update = false ) {
 /**
  * Get gift card information.
  *
- * @param {String} gan Gift card account number
- * @returns {Object} Response object.
+ * @param {string} gan Gift card account number
+ * @return {Object} Response object.
  */
 export async function getGiftCard( gan = '' ) {
 	const url = 'https://connect.squareupsandbox.com/v2/gift-cards/from-gan';
 	const headers = {
 		'Square-Version': squareVersion,
-		'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-		'Content-Type': 'application/json'
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
 	};
 
 	const data = {
-		gan
+		gan,
 	};
 
 	const response = await fetch( url, {
 		method: 'POST',
-		headers: headers,
-		body: JSON.stringify(data)
+		headers,
+		body: JSON.stringify( data ),
 	} );
 
 	return await response.json();
@@ -338,8 +355,102 @@ export async function doGooglePay( popup ) {
 	await popup.waitForLoadState();
 	await popup.locator( '#identifierId' ).fill( process.env.GMAIL_USERNAME );
 	await popup.locator( '#identifierNext' ).click();
-	await popup.locator( 'input[name="Passwd"]' ).fill( process.env.GMAIL_PASSWORD );
+	await popup
+		.locator( 'input[name="Passwd"]' )
+		.fill( process.env.GMAIL_PASSWORD );
 	await popup.locator( '#passwordNext' ).click();
-	const frame = await popup.frameLocator( '.bootstrapperIframeContainerElement iframe' ).first();
-	await frame.locator( '.goog-inline-block.jfk-button:has-text("PAY")' ).click();
+	const frame = await popup
+		.frameLocator( '.bootstrapperIframeContainerElement iframe' )
+		.first();
+	await frame
+		.locator( '.goog-inline-block.jfk-button:has-text("PAY")' )
+		.click();
+}
+
+export async function getItemOptions() {
+	const url =
+		'https://connect.squareupsandbox.com/v2/catalog/list?types=ITEM_OPTION';
+	const headers = {
+		'Square-Version': squareVersion,
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
+	};
+
+	const response = await fetch( url, {
+		method: 'GET',
+		headers,
+	} );
+
+	const result = await response.json();
+	const objects = result.objects.map( ( item ) => {
+		return {
+			id: item.id,
+			name: item.item_option_data.name,
+			values: item.item_option_data.values.map( ( value ) => {
+				return {
+					id: value.id,
+					name: value.item_option_value_data.name,
+				};
+			} ),
+		};
+	} );
+
+	const options = objects.reduce( ( acc, item ) => {
+		if ( item.name === 'pa_color' ) {
+			acc.COLOR_OPTION_ID = item.id;
+			item.values.forEach( ( value ) => {
+				acc[ value.name.toUpperCase() + '_COLOR_OPTION_VALUE' ] =
+					value.id;
+			} );
+		} else if ( item.name === 'pa_size' ) {
+			acc.SIZE_OPTION_ID = item.id;
+			item.values.forEach( ( value ) => {
+				acc[ value.name.toUpperCase() + '_SIZE_OPTION_VALUE' ] =
+					value.id;
+			} );
+		} else if ( item.name === 'Custom Material' ) {
+			acc.CUSTOM_MATERIAL_OPTION_ID = item.id;
+			item.values.forEach( ( value ) => {
+				acc[ value.name.toUpperCase() + '_MATERIAL_OPTION_VALUE' ] =
+					value.id;
+			} );
+		}
+		return acc;
+	}, {} );
+	return options;
+}
+
+export async function createVariableProductsInSquare() {
+	let jsonString = JSON.stringify( multiVariations );
+	const options = await getItemOptions();
+
+	Object.keys( options ).forEach( ( key ) => {
+		jsonString = jsonString.replace(
+			new RegExp( key, 'g' ),
+			options[ key ]
+		);
+	} );
+	const variations = JSON.parse( jsonString );
+
+	const url = 'https://connect.squareupsandbox.com/v2/catalog/batch-upsert';
+	const method = 'POST';
+	const headers = {
+		'Square-Version': squareVersion,
+		Authorization: `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+		'Content-Type': 'application/json',
+	};
+
+	const data = {
+		idempotency_key: uuidv4(),
+		batches: [ variations ],
+	};
+
+	const response = await fetch( url, {
+		method,
+		headers,
+		body: JSON.stringify( data ),
+	} );
+
+	const res = await response.json();
+	return res;
 }

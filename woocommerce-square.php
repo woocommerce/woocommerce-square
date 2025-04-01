@@ -40,6 +40,10 @@ if ( ! defined( 'WC_SQUARE_PLUGIN_PATH' ) ) {
 	define( 'WC_SQUARE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 }
 
+if ( ! defined( 'WC_SQUARE_OPTION_ANY' ) ) {
+	define( 'WC_SQUARE_OPTION_ANY', 'Any' );
+}
+
 /**
  * The plugin loader class.
  *

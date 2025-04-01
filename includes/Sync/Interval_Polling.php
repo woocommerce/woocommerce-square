@@ -150,6 +150,8 @@ class Interval_Polling extends Stepped_Job {
 
 		if ( $response->get_data() instanceof SearchCatalogObjectsResponse && is_array( $response->get_data()->getObjects() ) ) {
 
+			$product_import = new Product_Import();
+
 			foreach ( $response->get_data()->getObjects() as $object ) {
 
 				// filter out objects that aren't at our configured location
@@ -206,10 +208,21 @@ class Interval_Polling extends Stepped_Job {
 					} else {
 
 						try {
-							$thumbnail_image_id = Product::get_catalog_item_thumbnail_id( $object );
-							Product::update_from_square( $product, $object->getItemData(), false );
+							$data = $product_import->extract_product_data( $object, $product );
 
-							Product::update_image_from_square( $product, $thumbnail_image_id );
+							/**
+							 * Filters the data that is used to create update a WooCommerce product during import.
+							 *
+							 * @since 2.0.0
+							 *
+							 * @param array $data product data
+							 * @param \Square\Models\CatalogObject $object the catalog object from the Square API
+							 * @param Interval_Polling $this current class instance
+							 */
+							$data = apply_filters( 'woocommerce_square_create_product_data', $data, $object, $this );
+
+							// Update the product, this will update/create the variations as well.
+							$product_import->update_product( $product, $data );
 
 							$products_updated[] = $product->get_id();
 
