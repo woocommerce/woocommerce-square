@@ -106,7 +106,10 @@ jQuery( document ).ready( ( $ ) => {
 							}
 						} else {
 							$stockQty.prop( 'readonly', false );
-							$stockStatus.prop( 'readonly', false );
+							$stockStatus.off('mousedown keydown change');
+							$stockStatus.css( {
+								opacity: 1,
+							} );
 						}
 					} else {
 						$manageStockInput.on( 'click', () => {
@@ -129,7 +132,12 @@ jQuery( document ).ready( ( $ ) => {
 							$( '.backorder_field' ).hide();
 						} else {
 							$stockQty.prop( 'readonly', true );
-							$stockStatus.prop( 'readonly', true );
+							$stockStatus.on( 'mousedown keydown change', () => {
+								return false;
+							} );
+							$stockStatus.css( {
+								opacity: 0.5,
+							} );
 						}
 					}
 				} ).trigger( 'change' );
@@ -331,6 +339,9 @@ jQuery( document ).ready( ( $ ) => {
 		const $stockFields = $( '.stock_fields' );
 		const $stockInput = $stockFields.find( '#_stock' );
 		const $stockStatus = $( '.stock_status_field' );
+		const $stockStatusInput = $stockStatus.find(
+			'input[name="_stock_status"]'
+		);
 		const $manageField = $( '._manage_stock_field' );
 		const $manageInput = $manageField.find( '#_manage_stock' );
 		const $manageDesc = $manageField.find( '.description' );
@@ -374,6 +385,10 @@ jQuery( document ).ready( ( $ ) => {
 						return false;
 					});
 					$manageInput.css({ opacity: '0.5' });
+
+					// disable stock status radios.
+					$stockStatusInput.css({ opacity: 0.5 });
+					$stockStatusInput.on('mousedown keydown click', () => { return false; });
 
 				$stockInput.prop( 'readonly', true );
 
@@ -450,6 +465,8 @@ jQuery( document ).ready( ( $ ) => {
 				$manageInput.off( 'click' );
 				$manageInput.css( { opacity: 1 } );
 				$manageInput.prop( 'checked', manageStockOriginal );
+				$stockStatusInput.css({ opacity: 1 });
+				$stockStatusInput.off('mousedown keydown click');
 
 				if ( ! variableProduct ) {
 					if ( manageStockOriginal ) {
@@ -470,6 +487,7 @@ jQuery( document ).ready( ( $ ) => {
 				const $variationManageField = $variationManageInput.parent();
 				const $variationStockInput = $( e ).find( '.wc_input_stock' );
 				const $variationStockField = $variationStockInput.parent();
+				const $variationStockStatusField = $( e ).find( '.variable_stock_status select' );
 
 				// Square manages variations stock
 				if ( useSquare ) {
@@ -479,6 +497,8 @@ jQuery( document ).ready( ( $ ) => {
 						return false;
 					});
 					$variationManageInput.css( { opacity: '0.5' } );
+					$variationStockStatusField.css( { opacity: 0.5 } );
+					$variationStockStatusField.on('mousedown keydown change', () => { return false; });
 
 					// add a note that the variation stock is managed by square, but check if it wasn't added already to avoid duplicates.
 					if ( 0 === $variationManageField.find( '.description' ).length ) {
@@ -567,6 +587,8 @@ jQuery( document ).ready( ( $ ) => {
 					$variationManageInput.off( 'click' );
 					$variationManageInput.css( { opacity: 1 } );
 					$variationManageInput.next( '.description' ).remove();
+					$variationStockStatusField.css( { opacity: 1 } );
+					$variationStockStatusField.off( 'mousedown keydown change' );
 				}
 			} );
 		// initial page load handling.

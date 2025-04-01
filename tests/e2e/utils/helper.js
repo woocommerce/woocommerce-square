@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+
 const { promisify } = require('util');
 const execAsync = promisify(require('child_process').exec);
 
@@ -300,9 +301,7 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 }
 
 export async function placeOrder( page, isBlock = true ) {
-	if ( isBlock ) {
-		await page.waitForTimeout( 2000 );
-	}
+	await page.waitForTimeout( 2000 );
 	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
 }
 

@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { getSetting } from '@woocommerce/settings';
-import { dispatch } from '@wordpress/data';
+import { dispatch, select } from '@wordpress/data';
 
 /**
  * Internal dependencies
@@ -166,15 +166,18 @@ export const log = ( data, type = 'notice' ) => {
  * Select the Cash App Pay payment method if the continuation session is set.
  */
 export const selectCashAppPaymentMethod = () => {
-	const payMethodInput =
-		document &&
-		document.getElementById(
-			'radio-control-wc-payment-method-options-square_cash_app_pay'
-		);
+	const availablePaymentMethods =
+		select( PAYMENT_STORE_KEY ).getAvailablePaymentMethods();
+	const availableMethodKeys = Object.keys( availablePaymentMethods || {} );
+
+	// Bail if the Cash App Pay payment method is not available.
+	if ( ! availableMethodKeys.includes( PAYMENT_METHOD_ID ) ) {
+		return;
+	}
+
 	if (
 		getSquareCashAppPayServerData().isContinuation &&
-		! window.wcSquareCashAppPaySelected &&
-		payMethodInput
+		! window.wcSquareCashAppPaySelected
 	) {
 		log( '[Square Cash App Pay] Selecting Cash App Pay payment method' );
 		dispatch( PAYMENT_STORE_KEY ).__internalSetActivePaymentMethod(
