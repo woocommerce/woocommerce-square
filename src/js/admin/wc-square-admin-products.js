@@ -460,6 +460,7 @@ jQuery( document ).ready( ( $ ) => {
 
 				// remove any inline note to WooCommerce core stock fields that may have been added when Synced with Square is enabled.
 				$( 'p._stock_field span.description' ).remove();
+				$( '.sync-stock-from-square' ).remove();
 				$stockInput.prop( 'readonly', false );
 				$manageDesc.html( manageDescOriginal );
 				$manageInput.off( 'click' );
@@ -505,20 +506,23 @@ jQuery( document ).ready( ( $ ) => {
 							let syncInventory = '';
 							if (!$variationManageInput.is(':checked')) {
 								syncInventory =
-									' - <a href="#" class="sync-stock-from-square" data-product-id="' +
+									'<a href="#" class="sync-stock-from-square" data-product-id="' +
 									variationID +
 									'">' +
 									wc_square_admin_products.i18n
 										.sync_inventory +
 									'</a><div class="sync-stock-spinner spinner" style="float:none;"></div>';
 							}
-							$variationManageInput.after(
-								'(<span class="description">' +
-									wc_square_admin_products.i18n
-										.managed_by_square +
-									'</span>)' +
-									syncInventory
-							);
+
+							if ( ! $variationManageField.find( '.sync-stock-from-square' ).length ) {
+								$variationManageInput.after(
+									'<span class="description">(' +
+										wc_square_admin_products.i18n
+											.managed_by_square +
+										') - </span>' +
+										syncInventory
+								);
+							}
 					}
 
 					if ( wc_square_admin_products.is_woocommerce_sor ) {
