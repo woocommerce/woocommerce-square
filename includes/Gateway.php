@@ -301,9 +301,15 @@ class Gateway extends Payment_Gateway_Direct {
 
 			$is_valid = false;
 
-			Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
+				Square_Helper::wc_add_notice( $exception->getMessage(), 'error' );
+			} else {
+				Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			}
 
-			$this->add_debug_message( $exception->getMessage(), 'error' );
+			if ( $this->debug_log() ) {
+				$this->add_debug_message( $exception->getMessage(), 'error' );
+			}
 		}
 
 		return $is_valid;
