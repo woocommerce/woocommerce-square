@@ -1748,7 +1748,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Fetch the option (attribute) names from Square.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @throws \Exception
 	 */
