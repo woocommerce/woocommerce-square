@@ -1692,6 +1692,10 @@ class Product {
 			$product = wc_get_product( $product->get_parent_id() );
 		}
 
+		if ( ! $product instanceof \WC_Product ) {
+			return false;
+		}
+
 		return $product->meta_exists( self::SQUARE_GIFT_CARD_KEY ) && 'yes' === $product->get_meta( self::SQUARE_GIFT_CARD_KEY, true );
 	}
 }
