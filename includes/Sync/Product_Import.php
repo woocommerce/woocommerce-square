@@ -84,7 +84,7 @@ class Product_Import extends Stepped_Job {
 	/**
 	 * Fetch the option (attribute) names from Square.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @throws \Exception
 	 */
@@ -805,7 +805,7 @@ class Product_Import extends Stepped_Job {
 	/**
 	 * Extracts attributes from Square options.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param array $data the product data
 	 * @return int
@@ -861,7 +861,7 @@ class Product_Import extends Stepped_Job {
 	/**
 	 * Extracts attributes from Square variations.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param array $variations the variations
 	 * @return array
