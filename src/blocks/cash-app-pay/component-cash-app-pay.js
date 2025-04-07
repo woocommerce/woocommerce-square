@@ -13,6 +13,7 @@ import {
 	setContinuationSession,
 	log,
 } from './utils';
+import { deferExecution } from '../square-utils/utils';
 import { PAYMENT_METHOD_ID } from './constants';
 
 const buttonId = 'wc-square-cash-app-pay';
@@ -106,29 +107,35 @@ export const ComponentCashAppPay = ( props ) => {
 				await cashAppPay.attach( `#${ buttonId }`, buttonStyles );
 
 				// Handle the payment response.
-				cashAppPay.addEventListener( 'ontokenization', ( event ) => {
-					const { tokenResult, error } = event.detail;
-					if ( error ) {
-						setPaymentNonce( '' );
-						setErrorMessage( error.message );
-					} else if ( tokenResult.status === 'OK' ) {
-						const nonce = tokenResult.token;
-						if ( ! nonce ) {
+				cashAppPay.addEventListener(
+					'ontokenization',
+					async ( event ) => {
+						const { tokenResult, error } = event.detail;
+						if ( error ) {
 							setPaymentNonce( '' );
-							setErrorMessage( generalError );
+							setErrorMessage( error.message );
+						} else if ( tokenResult.status === 'OK' ) {
+							const nonce = tokenResult.token;
+							if ( ! nonce ) {
+								setPaymentNonce( '' );
+								setErrorMessage( generalError );
+							}
+
+							// Set the nonce.
+							setPaymentNonce( nonce );
+
+							// See function DocBlock.
+							await deferExecution();
+
+							// Place an Order.
+							onSubmit();
+						} else {
+							// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
+							setPaymentNonce( null );
+							setupIntegration();
 						}
-
-						// Set the nonce.
-						setPaymentNonce( nonce );
-
-						// Place an Order.
-						onSubmit();
-					} else {
-						// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
-						setPaymentNonce( null );
-						setupIntegration();
 					}
-				} );
+				);
 
 				// Handle the customer interaction. set continuation session to select the Cash App Pay payment method after the redirect back from the Cash App.
 				cashAppPay.addEventListener(

@@ -403,30 +403,6 @@ class Plugin extends Payment_Gateway_Plugin {
 					)
 				);
 			}
-		} else {
-
-			$instruction = '';
-
-			if ( wc_square()->get_dependency_handler()->meets_php_dependencies() ) {
-				if ( $this->is_plugin_settings() ) {
-					$instruction = __( 'To get started, connect with Square.', 'woocommerce-square' );
-				} else {
-					$instruction = sprintf(
-						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-						__( 'To get started, %1$sconnect with Square &raquo;%2$s', 'woocommerce-square' ),
-						'<a href="' . esc_url( $this->get_settings_url() ) . '">',
-						'</a>'
-					);
-				}
-			}
-
-			$message = sprintf(
-				/* translators: Placeholders: %1$s - plugin name */
-				__( 'Thanks for installing %1$s!', 'woocommerce-square' ),
-				esc_html( $this->get_plugin_name() )
-			);
-
-			$this->get_admin_notice_handler()->add_admin_notice( $message . ' ' . $instruction, 'connect' );
 		}
 
 		// add a notice for out-of-bounds base locations

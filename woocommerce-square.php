@@ -5,7 +5,7 @@
  * Version: 4.8.7
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.6
- * Tested up to: 6.7
+ * Tested up to: 6.8
  * Requires PHP: 7.4
  * PHP tested up to: 8.3
  *
@@ -38,6 +38,10 @@ if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_PATH' ) ) {
 	define( 'WC_SQUARE_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+}
+
+if ( ! defined( 'WC_SQUARE_OPTION_ANY' ) ) {
+	define( 'WC_SQUARE_OPTION_ANY', 'Any' );
 }
 
 /**
