@@ -601,7 +601,7 @@ class API extends Base {
 	/**
 	 * Fetch the option (attribute) names from Square.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @throws \Exception
 	 */
@@ -652,7 +652,7 @@ class API extends Base {
 	/**
 	 * Create options and values in Square.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param string $option_id Option ID.
 	 * @param string $attribute_name Attribute name.
