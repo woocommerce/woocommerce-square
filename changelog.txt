@@ -1,5 +1,19 @@
 *** WooCommerce Square Changelog ***
 
+= 4.9.0 - 2025-04-07 =
+* Add - Support for syncing multiple Product Variations.
+* Add - Support for WooCommerce's new Email Improvements feature.
+* Fix - Digital Wallets and Cash App payment issues in Woo 9.8.
+* Fix - Deprecated PHP error for Gift Cards.
+* Fix - jQuery error on Cart & Checkout pages when a Subscription product is added to the cart, as Digital Wallets cannot be used for Subscription products.
+* Fix - Remove duplicate onboarding notice.
+* Dev - Bump WooCommerce "tested up to" version 9.8.
+* Dev - Bump WooCommerce minimum supported version to 9.6.
+* Dev - Bump WordPress minimum supported version to 6.6.
+* Dev - Bump WordPress "tested up to" version 6.8.
+* Dev - Updates to E2E tests setup.
+* Dev - Update all third-party actions our workflows rely on to use versions based on specific commit hashes.
+
 = 4.8.7 - 2025-03-06 =
 * Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
 * Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.

@@ -1,0 +1,270 @@
+{
+    "objects": [
+        {
+            "type": "ITEM",
+            "item_data": {
+                "name": "MULTIPLE VARIATIONS PRODUCT 1",
+                "product_type": "REGULAR",
+                "description": "This is a variable product",
+                "variations": [
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Red",
+                            "sku": "multiple-variations-product-1-red",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 999,
+                                "currency": "USD"
+                            }
+                        },
+                        "id": "#multiple-variations-product-1-red"
+                    }
+                ]
+            },
+			"id": "#multiple-variations-product-1"
+        },
+        {
+            "type": "ITEM",
+            "item_data": {
+                "name": "MULTIPLE VARIATIONS PRODUCT 2",
+                "description": "This is a variable product",
+                "variations": [
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Blue, M",
+                            "sku": "multiple-variations-product-2-blue-m",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1299,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "BLUE_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "M_SIZE_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-2-blue-m"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Blue, S",
+                            "sku": "multiple-variations-product-2-blue-s",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1199,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "BLUE_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "S_SIZE_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-2-blue-s"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Red, M",
+                            "sku": "multiple-variations-product-2-red-m",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1099,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "RED_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "M_SIZE_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-2-red-m"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Red, S",
+                            "sku": "multiple-variations-product-2-red-s",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 999,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "RED_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "S_SIZE_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-2-red-s"
+                    }
+                ],
+                "product_type": "REGULAR",
+                "item_options": [
+                    {
+                        "item_option_id": "COLOR_OPTION_ID"
+                    },
+                    {
+                        "item_option_id": "SIZE_OPTION_ID"
+                    }
+                ]
+            },
+            "id": "#multiple-variations-product-2"
+        },
+        {
+            "type": "ITEM",
+            "item_data": {
+                "name": "MULTIPLE VARIATIONS PRODUCT 3",
+                "description": "This is a variable product",
+                "variations": [
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Blue, M, Cotton",
+                            "sku": "multiple-variations-product-3-blue-m-cotton",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1299,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "BLUE_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "M_SIZE_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "CUSTOM_MATERIAL_OPTION_ID",
+                                    "item_option_value_id": "COTTON_MATERIAL_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-3-blue-m-cotton"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Blue, S, Cotton",
+                            "sku": "multiple-variations-product-3-blue-s-cotton",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1199,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "BLUE_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "S_SIZE_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "CUSTOM_MATERIAL_OPTION_ID",
+                                    "item_option_value_id": "COTTON_MATERIAL_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-3-blue-s-cotton"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Red, M, Cotton",
+                            "sku": "multiple-variations-product-3-red-m-cotton",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 1099,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "RED_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "M_SIZE_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "CUSTOM_MATERIAL_OPTION_ID",
+                                    "item_option_value_id": "COTTON_MATERIAL_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-3-red-m-cotton"
+                    },
+                    {
+                        "type": "ITEM_VARIATION",
+                        "item_variation_data": {
+                            "name": "Red, S, Cotton",
+                            "sku": "multiple-variations-product-3-red-s-cotton",
+                            "pricing_type": "FIXED_PRICING",
+                            "price_money": {
+                                "amount": 999,
+                                "currency": "USD"
+                            },
+                            "item_option_values": [
+                                {
+                                    "item_option_id": "COLOR_OPTION_ID",
+                                    "item_option_value_id": "RED_COLOR_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "SIZE_OPTION_ID",
+                                    "item_option_value_id": "S_SIZE_OPTION_VALUE"
+                                },
+                                {
+                                    "item_option_id": "CUSTOM_MATERIAL_OPTION_ID",
+                                    "item_option_value_id": "COTTON_MATERIAL_OPTION_VALUE"
+                                }
+                            ]
+                        },
+                        "id": "#multiple-variations-product-3-red-s-cotton"
+                    }
+                ],
+                "product_type": "REGULAR",
+                "item_options": [
+                    {
+                        "item_option_id": "COLOR_OPTION_ID"
+                    },
+                    {
+                        "item_option_id": "SIZE_OPTION_ID"
+                    },
+                    {
+                        "item_option_id": "CUSTOM_MATERIAL_OPTION_ID"
+                    }
+                ]
+            }
+            ,
+            "id": "#multiple-variations-product-3"
+        }
+    ]
+}
