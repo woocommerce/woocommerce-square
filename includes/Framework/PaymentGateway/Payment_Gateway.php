@@ -260,6 +260,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string order note for the voided order. */
 	protected $voided_order_message;
 
+	/** @var string Gift card product default placeholder provided by the plugin. */
+	protected $is_default_placeholder;
+
+	/** @var integer ID of the placeholder media. */
+	protected $placeholder_id;
+
 	/**
 	 * Initialize the gateway
 	 *
