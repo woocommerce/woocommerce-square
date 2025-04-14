@@ -55,7 +55,7 @@ class WC_Square_Sync_Completed extends Emails\Base_Email {
 	/**
 	 * Set dummy placeholders for the email.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param array  $placeholders Placeholders.
 	 * @param string $email_type Email type.

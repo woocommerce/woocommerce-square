@@ -42,7 +42,7 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 	/**
 	 * Set dummy placeholders for the email.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param array  $placeholders Placeholders.
 	 * @param string $email_type Email type.
@@ -61,7 +61,7 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 	/**
 	 * Set dummy order for the email.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param \WC_Order $order The WooCommerce order.
 	 * @param string    $email_type Email type.
@@ -192,7 +192,7 @@ class WC_Square_Gift_Card_Sent extends \WC_Email {
 	/**
 	 * Returns the details of the gift card purchased.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.0
 	 *
 	 * @param \WC_Order $order The Woo Order associated with the gift card purchase.
 	 * @param string    $key   The key of the gift card detail to retrieve.
