@@ -132,35 +132,6 @@ export const usePaymentForm = (
 	);
 
 	/**
-	 * Handles the response from Payments.verifyBuyer() and resolves promise
-	 *
-	 * @param {Object} verificationResult Verify buyer result from Square
-	 */
-	const handleVerifyBuyerResponse = useCallback( ( verificationResult ) => {
-		const response = {
-			notices: [],
-			logs: [],
-		};
-
-		// no errors, but also no verification token.
-		if ( ! verificationResult || ! verificationResult.token ) {
-			logData(
-				'Verification token is missing from the Square response',
-				response
-			);
-			log(
-				'Verification token is missing from the Square response',
-				'error'
-			);
-			handleErrors( [], response );
-		} else {
-			response.verificationToken = verificationResult.token;
-		}
-
-		return response;
-	}, [] );
-
-	/**
 	 * Generates a verification buyer token
 	 *
 	 * @param {Object} payments     Instance of Square.payments().
