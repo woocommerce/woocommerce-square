@@ -132,33 +132,6 @@ export const usePaymentForm = (
 	);
 
 	/**
-	 * Generates a verification buyer token
-	 *
-	 * @param {Object} payments     Instance of Square.payments().
-	 * @param {string} paymentToken Payment Token to verify
-	 *
-	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
-	 */
-	const verifyBuyer = useCallback(
-		async ( payments, paymentToken ) => {
-			let verificationResponse;
-			try {
-				verificationResponse = await payments.verifyBuyer(
-					paymentToken,
-					verificationDetails
-				);
-
-				return handleVerifyBuyerResponse( verificationResponse );
-			} catch ( error ) {
-				handleErrors( [ error ] );
-			}
-
-			return false;
-		},
-		[ verificationDetails, handleVerifyBuyerResponse ]
-	);
-
-	/**
 	 * When customers interact with the Square Payments iframe elements,
 	 * determine whether the cardBrandChanged event has occurred and set card type.
 	 *
