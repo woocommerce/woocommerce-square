@@ -79,19 +79,7 @@ export const usePaymentProcessing = (
 			const paymentToken = paymentData.token || paymentData.nonce;
 
 			if ( paymentToken ) {
-				const verifyBuyerResponse = await verifyBuyer(
-					square.current.payments,
-					paymentToken
-				);
-
-				paymentData.verificationToken =
-					verifyBuyerResponse.verificationToken || '';
-				paymentData.logs = paymentData.logs.concat(
-					verifyBuyerResponse.log || []
-				);
-				paymentData.errors = paymentData.notices.concat(
-					verifyBuyerResponse.errors || []
-				);
+				paymentData.verificationToken = paymentToken;
 			}
 
 			if ( paymentToken || paymentData.logs.length > 0 ) {
