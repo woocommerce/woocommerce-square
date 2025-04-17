@@ -339,17 +339,20 @@ jQuery( document ).ready( ( $ ) => {
 		 * Generates Square payment token and submits form.
 		 */
 		handleSubmission() {
-			const tokenPromise = this.payment_form.tokenize();
-			tokenPromise.then( tokenResult => {
-				const { token, details, status } = tokenResult;
+			this.get_verification_details().then(( verificationDetails ) => {
+				this.payment_form
+					.tokenize( verificationDetails )
+						.then( ( tokenResult ) => {
+							const { token, details, status } = tokenResult;
 
-				if ( status === 'OK' ) {
-					this.handle_card_nonce_response( token, details );
-				} else {
-					if ( tokenResult.errors ) {
-						this.handle_errors( tokenResult.errors )
-					}
-				}
+							if ( status === 'OK' ) {
+								this.handle_card_nonce_response( token, details );
+							} else {
+								if ( tokenResult.errors ) {
+									this.handle_errors( tokenResult.errors )
+								}
+							}
+				} );
 			} );
 		}
 
