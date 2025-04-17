@@ -441,6 +441,8 @@ jQuery( document ).ready( ( $ ) => {
 					addressLines: [ $( '#billing_address_1' ).val() || '', $( '#billing_address_2' ).val() || '' ],
 				},
 				intent: this.get_intent(),
+				customerInitiated: true,
+				sellerKeyedIn: false,
 			};
 
 			if ( 'CHARGE' === verification_details.intent ) {
