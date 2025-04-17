@@ -53,6 +53,8 @@ export const usePaymentForm = (
 				],
 			},
 			intent,
+			customerInitiated: true,
+			sellerKeyedIn: false,
 		};
 
 		if ( intent === 'CHARGE' ) {
