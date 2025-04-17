@@ -421,43 +421,6 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
-		 * Handles the response from a call to verifyBuyer()
-		 *
-		 * @since 2.1.0
-		 *
-		 * @param {Object} errors Verification errors, if any.
-		 * @param {Object} verification_result Results of verification.
-		 */
-		handle_verify_buyer_response( errors, verification_result ) {
-			if ( errors ) {
-				$( errors ).each( ( index, error ) => {
-					if ( ! error.field ) {
-						error.field = 'none';
-					}
-				} );
-
-				return this.handle_errors( errors );
-			}
-
-			// no errors, but also no verification token.
-			if ( ! verification_result || ! verification_result.token ) {
-				const message = 'Verification token is missing from the Square response';
-
-				this.log( message, 'error' );
-				this.log_data( message, 'response' );
-
-				return this.handle_errors();
-			}
-
-			this.log( 'Verification result received' );
-			this.log( verification_result );
-
-			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( verification_result.token );
-
-			this.form.trigger( 'submit' );
-		}
-
-		/**
 		 * Gets a verification details object to be used in verifyBuyer()
 		 *
 		 * @since 2.1.0
