@@ -413,22 +413,11 @@ jQuery( document ).ready( ( $ ) => {
 			// payment nonce data.
 			$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
 
-			// if 3ds is enabled, we need to verify the buyer and record the verification token before continuing.
-			this.log( 'Verifying buyer' );
+			// buyer verification token data.
+			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( nonce );
 
-			this.get_verification_details().then((verificationDetails) => {
-				return this.payments
-					.verifyBuyer(nonce, verificationDetails)
-					.then((verificationResult) => {
-						this.handle_verify_buyer_response(
-							false,
-							verificationResult
-						);
-					})
-					.catch(error => {
-						this.handle_errors([ error ]);
-					});;
-			});
+			// if we made it this far, we have payment data.
+			this.form.trigger( 'submit' );
 		}
 
 		/**
