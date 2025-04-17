@@ -123,7 +123,7 @@ export const usePaymentForm = (
 	const createNonce = useCallback(
 		async ( card ) => {
 			if ( ! token ) {
-				return await card.tokenize();
+				return await card.tokenize( verificationDetails );
 			}
 
 			return token;
