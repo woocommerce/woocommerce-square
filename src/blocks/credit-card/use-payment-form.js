@@ -8,9 +8,7 @@ import { useState, useCallback, useMemo } from '@wordpress/element';
  */
 import {
 	getSquareServerData,
-	handleErrors,
 	log,
-	logData,
 } from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
