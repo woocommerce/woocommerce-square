@@ -306,19 +306,11 @@ jQuery( document ).ready( ( $ ) => {
 	
 						this.block_ui();
 	
-						this.get_verification_details().then((verificationDetails) => {
-							return this.payments
-								.verifyBuyer(token, verificationDetails)
-								.then((verificationResult) => {
-									this.handle_verify_buyer_response(
-										false,
-										verificationResult
-									);
-								})
-								.catch(error => {
-									this.handle_errors([ error ]);
-								});
-						});
+						// buyer verification token data.
+						$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( token );
+
+						// if we made it this far, we have payment data.
+						this.form.trigger( 'submit' );
 					} else {
 						this.payment_token_status = false;
 						this.form.trigger( 'submit' );
