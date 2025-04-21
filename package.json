@@ -38,7 +38,7 @@
     "@woocommerce/eslint-plugin": "^2.3.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.1",
     "@wordpress/env": "^10.0.0",
-    "@wordpress/scripts": "^24.6.0",
+    "@wordpress/scripts": "^30.14.1",
     "copy-webpack-plugin": "^12.0.2",
     "dotenv": "^16.4.5",
     "node-wp-i18n": "^1.2.7"
