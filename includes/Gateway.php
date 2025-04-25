@@ -1121,7 +1121,7 @@ class Gateway extends Payment_Gateway_Direct {
 				$this->get_validation_exception();
 			} catch ( \Exception $exception ) {
 				if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
-					$errors->add( 'validation',  $exception->getMessage() );
+					$errors->add( 'validation', $exception->getMessage() );
 				} else {
 					$errors->add( 'validation', __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ) );
 				}
