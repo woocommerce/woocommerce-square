@@ -29,7 +29,7 @@ use Square\Models\BatchRetrieveCatalogObjectsResponse;
 use Square\Models\CatalogObject;
 use Square\Models\SearchCatalogObjectsResponse;
 use Square\Models\CatalogInfoResponse;
-use \Square\ApiHelper;
+use Square\ApiHelper;
 use WooCommerce\Square\Handlers\Category;
 use WooCommerce\Square\Handlers\Product;
 
@@ -53,6 +53,30 @@ class Manual_Synchronization extends Stepped_Job {
 	 * Square paginates responses in page size of 100.
 	 * Consider some items can have more than one object returned with different states. */
 	const BATCH_INVENTORY_COUNTS_LIMIT = 125;
+
+	/**
+	 * Executes the next step of this job.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return \stdClass the job object
+	 */
+	public function run() {
+		// If the option is set to refresh the sync cycle, clear the next steps and completed steps.
+		// The refresh is requested when we do not have Square's Dynamic options data ready.
+		$refresh_sync_cycle = get_option( 'woocommerce_square_refresh_sync_cycle', false );
+		if ( $refresh_sync_cycle && $refresh_sync_cycle < 3 ) {
+			$this->set_attr( 'next_steps', array() );
+			$this->set_attr( 'completed_steps', array() );
+
+			update_option( 'woocommerce_square_refresh_sync_cycle', intval( $refresh_sync_cycle ) + 1 );
+		} else {
+			// Stop retrying after 3 attempts.
+			delete_option( 'woocommerce_square_refresh_sync_cycle' );
+		}
+
+		parent::run();
+	}
 
 	/**
 	 * Validates the products attached to this job.
@@ -1269,7 +1293,7 @@ class Manual_Synchronization extends Stepped_Job {
 				$woo_product_variations    = $maybe_parent_product->get_children();
 				$square_product_variations = $object->getItemData()->getVariations();
 				$square_variation_ids      = array_map(
-					function( $square_product_variation ) {
+					function ( $square_product_variation ) {
 						return wc_get_product_id_by_sku( $square_product_variation->getItemVariationData()->getSku() );
 					},
 					$square_product_variations
@@ -1299,6 +1323,8 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$found_product = wc_get_product( $found_product_id );
 
+				// The new Square variation which does not exist in WooCommerce,
+				// would be skipped here but will be added to the WooCommerce later.
 				if ( ! $found_product ) {
 					continue;
 				}
@@ -1331,6 +1357,11 @@ class Manual_Synchronization extends Stepped_Job {
 				}
 			}
 
+			// if no variation was found, check if the parent product exists.
+			if ( ! $found_product && $maybe_parent_product ) {
+				$found_product = $maybe_parent_product;
+			}
+
 			if ( $found_product && in_array( $found_product->get_id(), $synced_product_ids, false ) ) { // phpcs:disable WordPress.PHP.StrictInArray.FoundNonStrictFalse
 
 				Product::set_square_item_id( $found_product, $object->getId() );
@@ -1346,6 +1377,8 @@ class Manual_Synchronization extends Stepped_Job {
 		// Square SOR always gets the latest inventory
 		// set this before processing so nothing is missed during processing
 		wc_square()->get_sync_handler()->set_inventory_last_synced_at();
+
+		$product_import = new Product_Import();
 
 		foreach ( $products_to_update as $product ) {
 
@@ -1382,10 +1415,21 @@ class Manual_Synchronization extends Stepped_Job {
 					$pull_inventory_variation_ids[] = $variation->getId();
 				}
 
-				Product::update_from_square( $product, $square_object->getItemData(), false );
+				$data = $product_import->extract_product_data( $square_object, $product );
 
-				$image_id = Product::get_catalog_item_thumbnail_id( $square_object );
-				Product::update_image_from_square( $product, $image_id );
+				/**
+				 * Filters the data that is used to create update a WooCommerce product during import.
+				 *
+				 * @since 2.0.0
+				 *
+				 * @param array $data product data
+				 * @param \Square\Models\CatalogObject $square_object the catalog object from the Square API
+				 * @param Manual_Synchronization $this current class instance
+				 */
+				$data = apply_filters( 'woocommerce_square_create_product_data', $data, $square_object, $this );
+
+				// Update the product, this will update/create the variations as well.
+				$product_import->update_product( $product, $data );
 
 			} catch ( \Exception $exception ) {
 
@@ -1673,6 +1717,7 @@ class Manual_Synchronization extends Stepped_Job {
 					'refresh_category_mappings',
 					'query_unmapped_categories',
 					'upsert_categories',
+					'fetch_options_data',
 					'update_matched_products',
 					'search_matched_products',
 					'upsert_new_products',
@@ -1700,6 +1745,24 @@ class Manual_Synchronization extends Stepped_Job {
 		$this->set_attr( 'next_steps', $next_steps );
 	}
 
+	/**
+	 * Fetch the option (attribute) names from Square.
+	 *
+	 * @since 4.9.0
+	 *
+	 * @throws \Exception
+	 */
+	protected function fetch_options_data() {
+		$cursor     = $this->get_attr( 'fetch_options_data_cursor' ) ? $this->get_attr( 'fetch_options_data_cursor' ) : '';
+		$result     = wc_square()->get_api()->retrieve_options_data( $cursor );
+		$new_cursor = isset( $result[2] ) ? $result[2] : null;
+
+		$this->set_attr( 'fetch_options_data_cursor', $new_cursor );
+
+		if ( empty( $new_cursor ) ) {
+			$this->complete_step( 'fetch_options_data' );
+		}
+	}
 
 	/**
 	 * Gets the maximum number of objects to retrieve in a single sync job.

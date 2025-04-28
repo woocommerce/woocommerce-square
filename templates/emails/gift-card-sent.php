@@ -62,18 +62,18 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 		printf(
 			/* translators: %1$s Email sender name. */
 			esc_html__( 'Hey %1$s, you just received a gift card!', 'woocommerce-square' ),
-			esc_html( $email->gift_card_email_data->recipient_name )
+			esc_html( $gift_card_recipient_name )
 		);
 		?>
 </p>
 
-<?php if ( $email->gift_card_email_data->sender_message ) : ?>
+<?php if ( $gift_card_sender_message ) : ?>
 	<div id="wc-square-gift-card-email__message">
-		<?php echo esc_html( $email->gift_card_email_data->sender_message ); ?>
+		<?php echo esc_html( $gift_card_sender_message ); ?>
 		<br>
 		<?php
 			/* translators: %1$s Sender's name. */
-			printf( esc_html__( 'From: %1$s', 'woocommerce-square' ), $email->gift_card_email_data->sender_name ? esc_html( $email->gift_card_email_data->sender_name ) : esc_html( $order->get_billing_first_name() ) );
+			printf( esc_html__( 'From: %1$s', 'woocommerce-square' ), $gift_card_sender_name ? esc_html( $gift_card_sender_name ) : esc_html( $order->get_billing_first_name() ) );
 		?>
 	</div>
 <?php endif; ?>
