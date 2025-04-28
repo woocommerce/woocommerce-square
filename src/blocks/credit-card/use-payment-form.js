@@ -10,6 +10,8 @@ import {
 	getSquareServerData,
 	handleErrors,
 	log,
+  logData,
+  convertAmount,
 	logData,
 	convertAmount,
 } from '../square-utils';
@@ -59,6 +61,7 @@ export const usePaymentForm = (
 		};
 
 		if ( intent === 'CHARGE' ) {
+      newVerificationDetails.amount = convertAmount(billing.cartTotal.value, billing.currency.code).toString();
 			newVerificationDetails.amount = convertAmount(
 				billing.cartTotal.value,
 				billing.currency.code
