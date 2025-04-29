@@ -1,0 +1,21 @@
+.wc-square-validation-errors {
+    border-left: 4px solid #d63638;
+    background: #fff;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+    padding: 1px 12px 10px;
+}
+
+.wc-square-validation-errors ul {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+    list-style: disc;
+}
+
+.wc-square-validation-errors li {
+    margin: 0.5em 0;
+    color: #d63638;
+}
+
+.wc-square-field-error-highlight {
+    border-color: #d63638 !important;
+}
