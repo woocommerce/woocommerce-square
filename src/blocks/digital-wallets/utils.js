@@ -1,8 +1,7 @@
 import { getSquareServerData, convertAmount } from '../square-utils';
-import { getSquareServerData, convertAmount } from '../square-utils';
 
 export const buildVerificationDetails = ( billing ) => {
-  const cartTotal = billing.cartTotal.value;
+	const cartTotal = billing.cartTotal.value;
 	return {
 		intent: 'CHARGE',
 		amount: convertAmount(

@@ -6,7 +6,7 @@ import { select, dispatch } from '@wordpress/data';
 /**
  * Internal dependencies
  */
-import { getSquareServerData, convertAmount } from '../square-utils';
+import { getSquareServerData } from '../square-utils';
 
 /**
  * Returns the AJAX URL for a given action.
@@ -136,7 +136,6 @@ export const createPaymentRequest = async ( payments ) => {
  * @return {Object} Formatted data required to verify the buyer.
  */
 export const buildVerificationDetails = ( billing ) => {
-  const cartTotal = billing.cartTotal.value;
 	return {
 		intent: 'CHARGE',
 		amount: ( billing.cartTotal.value / 100 ).toString(),
