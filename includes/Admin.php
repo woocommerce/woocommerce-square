@@ -129,6 +129,13 @@ class Admin {
 				true
 			);
 
+			wp_enqueue_style(
+				'wc-square-admin-products',
+				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-products-styles.css',
+				array(),
+				Plugin::VERSION
+			);
+
 			wp_localize_script(
 				'wc-square-admin-products',
 				'wc_square_admin_products',
