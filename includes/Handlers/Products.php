@@ -1620,7 +1620,7 @@ class Products {
 	 * Validates a product before it can be synced with Square.
 	 * This runs on the product edit screen to catch issues early.
 	 *
-	 * @since 2.0.0
+	 * @since 4.9.0
 	 * @param \WC_Product $product the product to validate
 	 * @return array Array of validation errors, empty if valid
 	 */
