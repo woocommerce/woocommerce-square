@@ -38,7 +38,7 @@ jQuery( document ).ready( ( $ ) => {
 			const data = {
 				action: 'wc_square_get_quick_edit_product_details',
 				security: wc_square_admin_products.get_quick_edit_product_details_nonce,
-				product_id: $row.find( 'th.check-column input' ).val(),
+				product_id: postID,
 			};
 
 			$.post( wc_square_admin_products.ajax_url, data, ( response ) => {
@@ -153,6 +153,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product is variable.
 		 *
 		 * @since 2.0.0
+		 * @return {boolean} True if product is variable.
 		 */
 		const isVariable = () => {
 			return wc_square_admin_products.variable_product_types.includes( $( '#product-type' ).val() );
@@ -162,6 +163,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product has a SKU.
 		 *
 		 * @since 2.0.0
+		 * @return {boolean} True if product has SKU.
 		 */
 		const hasSKU = () => {
 			return '' !== $( '#_sku' ).val().trim();
@@ -171,8 +173,8 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product variations all have SKUs.
 		 *
 		 * @since 2.2.3
-		 *
-		 * @param {Array} skus
+		 * @param {Array} skus Array of SKU input elements.
+		 * @return {boolean} True if all variations have SKUs.
 		 */
 		const hasVariableSKUs = ( skus ) => {
 			if ( ! skus.length ) {
@@ -180,7 +182,6 @@ jQuery( document ).ready( ( $ ) => {
 			}
 
 			const valid = skus.filter( ( sku ) => '' !== $( sku ).val().trim() );
-
 			return valid.length === skus.length;
 		};
 
@@ -188,13 +189,13 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the given skus are unique.
 		 *
 		 * @since 2.2.3
-		 *
-		 * @param {Array} skus
+		 * @param {jQuery} skus jQuery object containing SKU input elements.
+		 * @return {boolean} True if all SKUs are unique.
 		 */
 		const hasUniqueSKUs = ( skus ) => {
-			const skuValues = skus.map( ( sku ) => $( sku ).val() );
-
-			return skuValues.every( ( sku ) => skuValues.indexOf( sku ) === skuValues.lastIndexOf( sku ) );
+			const skuValues = $.makeArray( skus ).map( sku => $( sku ).val().trim() );
+			const uniqueSkus = new Set( skuValues );
+			return skuValues.length === uniqueSkus.size;
 		};
 
 		/**
@@ -725,5 +726,114 @@ jQuery( document ).ready( ( $ ) => {
 				);
 			}
 		}
+
+		/**
+		 * Shows validation errors at the top of the product data panel.
+		 * 
+		 * @param {string} selector The field selector
+		 * @param {string} message The error message
+		 */
+		const showFieldError = (selector, message) => {
+			const $field = $(selector);
+			
+			// Add error class to highlight the field
+			$field.addClass('wc-square-field-error-highlight');
+			
+			// Create or get the error container
+			let $errorContainer = $('#wc-square-validation-errors');
+			if (!$errorContainer.length) {
+				$errorContainer = $('<div id="wc-square-validation-errors" class="wc-square-validation-errors"><h4>' + __('Square Sync Validation Errors', 'woocommerce-square') + '</h4><ul></ul></div>');
+				$('#woocommerce-product-data').prepend($errorContainer);
+			}
+
+			// Add the error message if not already present
+			const $errorList = $errorContainer.find('ul');
+			const errorId = 'square-error-' + selector.replace(/[^a-zA-Z0-9]/g, '');
+			if (!$('#' + errorId).length) {
+				$errorList.append('<li id="' + errorId + '">' + message + '</li>');
+			}
+		};
+
+		/**
+		 * Validates the product for Square sync and shows errors at the top of the panel.
+		 *
+		 * @since 2.0.0
+		 */
+		const validateProductForSquareSync = () => {
+			// Remove existing error container
+			$('#wc-square-validation-errors').remove();
+			$('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
+			
+			let isValid = true;
+
+			// 1. SKU Validation
+			if (!hasSKU()) {
+				if (isVariable()) {
+					showFieldError('#variable_product_options', __('Please add an SKU to every variation for syncing with Square.', 'woocommerce-square'));
+				} else {
+					showFieldError('#_sku', __('Please add an SKU to sync with Square.', 'woocommerce-square'));
+				}
+				isValid = false;
+			}
+
+			// 2. Variable Product Validation
+			if (isVariable()) {
+				const variationSkus = $('.variable_sku');
+				
+				// Check for missing SKUs
+				if (!hasVariableSKUs($.makeArray(variationSkus))) {
+					showFieldError('.variable_sku', __('Every variation must have a unique SKU.', 'woocommerce-square'));
+					isValid = false;
+				}
+				
+				// Check for duplicate SKUs
+				if (!hasUniqueSKUs(variationSkus)) {
+					showFieldError('.variable_sku', __('Variations cannot have duplicate SKUs.', 'woocommerce-square'));
+					isValid = false;
+				}
+
+				// Check parent SKU conflict
+				const parentSku = $('#_sku').val();
+				const variationSkuValues = Array.from(variationSkus).map(sku => $(sku).val());
+				if (parentSku && variationSkuValues.includes(parentSku)) {
+					showFieldError('#_sku', __('Parent SKU conflicts with a variation SKU.', 'woocommerce-square'));
+					isValid = false;
+				}
+			}
+
+			// 3. Gift Card Validation
+			if ($('#_gift_card').is(':checked')) {
+				showFieldError('#_gift_card', __('Gift card products cannot be synced with Square.', 'woocommerce-square'));
+				isValid = false;
+			}
+
+			// 4. Price Validation
+			if (!$('#_regular_price').val() && !$('#_sale_price').val()) {
+				showFieldError('#_regular_price', __('Product must have a price set to sync with Square.', 'woocommerce-square'));
+				isValid = false;
+			}
+
+			// If not valid, disable sync checkbox
+			if (!isValid) {
+				$(syncCheckboxID).prop('checked', false);
+				$(syncCheckboxID).prop('disabled', true);
+			} else {
+				$(syncCheckboxID).prop('disabled', false);
+			}
+
+			return isValid;
+		};
+
+		// Add event listeners for real-time validation
+		$('#_sku, #_regular_price, #_sale_price, #_gift_card').on('change', validateProductForSquareSync);
+		$('#product-type').on('change', () => {
+			setTimeout(validateProductForSquareSync, 100); // Delay to allow WooCommerce to update the form
+		});
+
+		// Add validation when variations are added or modified
+		$('#woocommerce-product-data').on('woocommerce_variations_added woocommerce_variations_loaded', () => {
+			$('.variable_sku').on('change', validateProductForSquareSync);
+			validateProductForSquareSync();
+		});
 	}
 } );
