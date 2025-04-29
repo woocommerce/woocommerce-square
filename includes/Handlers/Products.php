@@ -104,8 +104,6 @@ class Products {
 			/* translators: Placeholder: %s - product name */
 			'parent_sku_conflict'   => __( 'The SKU of %s conflicts with one of its variations. Parent and variation SKUs must be unique.', 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
-			'gift_card'            => __( '%s is a gift card product and cannot be synced with Square.', 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
 			'missing_price'        => __( '%s must have a price set to sync with Square.', 'woocommerce-square' ),
 			/* translators: Placeholder: %1$s - product name, %2$d - maximum number of variations allowed */
 			'too_many_variations'  => __( '%1$s has too many variations. Square allows a maximum of %2$d variations per product.', 'woocommerce-square' ),
