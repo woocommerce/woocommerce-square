@@ -158,7 +158,8 @@ class Admin {
 						'fetch_stock_with_square'     => __( 'Fetch stock from Square', 'woocommerce-square' ),
 						'sync_inventory'              => __( 'Sync inventory', 'woocommerce-square' ),
 						'sync_stock_from_square'      => __( 'Sync stock from Square', 'woocommerce-square' ),
-						'attribute_name_too_long'     => __( 'Attribute name is too long', 'woocommerce-square' ),
+						'attribute_name_too_long'     => __( 'Attribute name is too long, maximum allowed are 65 characters.', 'woocommerce-square' ),
+						'too_many_attributes'         => __( 'Too many attributes, maximum allowed are 6.', 'woocommerce-square' ),
 					),
 				)
 			);

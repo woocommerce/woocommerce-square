@@ -778,23 +778,69 @@ jQuery( document ).ready( ( $ ) => {
 			return true;
 		};
 
-		// Validate attribute name when editing existing attribute.
-		$('#product_attributes').on('change', 'input.attribute_name', function() {
-			const $field = $(this);
-			const name = $field.val();
-			validateAttributeName(name, $field);
-		});
+		// Validate maximum number of attributes.
+		const validateMaxAttributes = () => {
+			const maxAttributes = 1; // Maximum attributes allowed by Square.
+			const currentAttributes = $('#product_attributes .woocommerce_attribute').length;
+			
+			const $addButton = $('.attribute_tab');
+			if (currentAttributes > maxAttributes) {
+				// Show error on the "Add new attribute" button's parent.
+				showFieldError($addButton, wc_square_admin_products.i18n.too_many_attributes);
+				return false;
+			}
 
-		// Run validation when the page loads.
-		$(document).ready(function() {
-			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).val() === 'yes') {
-				// loop through all attributes and validate the attribute name.
-				$('#product_attributes').find('input.attribute_name').each(function() {
+			// Clear any existing max attributes error.
+			$addButton.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $addButton.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
+			}
+
+			return true;
+		};
+
+		// Validate attribute name and max attributes when editing existing attribute.
+		$('#product_attributes').on('change', 'input.attribute_name', function() {
+			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
 				const $field = $(this);
 				const name = $field.val();
-					validateAttributeName(name, $field);
-				});
+				validateAttributeName(name, $field);
+				validateMaxAttributes();
 			}
+		});
+
+		// Validate max attributes when deleting attribute.
+		$('#product_attributes').on('click', '.product_attributes .delete', function() {
+			validateMaxAttributes();
+		});
+
+		// Run validation when the page loads or when sync checkbox changes.
+		$(document).ready(function() {
+			const $syncCheckbox = $('#_' + wc_square_admin_products.synced_with_square_taxonomy);
+			
+			const validateAll = () => {
+				if ($syncCheckbox.prop('checked')) {
+					// Validate max attributes
+					validateMaxAttributes();
+					
+					// Validate all attribute names
+					$('#product_attributes').find('input.attribute_name').each(function() {
+						const $field = $(this);
+						const name = $field.val();
+						validateAttributeName(name, $field);
+					});
+				}
+			};
+
+			// Run validation on page load
+			validateAll();
+
+			// Run validation when sync checkbox changes
+			$syncCheckbox.on('change', validateAll);
+
+			// Run validation when variations are loaded
+			$('#woocommerce-product-data').on('woocommerce_variations_loaded', validateAll);
 		});
 	}
 } );
