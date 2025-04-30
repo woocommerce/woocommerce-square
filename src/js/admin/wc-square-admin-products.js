@@ -736,11 +736,6 @@ jQuery( document ).ready( ( $ ) => {
 		const showFieldError = (selector, message) => {
 			const $field = $(selector);
 
-			// Prevent duplicate errors.
-			if ($field.hasClass('wc-square-field-error-highlight')) {
-				return;
-			}
-
 			// Add error class to highlight the field.
 			$field.addClass('wc-square-field-error-highlight');
 			
@@ -756,174 +751,138 @@ jQuery( document ).ready( ( $ ) => {
 			const errorId = 'square-error-' + $field.attr('id');
 			if (!$('#' + errorId).length) {
 				$errorList.append('<li id="' + errorId + '">' + message + '</li>');
+			} else {
+				// Just update the message if it already exists.
+				$('#' + errorId).text(message);
 			}
 		};
 
-		// Add attribute name length validation.
+		// Generic validation helper functions.
+		const ensureFieldId = ($field) => {
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+			return $field;
+		};
+
+		const clearValidationError = ($field) => {
+			$field.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $field.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
+			}
+		};
+
+		const validateLimit = (current, max, $field, errorMessage) => {
+			$field = ensureFieldId($field);
+			
+			if (current > max) {
+				showFieldError($field, errorMessage);
+				return false;
+			}
+
+			clearValidationError($field);
+			return true;
+		};
+
+		// Specific validation functions.
 		const validateAttributeName = ($field) => {
-			const maxLength = 65; // Maximum length allowed by Square.
+			const maxLength = 65;
 			const name = $field.val();
-
-			// Add ID if not present.
-			if (!$field.attr('id')) {
-				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
-			}
-
-			if (name.length > maxLength) {
-				const truncatedName = name.substring(0, maxLength) + '...';
-				showFieldError($field, wc_square_admin_products.i18n.attribute_name_too_long + ': ' + truncatedName);
-				return false;
-			}
 			
-			// Clear validation errors when attribute name is changed.
-			$field.removeClass('wc-square-field-error-highlight');
-			$('#square-error-' + $field.attr('id')).remove();
-			if (!$('#wc-square-validation-errors ul li').length) {
-				$('#wc-square-validation-errors').remove();
-			}
-
-			return true;
+			return validateLimit(
+				name.length, 
+				maxLength, 
+				$field, 
+				wc_square_admin_products.i18n.attribute_name_too_long + ': ' + name.substring(0, maxLength) + '...'
+			);
 		};
 
-		// Validate maximum number of attributes.
 		const validateMaxAttributes = () => {
-			const maxAttributes = 6; // Maximum attributes allowed by Square.
-			const currentAttributes = $('#product_attributes .woocommerce_attribute').length;
-			
-			const $addButton = $('.attribute_tab');
-			// Add ID if not present.
-			if (!$addButton.attr('id')) {
-				$addButton.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
-			}
-
-			if (currentAttributes > maxAttributes) {
-				// Show error on the "Add new attribute" button's parent.
-				showFieldError($addButton, wc_square_admin_products.i18n.too_many_attributes);
-				return false;
-			}
-
-			// Clear any existing max attributes error.
-			$addButton.removeClass('wc-square-field-error-highlight');
-			$('#square-error-' + $addButton.attr('id')).remove();
-			if (!$('#wc-square-validation-errors ul li').length) {
-				$('#wc-square-validation-errors').remove();
-			}
-
-			return true;
+			return validateLimit(
+				$('#product_attributes .woocommerce_attribute').length,
+				6,
+				$('.attribute_tab'),
+				wc_square_admin_products.i18n.too_many_attributes
+			);
 		};
 
-		// Validate the maximum allowed attribute values 255.
-		const validateMaxAttributeValues = ( $field ) => {
-			const maxValues = 250; // Maximum values allowed by Square.
-			let currentValues = $field.val().split('|').length;
-			
-			// Add ID if not present.
-			if (!$field.attr('id')) {
-				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
-			}
-
-			if (currentValues > maxValues) {
-				showFieldError($field, wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val().substring(0, 50) + '...');
-				return false;
-			}
-
-			// Clear validation errors when attribute values are changed.
-			$field.removeClass('wc-square-field-error-highlight');
-			$('#square-error-' + $field.attr('id')).remove();
-			if (!$('#wc-square-validation-errors ul li').length) {
-				$('#wc-square-validation-errors').remove();
-			}
-
-			return true;
+		const validateMaxAttributeValues = ($field) => {
+			return validateLimit(
+				$field.val().split('|').length,
+				250,
+				$field,
+				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val().substring(0, 50) + '...'
+			);
 		};
 
-		// Validate the maximum allowed variations 255.
 		const validateMaxVariations = () => {
-			const maxVariations = 250; // Maximum variations allowed by Square.
-			const currentVariations = $('#woocommerce-product-data').find('.woocommerce_variation').length;
-			
-			const $field = $('.variations_tab');
-			// Add ID if not present.
-			if (!$field.attr('id')) {
-				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
-			}
-
-			if (currentVariations > maxVariations) {
-				showFieldError($field, wc_square_admin_products.i18n.too_many_variations);
-				return false;
-			}
-
-			// Clear validation errors when variations are changed.
-			$field.removeClass('wc-square-field-error-highlight');
-			$('#square-error-' + $field.attr('id')).remove();
-			if (!$('#wc-square-validation-errors ul li').length) {
-				$('#wc-square-validation-errors').remove();
-			}
-
-			return true;
+			return validateLimit(
+				$('#woocommerce-product-data').find('.woocommerce_variation').length,
+				250,
+				$('.variations_tab'),
+				wc_square_admin_products.i18n.too_many_variations
+			);
 		};
 
-		// Validate when .save-variation-changes button is clicked., count .woocommerce_variation
-		$('#woocommerce-product-data').on('click', '.save-variation-changes, #variable_product_options button', function() {
-			validateMaxVariations();
-		});
-
-		// Validate the maximum allowed attribute values 255.
-		$('#product_attributes').on('change', '[name*="attribute_values"]', function() {
-			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
-				validateMaxAttributeValues( $(this) );
-			}
-		});
-
-		// Validate attribute name and max attributes when editing existing attribute.
-		$('#product_attributes').on('change', 'input.attribute_name', function() {
-			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
-				validateAttributeName( $(this) );
-				validateMaxAttributes();
-			}
-		});
-
-		// Validate max attributes when deleting attribute.
-		$('#product_attributes').on('click', '.product_attributes .delete', function() {
-			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
-				validateMaxAttributes();
-			}
-		});
-
-		// Run validation when the page loads or when sync checkbox changes.
-		$(document).ready(function() {
+		// Event handlers.
+		const setupValidationHandlers = () => {
 			const $syncCheckbox = $('#_' + wc_square_admin_products.synced_with_square_taxonomy);
-			
+			const $productAttributes = $('#product_attributes');
+			const $productData = $('#woocommerce-product-data');
+
+			// Validate all fields.
 			const validateAll = () => {
-				if ($syncCheckbox.prop('checked')) {
-					// Validate max attributes.
-					validateMaxAttributes();
+				if (!$syncCheckbox.prop('checked')) return;
 
-					// Validate max variations.
-					validateMaxVariations();
-					
-					// Validate all attribute names.
-					$('#product_attributes').find('input.attribute_name').each(function() {
-						validateAttributeName( $(this) );
-					});
+				// Remove existing errors.
+				$productAttributes.find('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
+				$('#wc-square-validation-errors').remove();
 
-					// Validate all attribute values.
-					$('#product_attributes').find('[name*="attribute_values"]').each(function() {
-						if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
-							validateMaxAttributeValues( $(this) );
-						}
-					});
-				}
+				validateMaxAttributes();
+				validateMaxVariations();
+				
+				$productAttributes.find('input.attribute_name').each(function() {
+					validateAttributeName($(this));
+				});
+
+				$productAttributes.find('[name*="attribute_values"]').each(function() {
+					validateMaxAttributeValues($(this));
+				});
 			};
 
-			// Run validation on page load.
-			validateAll();
+			// Event bindings.
+			$productAttributes
+				.on('change', 'input.attribute_name', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateAttributeName($(this));
+						validateMaxAttributes();
+					}
+				})
+				.on('change', '[name*="attribute_values"]', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateMaxAttributeValues($(this));
+					}
+				})
+				.on('click', '.product_attributes .delete', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateMaxAttributes();
+					}
+				});
+
+			$productData.on('click', '.save-variation-changes, #variable_product_options button', validateMaxVariations);
+
+			// Run validation on variations changes
+			$productData.on('woocommerce_variations_loaded woocommerce_variations_added woocommerce_variations_removed', validateAll);
 
 			// Run validation when sync checkbox changes.
 			$syncCheckbox.on('change', validateAll);
 
-			// Run validation when variations are loaded.
-			$( '#woocommerce-product-data' ).on( 'woocommerce_variations_loaded woocommerce_variations_added woocommerce_variations_removed', validateAll );
-		});
+			// Initial validation.
+			validateAll();
+		};
+
+		// Initialize validation on document ready.
+		$(document).ready(setupValidationHandlers);
 	}
 } );
