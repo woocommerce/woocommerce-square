@@ -827,6 +827,12 @@ jQuery( document ).ready( ( $ ) => {
 
 		// Event handlers.
 		const setupValidationHandlers = () => {
+
+			// Early return if product type is not variable.
+			if (!isVariable()) {
+				return;
+			}
+
 			const $syncCheckbox = $('#_' + wc_square_admin_products.synced_with_square_taxonomy);
 			const $productAttributes = $('#product_attributes');
 			const $productData = $('#woocommerce-product-data');
