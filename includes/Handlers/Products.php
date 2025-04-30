@@ -620,7 +620,7 @@ class Products {
 		}
 
 		$posted_key = '_' . Product::SYNCED_WITH_SQUARE_TAXONOMY;
-		$set_synced = isset( $_POST[ $posted_key ] ) && 'yes' === sanitize_key( $_POST[ $posted_key ] );
+		$set_synced = isset( $_POST[ $posted_key ] ) && 'yes' === sanitize_key( $_POST[ $posted_key ] ); // phpcs:ignore
 		$was_synced = Product::is_synced_with_square( $product );
 
 		// condition has unchanged
@@ -915,19 +915,19 @@ class Products {
 	 */
 	private function format_product_error( string $error, \WC_Product $product, array $additional_params = array() ) {
 		$product_link = Product::get_product_edit_link( $product );
-		
+
 		// Define additional parameters for specific error types
 		$params = array(
 			'too_many_variations'     => array( $product_link, 250 ),
 			'too_many_options'        => array( $product_link, 6 ),
 			'too_many_option_values'  => array( $product_link, 250 ),
 			'attribute_name_too_long' => array( $product_link, $additional_params['attribute_name'] ?? '', 65 ),
-			'default'                 => array( $product_link )
+			'default'                 => array( $product_link ),
 		);
 
-		$message_params = isset( $params[$error] ) ? $params[$error] : $params['default'];
-		
-		return vsprintf( $this->product_errors[$error], $message_params );
+		$message_params = isset( $params[ $error ] ) ? $params[ $error ] : $params['default'];
+
+		return vsprintf( $this->product_errors[ $error ], $message_params );
 	}
 
 
@@ -1748,7 +1748,7 @@ class Products {
 
 		// 2. Variable Product Validation.
 		if ( $product->is_type( 'variable' ) ) {
-			$variations = $product->get_children();
+			$variations     = $product->get_children();
 			$variation_skus = array();
 
 			// Check number of variations.
