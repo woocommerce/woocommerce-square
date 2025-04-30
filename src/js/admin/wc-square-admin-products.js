@@ -773,6 +773,11 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		};
 
+		const clearAllValidationErrors = () => {
+			$('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
+			$('#wc-square-validation-errors').remove();
+		};
+
 		const validateLimit = (current, max, $field, errorMessage) => {
 			$field = ensureFieldId($field);
 			
@@ -825,6 +830,15 @@ jQuery( document ).ready( ( $ ) => {
 			);
 		};
 
+		// If product type changes to variable, validate all fields.
+		$( '#product-type' ).on( 'change', () => {
+			if ( 'variable' === $( '#product-type' ).val() ) {
+				setupValidationHandlers();
+			} else {
+				clearAllValidationErrors();
+			}
+		} );
+
 		// Event handlers.
 		const setupValidationHandlers = () => {
 
@@ -839,11 +853,11 @@ jQuery( document ).ready( ( $ ) => {
 
 			// Validate all fields.
 			const validateAll = () => {
+				clearAllValidationErrors();
+
 				if (!$syncCheckbox.prop('checked')) return;
 
-				// Remove existing errors.
-				$productAttributes.find('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
-				$('#wc-square-validation-errors').remove();
+				if (!isVariable()) return;
 
 				validateMaxAttributes();
 				validateMaxVariations();
