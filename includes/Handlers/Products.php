@@ -82,9 +82,6 @@ class Products {
 		$this->add_products_edit_screen_hooks();
 		$this->add_product_edit_screen_hooks();
 		$this->add_product_sync_hooks();
-
-		// Add hook to prevent product save on validation failure
-		add_action( 'woocommerce_before_product_object_save', array( $this, 'maybe_prevent_product_save' ), 10, 1 );
 	}
 
 	/**
@@ -96,7 +93,7 @@ class Products {
 		// Add common errors.
 		$this->product_errors = array(
 			/* translators: Placeholder: %s - product name */
-			'missing_sku'            => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
+			'missing_sku'           => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
 			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
 		);
@@ -602,6 +599,7 @@ class Products {
 			return;
 		}
 
+		$errors     = array();
 		$posted_key = '_' . Product::SYNCED_WITH_SQUARE_TAXONOMY;
 		$set_synced = isset( $_POST[ $posted_key ] ) && 'yes' === sanitize_key( $_POST[ $posted_key ] ); // phpcs:ignore
 		$was_synced = Product::is_synced_with_square( $product );
@@ -791,7 +789,7 @@ class Products {
 	 * @param \WC_Product $product product object
 	 * @return string formatted error message
 	 */
-	private function format_product_error( string $error, \WC_Product $product, array $additional_params = array() ) {
+	private function format_product_error( string $error, \WC_Product $product ) {
 		return sprintf(
 			$this->product_errors[ $error ],
 			Product::get_product_edit_link( $product )
