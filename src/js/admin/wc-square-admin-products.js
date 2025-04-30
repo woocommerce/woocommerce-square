@@ -785,7 +785,7 @@ jQuery( document ).ready( ( $ ) => {
 			validateAttributeName(name, $field);
 		});
 
-		// 
+		// Run validation when the page loads.
 		$(document).ready(function() {
 			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).val() === 'yes') {
 				// loop through all attributes and validate the attribute name.
