@@ -736,10 +736,15 @@ jQuery( document ).ready( ( $ ) => {
 		const showFieldError = (selector, message) => {
 			const $field = $(selector);
 
-			// Add error class to highlight the field
+			// Prevent duplicate errors.
+			if ($field.hasClass('wc-square-field-error-highlight')) {
+				return;
+			}
+
+			// Add error class to highlight the field.
 			$field.addClass('wc-square-field-error-highlight');
 			
-			// Create or get the error container
+			// Create or get the error container.
 			let $errorContainer = $('#wc-square-validation-errors');
 			if (!$errorContainer.length) {
 				$errorContainer = $('<div id="wc-square-validation-errors" class="wc-square-validation-errors"><h4>' + __('Square Sync Validation Errors', 'woocommerce-square') + '</h4><ul></ul></div>');
