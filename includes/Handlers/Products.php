@@ -96,25 +96,9 @@ class Products {
 		// Add common errors.
 		$this->product_errors = array(
 			/* translators: Placeholder: %s - product name */
-			'missing_sku'             => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
+			'missing_sku'            => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
-			'missing_variation_sku'   => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'duplicate_skus'          => __( 'Variations of %s have duplicate SKUs. Each variation must have a unique SKU.', 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'parent_sku_conflict'     => __( 'The SKU of %s conflicts with one of its variations. Parent and variation SKUs must be unique.', 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'gift_card'               => __( '%s must have a price set to sync with Square.', 'woocommerce-square' ),
-			/* translators: Placeholder: %s - product name */
-			'missing_price'           => __( '%s must have a price set to sync with Square.', 'woocommerce-square' ),
-			/* translators: Placeholder: %1$s - product name, %2$d - maximum number of variations allowed */
-			'too_many_variations'     => __( '%1$s has too many variations. Square allows a maximum of %2$d variations per product.', 'woocommerce-square' ),
-			/* translators: Placeholder: %1$s - product name, %2$d - maximum number of options allowed */
-			'too_many_options'        => __( '%1$s has too many options. Square allows a maximum of %2$d options per product.', 'woocommerce-square' ),
-			/* translators: Placeholder: %1$s - product name, %2$d - maximum number of option values allowed */
-			'too_many_option_values'  => __( '%1$s has an option with too many values. Square allows a maximum of %2$d values per option.', 'woocommerce-square' ),
-			/* translators: Placeholder: %1$s - product name, %2$s - attribute name, %3$d - maximum length allowed */
-			'attribute_name_too_long' => __( '%1$s has an attribute name "%2$s" that exceeds Square\'s limit of %3$d characters.', 'woocommerce-square' ),
+			'missing_variation_sku' => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
 		);
 	}
 
@@ -184,7 +168,6 @@ class Products {
 		// handle individual products input fields for setting sync status
 		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'add_product_data_fields' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( $this, 'process_product_data' ), 20 );
-		add_action( 'woocommerce_admin_process_product_object', array( $this, 'process_product_data_on_save' ), 20 );
 		add_action( 'woocommerce_before_product_object_save', array( $this, 'maybe_adjust_square_stock' ) );
 
 		add_action( 'admin_notices', array( $this, 'add_notice_product_hidden_from_catalog' ) );
@@ -639,110 +622,6 @@ class Products {
 		}
 	}
 
-	/**
-	 * Process product data on save.
-	 *
-	 * @since 4.9.0
-	 * @param int $post_id Post ID.
-	 */
-	public function process_product_data_on_save( $post_id ) {
-		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['_wpnonce'] ), 'update-post_' . $post_id ) ) {
-			return;
-		}
-
-		$product = wc_get_product( $post_id );
-
-		if ( ! $product || ! $this->is_product_syncable( $product ) ) {
-			return;
-		}
-
-		$sync_with_square = isset( $_POST['_sync_with_square'] ) ? 'yes' : 'no';
-		$stock_managed    = isset( $_POST['_manage_stock'] ) ? 'yes' : 'no';
-		$backorders       = isset( $_POST['_backorders'] ) ? wc_clean( wp_unslash( $_POST['_backorders'] ) ) : 'no';
-
-		// If syncing with Square is enabled and stock is managed, ensure backorders are disabled
-		if ( 'yes' === $sync_with_square && 'yes' === $stock_managed ) {
-			$backorders = 'no';
-		}
-
-		$product->update_meta_data( '_sync_with_square', $sync_with_square );
-		$product->update_meta_data( '_backorders', $backorders );
-
-		if ( 'yes' === $sync_with_square ) {
-			$this->process_sync_with_square( $product );
-		}
-
-		$product->save();
-	}
-
-	/**
-	 * Validates and processes the product data.
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param WC_Product $product Product object.
-	 * @param array      $data    Product data.
-	 * @return array
-	 */
-	public function validate_product_data( $product, $data ) {
-		$errors = array();
-
-		if ( ! $this->is_product_syncable( $product ) ) {
-			return $errors;
-		}
-
-		$this->process_sync_with_square( $product, isset( $data['_sync_with_square'] ) ? 'yes' : 'no' );
-
-		return $errors;
-	}
-
-	/**
-	 * Checks if a product can be synced with Square.
-	 *
-	 * @since 4.9.0
-	 * @param \WC_Product $product The product to check.
-	 * @return bool Whether the product can be synced.
-	 */
-	private function is_product_syncable( \WC_Product $product ) {
-		// Check if product sync is enabled
-		if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
-			return false;
-		}
-
-		// Check if product is valid
-		if ( ! $product || ! $product instanceof \WC_Product ) {
-			return false;
-		}
-
-		// Check if product type is supported
-		$supported_types = array( 'simple', 'variable' );
-		if ( ! in_array( $product->get_type(), $supported_types, true ) ) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Process sync with Square for a product.
-	 *
-	 * @since 4.9.0
-	 * @param \WC_Product $product The product to sync.
-	 * @param string      $sync_status Optional. The sync status to set. Default 'yes'.
-	 */
-	private function process_sync_with_square( \WC_Product $product, $sync_status = 'yes' ) {
-		if ( ! $this->is_product_syncable( $product ) ) {
-			return;
-		}
-
-		// Update sync status
-		Product::set_synced_with_square( $product, $sync_status );
-
-		// If syncing is enabled, stage for sync
-		if ( 'yes' === $sync_status ) {
-			$this->maybe_stage_product_for_sync( $product );
-		}
-	}
 
 	/**
 	 * Adjusts a product's Square stock.
@@ -910,24 +789,13 @@ class Products {
 	 *
 	 * @param string $error error identifier (e.g. 'missing_variation_sku' or 'missing_sku')
 	 * @param \WC_Product $product product object
-	 * @param array $additional_params Additional parameters for the error message
 	 * @return string formatted error message
 	 */
 	private function format_product_error( string $error, \WC_Product $product, array $additional_params = array() ) {
-		$product_link = Product::get_product_edit_link( $product );
-
-		// Define additional parameters for specific error types
-		$params = array(
-			'too_many_variations'     => array( $product_link, 250 ),
-			'too_many_options'        => array( $product_link, 6 ),
-			'too_many_option_values'  => array( $product_link, 250 ),
-			'attribute_name_too_long' => array( $product_link, $additional_params['attribute_name'] ?? '', 65 ),
-			'default'                 => array( $product_link ),
+		return sprintf(
+			$this->product_errors[ $error ],
+			Product::get_product_edit_link( $product )
 		);
-
-		$message_params = isset( $params[ $error ] ) ? $params[ $error ] : $params['default'];
-
-		return vsprintf( $this->product_errors[ $error ], $message_params );
 	}
 
 
@@ -1722,155 +1590,5 @@ class Products {
 		}
 
 		return wp_get_attachment_url( $attachment->ID );
-	}
-
-	/**
-	 * Validates a product before it can be synced with Square.
-	 * This runs on the product edit screen to catch issues early.
-	 *
-	 * @since 4.9.0
-	 * @param \WC_Product $product The product to validate.
-	 * @return array Array of validation errors, empty if valid.
-	 */
-	private function validate_product_for_square_sync( \WC_Product $product ) {
-		$errors = array();
-
-		// Define Square constraints.
-		$max_variations            = 250;
-		$max_options               = 6;
-		$max_option_values         = 250;
-		$max_attribute_name_length = 65;
-
-		// 1. SKU Validation.
-		if ( ! Product::has_sku( $product ) ) {
-			$errors['missing_sku'] = $this->format_product_error( 'missing_sku', $product );
-		}
-
-		// 2. Variable Product Validation.
-		if ( $product->is_type( 'variable' ) ) {
-			$variations     = $product->get_children();
-			$variation_skus = array();
-
-			// Check number of variations.
-			if ( count( $variations ) > $max_variations ) {
-				$errors['too_many_variations'] = $this->format_product_error( 'too_many_variations', $product );
-			}
-
-			// Check variations SKUs.
-			foreach ( $variations as $variation_id ) {
-				$variation = wc_get_product( $variation_id );
-				if ( ! $variation || ! $variation->get_sku() ) {
-					$errors['missing_variation_sku'] = $this->format_product_error( 'missing_variation_sku', $product );
-					break;
-				}
-				$variation_skus[] = $variation->get_sku();
-			}
-
-			// Check for duplicate SKUs.
-			if ( count( $variation_skus ) !== count( array_unique( $variation_skus ) ) ) {
-				$errors['duplicate_skus'] = $this->format_product_error( 'duplicate_skus', $product );
-			}
-
-			// Check if parent SKU conflicts with variation SKUs.
-			if ( $product->get_sku() && in_array( $product->get_sku(), $variation_skus, true ) ) {
-				$errors['parent_sku_conflict'] = $this->format_product_error( 'parent_sku_conflict', $product );
-			}
-
-			// 3. Attribute/Options Validation.
-			$attributes = $product->get_attributes();
-
-			// Check number of options/attributes.
-			if ( count( $attributes ) > $max_options ) {
-				$errors['too_many_options'] = $this->format_product_error( 'too_many_options', $product );
-			}
-
-			// Check each attribute.
-			foreach ( $attributes as $attribute ) {
-				// Check attribute name length.
-				if ( strlen( $attribute->get_name() ) > $max_attribute_name_length ) {
-					$errors['attribute_name_too_long'] = $this->format_product_error(
-						'attribute_name_too_long',
-						$product,
-						array( 'attribute_name' => $attribute->get_name() )
-					);
-				}
-
-				// Check number of values per option.
-				if ( $attribute->is_taxonomy() ) {
-					$terms = get_terms(
-						array(
-							'taxonomy'   => $attribute->get_name(),
-							'hide_empty' => false,
-						)
-					);
-					if ( count( $terms ) > $max_option_values ) {
-						$errors['too_many_option_values'] = $this->format_product_error( 'too_many_option_values', $product );
-					}
-				} else {
-					$values = $attribute->get_options();
-					if ( count( $values ) > $max_option_values ) {
-						$errors['too_many_option_values'] = $this->format_product_error( 'too_many_option_values', $product );
-					}
-				}
-			}
-		}
-
-		// 4. Gift Card Validation.
-		if ( $product->get_meta( '_gift_card' ) === 'yes' ) {
-			$errors['gift_card'] = $this->format_product_error( 'gift_card', $product );
-		}
-
-		// 5. Price Validation.
-		if ( ! $product->get_regular_price() && ! $product->get_sale_price() ) {
-			$errors['missing_price'] = $this->format_product_error( 'missing_price', $product );
-		}
-
-		/**
-		 * Filter the validation errors for a product before syncing with Square.
-		 *
-		 * @since 2.0.0
-		 * @param array $errors Array of validation errors.
-		 * @param \WC_Product $product The product being validated.
-		 */
-		return apply_filters( 'wc_square_product_sync_validation_errors', $errors, $product );
-	}
-
-	/**
-	 * Maybe prevent product save if validation fails
-	 *
-	 * @since 2.0.0
-	 * @param \WC_Product $product the product to validate
-	 */
-	public function maybe_prevent_product_save( $product ) {
-		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['_wpnonce'] ), 'update-post_' . $product->get_id() ) ) {
-			return;
-		}
-
-		try {
-			// Check if product sync is enabled.
-			if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
-				return;
-			}
-
-			$posted_key = '_' . Product::SYNCED_WITH_SQUARE_TAXONOMY;
-			$set_synced = isset( $_POST[ $posted_key ] ) && 'yes' === sanitize_key( $_POST[ $posted_key ] );
-			$was_synced = Product::is_synced_with_square( $product );
-
-			// Validate if product is being set to sync or is already synced.
-			if ( $set_synced || $was_synced ) {
-				$validation_errors = $this->validate_product_for_square_sync( $product );
-				if ( ! empty( $validation_errors ) ) {
-					foreach ( $validation_errors as $error ) {
-						wc_square()->get_message_handler()->add_warning( $error );
-					}
-				}
-			}
-		} catch ( \Exception $e ) {
-			wp_die(
-				esc_html( $e->getMessage() ),
-				esc_html__( 'Square Sync Validation Error', 'woocommerce-square' ),
-				array( 'back_link' => true )
-			);
-		}
 	}
 }
