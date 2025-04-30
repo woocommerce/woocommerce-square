@@ -818,7 +818,7 @@ jQuery( document ).ready( ( $ ) => {
 			}
 
 			if (currentValues > maxValues) {
-				showFieldError($field, wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val());
+				showFieldError($field, wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val().substring(0, 50) + '...');
 				return false;
 			}
 
@@ -831,6 +831,37 @@ jQuery( document ).ready( ( $ ) => {
 
 			return true;
 		};
+
+		// Validate the maximum allowed variations 255.
+		const validateMaxVariations = () => {
+			const maxVariations = 1; // Maximum variations allowed by Square.
+			const currentVariations = $('#woocommerce-product-data').find('.woocommerce_variation').length;
+			
+			const $field = $('.variations_tab');
+			// Add ID if not present.
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+
+			if (currentVariations > maxVariations) {
+				showFieldError($field, wc_square_admin_products.i18n.too_many_variations);
+				return false;
+			}
+
+			// Clear validation errors when variations are changed.
+			$field.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $field.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
+			}
+
+			return true;
+		};
+
+		// Validate when .save-variation-changes button is clicked., count .woocommerce_variation
+		$('#woocommerce-product-data').on('click', '.save-variation-changes, #variable_product_options button', function() {
+			validateMaxVariations();
+		});
 
 		// Validate the maximum allowed attribute values 255.
 		$('#product_attributes').on('change', '[name*="attribute_values"]', function() {
@@ -860,10 +891,13 @@ jQuery( document ).ready( ( $ ) => {
 			
 			const validateAll = () => {
 				if ($syncCheckbox.prop('checked')) {
-					// Validate max attributes
+					// Validate max attributes.
 					validateMaxAttributes();
+
+					// Validate max variations.
+					validateMaxVariations();
 					
-					// Validate all attribute names
+					// Validate all attribute names.
 					$('#product_attributes').find('input.attribute_name').each(function() {
 						validateAttributeName( $(this) );
 					});
@@ -877,14 +911,14 @@ jQuery( document ).ready( ( $ ) => {
 				}
 			};
 
-			// Run validation on page load
+			// Run validation on page load.
 			validateAll();
 
-			// Run validation when sync checkbox changes
+			// Run validation when sync checkbox changes.
 			$syncCheckbox.on('change', validateAll);
 
-			// Run validation when variations are loaded
-			$('#woocommerce-product-data').on('woocommerce_variations_loaded', validateAll);
+			// Run validation when variations are loaded.
+			$( '#woocommerce-product-data' ).on( 'woocommerce_variations_loaded woocommerce_variations_added woocommerce_variations_removed', validateAll );
 		});
 	}
 } );
