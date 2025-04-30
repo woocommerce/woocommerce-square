@@ -809,7 +809,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		// Validate the maximum allowed attribute values 255.
 		const validateMaxAttributeValues = ( $field ) => {
-			const maxValues = 1; // Maximum values allowed by Square.
+			const maxValues = 250; // Maximum values allowed by Square.
 			let currentValues = $field.val().split('|').length;
 			
 			// Add ID if not present.
@@ -834,7 +834,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		// Validate the maximum allowed variations 255.
 		const validateMaxVariations = () => {
-			const maxVariations = 1; // Maximum variations allowed by Square.
+			const maxVariations = 250; // Maximum variations allowed by Square.
 			const currentVariations = $('#woocommerce-product-data').find('.woocommerce_variation').length;
 			
 			const $field = $('.variations_tab');
