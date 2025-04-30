@@ -193,9 +193,9 @@ jQuery( document ).ready( ( $ ) => {
 		 * @return {boolean} True if all SKUs are unique.
 		 */
 		const hasUniqueSKUs = ( skus ) => {
-			const skuValues = $.makeArray( skus ).map( sku => $( sku ).val().trim() );
-			const uniqueSkus = new Set( skuValues );
-			return skuValues.length === uniqueSkus.size;
+			const skuValues = skus.map( ( sku ) => $( sku ).val() );
+
+			return skuValues.every( ( sku ) => skuValues.indexOf( sku ) === skuValues.lastIndexOf( sku ) );
 		};
 
 		/**
@@ -735,7 +735,12 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		const showFieldError = (selector, message) => {
 			const $field = $(selector);
-			
+
+			// Add ID if not present.
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+
 			// Add error class to highlight the field
 			$field.addClass('wc-square-field-error-highlight');
 			
@@ -748,92 +753,48 @@ jQuery( document ).ready( ( $ ) => {
 
 			// Add the error message if not already present
 			const $errorList = $errorContainer.find('ul');
-			const errorId = 'square-error-' + selector.replace(/[^a-zA-Z0-9]/g, '');
+			const errorId = 'square-error-' + $field.attr('id');
 			if (!$('#' + errorId).length) {
 				$errorList.append('<li id="' + errorId + '">' + message + '</li>');
 			}
 		};
 
-		/**
-		 * Validates the product for Square sync and shows errors at the top of the panel.
-		 *
-		 * @since 2.0.0
-		 */
-		const validateProductForSquareSync = () => {
-			// Remove existing error container
-			$('#wc-square-validation-errors').remove();
-			$('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
+		// Add attribute name length validation.
+		const validateAttributeName = (name, $field) => {
+			const maxLength = 65; // Maximum length allowed by Square.
+			if (name.length > maxLength) {
+				const truncatedName = name.substring(0, maxLength) + '...';
+				showFieldError($field, wc_square_admin_products.i18n.attribute_name_too_long + ': ' + truncatedName);
+				return false;
+			}
 			
-			let isValid = true;
-
-			// 1. SKU Validation
-			if (!hasSKU()) {
-				if (isVariable()) {
-					showFieldError('#variable_product_options', __('Please add an SKU to every variation for syncing with Square.', 'woocommerce-square'));
-				} else {
-					showFieldError('#_sku', __('Please add an SKU to sync with Square.', 'woocommerce-square'));
-				}
-				isValid = false;
+			// Clear validation errors when attribute name is changed.
+			$field.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $field.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
 			}
 
-			// 2. Variable Product Validation
-			if (isVariable()) {
-				const variationSkus = $('.variable_sku');
-				
-				// Check for missing SKUs
-				if (!hasVariableSKUs($.makeArray(variationSkus))) {
-					showFieldError('.variable_sku', __('Every variation must have a unique SKU.', 'woocommerce-square'));
-					isValid = false;
-				}
-				
-				// Check for duplicate SKUs
-				if (!hasUniqueSKUs(variationSkus)) {
-					showFieldError('.variable_sku', __('Variations cannot have duplicate SKUs.', 'woocommerce-square'));
-					isValid = false;
-				}
-
-				// Check parent SKU conflict
-				const parentSku = $('#_sku').val();
-				const variationSkuValues = Array.from(variationSkus).map(sku => $(sku).val());
-				if (parentSku && variationSkuValues.includes(parentSku)) {
-					showFieldError('#_sku', __('Parent SKU conflicts with a variation SKU.', 'woocommerce-square'));
-					isValid = false;
-				}
-			}
-
-			// 3. Gift Card Validation
-			if ($('#_gift_card').is(':checked')) {
-				showFieldError('#_gift_card', __('Gift card products cannot be synced with Square.', 'woocommerce-square'));
-				isValid = false;
-			}
-
-			// 4. Price Validation
-			if (!$('#_regular_price').val() && !$('#_sale_price').val()) {
-				showFieldError('#_regular_price', __('Product must have a price set to sync with Square.', 'woocommerce-square'));
-				isValid = false;
-			}
-
-			// If not valid, disable sync checkbox
-			if (!isValid) {
-				$(syncCheckboxID).prop('checked', false);
-				$(syncCheckboxID).prop('disabled', true);
-			} else {
-				$(syncCheckboxID).prop('disabled', false);
-			}
-
-			return isValid;
+			return true;
 		};
 
-		// Add event listeners for real-time validation
-		$('#_sku, #_regular_price, #_sale_price, #_gift_card').on('change', validateProductForSquareSync);
-		$('#product-type').on('change', () => {
-			setTimeout(validateProductForSquareSync, 100); // Delay to allow WooCommerce to update the form
+		// Validate attribute name when editing existing attribute.
+		$('#product_attributes').on('change', 'input.attribute_name', function() {
+			const $field = $(this);
+			const name = $field.val();
+			validateAttributeName(name, $field);
 		});
 
-		// Add validation when variations are added or modified
-		$('#woocommerce-product-data').on('woocommerce_variations_added woocommerce_variations_loaded', () => {
-			$('.variable_sku').on('change', validateProductForSquareSync);
-			validateProductForSquareSync();
+		// 
+		$(document).ready(function() {
+			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).val() === 'yes') {
+				// loop through all attributes and validate the attribute name.
+				$('#product_attributes').find('input.attribute_name').each(function() {
+				const $field = $(this);
+				const name = $field.val();
+					validateAttributeName(name, $field);
+				});
+			}
 		});
 	}
 } );
