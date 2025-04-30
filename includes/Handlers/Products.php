@@ -96,13 +96,13 @@ class Products {
 		// Add common errors.
 		$this->product_errors = array(
 			/* translators: Placeholder: %s - product name */
-			'missing_sku'              => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
+			'missing_sku'             => __( "Please add an SKU to sync %s with Square. The SKU must match the item's SKU in your Square account.", 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
-			'missing_variation_sku'    => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
+			'missing_variation_sku'   => __( "Please add an SKU to every variation of %s for syncing with Square. Each SKU must be unique and match the corresponding item's SKU in your Square account.", 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
-			'duplicate_skus'           => __( 'Variations of %s have duplicate SKUs. Each variation must have a unique SKU.', 'woocommerce-square' ),
+			'duplicate_skus'          => __( 'Variations of %s have duplicate SKUs. Each variation must have a unique SKU.', 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
-			'parent_sku_conflict'      => __( 'The SKU of %s conflicts with one of its variations. Parent and variation SKUs must be unique.', 'woocommerce-square' ),
+			'parent_sku_conflict'     => __( 'The SKU of %s conflicts with one of its variations. Parent and variation SKUs must be unique.', 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
 			'gift_card'               => __( '%s must have a price set to sync with Square.', 'woocommerce-square' ),
 			/* translators: Placeholder: %s - product name */
@@ -1736,9 +1736,9 @@ class Products {
 		$errors = array();
 
 		// Define Square constraints.
-		$max_variations = 250;
-		$max_options = 6;
-		$max_option_values = 250;
+		$max_variations            = 250;
+		$max_options               = 6;
+		$max_option_values         = 250;
 		$max_attribute_name_length = 65;
 
 		// 1. SKU Validation.
@@ -1750,7 +1750,7 @@ class Products {
 		if ( $product->is_type( 'variable' ) ) {
 			$variations = $product->get_children();
 			$variation_skus = array();
-			
+
 			// Check number of variations.
 			if ( count( $variations ) > $max_variations ) {
 				$errors['too_many_variations'] = $this->format_product_error( 'too_many_variations', $product );
@@ -1778,7 +1778,7 @@ class Products {
 
 			// 3. Attribute/Options Validation.
 			$attributes = $product->get_attributes();
-			
+
 			// Check number of options/attributes.
 			if ( count( $attributes ) > $max_options ) {
 				$errors['too_many_options'] = $this->format_product_error( 'too_many_options', $product );
@@ -1797,10 +1797,12 @@ class Products {
 
 				// Check number of values per option.
 				if ( $attribute->is_taxonomy() ) {
-					$terms = get_terms( array(
-						'taxonomy'   => $attribute->get_name(),
-						'hide_empty' => false,
-					) );
+					$terms = get_terms(
+						array(
+							'taxonomy'   => $attribute->get_name(),
+							'hide_empty' => false,
+						)
+					);
 					if ( count( $terms ) > $max_option_values ) {
 						$errors['too_many_option_values'] = $this->format_product_error( 'too_many_option_values', $product );
 					}
@@ -1840,6 +1842,10 @@ class Products {
 	 * @param \WC_Product $product the product to validate
 	 */
 	public function maybe_prevent_product_save( $product ) {
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['_wpnonce'] ), 'update-post_' . $product->get_id() ) ) {
+			return;
+		}
+
 		try {
 			// Check if product sync is enabled.
 			if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
