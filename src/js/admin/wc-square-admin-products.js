@@ -736,11 +736,6 @@ jQuery( document ).ready( ( $ ) => {
 		const showFieldError = (selector, message) => {
 			const $field = $(selector);
 
-			// Add ID if not present.
-			if (!$field.attr('id')) {
-				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
-			}
-
 			// Add error class to highlight the field
 			$field.addClass('wc-square-field-error-highlight');
 			
@@ -760,8 +755,15 @@ jQuery( document ).ready( ( $ ) => {
 		};
 
 		// Add attribute name length validation.
-		const validateAttributeName = (name, $field) => {
+		const validateAttributeName = ($field) => {
 			const maxLength = 65; // Maximum length allowed by Square.
+			const name = $field.val();
+
+			// Add ID if not present.
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+
 			if (name.length > maxLength) {
 				const truncatedName = name.substring(0, maxLength) + '...';
 				showFieldError($field, wc_square_admin_products.i18n.attribute_name_too_long + ': ' + truncatedName);
@@ -780,10 +782,15 @@ jQuery( document ).ready( ( $ ) => {
 
 		// Validate maximum number of attributes.
 		const validateMaxAttributes = () => {
-			const maxAttributes = 1; // Maximum attributes allowed by Square.
+			const maxAttributes = 6; // Maximum attributes allowed by Square.
 			const currentAttributes = $('#product_attributes .woocommerce_attribute').length;
 			
 			const $addButton = $('.attribute_tab');
+			// Add ID if not present.
+			if (!$addButton.attr('id')) {
+				$addButton.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+
 			if (currentAttributes > maxAttributes) {
 				// Show error on the "Add new attribute" button's parent.
 				showFieldError($addButton, wc_square_admin_products.i18n.too_many_attributes);
@@ -800,19 +807,51 @@ jQuery( document ).ready( ( $ ) => {
 			return true;
 		};
 
+		// Validate the maximum allowed attribute values 255.
+		const validateMaxAttributeValues = ( $field ) => {
+			const maxValues = 1; // Maximum values allowed by Square.
+			let currentValues = $field.val().split('|').length;
+			
+			// Add ID if not present.
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+
+			if (currentValues > maxValues) {
+				showFieldError($field, wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val());
+				return false;
+			}
+
+			// Clear validation errors when attribute values are changed.
+			$field.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $field.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
+			}
+
+			return true;
+		};
+
+		// Validate the maximum allowed attribute values 255.
+		$('#product_attributes').on('change', '[name*="attribute_values"]', function() {
+			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
+				validateMaxAttributeValues( $(this) );
+			}
+		});
+
 		// Validate attribute name and max attributes when editing existing attribute.
 		$('#product_attributes').on('change', 'input.attribute_name', function() {
 			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
-				const $field = $(this);
-				const name = $field.val();
-				validateAttributeName(name, $field);
+				validateAttributeName( $(this) );
 				validateMaxAttributes();
 			}
 		});
 
 		// Validate max attributes when deleting attribute.
 		$('#product_attributes').on('click', '.product_attributes .delete', function() {
-			validateMaxAttributes();
+			if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
+				validateMaxAttributes();
+			}
 		});
 
 		// Run validation when the page loads or when sync checkbox changes.
@@ -826,9 +865,14 @@ jQuery( document ).ready( ( $ ) => {
 					
 					// Validate all attribute names
 					$('#product_attributes').find('input.attribute_name').each(function() {
-						const $field = $(this);
-						const name = $field.val();
-						validateAttributeName(name, $field);
+						validateAttributeName( $(this) );
+					});
+
+					// Validate all attribute values.
+					$('#product_attributes').find('[name*="attribute_values"]').each(function() {
+						if ($('#_' + wc_square_admin_products.synced_with_square_taxonomy).prop('checked')) {
+							validateMaxAttributeValues( $(this) );
+						}
 					});
 				}
 			};
