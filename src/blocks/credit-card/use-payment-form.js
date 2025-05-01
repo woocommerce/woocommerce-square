@@ -6,9 +6,7 @@ import { useState, useCallback, useMemo } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import {
-	getSquareServerData, log,
-} from '../square-utils';
+import { getSquareServerData, log } from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
 /**
