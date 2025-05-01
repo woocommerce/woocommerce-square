@@ -173,7 +173,6 @@ export const usePaymentForm = (
 		getPostalCode,
 		cardType,
 		createNonce,
-		verifyBuyer,
 		getPaymentMethodData,
 	};
 };
