@@ -304,9 +304,16 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		try {
-			$this->get_validation_exception();
+			if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
+				throw new \Exception( '3D Secure Verification Token is missing' );
+			}
+
 			if ( Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-token' ) ) {
 				return $is_valid;
+			}
+
+			if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
+				throw new \Exception( 'Payment nonce is missing' );
 			}
 		} catch ( \Exception $exception ) {
 
