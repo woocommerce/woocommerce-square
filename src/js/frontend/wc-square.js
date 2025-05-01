@@ -283,42 +283,8 @@ jQuery( document ).ready( ( $ ) => {
 			const tokenized_card_id = this.get_tokenized_payment_method_id();
 
 			if ( tokenized_card_id ) {
-				if ( this.has_verification_token() ) {
-					this.log( 'Tokenized payment verification token present, placing order' );
-					return true;
-				}
-
-				this.log( 'Requesting verification token for tokenized payment' );
-
-				this.block_ui();
-
-				fetch( `${ wc_checkout_params.ajax_url }?action=wc_square_credit_card_get_token_by_id&token_id=${ tokenized_card_id }&nonce=${ this.payment_token_nonce }` )
-				.then( ( response ) => {
-					if ( response.ok ) {
-						return response.json()
-					} else {
-						throw new Error( 'Error in fetching payment token by ID.' );
-					}
-				} )
-				.then( ( { success, data: token } ) => {
-					if ( success ) {
-						this.log( 'Requesting verification token for tokenized payment' );
-	
-						this.block_ui();
-	
-						// buyer verification token data.
-						$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( token );
-
-						// if we made it this far, we have payment data.
-						this.form.trigger( 'submit' );
-					} else {
-						this.payment_token_status = false;
-						this.form.trigger( 'submit' );
-						this.log( token );
-					}
-				} );
-
-				return false;
+				$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( 'saved_card' );
+				return true;
 			}
 
 			this.log( 'Requesting payment nonce' );
@@ -416,7 +382,7 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
-		 * Gets a verification details object to be used in verifyBuyer()
+		 * Gets a verification details for tokenization.
 		 *
 		 * @since 2.1.0
 		 *
