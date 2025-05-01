@@ -93,6 +93,12 @@ class Payments extends \WooCommerce\Square\API\Request {
 			Utilities\Money_Utility::amount_to_money( $payment_total, $order->get_currency() )
 		);
 
+		if ( defined( 'WOOCOMMERCE_CHECKOUT' ) && WOOCOMMERCE_CHECKOUT ) {
+			$customer_details = new \Square\Models\CustomerDetails();
+			$customer_details->setCustomerInitiated( true );
+			$this->square_request->setCustomerDetails( $customer_details );
+		}
+
 		/**
 		 * Filters the Square payment order note (legacy filter).
 		 *
