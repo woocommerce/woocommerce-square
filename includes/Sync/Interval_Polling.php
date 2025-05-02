@@ -223,6 +223,7 @@ class Interval_Polling extends Stepped_Job {
 
 							// Update the product, this will update/create the variations as well.
 							$product_import->update_product( $product, $data );
+							Product::update_from_square( $product, $object->getItemData(), false );
 
 							$products_updated[] = $product->get_id();
 
