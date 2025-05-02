@@ -4845,4 +4845,15 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	public function needs_setup() {
 		return ( ! $this->is_account_connected() );
 	}
+
+	/**
+	 * Returns the Onboarding URL for the gateway.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string the Onboarding URL.
+	 */
+	public function get_connection_url() {
+		return admin_url( 'admin.php?page=woocommerce-square-onboarding' );
+	}
 }
