@@ -42,10 +42,20 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 		const creditCard = await page.locator(
 			'table.wc_gateways tr[data-gateway_id="square_cash_app_pay"]'
 		);
-		await expect(creditCard).toBeVisible();
-		await expect(creditCard.locator('td.name a')).toContainText(
-			'Cash App Pay (Square)'
-		);
+		if (await creditCard.isVisible()) {
+			await expect(creditCard).toBeVisible();
+			await expect(creditCard.locator('td.name a')).toContainText(
+				'Cash App Pay (Square)'
+			);
+		} else {
+			await expect(
+				page
+					.locator(
+						'.settings-payment-gateways #square_cash_app_pay .woocommerce-list__item-title'
+					)
+					.first()
+			).toContainText( 'Cash App Pay (Square)');
+		}
 	});
 
 	test('Store owner can configure Cash App Pay payment gateway - @foundational', async ({

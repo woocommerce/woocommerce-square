@@ -25,7 +25,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\WC_Order_Square;
-
+use WooCommerce\Square\Utilities\Performance_Logger;
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -87,26 +87,33 @@ class Payment_Gateway_Integration_Pre_Orders extends Payment_Gateway_Integration
 	 * @return boolean true if tokenization should be forced, false otherwise
 	 */
 	public function maybe_force_tokenization( $force_tokenization ) {
+		Performance_Logger::start( 'force_tokenization', $this->get_gateway()->get_plugin() );
 
-		// pay page with pre-order?
-		$pay_page_pre_order = false;
-		if ( $this->get_gateway()->is_pay_page_gateway() ) {
+		try {
+			// pay page with pre-order?
+			$pay_page_pre_order = false;
+			if ( $this->get_gateway()->is_pay_page_gateway() ) {
 
-			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
+				$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
-			if ( $order_id ) {
-				$pay_page_pre_order = class_exists( 'WC_Pre_Orders_Order' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Order::get_pre_order_product( $order_id ) );
+				if ( $order_id ) {
+					$pay_page_pre_order = class_exists( 'WC_Pre_Orders_Order' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Order::get_pre_order_product( $order_id ) );
+				}
 			}
+
+			if ( ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
+				$pay_page_pre_order ) {
+
+				// always tokenize the card for pre-orders that are charged upon release
+				$force_tokenization = true;
+			}
+
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin() );
+			return $force_tokenization;
+		} catch ( \Exception $e ) {
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin(), true );
+			return false;
 		}
-
-		if ( ( class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() ) ) ||
-			$pay_page_pre_order ) {
-
-			// always tokenize the card for pre-orders that are charged upon release
-			$force_tokenization = true;
-		}
-
-		return $force_tokenization;
 	}
 
 

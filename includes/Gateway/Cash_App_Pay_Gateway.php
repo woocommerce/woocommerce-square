@@ -31,7 +31,7 @@ use WooCommerce\Square\Gateway;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\WC_Order_Square;
-
+use WooCommerce\Square\Utilities\Performance_Logger;
 /**
  * The Cash App Pay payment gateway class.
  *
@@ -1066,6 +1066,9 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @throws \Exception
 	 */
 	protected function do_transaction( $order ) {
+		Performance_Logger::start( 'create_order', $this->get_plugin() );
+		$is_error = false;
+
 		// if there is no associated Square order ID, create one
 		if ( empty( $order->square_order_id ) ) {
 
@@ -1098,6 +1101,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
 
 			} catch ( \Exception $exception ) {
+				$is_error = true;
 
 				// log the error, but continue with payment
 				if ( $this->debug_log() ) {
@@ -1106,6 +1110,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			}
 		}
 
+		Performance_Logger::end( 'create_order', $this->get_plugin(), $is_error );
 		return parent::do_transaction( $order );
 	}
 
@@ -1120,61 +1125,68 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @throws \Exception network timeouts, etc
 	 */
 	protected function do_payment_method_transaction( $order, $response = null ) {
-		// Generate a new transaction ref if the order payment is split using multiple payment methods.
-		if ( isset( $order->payment->partial_total ) ) {
-			$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
-		}
+		Performance_Logger::start( 'payment_transaction', $this->get_plugin() );
 
-		// Charge/Authorize the order.
-		if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
-			$response = $this->get_api()->cash_app_pay_charge( $order );
-		} else {
-			$response = $this->get_api()->cash_app_pay_authorization( $order );
-		}
-
-		// success! update order record
-		if ( $response->transaction_approved() ) {
-
-			$payment_response = $response->get_data();
-			$payment          = $payment_response->getPayment();
-
-			// credit card order note
-			$message = sprintf(
-				/* translators: Placeholders: %1$s - payment method title, %2$s - environment ("Test"), %3$s - transaction type (authorization/charge), %4$s - card type (mastercard, visa, ...), %5$s - last four digits of the card */
-				esc_html__( '%1$s %2$s %3$s Approved for an amount of %4$s', 'woocommerce-square' ),
-				$this->get_method_title(),
-				wc_square()->get_settings_handler()->is_sandbox() ? esc_html_x( 'Test', 'noun, software environment', 'woocommerce-square' ) : '',
-				'APPROVED' === $response->get_payment()->getStatus() ? esc_html_x( 'Authorization', 'Cash App transaction type', 'woocommerce-square' ) : esc_html_x( 'Charge', 'noun, Cash App transaction type', 'woocommerce-square' ),
-				wc_price( Money_Utility::cents_to_float( $payment->getTotalMoney()->getAmount(), $order->get_currency() ) )
-			);
-
-			// adds the transaction id (if any) to the order note
-			if ( $response->get_transaction_id() ) {
-				/* translators: Placeholders: %s - transaction ID */
-				$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
+		try {
+			// Generate a new transaction ref if the order payment is split using multiple payment methods.
+			if ( isset( $order->payment->partial_total ) ) {
+				$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
 			}
 
-			/**
-			 * Direct Gateway Credit Card Transaction Approved Order Note Filter.
-			 *
-			 * Allow actors to modify the order note added when a Credit Card transaction
-			 * is approved.
-			 *
-			 * @since 4.5.0
-			 *
-			 * @param string $message order note
-			 * @param \WC_Order $order order object
-			 * @param \WooCommerce\Square\Gateway\API\Response $response transaction response
-			 * @param Cash_App_Pay_Gateway $this instance
-			 */
-			$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
+			// Charge/Authorize the order.
+			if ( $this->perform_charge( $order ) && self::CHARGE_TYPE_PARTIAL !== $this->get_charge_type() ) {
+				$response = $this->get_api()->cash_app_pay_charge( $order );
+			} else {
+				$response = $this->get_api()->cash_app_pay_authorization( $order );
+			}
 
-			$this->update_order_meta( $order, 'is_tender_type_cash_app_wallet', true );
+			// success! update order record
+			if ( $response->transaction_approved() ) {
 
-			$order->add_order_note( $message );
+				$payment_response = $response->get_data();
+				$payment          = $payment_response->getPayment();
+
+				// credit card order note
+				$message = sprintf(
+					/* translators: Placeholders: %1$s - payment method title, %2$s - environment ("Test"), %3$s - transaction type (authorization/charge), %4$s - card type (mastercard, visa, ...), %5$s - last four digits of the card */
+					esc_html__( '%1$s %2$s %3$s Approved for an amount of %4$s', 'woocommerce-square' ),
+					$this->get_method_title(),
+					wc_square()->get_settings_handler()->is_sandbox() ? esc_html_x( 'Test', 'noun, software environment', 'woocommerce-square' ) : '',
+					'APPROVED' === $response->get_payment()->getStatus() ? esc_html_x( 'Authorization', 'Cash App transaction type', 'woocommerce-square' ) : esc_html_x( 'Charge', 'noun, Cash App transaction type', 'woocommerce-square' ),
+					wc_price( Money_Utility::cents_to_float( $payment->getTotalMoney()->getAmount(), $order->get_currency() ) )
+				);
+
+				// adds the transaction id (if any) to the order note
+				if ( $response->get_transaction_id() ) {
+					/* translators: Placeholders: %s - transaction ID */
+					$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
+				}
+
+				/**
+				 * Direct Gateway Credit Card Transaction Approved Order Note Filter.
+				 *
+				 * Allow actors to modify the order note added when a Credit Card transaction
+				 * is approved.
+				 *
+				 * @since 4.5.0
+				 *
+				 * @param string $message order note
+				 * @param \WC_Order $order order object
+				 * @param \WooCommerce\Square\Gateway\API\Response $response transaction response
+				 * @param Cash_App_Pay_Gateway $this instance
+				 */
+				$message = apply_filters( 'wc_payment_gateway_' . $this->get_id() . '_transaction_approved_order_note', $message, $order, $response, $this );
+
+				$this->update_order_meta( $order, 'is_tender_type_cash_app_wallet', true );
+
+				$order->add_order_note( $message );
+			}
+
+			return $response;
+		} catch ( \Exception $e ) {
+			Performance_Logger::end( 'payment_transaction', $this->get_plugin(), true );
+			throw $e;
 		}
-
-		return $response;
 	}
 
 	/**
@@ -1261,6 +1273,11 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		if ( ! empty( $_REQUEST['data'] ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.PHP.DevelopmentFunctions.error_log_print_r
+		}
+
+		// If the type is performance, don't add the request type to the message, it's already in the message.
+		if ( ! empty( $_REQUEST['type'] ) && 'performance' === $_REQUEST['type'] && ! empty( $_REQUEST['data'] ) ) {
+			$message = wc_clean( wp_unslash( $_REQUEST['data'] ) );
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );
