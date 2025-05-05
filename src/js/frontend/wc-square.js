@@ -310,23 +310,24 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		handleSubmission() {
 			this.start( 'generate_payment_nonce' );
-      this.get_verification_details().then(( verificationDetails ) => {
-				this.payment_form
-					.tokenize( verificationDetails )
-						.then( ( tokenResult ) => {
-							const { token, details, status } = tokenResult;
-							this.end( 'generate_payment_nonce' );
+      			this.get_verification_details().then(( verificationDetails ) => {
+					this.payment_form
+						.tokenize( verificationDetails )
+							.then( ( tokenResult ) => {
+								const { token, details, status } = tokenResult;
+								this.end( 'generate_payment_nonce' );
 
-							if ( status === 'OK' ) {
-								this.handle_card_nonce_response( token, details );
-							} else {
-								if ( tokenResult.errors ) {
-									this.handle_errors( tokenResult.errors )
+								if ( status === 'OK' ) {
+									this.handle_card_nonce_response( token, details );
+								} else {
+									if ( tokenResult.errors ) {
+										this.handle_errors( tokenResult.errors )
+									}
+									this.end( 'generate_payment_nonce', true );
 								}
-								this.end( 'generate_payment_nonce', true );
-							}
-				} );
-			} );
+					} );
+				}
+			);
 		}
 
 		/**
