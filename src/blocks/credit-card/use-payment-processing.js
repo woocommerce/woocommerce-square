@@ -4,11 +4,6 @@
 import { useEffect, useRef } from '@wordpress/element';
 
 /**
- * Internal dependencies
- */
-import { getSquareServerData } from '../square-utils';
-
-/**
  * @typedef {import('@woocommerce/type-defs/registered-payment-method-props').EmitResponseProps} EmitResponseProps
  * @typedef {import('../square-utils/type-defs').SquareContext} SquareContext
  */
@@ -55,7 +50,7 @@ export const usePaymentProcessing = (
 			if ( square.current?.token ) {
 				// This is a saved card, so we need to set the token to 'saved_card'.
 				// It will be used to detect and not pass the token to Square via setVerificationToken().
-				paymentData.token = success ? 'saved_card' : '';
+				paymentData.token = 'saved_card';
 			} else {
 				const createNonceResponse = await createNonce(
 					square.current.card
