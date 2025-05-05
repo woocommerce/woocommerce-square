@@ -58,7 +58,7 @@ export const usePaymentProcessing = (
 					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
 				);
 				const { success, data: token } = await __response.json();
-				paymentData.token = success ? token : '';
+				paymentData.token = success ? 'saved_card' : '';
 			} else {
 				const createNonceResponse = await createNonce(
 					square.current.card
