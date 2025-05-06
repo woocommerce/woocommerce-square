@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.0
+Stable tag: 4.9.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,14 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.1 - 2025-05-05 =
+* Add - Set the onboarding URL for the "Complete setup" button on the new payment settings page.
+* Fix - Issue with Product Price override update logic.
+* Fix - Show detailed error messages on Checkout Page based on Debug Mode settings.
+* Fix - Ensure that debug logs for payment gateways are being generated as expected.
+* Dev - Add in performance logging during the checkout process.
+* Dev - Update E2E tests to accommodate payment modernization changes in WooCommerce Core.
 
 = 4.9.0 - 2025-04-07 =
 * Add - Support for syncing multiple Product Variations.
