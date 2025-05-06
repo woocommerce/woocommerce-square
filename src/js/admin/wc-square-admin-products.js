@@ -516,11 +516,8 @@ jQuery( document ).ready( ( $ ) => {
 
 							if ( ! $variationManageField.find( '.sync-stock-from-square' ).length ) {
 								$variationManageInput.after(
-									'<span class="description">(' +
-										wc_square_admin_products.i18n
-											.managed_by_square +
-										') - </span>' +
-										syncInventory
+									`<span class="description">(${ wc_square_admin_products.i18n
+										.managed_by_square })${ syncInventory ? ' - ' : '' }</span> ${ syncInventory }`
 								);
 							}
 					}
