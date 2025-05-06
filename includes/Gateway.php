@@ -37,6 +37,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
+use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
  * The Square payment gateway class.
@@ -176,7 +177,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @since 2.0.0
 	 */
 	public function log_js_data() {
-
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );
 
 		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( wp_unslash( $_REQUEST['type'] ) ) ) : 'Request' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -184,6 +184,11 @@ class Gateway extends Payment_Gateway_Direct {
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
 			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.PHP.DevelopmentFunctions.error_log_print_r
+		}
+
+		// If the type is performance, don't add the request type to the message, it's already in the message.
+		if ( ! empty( $_REQUEST['type'] ) && 'performance' === $_REQUEST['type'] && ! empty( $_REQUEST['data'] ) ) {
+			$message = wc_clean( wp_unslash( $_REQUEST['data'] ) );
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );
@@ -301,9 +306,15 @@ class Gateway extends Payment_Gateway_Direct {
 
 			$is_valid = false;
 
-			Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
+				Square_Helper::wc_add_notice( $exception->getMessage(), 'error' );
+			} else {
+				Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			}
 
-			$this->add_debug_message( $exception->getMessage(), 'error' );
+			if ( $this->debug_log() ) {
+				$this->add_debug_message( $exception->getMessage(), 'error' );
+			}
 		}
 
 		return $is_valid;
@@ -392,12 +403,13 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @throws \Exception
 	 */
 	protected function do_transaction( $order ) {
+		Performance_Logger::start( 'create_order', $this->get_plugin() );
+		$is_error = false;
 
 		// if there is no associated Square order ID, create one
 		if ( empty( $order->square_order_id ) ) {
 
 			try {
-
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
@@ -426,6 +438,7 @@ class Gateway extends Payment_Gateway_Direct {
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
 
 			} catch ( \Exception $exception ) {
+				$is_error = true;
 
 				// log the error, but continue with payment
 				if ( $this->debug_log() ) {
@@ -434,6 +447,7 @@ class Gateway extends Payment_Gateway_Direct {
 			}
 		}
 
+		Performance_Logger::end( 'create_order', $this->get_plugin(), $is_error );
 		return parent::do_transaction( $order );
 	}
 
