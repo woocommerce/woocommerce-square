@@ -4861,7 +4861,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/**
 	 * Returns the Onboarding URL for the gateway.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.1
 	 *
 	 * @return string the Onboarding URL.
 	 */

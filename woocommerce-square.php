@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 4.9.0
+ * Version: 4.9.1
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.6
  * Tested up to: 6.8
@@ -29,7 +29,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '4.9.0' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '4.9.1' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
