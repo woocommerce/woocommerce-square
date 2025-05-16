@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "4.8.7",
+  "version": "4.9.1",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
@@ -36,6 +36,7 @@
     "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.1",
     "@woocommerce/e2e-utils-playwright": "^0.2.1",
     "@woocommerce/eslint-plugin": "^2.3.0",
+    "@woocommerce/woocommerce-rest-api": "^1.0.1",
     "@wordpress/env": "^10.0.0",
     "@wordpress/scripts": "^24.6.0",
     "copy-webpack-plugin": "^12.0.2",
