@@ -25,7 +25,11 @@ import {
 import { useSquareSettings } from '../../settings/hooks';
 import { recordEvent, ONBOARDING_TRACK_EVENTS } from '../../../tracks';
 
-export const ConfigureSync = ( { indent = 0, isDirty = false, showViewProgressButton = true } ) => {
+export const ConfigureSync = ( {
+	indent = 0,
+	isDirty = false,
+	showViewProgressButton = true,
+} ) => {
 	const { settings, squareSettingsLoaded, setSquareSettingData } =
 		useSquareSettings();
 
@@ -378,16 +382,24 @@ export const ConfigureSync = ( { indent = 0, isDirty = false, showViewProgressBu
 										} }
 									>
 										{ importDoneNotice }
-										{ importDoneNotice && showViewProgressButton && (
-											<div style={ { marginTop: '10px' } }>
-												<a
-													href={ `${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&tab=square&section=update` }
-													className="button button-primary"
+										{ importDoneNotice &&
+											showViewProgressButton && (
+												<div
+													style={ {
+														marginTop: '10px',
+													} }
 												>
-													{ __( 'View Progress →', 'woocommerce-square' ) }
-												</a>
-											</div>
-										) }
+													<a
+														href={ `${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&tab=square&section=update` }
+														className="button button-primary"
+													>
+														{ __(
+															'View Progress →',
+															'woocommerce-square'
+														) }
+													</a>
+												</div>
+											) }
 									</div>
 								</InputWrapper>
 
