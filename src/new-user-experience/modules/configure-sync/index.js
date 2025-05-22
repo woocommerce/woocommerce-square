@@ -381,7 +381,8 @@ export const ConfigureSync = ( { indent = 0, isDirty = false, showViewProgressBu
 										{ importDoneNotice && showViewProgressButton && (
 											<div style={ { marginTop: '10px' } }>
 												<a
-													href="/wp-admin/admin.php?page=wc-settings&tab=square&section=update"
+													href={ `${ wcSquareSettings.adminUrl }admin.php?page=wc-settings&tab=square&section=update` }
+													className="button button-primary"
 												>
 													{ __( 'View Progress →', 'woocommerce-square' ) }
 												</a>
