@@ -72,6 +72,10 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.9.2 - 2025-05-27 =
+* Dev - Bump WooCommerce "tested up to" version 9.9.
+* Dev - Bump WooCommerce minimum supported version to 9.7.
+
 = 4.9.1 - 2025-05-05 =
 * Add - Set the onboarding URL for the "Complete setup" button on the new payment settings page.
 * Fix - Issue with Product Price override update logic.
