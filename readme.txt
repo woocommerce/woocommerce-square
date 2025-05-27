@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.1
+Stable tag: 4.9.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,10 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.2 - 2025-05-27 =
+* Dev - Bump WooCommerce "tested up to" version 9.9.
+* Dev - Bump WooCommerce minimum supported version to 9.7.
 
 = 4.9.1 - 2025-05-05 =
 * Add - Set the onboarding URL for the "Complete setup" button on the new payment settings page.
