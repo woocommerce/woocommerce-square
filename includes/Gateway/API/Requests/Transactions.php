@@ -111,7 +111,7 @@ class Transactions extends \WooCommerce\Square\API\Request {
 		}
 
 		// 3DS / SCA verification token (from JS)
-		if ( ! empty( $order->payment->verification_token ) ) {
+		if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {
 			$this->square_request->setVerificationToken( $order->payment->verification_token );
 		}
 

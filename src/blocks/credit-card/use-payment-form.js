@@ -6,13 +6,7 @@ import { useState, useCallback, useMemo } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import {
-	getSquareServerData,
-	handleErrors,
-	log,
-	logData,
-	convertAmount,
-} from '../square-utils';
+import { getSquareServerData, log, convertAmount } from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
 /**
@@ -56,6 +50,8 @@ export const usePaymentForm = (
 				],
 			},
 			intent,
+			customerInitiated: true,
+			sellerKeyedIn: false,
 		};
 
 		if ( intent === 'CHARGE' ) {
@@ -125,68 +121,12 @@ export const usePaymentForm = (
 	const createNonce = useCallback(
 		async ( card ) => {
 			if ( ! token ) {
-				return await card.tokenize();
+				return await card.tokenize( verificationDetails );
 			}
 
 			return token;
 		},
 		[ token ]
-	);
-
-	/**
-	 * Handles the response from Payments.verifyBuyer() and resolves promise
-	 *
-	 * @param {Object} verificationResult Verify buyer result from Square
-	 */
-	const handleVerifyBuyerResponse = useCallback( ( verificationResult ) => {
-		const response = {
-			notices: [],
-			logs: [],
-		};
-
-		// no errors, but also no verification token.
-		if ( ! verificationResult || ! verificationResult.token ) {
-			logData(
-				'Verification token is missing from the Square response',
-				response
-			);
-			log(
-				'Verification token is missing from the Square response',
-				'error'
-			);
-			handleErrors( [], response );
-		} else {
-			response.verificationToken = verificationResult.token;
-		}
-
-		return response;
-	}, [] );
-
-	/**
-	 * Generates a verification buyer token
-	 *
-	 * @param {Object} payments     Instance of Square.payments().
-	 * @param {string} paymentToken Payment Token to verify
-	 *
-	 * @return {Promise} Returns promise which will be resolved in handleVerifyBuyerResponse callback
-	 */
-	const verifyBuyer = useCallback(
-		async ( payments, paymentToken ) => {
-			let verificationResponse;
-			try {
-				verificationResponse = await payments.verifyBuyer(
-					paymentToken,
-					verificationDetails
-				);
-
-				return handleVerifyBuyerResponse( verificationResponse );
-			} catch ( error ) {
-				handleErrors( [ error ] );
-			}
-
-			return false;
-		},
-		[ verificationDetails, handleVerifyBuyerResponse ]
 	);
 
 	/**
@@ -231,7 +171,6 @@ export const usePaymentForm = (
 		getPostalCode,
 		cardType,
 		createNonce,
-		verifyBuyer,
 		getPaymentMethodData,
 	};
 };
