@@ -28,7 +28,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Performance logging utility for timing operations and memory usage.
  *
- * @since x.x.x
+ * @since 4.9.1
  */
 class Performance_Logger {
 
@@ -38,7 +38,7 @@ class Performance_Logger {
 	/**
 	 * Starts a timer for performance tracking.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.1
 	 *
 	 * @param string $key Unique identifier for this timer
 	 * @param \WooCommerce\Square\Plugin $plugin Plugin instance to check debug status
@@ -55,7 +55,7 @@ class Performance_Logger {
 	/**
 	 * Ends a timer and logs the performance data.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.1
 	 *
 	 * @param string $key Unique identifier for this timer
 	 * @param \WooCommerce\Square\Plugin $plugin Plugin instance for logging
@@ -95,7 +95,7 @@ class Performance_Logger {
 	/**
 	 * Gets the current timer value without logging (useful for testing).
 	 *
-	 * @since x.x.x
+	 * @since 4.9.1
 	 *
 	 * @param string $key Timer identifier
 	 * @return float|null Timer value in seconds or null if timer not found
@@ -107,7 +107,7 @@ class Performance_Logger {
 	/**
 	 * Resets all timers (useful for testing).
 	 *
-	 * @since x.x.x
+	 * @since 4.9.1
 	 */
 	public static function reset() {
 		self::$timers = array();
