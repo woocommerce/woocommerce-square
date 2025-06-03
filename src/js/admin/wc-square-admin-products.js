@@ -813,11 +813,18 @@ jQuery( document ).ready( ( $ ) => {
 		};
 
 		const validateMaxAttributeValues = ($field) => {
+			let attrValues = $field.val();
+
+			// if attrValues is array (when taxonomy attribute), convert to string and combine values by '|'.
+			if (Array.isArray(attrValues)) {
+				attrValues = attrValues.join('|');
+			}
+
 			return validateLimit(
-				$field.val().split('|').length,
+				attrValues.length,
 				250,
 				$field,
-				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + $field.val().substring(0, 50) + '...'
+				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + attrValues.substring(0, 50) + '...'
 			);
 		};
 
