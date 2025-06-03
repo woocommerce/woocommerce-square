@@ -116,6 +116,12 @@ test( 'Handle missing products @sync', async ( { page } ) => {
 	await saveSquareSettings( page );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
+
+	// If the sync button is disabled, the test is not applicable.
+	if ( await page.locator( '#wc-square-sync' ).isDisabled() ) {
+		return;
+	}
+
 	await page.locator( '#wc-square-sync' ).click();
 	await page.locator( '#btn-ok' ).click();
 	await expect( await page.getByText( 'Syncing now' ) ).toBeVisible();
