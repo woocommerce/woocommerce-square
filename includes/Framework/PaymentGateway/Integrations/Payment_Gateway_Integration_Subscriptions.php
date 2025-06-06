@@ -25,7 +25,7 @@ use WooCommerce\Square\Framework\Compatibility\Order_Compatibility;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Framework\PaymentGateway\PaymentTokens\Payment_Gateway_Payment_Token;
 use WooCommerce\Square\WC_Order_Square;
-
+use WooCommerce\Square\Utilities\Performance_Logger;
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -145,32 +145,39 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	 * @return bool true if tokenization should be forced, false otherwise
 	 */
 	public function maybe_force_tokenization( $force_tokenization ) {
+		Performance_Logger::start( 'force_tokenization', $this->get_gateway()->get_plugin() );
 
-		// pay page with subscription?
-		$pay_page_subscription      = false;
-		$is_manual_renewal_required = class_exists( 'WCS_Manual_Renewal_Manager' ) && \WCS_Manual_Renewal_Manager::is_manual_renewal_required();
+		try {
+			// pay page with subscription?
+			$pay_page_subscription      = false;
+			$is_manual_renewal_required = class_exists( 'WCS_Manual_Renewal_Manager' ) && \WCS_Manual_Renewal_Manager::is_manual_renewal_required();
 
-		if ( $this->get_gateway()->is_pay_page_gateway() ) {
+			if ( $this->get_gateway()->is_pay_page_gateway() ) {
 
-			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
+				$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
-			if ( $order_id ) {
-				$pay_page_subscription = function_exists( 'wcs_order_contains_subscription' ) && wcs_order_contains_subscription( $order_id );
+				if ( $order_id ) {
+					$pay_page_subscription = function_exists( 'wcs_order_contains_subscription' ) && wcs_order_contains_subscription( $order_id );
+				}
 			}
-		}
 
-		if ( $is_manual_renewal_required ) {
-			$force_tokenization = false;
-		} elseif (
-			( class_exists( 'WC_Subscriptions_Cart' ) && \WC_Subscriptions_Cart::cart_contains_subscription() ) ||
-			( function_exists( 'wcs_cart_contains_renewal' ) && wcs_cart_contains_renewal() ) ||
-			( class_exists( 'WC_Subscriptions_Change_Payment_Gateway' ) && \WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment ) ||
-			$pay_page_subscription
-		) {
-			$force_tokenization = true;
-		}
+			if ( $is_manual_renewal_required ) {
+				$force_tokenization = false;
+			} elseif (
+				( class_exists( 'WC_Subscriptions_Cart' ) && \WC_Subscriptions_Cart::cart_contains_subscription() ) ||
+				( function_exists( 'wcs_cart_contains_renewal' ) && wcs_cart_contains_renewal() ) ||
+				( class_exists( 'WC_Subscriptions_Change_Payment_Gateway' ) && \WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment ) ||
+				$pay_page_subscription
+			) {
+				$force_tokenization = true;
+			}
 
-		return $force_tokenization;
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin() );
+			return $force_tokenization;
+		} catch ( \Exception $e ) {
+			Performance_Logger::end( 'force_tokenization', $this->get_gateway()->get_plugin(), true );
+			return false;
+		}
 	}
 
 
@@ -220,24 +227,37 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	 * @param \WC_Order $order original order containing the subscription
 	 */
 	public function process_renewal_payment( $amount_to_charge, $order ) {
+		Performance_Logger::start( 'process_renewal_payment', $this->get_gateway()->get_plugin() );
 
-		// set payment total so it can override the default in get_order()
-		$this->renewal_payment_total = Square_Helper::number_format( $amount_to_charge );
+		try {
 
-		$token = $this->get_gateway()->get_order_meta( Order_Compatibility::get_prop( $order, 'id' ), 'payment_token' );
+			// set payment total so it can override the default in get_order()
+			$this->renewal_payment_total = Square_Helper::number_format( $amount_to_charge );
 
-		// payment token must be present and valid
-		if ( empty( $token ) || ! $this->get_gateway()->get_payment_tokens_handler()->user_has_token( $order->get_user_id(), $token ) ) {
+			$token = $this->get_gateway()->get_order_meta( Order_Compatibility::get_prop( $order, 'id' ), 'payment_token' );
 
+			// payment token must be present and valid
+			if ( empty( $token ) || ! $this->get_gateway()->get_payment_tokens_handler()->user_has_token( $order->get_user_id(), $token ) ) {
+				Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin(), true );
+
+				$this->get_gateway()->mark_order_as_failed( $order, esc_html__( 'Subscription Renewal: payment token is missing/invalid.', 'woocommerce-square' ) );
+
+				return;
+			}
+
+			// add subscriptions data to the order object prior to processing the payment
+			add_filter( 'wc_payment_gateway_' . $this->get_gateway()->get_id() . '_get_order', array( $this, 'get_order' ) );
+
+			$this->get_gateway()->process_payment( Order_Compatibility::get_prop( $order, 'id' ) );
+
+			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin() );
+		} catch ( \Exception $e ) {
+			Performance_Logger::end( 'process_renewal_payment', $this->get_gateway()->get_plugin(), true );
+
+			// Make order as failed.
 			$this->get_gateway()->mark_order_as_failed( $order, esc_html__( 'Subscription Renewal: payment token is missing/invalid.', 'woocommerce-square' ) );
-
 			return;
 		}
-
-		// add subscriptions data to the order object prior to processing the payment
-		add_filter( 'wc_payment_gateway_' . $this->get_gateway()->get_id() . '_get_order', array( $this, 'get_order' ) );
-
-		$this->get_gateway()->process_payment( Order_Compatibility::get_prop( $order, 'id' ) );
 	}
 
 
@@ -353,6 +373,8 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 	 * @return array $result change payment result
 	 */
 	public function process_change_payment( $result, $order_id, $gateway ) {
+		Performance_Logger::start( 'process_change_payment', $this->get_gateway()->get_plugin() );
+		$is_error = false;
 
 		// if this is not a subscription and not changing payment, bail for normal order processing
 		if ( ! function_exists( 'wcs_is_subscription' ) || ! wcs_is_subscription( $order_id ) || ! did_action( 'woocommerce_subscription_change_payment_method_via_pay_shortcode' ) ) {
@@ -380,6 +402,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 			);
 
 		} catch ( \Exception $e ) {
+			$is_error = true;
 
 			/* translators: Placeholders: %1$s - payment gateway title, %2$s - error message; e.g. Order Note: [Payment method] Payment Change failed [error] */
 			$note = sprintf( esc_html__( '%1$s Payment Change Failed (%2$s)', 'woocommerce-square' ), $gateway->get_method_title(), $e->getMessage() );
@@ -396,6 +419,7 @@ class Payment_Gateway_Integration_Subscriptions extends Payment_Gateway_Integrat
 			);
 		}
 
+		Performance_Logger::end( 'process_change_payment', $this->get_gateway()->get_plugin(), $is_error );
 		return $result;
 	}
 
