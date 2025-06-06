@@ -56,6 +56,7 @@ test( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { 
 		 */
 		try {
 			await page.locator( '.wc-square-track-quantity .components-form-toggle__input' ).click();
+			await page.locator( '[name="stock_quantity"]' ).fill( '' );
 			await page.locator( '[name="stock_quantity"]' ).fill( '62' );
 
 			await page.locator( '#woocommerce-product-tab__general' ).click();
@@ -145,6 +146,7 @@ test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
 		.click();
 
 	await expect( await page.locator( '[name="stock_quantity"]' ) ).toBeEnabled();
+	await page.locator( '[name="stock_quantity"]' ).fill( '' );
 	await page.locator( '[name="stock_quantity"]' ).fill( '84' );
 
 	await page
