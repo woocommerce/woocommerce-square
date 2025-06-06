@@ -280,7 +280,7 @@ class Gateway extends Payment_Gateway_Direct {
 	 * the validation of fields in the payment gateway. It can be utilized
 	 * in the `validation_fields` method to handle and process validation errors.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.3
 	 *
 	 * @return Exception|null The validation exception if one exists, or null if no exception occurred.
 	 */

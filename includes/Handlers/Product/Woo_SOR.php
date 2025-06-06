@@ -498,7 +498,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	/**
 	 * Helper to get only attributes used for variations.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.3
 	 *
 	 * @param WC_Product $product
 	 * @return array
