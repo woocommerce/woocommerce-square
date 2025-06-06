@@ -1,5 +1,14 @@
 *** WooCommerce Square Changelog ***
 
+= 4.9.3 - 2025-06-09 =
+* Add - Support for Square's EMV 3-D Secure authentication flow to comply with countries that have 3DS mandates and improve payment security.
+* Add - Pre-sync validations for Product Variations.
+* Add - Digit handling for country-specific currencies to prevent incorrect division by 100 for currencies like Japanese Yen.
+* Add - Indicate customer initiated payments in Square API requests.
+* Fix - Only sync attributes used for variations to Square, preventing item option mismatch errors when WooCommerce products have unused attributes.
+* Fix - Ensure consistent error messages between the Block Checkout and the Shortcode Checkout.
+* Dev - Bump Square PHP SDK version from `35.1.0.20240320` to `40.0.0.20250123`.
+
 = 4.9.2 - 2025-05-27 =
 * Dev - Bump WooCommerce "tested up to" version 9.9.
 * Dev - Bump WooCommerce minimum supported version to 9.7.
