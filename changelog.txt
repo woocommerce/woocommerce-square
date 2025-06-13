@@ -1,5 +1,8 @@
 *** WooCommerce Square Changelog ***
 
+= 4.9.4 - 2025-06-13 =
+* Fix - Ensure no fatal error occurs at checkout when using a free local pickup shipping method.
+
 = 4.9.3 - 2025-06-09 =
 * Add - Support for Square's EMV 3-D Secure authentication flow to comply with countries that have 3DS mandates and improve payment security.
 * Add - Pre-sync validations for Product Variations.

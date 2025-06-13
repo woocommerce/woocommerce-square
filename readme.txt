@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.3
+Stable tag: 4.9.4
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.4 - 2025-06-13 =
+* Fix - Ensure no fatal error occurs at checkout when using a free local pickup shipping method.
 
 = 4.9.3 - 2025-06-09 =
 * Add - Support for Square's EMV 3-D Secure authentication flow to comply with countries that have 3DS mandates and improve payment security.
