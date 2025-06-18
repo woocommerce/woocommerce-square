@@ -515,4 +515,35 @@ class Orders extends API\Request {
 		);
 	}
 
+	/**
+	 * Sets the data for creating an order and tags it as originating from WooCommerce.
+	 *
+	 * Builds a Square order from a WooCommerce order, tagging it for bidirectional sync traceability.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string   $location_id Location ID for the Square order.
+	 * @param \WC_Order $order       WooCommerce order object.
+	 */
+	public function set_create_order_data_with_woo_tag( $location_id, \WC_Order $order ) {
+		$this->square_api_method = 'createOrder';
+		$this->square_request    = new \Square\Models\CreateOrderRequest();
+
+		$order_model = new \Square\Models\Order( $location_id );
+
+		// Set customer ID if available.
+		if ( ! empty( $order->square_customer_id ) ) {
+			$order_model->setCustomerId( $order->square_customer_id );
+		}
+
+		// Set reference ID and metadata for traceability.
+		$order_model->setReferenceId( 'woo_order_' . $order->get_id() );
+		$order_model->setMetadata( array(
+			'orderedViaWoo' => 'true',
+			'wooOrderId'    => (string) $order->get_id(),
+		) );
+
+		// Leverage the existing mapping logic.
+		$this->set_order_data( $order, $order_model );
+	}
 }
