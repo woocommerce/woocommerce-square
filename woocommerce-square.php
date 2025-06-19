@@ -22,8 +22,8 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 9.7
- * WC tested up to: 9.9
+ * WC requires at least: 9.8
+ * WC tested up to: 10.0
  */
 
 defined( 'ABSPATH' ) || exit;
