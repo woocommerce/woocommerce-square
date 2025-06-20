@@ -34,6 +34,7 @@ use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
 use WooCommerce\Square\Handlers\Order;
+use WooCommerce\Square\Handlers\Order_Sync;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Handlers\Sync;
 use WooCommerce\Square\Handlers\Products;
@@ -93,6 +94,9 @@ class Plugin extends Payment_Gateway_Plugin {
 
 	/** @var Async_Request Asynchronous request handler */
 	private $async_request_handler;
+
+	/** @var Order_Sync order sync handler */
+	private $order_sync_handler;
 
 	/**
 	 * Constructs the plugin.
@@ -167,6 +171,8 @@ class Plugin extends Payment_Gateway_Plugin {
 		if ( class_exists( '\WooCommerce\Square\Handlers\Async_Request' ) ) {
 			$this->async_request_handler = new Async_Request();
 		}
+
+		$this->order_sync_handler = new Order_Sync();
 	}
 
 
@@ -785,6 +791,17 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function get_async_request_handler() {
 		return $this->async_request_handler;
+	}
+
+	/**
+	 * Gets the order sync handler instance.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return Order_Sync
+	 */
+	public function get_order_sync_handler() {
+		return $this->order_sync_handler;
 	}
 
 	/**
