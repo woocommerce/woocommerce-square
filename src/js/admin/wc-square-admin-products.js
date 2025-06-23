@@ -279,6 +279,21 @@ jQuery( document ).ready( ( $ ) => {
 		};
 
 		/**
+		 * Handles the variable product options reload
+		 *
+		 * @since x.x.x
+		 *
+		 * @param {string} syncCheckboxSelector
+		 */
+		const handleVariableProductOptionsReload = ( syncCheckboxSelector ) => {
+			if ( hasSKU() ) {
+				$( syncCheckboxSelector ).prop( 'disabled', false )
+			}
+
+			$( syncCheckboxSelector ).trigger( 'change' );
+		};
+
+		/**
 		 * Disables the Sync with Square checkbox and toggles an inline notice when more than one attribute is set on the product.
 		 *
 		 * @since 2.0.0
@@ -287,12 +302,9 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		const handleAttributes = ( syncCheckboxID ) => {
 			$( '#variable_product_options' ).on( 'reload', () => {
-				if ( hasSKU() ) {
-					$( syncCheckboxID ).prop( 'disabled', false )
-				}
-
-				$( syncCheckboxID ).trigger( 'change' );
-			} ).trigger( 'reload' );
+				handleVariableProductOptionsReload( syncCheckboxID );
+			} );
+			handleVariableProductOptionsReload( syncCheckboxID );
 		};
 
 		/**
