@@ -93,6 +93,12 @@ class Payments extends \WooCommerce\Square\API\Request {
 			Utilities\Money_Utility::amount_to_money( $payment_total, $order->get_currency() )
 		);
 
+		if ( defined( 'WOOCOMMERCE_CHECKOUT' ) && WOOCOMMERCE_CHECKOUT ) {
+			$customer_details = new \Square\Models\CustomerDetails();
+			$customer_details->setCustomerInitiated( true );
+			$this->square_request->setCustomerDetails( $customer_details );
+		}
+
 		/**
 		 * Filters the Square payment order note (legacy filter).
 		 *
@@ -124,7 +130,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 
 			// 3DS / SCA verification token (from JS)
-			if ( ! empty( $order->payment->verification_token ) ) {
+			if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {
 				$this->square_request->setVerificationToken( $order->payment->verification_token );
 			}
 		}

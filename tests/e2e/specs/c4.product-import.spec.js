@@ -46,7 +46,7 @@ test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	await importProducts( page );
 
 	await new Promise( ( resolve ) => {
-		let intervalId = setInterval( async () => {	
+		let intervalId = setInterval( async () => {
 			if ( await doesProductExist( baseURL, 'cap' ) ) {
 				clearInterval( intervalId );
 				resolve();
