@@ -72,6 +72,12 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 4.9.5 - 2025-06-30 =
+* Fix - Ensure the customer is created on the Square side without errors when adding a payment method.
+* Fix - Ensure that the request body is correctly logged in the debug logs.
+* Dev - Bump WooCommerce "tested up to" version 10.0.
+* Dev - Bump WooCommerce minimum supported version to 9.8.
+
 = 4.9.4 - 2025-06-13 =
 * Fix - Ensure no fatal error occurs at checkout when using a free local pickup shipping method.
 
