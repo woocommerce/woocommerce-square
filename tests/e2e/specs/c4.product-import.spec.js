@@ -46,7 +46,7 @@ test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	await importProducts( page );
 
 	await new Promise( ( resolve ) => {
-		let intervalId = setInterval( async () => {	
+		let intervalId = setInterval( async () => {
 			if ( await doesProductExist( baseURL, 'cap' ) ) {
 				clearInterval( intervalId );
 				resolve();
@@ -117,7 +117,7 @@ test( 'Handle missing products @sync', async ( { page } ) => {
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
 
-	// If the sync button is disabled, the test is not applicable.Add commentMore actions
+	// If the sync button is disabled, the test is not applicable.
 	if ( await page.locator( '#wc-square-sync' ).isDisabled() ) {
 		return;
 	}
