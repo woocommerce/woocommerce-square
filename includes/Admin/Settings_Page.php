@@ -70,6 +70,8 @@ class Settings_Page extends \WC_Settings_Page {
 
 		if ( 'update' === $current_section ) {
 			$this->output_update_section();
+		} else if ( 'order-sync' === $current_section ) {
+			$this->output_order_sync_section();
 		} else {
 			$this->output_general_section();
 		}
@@ -143,6 +145,7 @@ class Settings_Page extends \WC_Settings_Page {
 		$sections = array(
 			''       => __( 'Settings', 'woocommerce-square' ), // this key is intentionally blank
 			'update' => __( 'Update', 'woocommerce-square' ),
+			'order-sync' => __( 'Order Sync', 'woocommerce-square' ),
 		);
 
 		/**
@@ -193,6 +196,12 @@ class Settings_Page extends \WC_Settings_Page {
 			</div>
 			<div class="wc-backbone-modal-backdrop modal-close"></div>
 		</script>
+		<?php
+	}
+
+	private function output_order_sync_section() {
+		?>
+		<h1>Order Sync</h1>
 		<?php
 	}
 }

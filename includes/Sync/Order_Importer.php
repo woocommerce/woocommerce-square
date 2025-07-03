@@ -144,6 +144,17 @@ class Order_Importer {
 	}
 
 	/**
+	 * Check if order sync is enabled.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	private static function is_order_sync_enabled() {
+		$settings = wc_square()->get_settings_handler();
+		return $settings->get_option( 'enable_order_sync', 'no' ) === 'yes';
+	}
+
+	/**
 	 * Find existing WooCommerce order by Square order ID.
 	 *
 	 * @since x.x.x

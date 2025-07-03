@@ -1,0 +1,213 @@
+/**
+ * Order Tagging Styles.
+ *
+ * Styles for Square order source indicators in WooCommerce admin.
+ */
+
+/* Order Source Column Styles */
+.wc-square-order-source {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.wc-square-order-source.square {
+	background-color: #00d4aa;
+	color: #fff;
+}
+
+.wc-square-order-source.woo {
+	background-color: #7f54b3;
+	color: #fff;
+}
+
+.wc-square-order-source .dashicons {
+	font-size: 12px;
+	width: 12px;
+	height: 12px;
+}
+
+/* Order Source Badge */
+.wc-square-order-source-badge {
+	display: inline-block;
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.wc-square-order-source-badge.square {
+	background-color: #00d4aa;
+	color: #fff;
+}
+
+.wc-square-order-source-badge.woo {
+	background-color: #7f54b3;
+	color: #fff;
+}
+
+/* Order Source Meta Box */
+.wc-square-order-source-info {
+	background-color: #f8f9fa;
+	border: 1px solid #e2e4e7;
+	border-radius: 4px;
+	padding: 12px;
+	margin-top: 8px;
+}
+
+.wc-square-order-source-info p {
+	margin: 0 0 8px 0;
+}
+
+.wc-square-order-source-info p:last-child {
+	margin-bottom: 0;
+}
+
+.wc-square-order-source-info strong {
+	color: #1d2327;
+}
+
+.wc-square-order-source-info .description {
+	color: #646970;
+	font-style: italic;
+}
+
+/* Order Actions */
+.wc-order-actions .button.square-order {
+	background-color: #00d4aa;
+	border-color: #00d4aa;
+	color: #fff;
+}
+
+.wc-order-actions .button.square-order:hover {
+	background-color: #00b894;
+	border-color: #00b894;
+}
+
+/* HPOS Order List Table */
+.woocommerce_page_wc-orders .wc-square-order-source {
+	font-size: 10px;
+	padding: 1px 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 782px) {
+	.wc-square-order-source {
+		font-size: 10px;
+		padding: 1px 6px;
+	}
+	
+	.wc-square-order-source .dashicons {
+		font-size: 10px;
+		width: 10px;
+		height: 10px;
+	}
+}
+
+/* Order status indicator for Square imported orders */
+.order-status.status-square-imported {
+	background-color: #00d4aa;
+	color: #fff;
+}
+
+.order-status.status-square-imported::after {
+	content: " \f504"; /* dashicons-external */
+	font-family: dashicons;
+	font-size: 12px;
+	margin-left: 4px;
+}
+
+/* Filter dropdown for order source */
+.wc-square-order-source-filter {
+	margin-left: 8px;
+}
+
+.wc-square-order-source-filter select {
+	max-width: 150px;
+}
+
+/* Bulk actions for order source */
+.bulk-edit-order-source {
+	display: none;
+}
+
+.bulk-edit-order-source.show {
+	display: block;
+}
+
+/* Order notes for Square orders */
+.wc-square-order-note {
+	background-color: #e8f5e8;
+	border-left: 4px solid #00d4aa;
+	padding: 8px 12px;
+	margin: 8px 0;
+}
+
+.wc-square-order-note .note-content {
+	font-style: italic;
+	color: #2c5aa0;
+}
+
+/* Sync status indicators */
+.sync-status {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	margin-right: 6px;
+}
+
+.sync-status.completed {
+	background-color: #00d4aa;
+}
+
+.sync-status.pending {
+	background-color: #ffba00;
+}
+
+.sync-status.failed {
+	background-color: #dc3232;
+}
+
+/* Order list table enhancements */
+.wp-list-table .column-order_source {
+	width: 80px;
+}
+
+.wp-list-table .column-order_source .wc-square-order-source {
+	justify-content: center;
+	width: 100%;
+}
+
+/* Tooltip styles */
+.wc-square-order-source[title]:hover::after {
+	content: attr(title);
+	position: absolute;
+	background: #333;
+	color: #fff;
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	white-space: nowrap;
+	z-index: 1000;
+	margin-top: -30px;
+	margin-left: -50px;
+}
+
+/* Print styles */
+@media print {
+	.wc-square-order-source,
+	.wc-square-order-source-badge {
+		border: 1px solid #ccc;
+		background-color: #f9f9f9 !important;
+		color: #333 !important;
+	}
+} 

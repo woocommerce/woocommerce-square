@@ -56,7 +56,7 @@ class Orders extends API\Request {
 	 */
 	public function set_create_order_data( $location_id, \WC_Order $order ) {
 
-		$this->square_api_method = 'createOrder';
+		 $this->square_api_method = 'createOrder';
 		$this->square_request    = new \Square\Models\CreateOrderRequest();
 
 		$order_model = new \Square\Models\Order( $location_id );
@@ -138,7 +138,7 @@ class Orders extends API\Request {
 			array_filter(
 				$all_line_items,
 				function( $line_item ) {
-					return $line_item instanceof \Square\Models\OrderLineItemDiscount;
+					 return $line_item instanceof \Square\Models\OrderLineItemDiscount;
 				}
 			)
 		);
@@ -147,7 +147,7 @@ class Orders extends API\Request {
 			array_filter(
 				$all_line_items,
 				function( $line_item ) {
-					return $line_item instanceof \Square\Models\OrderLineItemTax;
+					 return $line_item instanceof \Square\Models\OrderLineItemTax;
 				}
 			)
 		);
@@ -170,8 +170,8 @@ class Orders extends API\Request {
 	}
 
 	/**
-	 * Sets request data when a payment is to be made using multiple payment methods.
-	 * For example: Gift Card + Square Credit Card.
+	  * Sets request data when a payment is to be made using multiple payment methods.
+	  * For example: Gift Card + Square Credit Card.
 	 *
 	 * @param array  $payment_ids Array of payment IDs.
 	 * @param string $order_id    Square order ID.
@@ -525,7 +525,7 @@ class Orders extends API\Request {
 	 * @param string   $location_id Location ID for the Square order.
 	 * @param \WC_Order $order       WooCommerce order object.
 	 */
-	public function set_create_order_data_with_woo_tag( $location_id, \WC_Order $order ) {
+	 public function set_create_order_data_with_woo_tag( $location_id, \WC_Order $order ) {
 		$this->square_api_method = 'createOrder';
 		$this->square_request    = new \Square\Models\CreateOrderRequest();
 

@@ -1997,7 +1997,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param Create_Payment $payment_method_response Other Payment Method payment response.
 	 * @param \WC_Order      $order                   WooCommerce Order object.
 	 */
-	protected function handle_multi_payment_methods( $gift_card_response, $payment_method_response, $order ) {
+	 protected function handle_multi_payment_methods( $gift_card_response, $payment_method_response, $order ) {
 		Performance_Logger::start( 'handle_payment_response', $this->get_plugin() );
 
 		if ( $payment_method_response->transaction_approved() || $payment_method_response->transaction_held() ) {

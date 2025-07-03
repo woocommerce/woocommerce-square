@@ -183,6 +183,11 @@ class Order_Sync {
 	 * @since x.x.x
 	 */
 	public static function maybe_register_square_webhook() {
+		// Only register if order sync is enabled and webhook not already registered.
+		if ( ! self::is_order_sync_enabled() ) {
+			// return;
+		}
+
 		$webhook_subscription_id = get_option( 'square_webhook_subscription_id' );
 		$square_webhook_url      = get_option( 'square_webhook_url' );
 		
@@ -225,6 +230,131 @@ class Order_Sync {
 		// Delete the tag and attempts.
 		delete_option( 'square_webhook_in_progress' );
 		delete_option( 'square_webhook_attempts' );
+	}
+
+	/**
+	 * Check if order sync is enabled.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	private static function is_order_sync_enabled() {
+		return get_option( 'order_sync_enabled', 'no' ) === 'yes';
+	}
+
+	/**
+	 * Enqueue admin scripts and styles.
+	 *
+	 * @since x.x.x
+	 */
+	public static function enqueue_admin_scripts() {
+		$screen = get_current_screen();
+		
+		// Only enqueue on order-related screens.
+		if ( ! $screen || ! in_array( $screen->id, array( 'edit-shop_order', 'shop_order', 'woocommerce_page_wc-orders' ), true ) ) {
+			return;
+		}
+
+		// Enqueue order tagging styles.
+		// Order_Tagging::enqueue_admin_styles();
+
+		// Enqueue JavaScript for order actions.
+		// wp_enqueue_script(
+		//     'wc-square-order-sync',
+		//     plugins_url( 'assets/js/order-sync.js', WC_SQUARE_PLUGIN_FILE ),
+		//     array( 'jquery' ),
+		//     WC_SQUARE_VERSION,
+		//     true
+		// );
+
+		// wp_localize_script(
+		//     'wc-square-order-sync',
+		//     'wcSquareOrderSync',
+		//     array(
+		//         'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+		//         'nonce'   => wp_create_nonce( 'wc-square-order-sync' ),
+		//         'i18n'    => array(
+		//             'confirmSync' => __( 'Are you sure you want to sync this order to Square?', 'woocommerce-square' ),
+		//             'syncSuccess' => __( 'Order synced successfully!', 'woocommerce-square' ),
+		//             'syncError'   => __( 'Failed to sync order. Please try again.', 'woocommerce-square' ),
+		//         ),
+		//     )
+		// );
+	}
+
+	/**
+	 * Get sync statistics.
+	 *
+	 * @since x.x.x
+	 * @return array
+	 */
+	public static function get_sync_stats() {
+		global $wpdb;
+
+		$stats = array(
+			'total_square_orders' => 0,
+			'total_woo_orders'    => 0,
+			'sync_errors'         => 0,
+			'last_sync'           => null,
+		);
+
+		// Count Square imported orders.
+		$square_orders = $wpdb->get_var(
+			"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
+			WHERE meta_key = '_ordered_via_square' 
+			AND meta_value = 'true'"
+		);
+		$stats['total_square_orders'] = (int) $square_orders;
+
+		// Count WooCommerce orders synced to Square.
+		$woo_orders = $wpdb->get_var(
+			"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} 
+			WHERE meta_key = '_square_order_id' 
+			AND meta_value != ''"
+		);
+		$stats['total_woo_orders'] = (int) $woo_orders;
+
+		// Get last sync timestamp.
+		$last_sync = $wpdb->get_var(
+			"SELECT MAX(meta_value) FROM {$wpdb->postmeta} 
+			WHERE meta_key = '_square_sync_timestamp'"
+		);
+		$stats['last_sync'] = $last_sync;
+
+		return $stats;
+	}
+
+	/**
+	 * Manual sync trigger for admin.
+	 *
+	 * @since x.x.x
+	 * @param int $order_id WooCommerce order ID.
+	 * @return bool
+	 */
+	public static function manual_sync_to_square( $order_id ) {
+		if ( ! self::is_order_sync_enabled() ) {
+			return false;
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return false;
+		}
+
+		// Check if order was imported from Square.
+		if ( Order_Tagging::is_square_imported_order( $order ) ) {
+			wc_square()->log( "Cannot sync Square-imported order to Square: {$order_id}", 'sync' );
+			return false;
+		}
+
+		// Perform sync.
+		$result = self::maybe_new_order_sync_to_square( $order_id );
+		
+		if ( $result ) {
+			$order->add_order_note( __( 'Order manually synced to Square', 'woocommerce-square' ) );
+		}
+
+		return $result;
 	}
 
 	/**

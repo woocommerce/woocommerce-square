@@ -544,6 +544,38 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 		Performance_Logger::start( 'payment_transaction', $this->get_plugin() );
 
 		try {
+			// Step 1: Always create a Square Order before payment if not already present.
+			$square_order_id = $order->get_meta( '_square_order_id', true );
+			if ( empty( $square_order_id ) ) {
+				$location_id  = wc_square()->get_settings_handler()->get_location_id();
+				$access_token = wc_square()->get_settings_handler()->get_access_token();
+				$is_sandbox   = wc_square()->get_settings_handler()->is_sandbox();
+				$api          = new \WooCommerce\Square\Gateway\API( $access_token, $location_id, $is_sandbox );
+				// Use Order_Mapper to map Woo order to Square order data if available and supported.
+				if ( class_exists( '\WooCommerce\Square\Sync\Order_Mapper' ) && method_exists( $api, 'create_order' ) && method_exists( '\WooCommerce\Square\Sync\Order_Mapper', 'woocommerce_to_square' ) ) {
+					$square_order_data = \WooCommerce\Square\Sync\Order_Mapper::woocommerce_to_square( $order );
+					$ref = new \ReflectionMethod( $api, 'create_order' );
+					if ( $ref->getNumberOfParameters() >= 3 ) {
+						$square_order = $api->create_order( $location_id, $order, $square_order_data );
+					} else {
+						$square_order = $api->create_order( $location_id, $order );
+					}
+				} elseif ( method_exists( $api, 'create_order' ) ) {
+					$square_order = $api->create_order( $location_id, $order );
+				}
+				// Only use $square_order if it is an object and has getId().
+				if ( isset( $square_order ) && is_object( $square_order ) && method_exists( $square_order, 'getId' ) ) {
+					$square_order_id = $square_order->getId();
+					$order->update_meta_data( '_square_order_id', $square_order_id );
+					$order->save();
+				} else {
+					throw new \Exception( __( 'Failed to create Square Order before payment.', 'woocommerce-square' ) );
+				}
+			}
+
+			// Step 2: Pass the Square Order ID to the Payments API.
+			$order->square_order_id = $square_order_id;
+
 			// Generate a new transaction ref if the order payment is split using multiple payment methods.
 			if ( isset( $order->payment->partial_total ) ) {
 				$order->unique_transaction_ref = $this->get_order_with_unique_transaction_ref( $order );
