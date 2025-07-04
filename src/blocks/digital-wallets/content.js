@@ -7,7 +7,7 @@ import { useEffect, useState } from '@wordpress/element';
  * Internal dependencies
  */
 import { tokenize } from './utils';
-import { getSquareServerData, deferExecution } from '../square-utils/utils';
+import { getSquareServerData } from '../square-utils/utils';
 import {
 	useSquare,
 	usePaymentRequest,
@@ -45,7 +45,8 @@ const Content = ( {
 		billing,
 		tokenResult,
 		emitResponse,
-		onPaymentSetup
+		onPaymentSetup,
+		onSubmit
 	);
 
 	useEffect( () => {
@@ -76,10 +77,6 @@ const Content = ( {
 				onClose();
 			} else {
 				setTokenResult( __tokenResult );
-
-				// See function DocBlock.
-				await deferExecution();
-				onSubmit();
 			}
 		} )();
 	}

@@ -135,28 +135,9 @@ const log = ( data, type = 'notice' ) => {
 };
 
 /**
- * Defers execution to the next event loop cycle to ensure state updates are committed.
- *
- * React 18 (introduced in WooCommerce 9.8) batches state updates inside event handlers,
- * which can cause issues where state is not updated in time before dependent logic runs.
- *
- * This utility function forces JavaScript to defer execution to the next event loop cycle,
- * ensuring that any state updates are fully committed before continuing execution.
- *
- * Introduced specifically to handle WooCommerce 9.8 and above, where React 18's
- * concurrent rendering changes impact payment tokenization timing.
- *
- * @see https://github.com/woocommerce/woocommerce/pull/52473 for more details.
- *
- * @return {Promise<void>} A promise that resolves in the next event loop cycle.
- */
-const deferExecution = () =>
-	new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
-
-/**
  * Adjust decimal places based on currency code
  *
- * @param {number} amount The amount to convert
+ * @param {number} amount       The amount to convert
  * @param {string} currencyCode The currency code of the amount
  * @return {number} The converted amount
  */
@@ -185,4 +166,4 @@ const convertAmount = ( amount, currencyCode ) => {
 	}
 };
 
-export { getSquareServerData, handleErrors, log, logData, deferExecution, convertAmount };
+export { getSquareServerData, handleErrors, log, logData, convertAmount };

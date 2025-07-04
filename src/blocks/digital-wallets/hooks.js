@@ -203,14 +203,28 @@ export function useApplePay( payments, paymentRequest ) {
  * @param {Object}   tokenResult    Tokenization response object.
  * @param {Object}   emitResponse   Object containing properties referencing the various response types.
  * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
+ * @param {Function} onSubmit       Function to place an Order.
  */
 export function usePaymentProcessing(
 	payments,
 	billing,
 	tokenResult,
 	emitResponse,
-	onPaymentSetup
+	onPaymentSetup,
+	onSubmit
 ) {
+	const tokenResultRef = useRef( tokenResult );
+
+	// Place an Order once the token result is available.
+	useEffect( () => {
+		tokenResultRef.current = tokenResult;
+
+		// Place an Order.
+		if ( tokenResult ) {
+			onSubmit();
+		}
+	}, [ tokenResult ] );
+
 	const verificationDetails = buildVerificationDetails( billing );
 
 	useEffect(
@@ -219,7 +233,7 @@ export function usePaymentProcessing(
 				async function handlePaymentProcessing() {
 					let response = { type: emitResponse.responseTypes.SUCCESS };
 
-					if ( ! tokenResult ) {
+					if ( ! tokenResultRef.current ) {
 						response = {
 							type: emitResponse.responseTypes.FAILURE,
 						};
@@ -229,13 +243,14 @@ export function usePaymentProcessing(
 					const {
 						details: { card, method },
 						token,
-					} = tokenResult;
+					} = tokenResultRef.current;
 
-					const billingContact = tokenResult?.details?.billing || {};
+					const billingContact =
+						tokenResultRef.current?.details?.billing || {};
 					const {
 						contact: shippingContact = {},
 						option: shippingOption = {},
-					} = tokenResult?.details?.shipping || {};
+					} = tokenResultRef.current?.details?.shipping || {};
 
 					const verificationResult = await verifyBuyer(
 						payments,

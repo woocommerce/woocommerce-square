@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, useRef } from '@wordpress/element';
 import { decodeEntities } from '@wordpress/html-entities';
 
 /**
@@ -13,7 +13,6 @@ import {
 	setContinuationSession,
 	log,
 } from './utils';
-import { deferExecution } from '../square-utils/utils';
 import { PAYMENT_METHOD_ID } from './constants';
 
 const buttonId = 'wc-square-cash-app-pay';
@@ -27,6 +26,8 @@ export const ComponentCashAppPay = ( props ) => {
 	const [ errorMessage, setErrorMessage ] = useState( null );
 	const [ isLoaded, setIsLoaded ] = useState( false );
 	const [ paymentNonce, setPaymentNonce ] = useState( '' );
+	const paymentNonceRef = useRef( paymentNonce );
+
 	const {
 		applicationId,
 		locationId,
@@ -46,10 +47,20 @@ export const ComponentCashAppPay = ( props ) => {
 	} = props;
 	const { onPaymentSetup } = eventRegistration;
 
+	// Place an Order once the payment nonce is available.
+	useEffect( () => {
+		paymentNonceRef.current = paymentNonce;
+
+		// Place an Order.
+		if ( paymentNonce ) {
+			onSubmit();
+		}
+	}, [ paymentNonce ] );
+
 	// Checkout handler.
 	useEffect( () => {
 		const unsubscribe = onPaymentSetup( () => {
-			if ( ! paymentNonce ) {
+			if ( ! paymentNonceRef.current ) {
 				return {
 					type: emitResponse.responseTypes.ERROR,
 					message: generalError,
@@ -57,7 +68,7 @@ export const ComponentCashAppPay = ( props ) => {
 			}
 			const paymentMethodData = {
 				[ `wc-${ gatewayIdDasherized }-payment-nonce` ]:
-					paymentNonce || '',
+					paymentNonceRef.current || '',
 			};
 			return {
 				type: emitResponse.responseTypes.SUCCESS,
@@ -123,12 +134,6 @@ export const ComponentCashAppPay = ( props ) => {
 
 							// Set the nonce.
 							setPaymentNonce( nonce );
-
-							// See function DocBlock.
-							await deferExecution();
-
-							// Place an Order.
-							onSubmit();
 						} else {
 							// Declined. Reset the nonce and re-initialize the Square Cash App Pay Button.
 							setPaymentNonce( null );
