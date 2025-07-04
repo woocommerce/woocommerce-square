@@ -203,7 +203,7 @@ export function useApplePay( payments, paymentRequest ) {
  * @param {Object}   tokenResult    Tokenization response object.
  * @param {Object}   emitResponse   Object containing properties referencing the various response types.
  * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
- * @param {Function} onSubmit       Function to place an Order.
+ * @param {Object}   tokenResultRef Tokenization response object.
  */
 export function usePaymentProcessing(
 	payments,
@@ -211,20 +211,8 @@ export function usePaymentProcessing(
 	tokenResult,
 	emitResponse,
 	onPaymentSetup,
-	onSubmit
+	tokenResultRef
 ) {
-	const tokenResultRef = useRef( tokenResult );
-
-	// Place an Order once the token result is available.
-	useEffect( () => {
-		tokenResultRef.current = tokenResult;
-
-		// Place an Order.
-		if ( tokenResult ) {
-			onSubmit();
-		}
-	}, [ tokenResult ] );
-
 	const verificationDetails = buildVerificationDetails( billing );
 
 	useEffect(
@@ -362,6 +350,6 @@ export function usePaymentProcessing(
 
 				return handlePaymentProcessing();
 			} ),
-		[ onPaymentSetup, billing.billingData, tokenResult ]
+		[ onPaymentSetup, billing.billingData, tokenResult, payments ]
 	);
 }

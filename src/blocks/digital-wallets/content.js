@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, useRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -37,6 +37,7 @@ const Content = ( {
 	);
 	const [ applePay, applePayRef ] = useApplePay( payments, paymentRequest );
 	const [ tokenResult, setTokenResult ] = useState( false );
+	const tokenResultRef = useRef( tokenResult );
 
 	useShippingContactChangeHandler( paymentRequest );
 	useShippingOptionChangeHandler( paymentRequest );
@@ -46,8 +47,18 @@ const Content = ( {
 		tokenResult,
 		emitResponse,
 		onPaymentSetup,
-		onSubmit
+		tokenResultRef
 	);
+
+	// Place an Order once the token result is available.
+	useEffect( () => {
+		tokenResultRef.current = tokenResult;
+
+		// Place an Order.
+		if ( tokenResult?.token ) {
+			onSubmit();
+		}
+	}, [ tokenResult ] );
 
 	useEffect( () => {
 		const unsubscribe = onCheckoutFail( () => {
