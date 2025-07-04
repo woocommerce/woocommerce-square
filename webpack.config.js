@@ -26,6 +26,8 @@ module.exports = {
 		// admin files.
 		'assets/admin/wc-square-admin-products':
 			'./src/js/admin/wc-square-admin-products.js',
+		'assets/admin/wc-square-admin-products-styles':
+			'./src/css/admin/wc-square-admin-products.scss',
 		'assets/admin/wc-square-admin-settings':
 			'./src/js/admin/wc-square-admin-settings.js',
 		'assets/admin/wc-square-payment-gateway-admin-order':

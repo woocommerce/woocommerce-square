@@ -81,7 +81,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			$item_data->setReportingCategory( $square_category );
 		}
 
-		$attributes = $product->get_attributes();
+		// Only use attributes that are used for variations.
+		$attributes = self::get_used_variation_attributes( $product );
 
 		$product_variation_ids = $product->get_children();
 		$catalog_variations    = $item_data->getVariations() ?? array();
@@ -294,7 +295,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			$result                = wc_square()->get_api()->retrieve_options_data();
 			$options_data          = isset( $result[1] ) ? $result[1] : array();
 			$parent_product        = wc_get_product( $product->get_parent_id() );
-			$attributes            = $parent_product->get_attributes();
+			$attributes            = self::get_used_variation_attributes( $parent_product );
 			$variation_items       = $product->get_attributes();
 			$variation_item_values = array();
 
@@ -492,5 +493,22 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		$catalog_object->setPresentAtAllLocations( false );
 
 		return $catalog_object;
+	}
+
+	/**
+	 * Helper to get only attributes used for variations.
+	 *
+	 * @since 4.9.3
+	 *
+	 * @param WC_Product $product
+	 * @return array
+	 */
+	public static function get_used_variation_attributes( $product ) {
+		return array_filter(
+			$product->get_attributes(),
+			function ( $attribute ) {
+				return $attribute->get_variation();
+			}
+		);
 	}
 }

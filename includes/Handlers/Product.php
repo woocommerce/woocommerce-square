@@ -155,24 +155,6 @@ class Product {
 
 					$variation->update_meta_data( self::SQUARE_VARIATION_ID_META_KEY, $catalog_variation->getId() );
 
-					/**
-					 * Allow overriding variation name during product import from Square
-					 *
-					 * @since 3.3.0
-					 *
-					 * @param string                             $variation_name Variation name to update.
-					 * @param \SquareConnect\Model\CatalogObject $catalog_variation Catalog item variation being imported.
-					 * @param \SquareConnect\Model\CatalogItem   $catalog_item Catalog item being imported.
-					 * @param \WC_Product_Variation              $variation Variation being updated.
-					 * @return false|string String to override the variation name, false to disable updating
-					 *                      and keep existing name.
-					 * @since 3.3.0
-					 */
-					$variation_name = apply_filters( 'wc_square_update_product_set_variation_name', $catalog_variation->getItemVariationData()->getName(), $catalog_variation, $catalog_item, $variation );
-					if ( false !== $variation_name ) {
-						$variation->set_name( $variation_name );
-					}
-
 					self::update_price_money( $variation, $catalog_variation );
 
 					if ( $with_inventory && wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
@@ -1627,7 +1609,7 @@ class Product {
 	 * @param \WC_Product|\WC_Product_Variation $product
 	 * @param \Square\Models\CatalogObject $catalog_variation
 	 */
-	private static function update_price_money( $product, \Square\Models\CatalogObject $catalog_variation ) {
+	public static function update_price_money( $product, \Square\Models\CatalogObject $catalog_variation ) {
 		$location_overrides = $catalog_variation->getItemVariationData()->getLocationOverrides();
 
 		if ( is_null( $location_overrides ) ) {

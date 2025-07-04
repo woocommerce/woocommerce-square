@@ -1430,6 +1430,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 				// Update the product, this will update/create the variations as well.
 				$product_import->update_product( $product, $data );
+				Product::update_from_square( $product, $square_object->getItemData(), false );
 
 			} catch ( \Exception $exception ) {
 

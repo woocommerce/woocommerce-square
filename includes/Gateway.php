@@ -37,6 +37,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
+use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
  * The Square payment gateway class.
@@ -176,7 +177,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @since 2.0.0
 	 */
 	public function log_js_data() {
-
 		check_ajax_referer( 'wc_' . $this->get_id() . '_log_js_data', 'security' );
 
 		$message = sprintf( "Square.js %1\$s:\n ", ! empty( $_REQUEST['type'] ) ? ucfirst( wc_clean( wp_unslash( $_REQUEST['type'] ) ) ) : 'Request' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -184,6 +184,11 @@ class Gateway extends Payment_Gateway_Direct {
 		// add the data
 		if ( ! empty( $_REQUEST['data'] ) ) {
 			$message .= print_r( wc_clean( wp_unslash( $_REQUEST['data'] ) ), true ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.PHP.DevelopmentFunctions.error_log_print_r
+		}
+
+		// If the type is performance, don't add the request type to the message, it's already in the message.
+		if ( ! empty( $_REQUEST['type'] ) && 'performance' === $_REQUEST['type'] && ! empty( $_REQUEST['data'] ) ) {
+			$message = wc_clean( wp_unslash( $_REQUEST['data'] ) );
 		}
 
 		$this->get_plugin()->log( $message, $this->get_id() );
@@ -268,6 +273,26 @@ class Gateway extends Payment_Gateway_Direct {
 		$this->get_payment_form_instance()->render_js();
 	}
 
+	/**
+	 * Retrieves the validation exception for the gateway.
+	 *
+	 * This function is used to fetch the exception that occurs during
+	 * the validation of fields in the payment gateway. It can be utilized
+	 * in the `validation_fields` method to handle and process validation errors.
+	 *
+	 * @since 4.9.3
+	 *
+	 * @return Exception|null The validation exception if one exists, or null if no exception occurred.
+	 */
+	public function get_validation_exception() {
+		if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
+			throw new \Exception( '3D Secure Verification Token is missing' );
+		}
+
+		if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
+			throw new \Exception( 'Payment nonce is missing' );
+		}
+	}
 
 	/**
 	 * Validates the entered payment fields.
@@ -277,7 +302,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return bool
 	 */
 	public function validate_fields() {
-
 		$is_valid = true;
 
 		if ( $this->is_gift_card_applied() ) {
@@ -285,7 +309,6 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		try {
-
 			if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
 				throw new \Exception( '3D Secure Verification Token is missing' );
 			}
@@ -301,9 +324,15 @@ class Gateway extends Payment_Gateway_Direct {
 
 			$is_valid = false;
 
-			Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
+				Square_Helper::wc_add_notice( $exception->getMessage(), 'error' );
+			} else {
+				Square_Helper::wc_add_notice( __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ), 'error' );
+			}
 
-			$this->add_debug_message( $exception->getMessage(), 'error' );
+			if ( $this->debug_log() ) {
+				$this->add_debug_message( $exception->getMessage(), 'error' );
+			}
 		}
 
 		return $is_valid;
@@ -392,12 +421,13 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @throws \Exception
 	 */
 	protected function do_transaction( $order ) {
+		Performance_Logger::start( 'create_order', $this->get_plugin() );
+		$is_error = false;
 
 		// if there is no associated Square order ID, create one
 		if ( empty( $order->square_order_id ) ) {
 
 			try {
-
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
@@ -426,6 +456,7 @@ class Gateway extends Payment_Gateway_Direct {
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
 
 			} catch ( \Exception $exception ) {
+				$is_error = true;
 
 				// log the error, but continue with payment
 				if ( $this->debug_log() ) {
@@ -434,6 +465,7 @@ class Gateway extends Payment_Gateway_Direct {
 			}
 		}
 
+		Performance_Logger::end( 'create_order', $this->get_plugin(), $is_error );
 		return parent::do_transaction( $order );
 	}
 
@@ -1097,6 +1129,20 @@ class Gateway extends Payment_Gateway_Direct {
 	 */
 	public function wc_ajax_square_checkout_validate( $data, $errors = null ) {
 		$error_messages = null;
+
+		// Check Square payment validation.
+		if ( ! $this->validate_fields() ) {
+			try {
+				$this->get_validation_exception();
+			} catch ( \Exception $exception ) {
+				if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
+					$errors->add( 'validation', $exception->getMessage() );
+				} else {
+					$errors->add( 'validation', __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ) );
+				}
+			}
+		}
+
 		if ( ! is_null( $errors ) ) {
 			$error_messages = $errors->get_error_messages();
 		}
