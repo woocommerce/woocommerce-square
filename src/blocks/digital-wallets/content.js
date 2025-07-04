@@ -55,10 +55,10 @@ const Content = ( {
 		tokenResultRef.current = tokenResult;
 
 		// Place an Order.
-		if ( tokenResult?.token ) {
+		if ( tokenResult ) {
 			onSubmit();
 		}
-	}, [ tokenResult ] );
+	}, [ tokenResult, onSubmit ] );
 
 	useEffect( () => {
 		const unsubscribe = onCheckoutFail( () => {

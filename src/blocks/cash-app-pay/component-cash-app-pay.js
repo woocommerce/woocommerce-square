@@ -55,7 +55,7 @@ export const ComponentCashAppPay = ( props ) => {
 		if ( paymentNonce ) {
 			onSubmit();
 		}
-	}, [ paymentNonce ] );
+	}, [ paymentNonce, onSubmit ] );
 
 	// Checkout handler.
 	useEffect( () => {
