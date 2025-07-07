@@ -350,6 +350,13 @@ export function usePaymentProcessing(
 
 				return handlePaymentProcessing();
 			} ),
-		[ onPaymentSetup, billing.billingData, tokenResult, payments ]
+		[
+			onPaymentSetup,
+			billing.billingData,
+			tokenResult,
+			payments,
+			emitResponse.responseTypes.SUCCESS,
+			emitResponse.responseTypes.FAILURE,
+		]
 	);
 }
