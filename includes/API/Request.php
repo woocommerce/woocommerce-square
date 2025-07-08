@@ -169,6 +169,8 @@ class Request implements API_Request {
 
 				if ( is_callable( array( $arg, '__toString' ) ) ) {
 					$body[ $key ] = $arg->__toString();
+				} elseif ( $arg instanceof \JsonSerializable ) {
+					$body[ $key ] = wp_json_encode( $arg );
 				}
 			}
 
