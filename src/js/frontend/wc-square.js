@@ -292,55 +292,10 @@ jQuery( document ).ready( ( $ ) => {
 			const tokenized_card_id = this.get_tokenized_payment_method_id();
 
 			if ( tokenized_card_id ) {
-				if ( this.has_verification_token() ) {
-					this.log( 'Tokenized payment verification token present, placing order' );
-					this.end( 'validate_payment_data' );
-					return true;
-				}
-
-				this.log( 'Requesting verification token for tokenized payment' );
+				this.log( 'Tokenized payment verification token present, placing order' );
 				this.end( 'validate_payment_data' );
-				this.block_ui();
-
-				fetch( `${ wc_checkout_params.ajax_url }?action=wc_square_credit_card_get_token_by_id&token_id=${ tokenized_card_id }&nonce=${ this.payment_token_nonce }` )
-				.then( ( response ) => {
-					if ( response.ok ) {
-						return response.json()
-					} else {
-						throw new Error( 'Error in fetching payment token by ID.' );
-					}
-				} )
-				.then( ( { success, data: token } ) => {
-					this.start( 'verify_buyer' );
-					if ( success ) {
-						this.log( 'Requesting verification token for tokenized payment' );
-
-						this.block_ui();
-	
-						this.get_verification_details().then((verificationDetails) => {
-							return this.payments
-								.verifyBuyer(token, verificationDetails)
-								.then((verificationResult) => {
-									this.handle_verify_buyer_response(
-										false,
-										verificationResult
-									);
-									this.end( 'verify_buyer' );
-								})
-								.catch(error => {
-									this.handle_errors([ error ]);
-									this.end( 'verify_buyer', true );
-								});
-						});
-					} else {
-						this.payment_token_status = false;
-						this.form.trigger( 'submit' );
-						this.end( 'verify_buyer', true );
-						this.log( token );
-					}
-				} );
-
-				return false;
+				$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( 'saved_card' );
+				return true;
 			}
 
 			this.log( 'Requesting payment nonce' );
@@ -355,20 +310,24 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		handleSubmission() {
 			this.start( 'generate_payment_nonce' );
-			const tokenPromise = this.payment_form.tokenize();
-			tokenPromise.then( tokenResult => {
-				const { token, details, status } = tokenResult;
+      			this.get_verification_details().then(( verificationDetails ) => {
+					this.payment_form
+						.tokenize( verificationDetails )
+							.then( ( tokenResult ) => {
+								const { token, details, status } = tokenResult;
+								this.end( 'generate_payment_nonce' );
 
-				if ( status === 'OK' ) {
-					this.handle_card_nonce_response( token, details );
-					this.end( 'generate_payment_nonce' );
-				} else {
-					if ( tokenResult.errors ) {
-						this.handle_errors( tokenResult.errors )
-					}
-					this.end( 'generate_payment_nonce', true );
+								if ( status === 'OK' ) {
+									this.handle_card_nonce_response( token, details );
+								} else {
+									if ( tokenResult.errors ) {
+										this.handle_errors( tokenResult.errors )
+									}
+									this.end( 'generate_payment_nonce', true );
+								}
+					} );
 				}
-			} );
+			);
 		}
 
 		/**
@@ -431,63 +390,15 @@ jQuery( document ).ready( ( $ ) => {
 			// payment nonce data.
 			$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
 
-			// if 3ds is enabled, we need to verify the buyer and record the verification token before continuing.
-			this.log( 'Verifying buyer' );
+			// buyer verification token data.
+			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( nonce );
 
-			this.get_verification_details().then((verificationDetails) => {
-				return this.payments
-					.verifyBuyer(nonce, verificationDetails)
-					.then((verificationResult) => {
-						this.handle_verify_buyer_response(
-							false,
-							verificationResult
-						);
-					})
-					.catch(error => {
-						this.handle_errors([ error ]);
-					});;
-			});
-		}
-
-		/**
-		 * Handles the response from a call to verifyBuyer()
-		 *
-		 * @since 2.1.0
-		 *
-		 * @param {Object} errors Verification errors, if any.
-		 * @param {Object} verification_result Results of verification.
-		 */
-		handle_verify_buyer_response( errors, verification_result ) {
-			if ( errors ) {
-				$( errors ).each( ( index, error ) => {
-					if ( ! error.field ) {
-						error.field = 'none';
-					}
-				} );
-
-				return this.handle_errors( errors );
-			}
-
-			// no errors, but also no verification token.
-			if ( ! verification_result || ! verification_result.token ) {
-				const message = 'Verification token is missing from the Square response';
-
-				this.log( message, 'error' );
-				this.log_data( message, 'response' );
-
-				return this.handle_errors();
-			}
-
-			this.log( 'Verification result received' );
-			this.log( verification_result );
-
-			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( verification_result.token );
-
+			// if we made it this far, we have payment data.
 			this.form.trigger( 'submit' );
 		}
 
 		/**
-		 * Gets a verification details object to be used in verifyBuyer()
+		 * Gets a verification details for tokenization.
 		 *
 		 * @since 2.1.0
 		 *
@@ -507,6 +418,8 @@ jQuery( document ).ready( ( $ ) => {
 					addressLines: [ $( '#billing_address_1' ).val() || '', $( '#billing_address_2' ).val() || '' ],
 				},
 				intent: this.get_intent(),
+				customerInitiated: true,
+				sellerKeyedIn: false,
 			};
 
 			if ( 'CHARGE' === verification_details.intent ) {

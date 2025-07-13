@@ -273,6 +273,26 @@ class Gateway extends Payment_Gateway_Direct {
 		$this->get_payment_form_instance()->render_js();
 	}
 
+	/**
+	 * Retrieves the validation exception for the gateway.
+	 *
+	 * This function is used to fetch the exception that occurs during
+	 * the validation of fields in the payment gateway. It can be utilized
+	 * in the `validation_fields` method to handle and process validation errors.
+	 *
+	 * @since 4.9.3
+	 *
+	 * @return Exception|null The validation exception if one exists, or null if no exception occurred.
+	 */
+	public function get_validation_exception() {
+		if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
+			throw new \Exception( '3D Secure Verification Token is missing' );
+		}
+
+		if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
+			throw new \Exception( 'Payment nonce is missing' );
+		}
+	}
 
 	/**
 	 * Validates the entered payment fields.
@@ -282,7 +302,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return bool
 	 */
 	public function validate_fields() {
-
 		$is_valid = true;
 
 		if ( $this->is_gift_card_applied() ) {
@@ -290,7 +309,6 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		try {
-
 			if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
 				throw new \Exception( '3D Secure Verification Token is missing' );
 			}
@@ -1111,6 +1129,20 @@ class Gateway extends Payment_Gateway_Direct {
 	 */
 	public function wc_ajax_square_checkout_validate( $data, $errors = null ) {
 		$error_messages = null;
+
+		// Check Square payment validation.
+		if ( ! $this->validate_fields() ) {
+			try {
+				$this->get_validation_exception();
+			} catch ( \Exception $exception ) {
+				if ( $this->debug_checkout() || $this->is_detailed_customer_decline_messages_enabled() ) {
+					$errors->add( 'validation', $exception->getMessage() );
+				} else {
+					$errors->add( 'validation', __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ) );
+				}
+			}
+		}
+
 		if ( ! is_null( $errors ) ) {
 			$error_messages = $errors->get_error_messages();
 		}

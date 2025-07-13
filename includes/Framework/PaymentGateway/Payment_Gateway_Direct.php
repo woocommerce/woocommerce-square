@@ -789,7 +789,6 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 
 		// mock order, as all gateway API implementations require an order object for tokenization
 		$order = new WC_Order_Square( 0 );
-		$order = $this->get_order( $order );
 
 		$user = get_userdata( get_current_user_id() );
 
@@ -835,8 +834,13 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 
 		$order = Order_Compatibility::set_props( $order, $properties );
 
-		// other default info
-		$order->customer_id = $this->get_customer_id( $order->get_user_id() );
+		// Add payment and transaction data to the order.
+		$order = $this->get_order( $order );
+
+		if ( empty( $order->customer_id ) ) {
+			// Set customer ID if not already set.
+			$order->customer_id = $this->get_customer_id( $order->get_user_id() );
+		}
 
 		/* translators: Placeholders: %1$s - site title, %2$s - customer email. Payment method as in a specific credit card, e-check or bank account */
 		$order->description = sprintf( esc_html__( '%1$s - Add Payment Method for %2$s', 'woocommerce-square' ), sanitize_text_field( Square_Helper::get_site_name() ), $properties['billing_email'] );

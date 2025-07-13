@@ -261,7 +261,7 @@ export const OnboardingApp = () => {
 				) }
 				{ step === 'sync-settings' && (
 					<>
-						<ConfigureSync />
+						<ConfigureSync showViewProgressButton={ false } />
 						<SquareSettingsSaveButton
 							data-testid="square-settings-save-button"
 							afterSaveCallback={ () => {

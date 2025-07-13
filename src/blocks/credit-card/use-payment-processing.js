@@ -4,11 +4,6 @@
 import { useEffect, useRef } from '@wordpress/element';
 
 /**
- * Internal dependencies
- */
-import { getSquareServerData } from '../square-utils';
-
-/**
  * @typedef {import('@woocommerce/type-defs/registered-payment-method-props').EmitResponseProps} EmitResponseProps
  * @typedef {import('../square-utils/type-defs').SquareContext} SquareContext
  */
@@ -53,12 +48,9 @@ export const usePaymentProcessing = (
 			};
 
 			if ( square.current?.token ) {
-				const { paymentTokenNonce } = getSquareServerData();
-				const __response = await fetch(
-					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
-				);
-				const { success, data: token } = await __response.json();
-				paymentData.token = success ? token : '';
+				// This is a saved card, so we need to set the token to 'saved_card'.
+				// It will be used to detect and not pass the token to Square via setVerificationToken().
+				paymentData.token = 'saved_card';
 			} else {
 				const createNonceResponse = await createNonce(
 					square.current.card
@@ -79,19 +71,7 @@ export const usePaymentProcessing = (
 			const paymentToken = paymentData.token || paymentData.nonce;
 
 			if ( paymentToken ) {
-				const verifyBuyerResponse = await verifyBuyer(
-					square.current.payments,
-					paymentToken
-				);
-
-				paymentData.verificationToken =
-					verifyBuyerResponse.verificationToken || '';
-				paymentData.logs = paymentData.logs.concat(
-					verifyBuyerResponse.log || []
-				);
-				paymentData.errors = paymentData.notices.concat(
-					verifyBuyerResponse.errors || []
-				);
+				paymentData.verificationToken = paymentToken;
 			}
 
 			if ( paymentToken || paymentData.logs.length > 0 ) {

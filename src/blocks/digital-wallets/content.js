@@ -1,13 +1,13 @@
 /**
  * External dependencies
  */
-import { useEffect, useState } from '@wordpress/element';
+import { useEffect, useState, useRef } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
 import { tokenize } from './utils';
-import { getSquareServerData, deferExecution } from '../square-utils/utils';
+import { getSquareServerData } from '../square-utils/utils';
 import {
 	useSquare,
 	usePaymentRequest,
@@ -37,6 +37,7 @@ const Content = ( {
 	);
 	const [ applePay, applePayRef ] = useApplePay( payments, paymentRequest );
 	const [ tokenResult, setTokenResult ] = useState( false );
+	const tokenResultRef = useRef( tokenResult );
 
 	useShippingContactChangeHandler( paymentRequest );
 	useShippingOptionChangeHandler( paymentRequest );
@@ -45,8 +46,19 @@ const Content = ( {
 		billing,
 		tokenResult,
 		emitResponse,
-		onPaymentSetup
+		onPaymentSetup,
+		tokenResultRef
 	);
+
+	// Place an Order once the token result is available.
+	useEffect( () => {
+		tokenResultRef.current = tokenResult;
+
+		// Place an Order.
+		if ( tokenResult ) {
+			onSubmit();
+		}
+	}, [ tokenResult, onSubmit ] );
 
 	useEffect( () => {
 		const unsubscribe = onCheckoutFail( () => {
@@ -76,10 +88,6 @@ const Content = ( {
 				onClose();
 			} else {
 				setTokenResult( __tokenResult );
-
-				// See function DocBlock.
-				await deferExecution();
-				onSubmit();
 			}
 		} )();
 	}

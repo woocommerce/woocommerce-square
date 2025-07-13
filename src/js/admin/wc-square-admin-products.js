@@ -38,7 +38,7 @@ jQuery( document ).ready( ( $ ) => {
 			const data = {
 				action: 'wc_square_get_quick_edit_product_details',
 				security: wc_square_admin_products.get_quick_edit_product_details_nonce,
-				product_id: $row.find( 'th.check-column input' ).val(),
+				product_id: postID,
 			};
 
 			$.post( wc_square_admin_products.ajax_url, data, ( response ) => {
@@ -153,6 +153,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product is variable.
 		 *
 		 * @since 2.0.0
+		 * @return {boolean} True if product is variable.
 		 */
 		const isVariable = () => {
 			return wc_square_admin_products.variable_product_types.includes( $( '#product-type' ).val() );
@@ -162,6 +163,7 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product has a SKU.
 		 *
 		 * @since 2.0.0
+		 * @return {boolean} True if product has SKU.
 		 */
 		const hasSKU = () => {
 			return '' !== $( '#_sku' ).val().trim();
@@ -171,8 +173,8 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the product variations all have SKUs.
 		 *
 		 * @since 2.2.3
-		 *
-		 * @param {Array} skus
+		 * @param {Array} skus Array of SKU input elements.
+		 * @return {boolean} True if all variations have SKUs.
 		 */
 		const hasVariableSKUs = ( skus ) => {
 			if ( ! skus.length ) {
@@ -180,7 +182,6 @@ jQuery( document ).ready( ( $ ) => {
 			}
 
 			const valid = skus.filter( ( sku ) => '' !== $( sku ).val().trim() );
-
 			return valid.length === skus.length;
 		};
 
@@ -188,8 +189,8 @@ jQuery( document ).ready( ( $ ) => {
 		 * Checks whether the given skus are unique.
 		 *
 		 * @since 2.2.3
-		 *
-		 * @param {Array} skus
+		 * @param {jQuery} skus jQuery object containing SKU input elements.
+		 * @return {boolean} True if all SKUs are unique.
 		 */
 		const hasUniqueSKUs = ( skus ) => {
 			const skuValues = skus.map( ( sku ) => $( sku ).val() );
@@ -325,6 +326,9 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		};
 
+		const productType = $( '#product-type' ).val();
+		toggleSyncProductMeta( productType );
+
 		// fire once on page load
 		handleAttributes( syncCheckboxID );
 
@@ -457,6 +461,7 @@ jQuery( document ).ready( ( $ ) => {
 
 				// remove any inline note to WooCommerce core stock fields that may have been added when Synced with Square is enabled.
 				$( 'p._stock_field span.description' ).remove();
+				$( '.sync-stock-from-square' ).remove();
 				$stockInput.prop( 'readonly', false );
 				$manageDesc.html( manageDescOriginal );
 				$manageInput.off( 'click' );
@@ -502,20 +507,20 @@ jQuery( document ).ready( ( $ ) => {
 							let syncInventory = '';
 							if (!$variationManageInput.is(':checked')) {
 								syncInventory =
-									' - <a href="#" class="sync-stock-from-square" data-product-id="' +
+									'<a href="#" class="sync-stock-from-square" data-product-id="' +
 									variationID +
 									'">' +
 									wc_square_admin_products.i18n
 										.sync_inventory +
 									'</a><div class="sync-stock-spinner spinner" style="float:none;"></div>';
 							}
-							$variationManageInput.after(
-								'(<span class="description">' +
-									wc_square_admin_products.i18n
-										.managed_by_square +
-									'</span>)' +
-									syncInventory
-							);
+
+							if ( ! $variationManageField.find( '.sync-stock-from-square' ).length ) {
+								$variationManageInput.after(
+									`<span class="description">(${ wc_square_admin_products.i18n
+										.managed_by_square })${ syncInventory ? ' - ' : '' }</span> ${ syncInventory }`
+								);
+							}
 					}
 
 					if ( wc_square_admin_products.is_woocommerce_sor ) {
@@ -591,13 +596,10 @@ jQuery( document ).ready( ( $ ) => {
 		// initial page load handling.
 		} ).trigger( 'change' );
 
-		// trigger an update if the product type changes.
-		$( '#product-type' ).on( 'change', ( e ) => {
-			if ( 'complete' === document.readyState ) {
-				triggerUpdate();
-			}
+		$( '#product-type' ).on( 'change', function( e ) {
 			toggleSyncProductMeta( $( e.target ).val() );
-		} ).trigger( 'change' );
+			triggerUpdate();
+		} );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -623,7 +625,7 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		);
 
-		$( '#product-type, #_square_gift_card' ).on( 'change', function() {
+		function handleGiftCard() {
 			const productType = $( '#product-type' ).val();
 			const squareGiftCardCheckbox = $( '#_square_gift_card' );
 			const isGiftCard = squareGiftCardCheckbox.prop( 'checked' );
@@ -662,7 +664,11 @@ jQuery( document ).ready( ( $ ) => {
 					$( 'label[for="_downloadable"]' ).hide();
 				}
 			}
-		} ).trigger( 'change' );
+		}
+
+		handleGiftCard();
+
+		$( '#product-type, #_square_gift_card' ).on( 'change', handleGiftCard );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -699,7 +705,7 @@ jQuery( document ).ready( ( $ ) => {
 		} );
 
 		/**
-		 * Hides unnecessary meta fields when Variatble product is set as Gift Card.
+		 * Hides unnecessary meta fields when Variable product is set as Gift Card.
 		 * @returns void
 		 */
 		function observeVariations() {
@@ -725,5 +731,190 @@ jQuery( document ).ready( ( $ ) => {
 				);
 			}
 		}
+
+		/**
+		 * Shows validation errors at the top of the product data panel.
+		 * 
+		 * @param {string} selector The field selector
+		 * @param {string} message The error message
+		 */
+		const showFieldError = (selector, message) => {
+			const $field = $(selector);
+
+			// Add error class to highlight the field.
+			$field.addClass('wc-square-field-error-highlight');
+			
+			// Create or get the error container.
+			let $errorContainer = $('#wc-square-validation-errors');
+			if (!$errorContainer.length) {
+				$errorContainer = $('<div id="wc-square-validation-errors" class="wc-square-validation-errors"><h4>' + __('Square Sync Validation Errors', 'woocommerce-square') + '</h4><ul></ul></div>');
+				$('#woocommerce-product-data').prepend($errorContainer);
+			}
+
+			// Add the error message if not already present
+			const $errorList = $errorContainer.find('ul');
+			const errorId = 'square-error-' + $field.attr('id');
+			if (!$('#' + errorId).length) {
+				$errorList.append('<li id="' + errorId + '">' + message + '</li>');
+			} else {
+				// Just update the message if it already exists.
+				$('#' + errorId).text(message);
+			}
+		};
+
+		// Generic validation helper functions.
+		const ensureFieldId = ($field) => {
+			if (!$field.attr('id')) {
+				$field.attr('id', 'wc-square-field-' + Math.random().toString(36).substring(2, 15));
+			}
+			return $field;
+		};
+
+		const clearValidationError = ($field) => {
+			$field.removeClass('wc-square-field-error-highlight');
+			$('#square-error-' + $field.attr('id')).remove();
+			if (!$('#wc-square-validation-errors ul li').length) {
+				$('#wc-square-validation-errors').remove();
+			}
+		};
+
+		const clearAllValidationErrors = () => {
+			$('.wc-square-field-error-highlight').removeClass('wc-square-field-error-highlight');
+			$('#wc-square-validation-errors').remove();
+		};
+
+		const validateLimit = (current, max, $field, errorMessage) => {
+			$field = ensureFieldId($field);
+			
+			if (current > max) {
+				showFieldError($field, errorMessage);
+				return false;
+			}
+
+			clearValidationError($field);
+			return true;
+		};
+
+		// Specific validation functions.
+		const validateAttributeName = ($field) => {
+			const maxLength = 65;
+			const name = $field.val();
+			
+			return validateLimit(
+				name.length, 
+				maxLength, 
+				$field, 
+				wc_square_admin_products.i18n.attribute_name_too_long + ': ' + name.substring(0, maxLength) + '...'
+			);
+		};
+
+		const validateMaxAttributes = () => {
+			return validateLimit(
+				$('#product_attributes .woocommerce_attribute').length,
+				6,
+				$('.attribute_tab'),
+				wc_square_admin_products.i18n.too_many_attributes
+			);
+		};
+
+		const validateMaxAttributeValues = ($field) => {
+			let attrValues = $field.val();
+
+			// if attrValues is array (when taxonomy attribute), convert to string and combine values by '|'.
+			if (Array.isArray(attrValues)) {
+				attrValues = attrValues.join('|');
+			}
+
+			return validateLimit(
+				attrValues.length,
+				250,
+				$field,
+				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + attrValues.substring(0, 50) + '...'
+			);
+		};
+
+		const validateMaxVariations = () => {
+			return validateLimit(
+				$('#woocommerce-product-data').find('.woocommerce_variation').length,
+				250,
+				$('.variations_tab'),
+				wc_square_admin_products.i18n.too_many_variations
+			);
+		};
+
+		// If product type changes to variable, validate all fields.
+		$( '#product-type' ).on( 'change', () => {
+			if ( 'variable' === $( '#product-type' ).val() ) {
+				setupValidationHandlers();
+			} else {
+				clearAllValidationErrors();
+			}
+		} );
+
+		// Event handlers.
+		const setupValidationHandlers = () => {
+
+			// Early return if product type is not variable.
+			if (!isVariable()) {
+				return;
+			}
+
+			const $syncCheckbox = $('#_' + wc_square_admin_products.synced_with_square_taxonomy);
+			const $productAttributes = $('#product_attributes');
+			const $productData = $('#woocommerce-product-data');
+
+			// Validate all fields.
+			const validateAll = () => {
+				clearAllValidationErrors();
+
+				if (!$syncCheckbox.prop('checked')) return;
+
+				if (!isVariable()) return;
+
+				validateMaxAttributes();
+				validateMaxVariations();
+				
+				$productAttributes.find('input.attribute_name').each(function() {
+					validateAttributeName($(this));
+				});
+
+				$productAttributes.find('[name*="attribute_values"]').each(function() {
+					validateMaxAttributeValues($(this));
+				});
+			};
+
+			// Event bindings.
+			$productAttributes
+				.on('change', 'input.attribute_name', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateAttributeName($(this));
+						validateMaxAttributes();
+					}
+				})
+				.on('change', '[name*="attribute_values"]', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateMaxAttributeValues($(this));
+					}
+				})
+				.on('click', '.product_attributes .delete', function() {
+					if ($syncCheckbox.prop('checked')) {
+						validateMaxAttributes();
+					}
+				});
+
+			$productData.on('click', '.save-variation-changes, #variable_product_options button', validateMaxVariations);
+
+			// Run validation on variations changes
+			$productData.on('woocommerce_variations_loaded woocommerce_variations_added woocommerce_variations_removed', validateAll);
+
+			// Run validation when sync checkbox changes.
+			$syncCheckbox.on('change', validateAll);
+
+			// Initial validation.
+			validateAll();
+		};
+
+		// Initialize validation on document ready.
+		$(document).ready(setupValidationHandlers);
 	}
 } );
