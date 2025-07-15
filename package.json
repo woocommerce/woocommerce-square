@@ -63,6 +63,10 @@
   "overrides": {
     "ws": "^8.17.0",
     "dompurify": "^3.2.4",
-    "tar-fs": "^2.1.2"
+    "tar-fs": "^2.1.2",
+    "@wordpress/scripts": {
+      "cross-spawn@<7.0.6": "^7.0.6",
+      "axios@<0.29.0": "^0.29.0"
+    }
   }
 }
