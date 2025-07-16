@@ -137,7 +137,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( ! empty( $token ) ? $token : $order->payment->nonce->credit_card );
 
 			// 3DS / SCA verification token (from JS)
-			if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {
+			if ( ! empty( $order->payment->verification_token ) ) {
 				$this->square_request->setVerificationToken( $order->payment->verification_token );
 			}
 		}
