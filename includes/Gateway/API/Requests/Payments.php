@@ -82,9 +82,9 @@ class Payments extends \WooCommerce\Square\API\Request {
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
-			$token                = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : $order->payment->token;
+			$source_id            = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
-				! empty( $token ) ? $token : $order->payment->nonce->credit_card,
+				$source_id,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		}
@@ -133,8 +133,8 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
 			// payment token (card ID) or card nonce (from JS)
-			$token = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : $order->payment->token;
-			$this->square_request->setSourceId( ! empty( $token ) ? $token : $order->payment->nonce->credit_card );
+			$source_id = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$this->square_request->setSourceId( $source_id );
 
 			// 3DS / SCA verification token (from JS)
 			if ( ! empty( $order->payment->verification_token ) ) {
