@@ -98,6 +98,11 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$customer_details = new \Square\Models\CustomerDetails();
 			$customer_details->setCustomerInitiated( true );
 			$this->square_request->setCustomerDetails( $customer_details );
+		} elseif ( ! empty( $order->payment->token ) ) {
+			// Set customer initiated to false for the case of a renewal order or a pre-order release payment.
+			$customer_details = new \Square\Models\CustomerDetails();
+			$customer_details->setCustomerInitiated( false );
+			$this->square_request->setCustomerDetails( $customer_details );
 		}
 
 		/**
