@@ -66,6 +66,7 @@ jQuery( document ).ready( ( $ ) => {
 			// unblock the UI and clear any payment nonces when a server-side error occurs.
 			$( document.body ).on( 'checkout_error', () => {
 				$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
+				$( 'input[name=wc-square-credit-card-tokenized-token]' ).val( '' );
 				$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 			} );
 
@@ -282,8 +283,8 @@ jQuery( document ).ready( ( $ ) => {
 				return false;
 			}
 
-			// let through if nonce is already present - nonce is only present on non-tokenized payments.
-			if ( this.has_nonce() ) {
+			// let through if nonce or tokenized token is already present - nonce is only present on non-tokenized payments.
+			if ( this.has_nonce() || this.has_tokenized_token() ) {
 				this.log( 'Payment nonce present, placing order' );
 				this.end( 'validate_payment_data' );
 				return true;
@@ -292,9 +293,10 @@ jQuery( document ).ready( ( $ ) => {
 			const tokenized_card_id = this.get_tokenized_payment_method_id();
 
 			if ( tokenized_card_id ) {
-				this.log( 'Tokenized payment verification token present, placing order' );
+				this.log( 'Tokenize the card on file' );
+				this.block_ui();
+				this.handleSavedCardSubmission( tokenized_card_id );
 				this.end( 'validate_payment_data' );
-				$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( 'saved_card' );
 				return true;
 			}
 
@@ -303,6 +305,55 @@ jQuery( document ).ready( ( $ ) => {
 			this.handleSubmission();
 			this.end( 'validate_payment_data' );
 			return false;
+		}
+
+		/**
+		 * Handles the submission of a saved card.
+		 *
+		 * @param {string} tokenized_card_id The ID of the tokenized card.
+		 */
+		async handleSavedCardSubmission( tokenized_card_id ) {
+			try {
+				const response = await fetch(
+					`${ window.wc_checkout_params.ajax_url }?action=wc_square_credit_card_get_token_by_id&token_id=${ tokenized_card_id }&nonce=${ this.payment_token_nonce }` );
+				if ( ! response.ok ) {
+					throw new Error( 'Error in fetching payment token by ID.' );
+				}
+				const { success, data: savedToken } = await response.json();
+				if ( ! success ) {
+					throw new Error( 'Error in fetching payment token by ID.' );
+				}
+
+				this.start( 'tokenize_card_on_file' );
+				this.block_ui();
+				const verificationDetails =
+					await this.get_verification_details();
+				const tokenResult = await this.payment_form.tokenize(
+					verificationDetails,
+					savedToken
+				);
+				const { token, status } = tokenResult;
+				if ( status === 'OK' && token ) {
+					// payment nonce data.
+					$(
+						`input[name=wc-${ this.id_dasherized }-tokenized-token]`
+					).val( token );
+
+					this.end( 'tokenize_card_on_file' );
+					// if we made it this far, we have payment data.
+					this.form.trigger( 'submit' );
+				} else {
+					this.end( 'tokenize_card_on_file', true );
+					if ( tokenResult.errors ) {
+						this.handle_errors( tokenResult.errors );
+					} else {
+						throw new Error( 'Error in tokenizing card on file.' );
+					}
+				}
+			} catch ( error ) {
+				this.handle_errors( [ error ] );
+				this.end( 'validate_payment_data', true );
+			}
 		}
 
 		/**
@@ -390,8 +441,6 @@ jQuery( document ).ready( ( $ ) => {
 			// payment nonce data.
 			$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
 
-			// buyer verification token data.
-			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( nonce );
 
 			// if we made it this far, we have payment data.
 			this.form.trigger( 'submit' );
@@ -510,6 +559,7 @@ jQuery( document ).ready( ( $ ) => {
 
 			// clear any previous nonces
 			$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
+			$( 'input[name=wc-square-credit-card-tokenized-token]' ).val( '' );
 			$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 
 			const messages = [];
@@ -645,6 +695,19 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		has_verification_token() {
 			return $( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val();
+		}
+
+		/**
+		 * Determines if a tokenized token is present in the hidden input.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @return {boolean} True if tokenized token is present, otherwise false.
+		 */
+		has_tokenized_token() {
+			return $(
+				`input[name=wc-${ this.id_dasherized }-tokenized-token]`
+			).val();
 		}
 
 		/**

@@ -285,10 +285,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return Exception|null The validation exception if one exists, or null if no exception occurred.
 	 */
 	public function get_validation_exception() {
-		if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
-			throw new \Exception( '3D Secure Verification Token is missing' );
-		}
-
 		if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
 			throw new \Exception( 'Payment nonce is missing' );
 		}
@@ -309,10 +305,6 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		try {
-			if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
-				throw new \Exception( '3D Secure Verification Token is missing' );
-			}
-
 			if ( Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-token' ) ) {
 				return $is_valid;
 			}

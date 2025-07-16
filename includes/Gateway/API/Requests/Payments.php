@@ -82,8 +82,9 @@ class Payments extends \WooCommerce\Square\API\Request {
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
+			$token                = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : $order->payment->token;
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
-				! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
+				! empty( $token ) ? $token : $order->payment->nonce->credit_card,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		}
@@ -127,7 +128,8 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
 			// payment token (card ID) or card nonce (from JS)
-			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$token = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : $order->payment->token;
+			$this->square_request->setSourceId( ! empty( $token ) ? $token : $order->payment->nonce->credit_card );
 
 			// 3DS / SCA verification token (from JS)
 			if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {

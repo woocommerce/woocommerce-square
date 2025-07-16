@@ -58,9 +58,10 @@ class Card extends \WooCommerce\Square\API\Request {
 		$card->setCardholderName( $order->get_formatted_billing_full_name() );
 		$card->setCustomerId( $order->customer_id );
 
+		$token   = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : $order->payment->token;
 		$request = new \Square\Models\CreateCardRequest(
 			wc_square()->get_idempotency_key( '', false ),
-			! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
+			! empty( $token ) ? $token : $order->payment->nonce->credit_card,
 			$card
 		);
 

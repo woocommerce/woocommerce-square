@@ -491,12 +491,18 @@ abstract class Payment_Gateway_Direct extends Payment_Gateway {
 
 		// payment info
 		if ( $token_id ) {
-			$token = \WC_Payment_Tokens::get( $token_id );
-			$token = $this->get_payment_tokens_handler()->get_token( $order->get_user_id(), $token->get_token() );
+			$token           = \WC_Payment_Tokens::get( $token_id );
+			$token           = $this->get_payment_tokens_handler()->get_token( $order->get_user_id(), $token->get_token() );
+			$tokenized_token = Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-tokenized-token' );
 
 			$order->payment->token          = $token->get_token();
 			$order->payment->account_number = $token->get_last4();
 			$order->payment->last_four      = $token->get_last4();
+
+			// Set the tokenized token if it is provided.
+			if ( ! empty( $tokenized_token ) ) {
+				$order->payment->tokenized_token = $tokenized_token;
+			}
 
 			if ( $this->is_credit_card_gateway() ) {
 

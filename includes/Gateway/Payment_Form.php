@@ -132,6 +132,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		);
 
 		$fields[] = 'buyer-verification-token';
+		$fields[] = 'tokenized-token';
 
 		foreach ( $fields as $field_id ) {
 			echo '<input type="hidden" name="wc-' . esc_attr( $this->get_gateway()->get_id_dasherized() ) . '-' . esc_attr( $field_id ) . '" />';
