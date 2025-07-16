@@ -4,6 +4,11 @@
 import { useEffect, useRef } from '@wordpress/element';
 
 /**
+ * Internal dependencies
+ */
+import { getSquareServerData } from '../square-utils';
+
+/**
  * @typedef {import('@woocommerce/type-defs/registered-payment-method-props').EmitResponseProps} EmitResponseProps
  * @typedef {import('../square-utils/type-defs').SquareContext} SquareContext
  */
@@ -22,7 +27,7 @@ import { useEffect, useRef } from '@wordpress/element';
  * @param {SquareContext}     squareContext        Square payment form context variable
  * @param {Function}          getPaymentMethodData CreateNonce function
  * @param {Function}          createNonce          CreateNonce function
- * @param {Function}          verifyBuyer          VerifyBuyer function
+ * @param {Function}          tokenizeSavedCard    TokenizeSavedCard function
  */
 export const usePaymentProcessing = (
 	onPaymentSetup,
@@ -30,7 +35,7 @@ export const usePaymentProcessing = (
 	squareContext,
 	getPaymentMethodData,
 	createNonce,
-	verifyBuyer
+	tokenizeSavedCard
 ) => {
 	const square = useRef( squareContext );
 
@@ -48,9 +53,31 @@ export const usePaymentProcessing = (
 			};
 
 			if ( square.current?.token ) {
-				// This is a saved card, so we need to set the token to 'saved_card'.
-				// It will be used to detect and not pass the token to Square via setVerificationToken().
-				paymentData.token = 'saved_card';
+				const { paymentTokenNonce } = getSquareServerData();
+				const __response = await fetch(
+					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
+				);
+				const { success, data: token } = await __response.json();
+				const savedCardToken = success ? token : '';
+
+				if ( savedCardToken ) {
+					const tokenizeSavedCardResponse = await tokenizeSavedCard(
+						square.current.payments,
+						savedCardToken
+					);
+
+					if (
+						tokenizeSavedCardResponse.status === 'OK' &&
+						tokenizeSavedCardResponse.token
+					) {
+						paymentData.tokenizedToken =
+							tokenizeSavedCardResponse.token;
+					} else {
+						paymentData.notices = paymentData.notices.concat( [
+							'Failed to tokenize saved card',
+						] );
+					}
+				}
 			} else {
 				const createNonceResponse = await createNonce(
 					square.current.card
@@ -68,11 +95,8 @@ export const usePaymentProcessing = (
 				}
 			}
 
-			const paymentToken = paymentData.token || paymentData.nonce;
-
-			if ( paymentToken ) {
-				paymentData.verificationToken = paymentToken;
-			}
+			const paymentToken =
+				paymentData.tokenizedToken || paymentData.nonce;
 
 			if ( paymentToken || paymentData.logs.length > 0 ) {
 				response.meta = {
@@ -93,7 +117,7 @@ export const usePaymentProcessing = (
 		emitResponse.responseTypes.SUCCESS,
 		emitResponse.responseTypes.ERROR,
 		createNonce,
-		verifyBuyer,
+		tokenizeSavedCard,
 		getPaymentMethodData,
 	] );
 };

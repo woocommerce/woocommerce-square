@@ -6,7 +6,12 @@ import { useState, useCallback, useMemo } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { getSquareServerData, log, convertAmount } from '../square-utils';
+import {
+	getSquareServerData,
+	log,
+	handleErrors,
+	convertAmount,
+} from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
 /**
@@ -76,6 +81,7 @@ export const usePaymentForm = (
 				cardData = {},
 				nonce,
 				verificationToken,
+				tokenizedToken,
 				notices,
 				logs,
 			} = inputData;
@@ -95,6 +101,8 @@ export const usePaymentForm = (
 				[ `wc-${ PAYMENT_METHOD_NAME }-payment-token` ]: token || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-buyer-verification-token` ]:
 					verificationToken || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-tokenized-token` ]:
+					tokenizedToken || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-tokenize-payment-method` ]:
 					shouldSavePayment || false,
 				'log-data': logs.length > 0 ? JSON.stringify( logs ) : '',
@@ -127,6 +135,31 @@ export const usePaymentForm = (
 			return token;
 		},
 		[ token ]
+	);
+
+	/**
+	 * Tokenizes a saved card
+	 *
+	 * @param {Object} payments   Instance of Payments.
+	 * @param {string} savedToken Saved card token.
+	 *
+	 * @return {Promise} Returns Promise<TokenResult>
+	 */
+	const tokenizeSavedCard = useCallback(
+		async ( payments, savedToken ) => {
+			try {
+				const card = await payments.card();
+				const tokenResult = await card.tokenize(
+					verificationDetails,
+					savedToken
+				);
+
+				return tokenResult;
+			} catch ( error ) {
+				handleErrors( [ error ] );
+			}
+		},
+		[ token, verificationDetails ]
 	);
 
 	/**
@@ -171,6 +204,7 @@ export const usePaymentForm = (
 		getPostalCode,
 		cardType,
 		createNonce,
+		tokenizeSavedCard,
 		getPaymentMethodData,
 	};
 };
