@@ -297,7 +297,7 @@ jQuery( document ).ready( ( $ ) => {
 				this.block_ui();
 				this.handleSavedCardSubmission( tokenized_card_id );
 				this.end( 'validate_payment_data' );
-				return true;
+				return false;
 			}
 
 			this.log( 'Requesting payment nonce' );
