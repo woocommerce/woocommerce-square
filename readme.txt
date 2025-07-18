@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.5
+Stable tag: 4.9.6
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.6 - 2025-07-10 =
+* Add - When importing products from Square, a new "View Progress" link on the "Update" page allows ability to more closely monitor that progress.
+* Fix - Ensure that Digital Wallet payment methods and Cash App Pay function properly in Block Checkout when using Safari.
+* Fix - Prevent the "Sync with Square" setting from getting unchecked.
 
 = 4.9.5 - 2025-06-30 =
 * Fix - Ensure the customer is created on the Square side without errors when adding a payment method.
