@@ -48,6 +48,8 @@ const getSquareServerData = () => {
 		applePayColor: squareData.apple_pay_color || 'black',
 		applePayType: squareData.apple_pay_type || 'buy',
 		hideButtonOptions: squareData.hide_button_options || [],
+		shouldChargeOrderNonce: squareData.should_charge_order_nonce || '',
+		orderId: squareData.order_id || '',
 	};
 
 	return cachedSquareData;
@@ -135,6 +137,34 @@ const log = ( data, type = 'notice' ) => {
 };
 
 /**
+ * Returns whether the order should be charged.
+ *
+ * @return {boolean} Whether the order should be charged.
+ */
+const shouldChargeOrder = () => {
+	return new Promise( ( resolve, reject ) => {
+		const data = {
+			security: getSquareServerData().shouldChargeOrderNonce,
+			is_pay_for_order_page:
+				getSquareServerData().isPayForOrderPage || false,
+			order_id: getSquareServerData().orderId || 0,
+		};
+
+		jQuery.post(
+			`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_should_charge_order`,
+			data,
+			( response ) => {
+				if ( response.success ) {
+					return resolve( response.data );
+				}
+
+				return reject( response.data );
+			}
+		);
+	} );
+};
+
+/**
  * Adjust decimal places based on currency code
  *
  * @param {number} amount       The amount to convert
@@ -166,4 +196,11 @@ const convertAmount = ( amount, currencyCode ) => {
 	}
 };
 
-export { getSquareServerData, handleErrors, log, logData, convertAmount };
+export {
+	getSquareServerData,
+	handleErrors,
+	log,
+	logData,
+	convertAmount,
+	shouldChargeOrder,
+};
