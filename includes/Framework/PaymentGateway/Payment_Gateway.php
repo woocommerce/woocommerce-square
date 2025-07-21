@@ -1963,7 +1963,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		Performance_Logger::start( 'handle_payment_response', $this->get_plugin() );
 
 		if ( $response->transaction_approved() || $response->transaction_held() ) {
-			if ( ! $this->is_cash_app_pay_gateway() && $response->is_gift_card_payment() ) {
+			if ( ! $this->is_cash_app_pay_gateway() && ! $response->is_gift_card_payment() ) {
 				$this->maybe_tokenize( $response, $order );
 			}
 

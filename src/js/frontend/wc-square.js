@@ -44,6 +44,8 @@ jQuery( document ).ready( ( $ ) => {
 			this.billing_details_message_wrapper = $( '#square-pay-for-order-billing-details-wrapper' );
 			this.orderId = args.order_id;
 			this.ajax_get_order_amount_nonce = args.ajax_get_order_amount_nonce;
+			this.ajax_should_charge_order_nonce =
+				args.ajax_should_charge_order_nonce;
 			this.metrics = {};
 
 			if ( $( 'form.checkout' ).length ) {
@@ -377,8 +379,11 @@ jQuery( document ).ready( ( $ ) => {
 									this.end( 'generate_payment_nonce', true );
 								}
 					} );
-				}
-			);
+				} )
+				.catch( () => {
+					this.end( 'generate_payment_nonce', true );
+					this.handle_errors();
+				} );
 		}
 
 		/**
@@ -453,7 +458,8 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @return {Promise<Object>} Verification details object.
 		 */
-		get_verification_details() {
+		async get_verification_details() {
+			const intent = await this.get_intent();
 			const verification_details = {
 				billingContact: {
 					familyName: $( '#billing_last_name' ).val() || '',
@@ -466,23 +472,26 @@ jQuery( document ).ready( ( $ ) => {
 					phone: $( '#billing_phone' ).val() || '',
 					addressLines: [ $( '#billing_address_1' ).val() || '', $( '#billing_address_2' ).val() || '' ],
 				},
-				intent: this.get_intent(),
+				intent,
 				customerInitiated: true,
 				sellerKeyedIn: false,
 			};
 
-			if ( 'CHARGE' === verification_details.intent ) {
+			if (
+				'CHARGE' === verification_details.intent ||
+				'CHARGE_AND_STORE' === verification_details.intent
+			) {
 				verification_details.currencyCode = this.currency_code;
-				return this.get_amount().then((amount) => {
+				return this.get_amount().then( ( amount ) => {
 					verification_details.amount = amount;
-					this.log(verification_details);
+					this.log( JSON.stringify( verification_details, null, 2 ) );
 					return verification_details;
 				});
 			}
 
-			return new Promise((resolve) => {
-				this.log(verification_details);
-				resolve(verification_details);
+			return new Promise(( resolve ) => {
+				this.log( JSON.stringify( verification_details, null, 2 ) );
+				resolve( verification_details );
 			});
 		}
 
@@ -494,9 +503,9 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @since 2.1.0
 		 *
-		 * @return {string} {'CHARGE'|'STORE'}
+		 * @return {string} {'CHARGE'|'STORE'|'CHARGE_AND_STORE'}
 		 */
-		get_intent() {
+		async get_intent() {
 			const $save_method_input = $( '#wc-square-credit-card-tokenize-payment-method' );
 
 			let save_payment_method;
@@ -507,11 +516,51 @@ jQuery( document ).ready( ( $ ) => {
 				save_payment_method = 'true' === $save_method_input.val();
 			}
 
-			if ( ! this.get_tokenized_payment_method_id() && save_payment_method ) {
-				return 'STORE';
+			if (
+				! this.get_tokenized_payment_method_id() &&
+				save_payment_method
+			) {
+				const should_charge = await this.should_charge_order();
+				return should_charge ? 'CHARGE_AND_STORE' : 'STORE';
 			}
 
 			return 'CHARGE';
+		}
+
+		/**
+		 * Gets whether the order be charged.
+		 *
+		 * @since 2.1.0
+		 *
+		 * @return {Promise<boolean>} Whether the order should be charged.
+		 */
+		async should_charge_order() {
+			return new Promise( ( resolve, reject ) => {
+				const data = {
+					action: 'wc_' + this.id + '_should_charge_order',
+					security: this.ajax_should_charge_order_nonce,
+					order_id: this.orderId,
+					is_pay_order: this.is_manual_order_payment,
+				};
+
+				$.ajax( {
+					url: this.ajax_url,
+					method: 'post',
+					cache: false,
+					data,
+					complete: ( response ) => {
+						const result = response.responseJSON;
+						if ( result && result.success ) {
+							return resolve( result.data );
+						}
+
+						return reject( result );
+					},
+					error: ( error ) => {
+						return reject( error );
+					},
+				} );
+			} );
 		}
 
 		/**
