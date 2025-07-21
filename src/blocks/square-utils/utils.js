@@ -49,6 +49,7 @@ const getSquareServerData = () => {
 		applePayType: squareData.apple_pay_type || 'buy',
 		hideButtonOptions: squareData.hide_button_options || [],
 		shouldChargeOrderNonce: squareData.should_charge_order_nonce || '',
+		isChangePaymentMethod: squareData.is_change_payment_method || false,
 		orderId: squareData.order_id || '',
 	};
 
@@ -142,6 +143,10 @@ const log = ( data, type = 'notice' ) => {
  * @return {boolean} Whether the order should be charged.
  */
 const shouldChargeOrder = () => {
+	if ( getSquareServerData().isChangePaymentMethod ) {
+		return false;
+	}
+
 	return new Promise( ( resolve, reject ) => {
 		const data = {
 			security: getSquareServerData().shouldChargeOrderNonce,

@@ -46,6 +46,8 @@ jQuery( document ).ready( ( $ ) => {
 			this.ajax_get_order_amount_nonce = args.ajax_get_order_amount_nonce;
 			this.ajax_should_charge_order_nonce =
 				args.ajax_should_charge_order_nonce;
+			this.is_change_payment_method_request =
+				args.is_change_payment_method_request;
 			this.metrics = {};
 
 			if ( $( 'form.checkout' ).length ) {
@@ -536,6 +538,12 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		async should_charge_order() {
 			return new Promise( ( resolve, reject ) => {
+				// If the request is to change payment method for a subscription, we don't need to charge the order.
+				if ( this.is_change_payment_method_request ) {
+					resolve( false );
+					return;
+				}
+
 				const data = {
 					action: 'wc_' + this.id + '_should_charge_order',
 					security: this.ajax_should_charge_order_nonce,

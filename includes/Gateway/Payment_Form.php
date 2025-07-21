@@ -232,6 +232,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 			'order_id'                         => absint( get_query_var( 'order-pay' ) ),
 			'ajax_get_order_amount_nonce'      => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_get_order_amount' ),
 			'ajax_should_charge_order_nonce'   => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
+			'is_change_payment_method_request' => $this->get_gateway()->is_change_payment_method_request(),
 		);
 
 		// map the unique square card type string to our framework standards

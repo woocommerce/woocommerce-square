@@ -1266,6 +1266,17 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
+	 * Check if request is to change payment method.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return boolean
+	 */
+	public function is_change_payment_method_request() {
+		return class_exists( 'WC_Subscriptions_Change_Payment_Gateway' ) && \WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment;
+	}
+
+	/**
 	 * Returns whether the order should be charged.
 	 *
 	 * @since x.x.x
