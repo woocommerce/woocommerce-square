@@ -118,6 +118,79 @@ class Orders extends API\Request {
 	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model ) {
 		$order_model->setReferenceId( $order->get_order_number() );
 
+		// Set status to Open.
+		$order_model->setState( 'OPEN' );
+
+		// Create comprehensive fulfillment object.
+		$fulfillment = new \Square\Models\OrderFulfillment( 'PROPOSED' );
+		$fulfillment->setUid( 'woo_order_fulfillment_' . $order->get_id() );
+
+		// Determine fulfillment type based on shipping method.
+		$shipping_methods = $order->get_shipping_methods();
+		$fulfillment_type = empty( $shipping_methods ) ? 'PICKUP' : 'SHIPMENT';
+		$fulfillment->setType( $fulfillment_type );
+
+		// Add fulfillment details based on type.
+		if ( 'SHIPMENT' === $fulfillment_type ) {
+			$shipment_details = new \Square\Models\OrderFulfillmentShipmentDetails();
+
+			// Add recipient information.
+			$recipient = new \Square\Models\OrderFulfillmentRecipient();
+			$recipient->setDisplayName( trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() ) );
+			$recipient->setPhoneNumber( $order->get_billing_phone() );
+
+			// Add shipping address.
+			$shipping_address = new \Square\Models\Address();
+			$shipping_address->setAddressLine1( $order->get_shipping_address_1() );
+			$shipping_address->setAddressLine2( $order->get_shipping_address_2() );
+			$shipping_address->setLocality( $order->get_shipping_city() );
+			$shipping_address->setAdministrativeDistrictLevel1( $order->get_shipping_state() );
+			$shipping_address->setPostalCode( $order->get_shipping_postcode() );
+			$shipping_address->setCountry( $order->get_shipping_country() );
+			$recipient->setAddress( $shipping_address );
+
+			$shipment_details->setRecipient( $recipient );
+
+			// Add shipping method as carrier if available.
+			foreach ( $shipping_methods as $shipping_method ) {
+				$shipment_details->setCarrier( $shipping_method->get_method_title() );
+				break; // Use first shipping method.
+			}
+
+			$fulfillment->setShipmentDetails( $shipment_details );
+
+		} elseif ( 'PICKUP' === $fulfillment_type ) {
+			$pickup_details = new \Square\Models\OrderFulfillmentPickupDetails();
+			$pickup_details->setScheduleType( 'ASAP' );
+
+			// Add recipient information for pickup.
+			$recipient = new \Square\Models\OrderFulfillmentRecipient();
+			$recipient->setDisplayName( trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ) );
+			$recipient->setPhoneNumber( $order->get_billing_phone() );
+
+			// Use billing address for pickup.
+			$pickup_address = new \Square\Models\Address();
+			$pickup_address->setAddressLine1( $order->get_billing_address_1() );
+			$pickup_address->setAddressLine2( $order->get_billing_address_2() );
+			$pickup_address->setLocality( $order->get_billing_city() );
+			$pickup_address->setAdministrativeDistrictLevel1( $order->get_billing_state() );
+			$pickup_address->setPostalCode( $order->get_billing_postcode() );
+			$pickup_address->setCountry( $order->get_billing_country() );
+			$recipient->setAddress( $pickup_address );
+
+			$pickup_details->setRecipient( $recipient );
+
+			// Add customer note if available.
+			if ( $order->get_customer_note() ) {
+				$pickup_details->setNote( Square_Helper::str_truncate( $order->get_customer_note(), 500 ) );
+			}
+
+			$fulfillment->setPickupDetails( $pickup_details );
+		}
+
+		// Set the fulfillment on the order.
+		$order_model->setFulfillments( array( $fulfillment ) );
+
 		$taxes          = $this->get_order_taxes( $order );
 		$all_line_items = $this->get_api_line_items(
 			$order,
