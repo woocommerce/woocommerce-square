@@ -82,7 +82,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
-			$source_id            = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$source_id            = ! empty( $order->payment->verified_token ) ? $order->payment->verified_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
 				$source_id,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
@@ -133,7 +133,7 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
 			// payment token (card ID) or card nonce (from JS)
-			$source_id = ! empty( $order->payment->tokenized_token ) ? $order->payment->tokenized_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$source_id = ! empty( $order->payment->verified_token ) ? $order->payment->verified_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 			$this->square_request->setSourceId( $source_id );
 
 			// 3DS / SCA verification token (from JS)

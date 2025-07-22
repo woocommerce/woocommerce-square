@@ -70,7 +70,7 @@ export const usePaymentProcessing = (
 						tokenizeSavedCardResponse.status === 'OK' &&
 						tokenizeSavedCardResponse.token
 					) {
-						paymentData.tokenizedToken =
+						paymentData.verifiedToken =
 							tokenizeSavedCardResponse.token;
 					} else {
 						paymentData.notices = paymentData.notices.concat( [
@@ -95,8 +95,7 @@ export const usePaymentProcessing = (
 				}
 			}
 
-			const paymentToken =
-				paymentData.tokenizedToken || paymentData.nonce;
+			const paymentToken = paymentData.verifiedToken || paymentData.nonce;
 
 			if ( paymentToken || paymentData.logs.length > 0 ) {
 				response.meta = {

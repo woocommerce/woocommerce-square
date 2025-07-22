@@ -90,7 +90,7 @@ export const usePaymentForm = (
 				cardData = {},
 				nonce,
 				verificationToken,
-				tokenizedToken,
+				verifiedToken,
 				notices,
 				logs,
 			} = inputData;
@@ -110,8 +110,8 @@ export const usePaymentForm = (
 				[ `wc-${ PAYMENT_METHOD_NAME }-payment-token` ]: token || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-buyer-verification-token` ]:
 					verificationToken || '',
-				[ `wc-${ PAYMENT_METHOD_NAME }-tokenized-token` ]:
-					tokenizedToken || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-verified-token` ]:
+					verifiedToken || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-tokenize-payment-method` ]:
 					shouldSavePayment || false,
 				'log-data': logs.length > 0 ? JSON.stringify( logs ) : '',

@@ -70,7 +70,7 @@ jQuery( document ).ready( ( $ ) => {
 			// unblock the UI and clear any payment nonces when a server-side error occurs.
 			$( document.body ).on( 'checkout_error', () => {
 				$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
-				$( 'input[name=wc-square-credit-card-tokenized-token]' ).val( '' );
+				$( 'input[name=wc-square-credit-card-verified-token]' ).val( '' );
 				$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 			} );
 
@@ -287,8 +287,8 @@ jQuery( document ).ready( ( $ ) => {
 				return false;
 			}
 
-			// let through if nonce or tokenized token is already present - nonce is only present on non-tokenized payments.
-			if ( this.has_nonce() || this.has_tokenized_token() ) {
+			// let through if nonce or verified token is already present - nonce is only present on non-tokenized payments.
+			if ( this.has_nonce() || this.has_verified_token() ) {
 				this.log( 'Payment nonce present, placing order' );
 				this.end( 'validate_payment_data' );
 				return true;
@@ -340,7 +340,7 @@ jQuery( document ).ready( ( $ ) => {
 				if ( status === 'OK' && token ) {
 					// payment nonce data.
 					$(
-						`input[name=wc-${ this.id_dasherized }-tokenized-token]`
+						`input[name=wc-${ this.id_dasherized }-verified-token]`
 					).val( token );
 
 					this.end( 'tokenize_card_on_file' );
@@ -616,7 +616,7 @@ jQuery( document ).ready( ( $ ) => {
 
 			// clear any previous nonces
 			$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
-			$( 'input[name=wc-square-credit-card-tokenized-token]' ).val( '' );
+			$( 'input[name=wc-square-credit-card-verified-token]' ).val( '' );
 			$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 
 			const messages = [];
@@ -755,15 +755,15 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
-		 * Determines if a tokenized token is present in the hidden input.
+		 * Determines if a verified token is present in the hidden input.
 		 *
 		 * @since 2.0.0
 		 *
-		 * @return {boolean} True if tokenized token is present, otherwise false.
+		 * @return {boolean} True if verified token is present, otherwise false.
 		 */
-		has_tokenized_token() {
+		has_verified_token() {
 			return $(
-				`input[name=wc-${ this.id_dasherized }-tokenized-token]`
+				`input[name=wc-${ this.id_dasherized }-verified-token]`
 			).val();
 		}
 
