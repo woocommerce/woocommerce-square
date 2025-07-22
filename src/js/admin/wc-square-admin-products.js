@@ -326,6 +326,9 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		};
 
+		const productType = $( '#product-type' ).val();
+		toggleSyncProductMeta( productType );
+
 		// fire once on page load
 		handleAttributes( syncCheckboxID );
 
@@ -458,6 +461,7 @@ jQuery( document ).ready( ( $ ) => {
 
 				// remove any inline note to WooCommerce core stock fields that may have been added when Synced with Square is enabled.
 				$( 'p._stock_field span.description' ).remove();
+				$( '.sync-stock-from-square' ).remove();
 				$stockInput.prop( 'readonly', false );
 				$manageDesc.html( manageDescOriginal );
 				$manageInput.off( 'click' );
@@ -503,20 +507,20 @@ jQuery( document ).ready( ( $ ) => {
 							let syncInventory = '';
 							if (!$variationManageInput.is(':checked')) {
 								syncInventory =
-									' - <a href="#" class="sync-stock-from-square" data-product-id="' +
+									'<a href="#" class="sync-stock-from-square" data-product-id="' +
 									variationID +
 									'">' +
 									wc_square_admin_products.i18n
 										.sync_inventory +
 									'</a><div class="sync-stock-spinner spinner" style="float:none;"></div>';
 							}
-							$variationManageInput.after(
-								'(<span class="description">' +
-									wc_square_admin_products.i18n
-										.managed_by_square +
-									'</span>)' +
-									syncInventory
-							);
+
+							if ( ! $variationManageField.find( '.sync-stock-from-square' ).length ) {
+								$variationManageInput.after(
+									`<span class="description">(${ wc_square_admin_products.i18n
+										.managed_by_square })${ syncInventory ? ' - ' : '' }</span> ${ syncInventory }`
+								);
+							}
 					}
 
 					if ( wc_square_admin_products.is_woocommerce_sor ) {
@@ -592,13 +596,10 @@ jQuery( document ).ready( ( $ ) => {
 		// initial page load handling.
 		} ).trigger( 'change' );
 
-		// trigger an update if the product type changes.
-		$( '#product-type' ).on( 'change', ( e ) => {
-			if ( 'complete' === document.readyState ) {
-				triggerUpdate();
-			}
+		$( '#product-type' ).on( 'change', function( e ) {
 			toggleSyncProductMeta( $( e.target ).val() );
-		} ).trigger( 'change' );
+			triggerUpdate();
+		} );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -624,7 +625,7 @@ jQuery( document ).ready( ( $ ) => {
 			}
 		);
 
-		$( '#product-type, #_square_gift_card' ).on( 'change', function() {
+		function handleGiftCard() {
 			const productType = $( '#product-type' ).val();
 			const squareGiftCardCheckbox = $( '#_square_gift_card' );
 			const isGiftCard = squareGiftCardCheckbox.prop( 'checked' );
@@ -663,7 +664,11 @@ jQuery( document ).ready( ( $ ) => {
 					$( 'label[for="_downloadable"]' ).hide();
 				}
 			}
-		} ).trigger( 'change' );
+		}
+
+		handleGiftCard();
+
+		$( '#product-type, #_square_gift_card' ).on( 'change', handleGiftCard );
 
 		// Sync stock from the Square.
 		$('#woocommerce-product-data').on(
@@ -700,7 +705,7 @@ jQuery( document ).ready( ( $ ) => {
 		} );
 
 		/**
-		 * Hides unnecessary meta fields when Variatble product is set as Gift Card.
+		 * Hides unnecessary meta fields when Variable product is set as Gift Card.
 		 * @returns void
 		 */
 		function observeVariations() {

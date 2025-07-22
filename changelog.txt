@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 4.9.6 - 2025-07-10 =
+* Add - When importing products from Square, a new "View Progress" link on the "Update" page allows ability to more closely monitor that progress.
+* Fix - Ensure that Digital Wallet payment methods and Cash App Pay function properly in Block Checkout when using Safari.
+* Fix - Prevent the "Sync with Square" setting from getting unchecked.
+
 = 4.9.5 - 2025-06-30 =
 * Fix - Ensure the customer is created on the Square side without errors when adding a payment method.
 * Fix - Ensure that the request body is correctly logged in the debug logs.
