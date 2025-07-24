@@ -302,4 +302,15 @@ class Order_Polling {
 
 		return $last_time;
 	}
+
+	/**
+	 * Update last polling time.
+	 *
+	 * @since x.x.x
+	 */
+	private function update_last_polling_time() {
+		$current_time = gmdate( 'c' );
+		update_option( 'wc_square_last_order_polling_time', $current_time );
+	}
+
 }
