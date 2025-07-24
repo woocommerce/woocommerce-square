@@ -180,7 +180,7 @@ class Order_Polling {
 			} while ( ! empty( $cursor ) && $batch_count < $max_batches );
 
 			wc_square()->log( sprintf( 
-				'Total found: %d Square orders (after filtering WooCommerce-originated orders)', 
+				'Total found: %d Square orders', 
 				count( $all_orders ) 
 			), 'sync' );
 
@@ -312,5 +312,4 @@ class Order_Polling {
 		$current_time = gmdate( 'c' );
 		update_option( 'wc_square_last_order_polling_time', $current_time );
 	}
-
 }

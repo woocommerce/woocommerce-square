@@ -196,13 +196,30 @@ class Order_Importer {
 	 * @return \WC_Order|false
 	 */
 	public function find_existing_wc_order_by_square_id( $square_order_id ) {
-		$orders = wc_get_orders( array(
-			'meta_key'     => '_square_order_id',
-			'meta_value'   => $square_order_id,
-			'meta_compare' => '=',
-			'limit'        => 1,
-		) );
+		global $wpdb;
 
-		return ! empty( $orders ) ? $orders[0] : false;
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"
+				SELECT order_id, meta_key
+				FROM {$wpdb->prefix}wc_orders_meta
+				WHERE meta_value = %s
+				AND meta_key LIKE %s
+				LIMIT 1
+				",
+				$square_order_id,
+				'%_square_order_id'
+			),
+			ARRAY_A
+		);
+
+		if ( ! empty( $results ) ) {
+			$order = wc_get_order( $results[0]['order_id'] );
+			if ( $order instanceof \WC_Order ) {
+				return $order;
+			}
+		}
+
+		return false;
 	}
 }
