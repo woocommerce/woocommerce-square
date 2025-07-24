@@ -187,4 +187,22 @@ class Order_Importer {
 			}
 		}
 	}
+
+	/**
+	 * Find existing WooCommerce order by Square order ID.
+	 *
+	 * @since x.x.x
+	 * @param string $square_order_id Square order ID.
+	 * @return \WC_Order|false
+	 */
+	public function find_existing_wc_order_by_square_id( $square_order_id ) {
+		$orders = wc_get_orders( array(
+			'meta_key'     => '_square_order_id',
+			'meta_value'   => $square_order_id,
+			'meta_compare' => '=',
+			'limit'        => 1,
+		) );
+
+		return ! empty( $orders ) ? $orders[0] : false;
+	}
 }
