@@ -285,4 +285,21 @@ class Order_Polling {
 		 */
 		return apply_filters( 'wc_square_order_polling_interval_seconds', 15 * MINUTE_IN_SECONDS );
 	}
+
+	/**
+	 * Get last polling time.
+	 *
+	 * @since x.x.x
+	 * @return string ISO 8601 timestamp.
+	 */
+	private function get_last_polling_time() {
+		$last_time = get_option( 'wc_square_last_order_polling_time' );
+
+		if ( ! $last_time ) {
+			// Default to 24 hours ago for first run.
+			$last_time = gmdate( 'c', time() - DAY_IN_SECONDS );
+		}
+
+		return $last_time;
+	}
 }
