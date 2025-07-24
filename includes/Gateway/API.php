@@ -716,6 +716,79 @@ class API extends \WooCommerce\Square\API {
 		return $this->perform_request( $request );
 	}
 
+	/**
+	 * Searches for Square orders.
+	 *
+	 * @since x.x.x
+	 * @param array $location_ids Array of location IDs.
+	 * @param string $start_time Start time for the search.
+	 * @param int $limit Number of orders to retrieve.
+	 * @param string $cursor Cursor for pagination.
+	 * @return array Array containing orders and cursor.
+	 * @throws \Exception
+	 */
+	public function search_orders( $location_ids, $start_time, $limit = 100, $cursor = '' ) {
+		try {
+			// Create the search request
+			$search_request = new \Square\Models\SearchOrdersRequest();
+			$search_request->setLocationIds( $location_ids );
+			$search_request->setLimit( $limit );
+			
+			// Set cursor for pagination if provided
+			if ( ! empty( $cursor ) ) {
+				$search_request->setCursor( $cursor );
+			}
+			
+			// Create the query object
+			$query = new \Square\Models\SearchOrdersQuery();
+			
+			// Create the filter
+			$filter = new \Square\Models\SearchOrdersFilter();
+			
+			// Set date filter
+			$date_filter = new \Square\Models\SearchOrdersDateTimeFilter();
+			$closed_at = new \Square\Models\TimeRange();
+			$closed_at->setStartAt( $start_time );
+			$date_filter->setUpdatedAt( $closed_at );
+			$filter->setDateTimeFilter( $date_filter );
+
+			// Set states filter.
+			$state_filter = new \Square\Models\SearchOrdersStateFilter( array( 'COMPLETED', 'CANCELED' ) );
+			$filter->setStateFilter( $state_filter );
+			
+			$query->setFilter( $filter );
+			
+			// Set sort
+			$sort = new \Square\Models\SearchOrdersSort( 'UPDATED_AT' );
+			$sort->setSortOrder( 'ASC' );
+			$query->setSort( $sort );
+			
+			$search_request->setQuery( $query );
+			
+			// Make the API call
+			$orders_api = $this->client->getOrdersApi();
+			$response = $orders_api->searchOrders( $search_request );
+			
+			if ( $response->isSuccess() ) {
+				$result = $response->getResult();
+				return array(
+					'orders' => $result->getOrders() ?: array(),
+					'cursor' => $result->getCursor(),
+				);
+			} else {
+				$errors = $response->getErrors();
+				$error_messages = array();
+				foreach ( $errors as $error ) {
+					$error_messages[] = $error->getDetail();
+				}
+				throw new \Exception( 'SearchOrders API failed: ' . implode( ', ', $error_messages ) );
+			}
+			
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'SearchOrders API error: ' . $e->getMessage(), 'error' );
+			throw $e;
+		}
+	}
 
 	/**
 	 * Validates the parsed response.
