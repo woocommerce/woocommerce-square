@@ -193,6 +193,83 @@ class Order_Polling {
 	}
 
 	/**
+	 * Process Square orders and create/update WooCommerce orders.
+	 *
+	 * @since x.x.x
+	 * @param array $square_orders Array of Square order objects.
+	 */
+	private function process_square_orders( $square_orders ) {
+		if ( empty( $square_orders ) ) {
+			wc_square()->log( 'No Square orders to process', 'sync' );
+			return;
+		}
+
+		$processed_count = 0;
+		$updated_count = 0;
+		$skipped_count = 0;
+		$error_count = 0;
+
+		$importer = new Order_Importer();
+
+		foreach ( $square_orders as $square_order ) {
+			try {
+				// Check if order already exists in WooCommerce
+				$existing_order = $importer->find_existing_wc_order_by_square_id( $square_order->getId() );
+
+				if ( $existing_order ) {
+					// Update existing order
+					$update_result = $importer->update_existing_woocommerce_order( $existing_order, $square_order );
+
+					if ( $update_result['updated'] ) {
+						wc_square()->log( sprintf( 
+							'Successfully updated WooCommerce order: Square ID %s -> WC ID %d (%s)', 
+							$square_order->getId(), 
+							$existing_order->get_id(),
+							$update_result['message']
+						), 'sync' );
+						$updated_count++;
+					} else {
+						wc_square()->log( sprintf( 
+							'No updates needed for order: Square ID %s -> WC ID %d (%s)', 
+							$square_order->getId(), 
+							$existing_order->get_id(),
+							$update_result['message']
+						), 'sync' );
+						$skipped_count++;
+					}
+				}
+
+			} catch ( \Exception $e ) {
+				wc_square()->log( sprintf( 
+					'Error processing Square order %s: %s', 
+					$square_order->getId(), 
+					$e->getMessage() 
+				), 'error' );
+				$error_count++;
+
+				// Also add a order note and a meta tag to the order.
+				$existing_order->add_order_note( sprintf( 
+					'Error processing Square order %s: %s', 
+					$square_order->getId(), 
+					$e->getMessage() 
+				) );
+				$existing_order->update_meta_data( '_square_sync_status', 'error' );
+			}
+		}
+
+		wc_square()->log( sprintf( 
+			'Order processing complete: %d created, %d updated, %d skipped, %d errors', 
+			$processed_count, 
+			$updated_count,
+			$skipped_count, 
+			$error_count 
+		), 'sync' );
+
+		// Update last polling timestamp.
+		$this->update_last_polling_time();
+	}
+
+	/**
 	 * Get polling interval in seconds.
 	 *
 	 * @since x.x.x
