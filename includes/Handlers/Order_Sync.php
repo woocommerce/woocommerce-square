@@ -45,5 +45,6 @@ class Order_Sync {
 	 */
 	public static function maybe_sync_update_to_square( $order_id, $order ) {
 		// @TODO: For future updates.
+		return;
 	}
 }
