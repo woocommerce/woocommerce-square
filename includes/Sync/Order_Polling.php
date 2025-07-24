@@ -38,6 +38,9 @@ class Order_Polling {
 
 		// Add action to schedule polling.
 		add_action( 'init', array( $this, 'maybe_schedule_polling' ) );
+
+		// Add action to poll square orders.
+		add_action( self::CRON_HOOK, array( $this, 'poll_square_orders' ) );
 	}
 
 	/**
@@ -82,6 +85,32 @@ class Order_Polling {
 		wp_schedule_event( time(), 'square_order_polling', self::CRON_HOOK );
 
 		wc_square()->log( "Scheduled Square order polling with interval: {$this->get_polling_interval_seconds()}", 'sync' );
+	}
+
+	/**
+	 * Poll Square for new orders.
+	 *
+	 * @since x.x.x
+	 */
+	public function poll_square_orders() {
+		wc_square()->log( 'Starting Square order polling', 'sync' );
+
+		try {
+			$orders = $this->fetch_recent_square_orders();
+
+			if ( empty( $orders ) ) {
+				wc_square()->log( 'No new Square orders found during polling', 'sync' );
+				return;
+			}
+
+			// Process orders to create WooCommerce orders.
+			$this->process_square_orders( $orders );
+
+			wc_square()->log( "Square order polling completed.", 'sync' );
+
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'Square order polling failed: ' . $e->getMessage(), 'sync' );
+		}
 	}
 
 	/**
