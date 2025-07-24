@@ -35,6 +35,9 @@ class Order_Polling {
 	public function __construct() {
 		// Add filter to add custom cron schedule.
 		add_filter( 'cron_schedules', array( $this, 'add_custom_cron_schedule' ) );
+
+		// Add action to schedule polling.
+		add_action( 'init', array( $this, 'maybe_schedule_polling' ) );
 	}
 
 	/**
@@ -57,6 +60,28 @@ class Order_Polling {
 		);
 
 		return $schedules;
+	}
+
+	/**
+	 * Maybe schedule the polling cron job.
+	 *
+	 * @since x.x.x
+	 */
+	public function maybe_schedule_polling() {
+		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
+			$this->schedule_polling();
+		}
+	}
+
+	/**
+	 * Schedule the polling cron job.
+	 *
+	 * @since x.x.x
+	 */
+	public function schedule_polling() {
+		wp_schedule_event( time(), 'square_order_polling', self::CRON_HOOK );
+
+		wc_square()->log( "Scheduled Square order polling with interval: {$this->get_polling_interval_seconds()}", 'sync' );
 	}
 
 	/**
