@@ -140,6 +140,59 @@ class Order_Polling {
 	}
 
 	/**
+	 * Search Square orders since a specific time.
+	 *
+	 * @since x.x.x
+	 * @param \WooCommerce\Square\Gateway\API $api API instance.
+	 * @param string                          $since_time ISO 8601 timestamp.
+	 * @return array Array of Square order objects.
+	 */
+	private function search_square_orders_since( $api, $since_time ) {
+		wc_square()->log( "Searching Square orders since: {$since_time}", 'sync' );
+
+		try {
+			$settings_handler = wc_square()->get_settings_handler();
+			$location_id      = $settings_handler->get_location_id();
+
+			$all_orders = array();
+			$cursor = '';
+			$batch_count = 0;
+			$max_batches = 10; // Prevent infinite loops
+
+			do {
+				// Use the API's search_orders method with cursor
+				$response = $api->search_orders( array( $location_id ), $since_time, 100, $cursor );
+
+				if ( ! empty( $response['orders'] ) ) {
+					$all_orders = array_merge( $all_orders, $response['orders'] );
+
+					wc_square()->log( sprintf( 
+						'Batch %d: Found %d orders', 
+						$batch_count + 1, 
+						count( $response['orders'] ),
+					), 'sync' );
+				}
+
+				// Update cursor for next iteration
+				$cursor = $response['cursor'] ?? '';
+				$batch_count++;
+
+			} while ( ! empty( $cursor ) && $batch_count < $max_batches );
+
+			wc_square()->log( sprintf( 
+				'Total found: %d Square orders (after filtering WooCommerce-originated orders)', 
+				count( $all_orders ) 
+			), 'sync' );
+
+			return $all_orders;
+
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'Error searching Square orders: ' . $e->getMessage(), 'error' );
+			return array();
+		}
+	}
+
+	/**
 	 * Get polling interval in seconds.
 	 *
 	 * @since x.x.x
