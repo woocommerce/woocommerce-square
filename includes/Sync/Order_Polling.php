@@ -114,6 +114,32 @@ class Order_Polling {
 	}
 
 	/**
+	 * Fetch recent Square orders.
+	 *
+	 * @since x.x.x
+	 * @return array Array of Square order objects.
+	 */
+	private function fetch_recent_square_orders() {
+		$settings_handler = wc_square()->get_settings_handler();
+		$access_token     = $settings_handler->get_access_token();
+		$location_id      = $settings_handler->get_location_id();
+		$is_sandbox       = $settings_handler->is_sandbox();
+
+		if ( empty( $access_token ) || empty( $location_id ) ) {
+			wc_square()->log( 'Square API credentials not configured for order polling', 'sync' );
+			return array();
+		}
+
+		$api = new \WooCommerce\Square\Gateway\API( $access_token, $location_id, $is_sandbox );
+
+		// Get orders since last polling time.
+		$last_polling_time = $this->get_last_polling_time();
+		$orders            = $this->search_square_orders_since( $api, $last_polling_time );
+
+		return $orders;
+	}
+
+	/**
 	 * Get polling interval in seconds.
 	 *
 	 * @since x.x.x
