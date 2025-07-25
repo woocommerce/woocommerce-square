@@ -48,7 +48,7 @@ class Order_Mapper {
 		// Don't allow status changes from terminal states unless it's a specific case
 		$terminal_statuses = array( 'completed', 'cancelled', 'refunded', 'failed' );
 
-		if ( in_array( $from_status, $terminal_statuses ) ) {
+		if ( in_array( $from_status, $terminal_statuses, true ) ) {
 			// Only allow specific transitions from terminal states
 			$allowed_terminal_transitions = array(
 				'completed' => array( 'cancelled' ), // Allow cancellation of completed orders
@@ -57,7 +57,7 @@ class Order_Mapper {
 				'failed'    => array( 'pending', 'processing' ), // Allow retry of failed orders
 			);
 
-			return in_array( $to_status, $allowed_terminal_transitions[ $from_status ] ?? array() );
+			return in_array( $to_status, $allowed_terminal_transitions[ $from_status ] ?? array(), true );
 		}
 
 		// Allow all other status changes
