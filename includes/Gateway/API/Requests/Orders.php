@@ -65,7 +65,7 @@ class Orders extends API\Request {
 		}
 
 		// Set the data.
-		$this->set_order_data( $order, $order_model );
+		$this->set_order_data( $order, $order_model, 'create' );
 	}
 
 	/**
@@ -114,11 +114,77 @@ class Orders extends API\Request {
 	 *
 	 * @param \WC_Order            $order        WooCommerce order object.
 	 * @param \Square\Models\Order $square_order Square order object.
+	 * @param string $order_request_type The type of order request.
 	 */
-	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model ) {
+	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model, $order_request_type = 'update' ) {
 		$order_model->setReferenceId( $order->get_order_number() );
 
-		// Set status to Open.
+		// Set fulfillment data for create order request.
+		if ( 'create' === $order_request_type ) {
+			$order_model = $this->set_fulfillment_data( $order, $order_model );
+		}
+
+		$taxes          = $this->get_order_taxes( $order );
+		$all_line_items = $this->get_api_line_items(
+			$order,
+			array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ), $this->get_shipping_line_items( $order ) ),
+			$taxes
+		);
+
+		$square_order_line_items = array_values(
+			array_filter(
+				$all_line_items,
+				function( $line_item ) {
+					return $line_item instanceof \Square\Models\OrderLineItem;
+				}
+			)
+		);
+
+		$square_discount_line_items = array_values(
+			array_filter(
+				$all_line_items,
+				function( $line_item ) {
+					return $line_item instanceof \Square\Models\OrderLineItemDiscount;
+				}
+			)
+		);
+
+		$square_updated_taxes_line_items = array_values(
+			array_filter(
+				$all_line_items,
+				function( $line_item ) {
+					return $line_item instanceof \Square\Models\OrderLineItemTax;
+				}
+			)
+		);
+
+		// Merge existing and new taxes.
+		$taxes = array_merge( $taxes, $square_updated_taxes_line_items );
+
+		$order_model->setLineItems( $square_order_line_items );
+
+		if ( ! empty( $square_discount_line_items ) ) {
+			$order_model->setDiscounts( $square_discount_line_items );
+		}
+
+		$order_model->setTaxes( array_values( $taxes ) );
+
+		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) );
+		$this->square_request->setOrder( $order_model );
+
+		$this->square_api_args = array( $this->square_request );
+	}
+
+	/**
+	 * Sets the fulfillment data for an order.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order            $order        WooCommerce order object.
+	 * @param \Square\Models\Order $order_model Square order object.
+	 * @return \Square\Models\Order
+	 */
+	protected function set_fulfillment_data( \WC_Order $order, \Square\Models\Order $order_model ) {
 		$order_model->setState( 'OPEN' );
 
 		// Create comprehensive fulfillment object.
@@ -191,55 +257,7 @@ class Orders extends API\Request {
 		// Set the fulfillment on the order.
 		$order_model->setFulfillments( array( $fulfillment ) );
 
-		$taxes          = $this->get_order_taxes( $order );
-		$all_line_items = $this->get_api_line_items(
-			$order,
-			array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ), $this->get_shipping_line_items( $order ) ),
-			$taxes
-		);
-
-		$square_order_line_items = array_values(
-			array_filter(
-				$all_line_items,
-				function( $line_item ) {
-					return $line_item instanceof \Square\Models\OrderLineItem;
-				}
-			)
-		);
-
-		$square_discount_line_items = array_values(
-			array_filter(
-				$all_line_items,
-				function( $line_item ) {
-					return $line_item instanceof \Square\Models\OrderLineItemDiscount;
-				}
-			)
-		);
-
-		$square_updated_taxes_line_items = array_values(
-			array_filter(
-				$all_line_items,
-				function( $line_item ) {
-					return $line_item instanceof \Square\Models\OrderLineItemTax;
-				}
-			)
-		);
-
-		// Merge existing and new taxes.
-		$taxes = array_merge( $taxes, $square_updated_taxes_line_items );
-
-		$order_model->setLineItems( $square_order_line_items );
-
-		if ( ! empty( $square_discount_line_items ) ) {
-			$order_model->setDiscounts( $square_discount_line_items );
-		}
-
-		$order_model->setTaxes( array_values( $taxes ) );
-
-		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) );
-		$this->square_request->setOrder( $order_model );
-
-		$this->square_api_args = array( $this->square_request );
+		return $order_model;
 	}
 
 	/**
