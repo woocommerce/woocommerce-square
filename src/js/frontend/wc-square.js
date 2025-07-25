@@ -365,21 +365,25 @@ jQuery( document ).ready( ( $ ) => {
 		 */
 		handleSubmission() {
 			this.start( 'generate_payment_nonce' );
-      			this.get_verification_details().then(( verificationDetails ) => {
-					this.payment_form
-						.tokenize( verificationDetails )
-							.then( ( tokenResult ) => {
-								const { token, details, status } = tokenResult;
-								this.end( 'generate_payment_nonce' );
+			this.get_verification_details().then( ( verificationDetails ) => {
+				this.payment_form
+					.tokenize( verificationDetails )
+					.then( ( tokenResult ) => {
+						const { token, details, status } = tokenResult;
 
-								if ( status === 'OK' ) {
-									this.handle_card_nonce_response( token, details );
-								} else {
-									if ( tokenResult.errors ) {
-										this.handle_errors( tokenResult.errors )
-									}
-									this.end( 'generate_payment_nonce', true );
-								}
+						if ( status === 'OK' ) {
+							this.handle_card_nonce_response( token, details );
+							this.end( 'generate_payment_nonce' );
+						} else {
+							if ( tokenResult.errors ) {
+								this.handle_errors( tokenResult.errors );
+							}
+							this.end( 'generate_payment_nonce', true );
+						}
+					} )
+					.catch( ( error ) => {
+						this.end( 'generate_payment_nonce', true );
+						this.handle_errors( [ error ] );
 					} );
 				} )
 				.catch( () => {
@@ -817,7 +821,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		/**
 		 * Start timing a performance metric
-		 * 
+		 *
 		 * @param {string} key Name of the metric to time
 		 */
 		start(key) {
@@ -834,7 +838,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		/**
 		 * End timing a performance metric
-		 * 
+		 *
 		 * @param {string} key Name of the metric to stop timing
 		 * @param {boolean} is_error Whether the metric was captured during an error
 		 */
@@ -844,12 +848,12 @@ jQuery( document ).ready( ( $ ) => {
 				const memory_bytes = (performance.memory?.usedJSHeapSize || 0) - this.metrics[key].memory;
 
 				// Format duration: Show milliseconds if < 1 second, otherwise show seconds
-				const time_format = duration < 1000 
+				const time_format = duration < 1000
 					? `${Math.round(duration)}ms`
 					: `${(duration/1000).toFixed(3)}s`;
 
 				// Format memory: Show MB if > 1MB, otherwise KB
-				const memory_format = memory_bytes > 1048576 
+				const memory_format = memory_bytes > 1048576
 					? `${(memory_bytes / 1048576).toFixed(2)}MB`
 					: `${(memory_bytes / 1024).toFixed(2)}KB`;
 
