@@ -27,7 +27,7 @@ class Order_Sync {
 	 *
 	 * @since x.x.x
 	 */
-	public static function init() {
+	public function init() {
 		// Initialize order polling system.
 		new Order_Polling();
 	}
