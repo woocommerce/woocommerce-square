@@ -44,6 +44,10 @@ jQuery( document ).ready( ( $ ) => {
 			this.billing_details_message_wrapper = $( '#square-pay-for-order-billing-details-wrapper' );
 			this.orderId = args.order_id;
 			this.ajax_get_order_amount_nonce = args.ajax_get_order_amount_nonce;
+			this.ajax_should_charge_order_nonce =
+				args.ajax_should_charge_order_nonce;
+			this.is_change_payment_method_request =
+				args.is_change_payment_method_request;
 			this.metrics = {};
 
 			if ( $( 'form.checkout' ).length ) {
@@ -66,6 +70,7 @@ jQuery( document ).ready( ( $ ) => {
 			// unblock the UI and clear any payment nonces when a server-side error occurs.
 			$( document.body ).on( 'checkout_error', () => {
 				$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
+				$( 'input[name=wc-square-credit-card-verified-token]' ).val( '' );
 				$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 			} );
 
@@ -282,8 +287,8 @@ jQuery( document ).ready( ( $ ) => {
 				return false;
 			}
 
-			// let through if nonce is already present - nonce is only present on non-tokenized payments.
-			if ( this.has_nonce() ) {
+			// let through if nonce or verified token is already present - nonce is only present on non-tokenized payments.
+			if ( this.has_nonce() || this.has_verified_token() ) {
 				this.log( 'Payment nonce present, placing order' );
 				this.end( 'validate_payment_data' );
 				return true;
@@ -292,10 +297,11 @@ jQuery( document ).ready( ( $ ) => {
 			const tokenized_card_id = this.get_tokenized_payment_method_id();
 
 			if ( tokenized_card_id ) {
-				this.log( 'Tokenized payment verification token present, placing order' );
+				this.log( 'Tokenize the card on file' );
+				this.block_ui();
+				this.handleSavedCardSubmission( tokenized_card_id );
 				this.end( 'validate_payment_data' );
-				$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( 'saved_card' );
-				return true;
+				return false;
 			}
 
 			this.log( 'Requesting payment nonce' );
@@ -303,6 +309,55 @@ jQuery( document ).ready( ( $ ) => {
 			this.handleSubmission();
 			this.end( 'validate_payment_data' );
 			return false;
+		}
+
+		/**
+		 * Handles the submission of a saved card.
+		 *
+		 * @param {string} tokenized_card_id The ID of the tokenized card.
+		 */
+		async handleSavedCardSubmission( tokenized_card_id ) {
+			try {
+				const response = await fetch(
+					`${ window.wc_checkout_params.ajax_url }?action=wc_square_credit_card_get_token_by_id&token_id=${ tokenized_card_id }&nonce=${ this.payment_token_nonce }` );
+				if ( ! response.ok ) {
+					throw new Error( 'Error in fetching payment token by ID.' );
+				}
+				const { success, data: savedToken } = await response.json();
+				if ( ! success ) {
+					throw new Error( 'Error in fetching payment token by ID.' );
+				}
+
+				this.start( 'tokenize_card_on_file' );
+				this.block_ui();
+				const verificationDetails =
+					await this.get_verification_details();
+				const tokenResult = await this.payment_form.tokenize(
+					verificationDetails,
+					savedToken
+				);
+				const { token, status } = tokenResult;
+				if ( status === 'OK' && token ) {
+					// payment nonce data.
+					$(
+						`input[name=wc-${ this.id_dasherized }-verified-token]`
+					).val( token );
+
+					this.end( 'tokenize_card_on_file' );
+					// if we made it this far, we have payment data.
+					this.form.trigger( 'submit' );
+				} else {
+					this.end( 'tokenize_card_on_file', true );
+					if ( tokenResult.errors ) {
+						this.handle_errors( tokenResult.errors );
+					} else {
+						throw new Error( 'Error in tokenizing card on file.' );
+					}
+				}
+			} catch ( error ) {
+				this.handle_errors( [ error ] );
+				this.end( 'validate_payment_data', true );
+			}
 		}
 
 		/**
@@ -330,7 +385,11 @@ jQuery( document ).ready( ( $ ) => {
 						this.end( 'generate_payment_nonce', true );
 						this.handle_errors( [ error ] );
 					} );
-			} );
+				} )
+				.catch( () => {
+					this.end( 'generate_payment_nonce', true );
+					this.handle_errors();
+				} );
 		}
 
 		/**
@@ -393,8 +452,6 @@ jQuery( document ).ready( ( $ ) => {
 			// payment nonce data.
 			$( `input[name=wc-${ this.id_dasherized }-payment-nonce]` ).val( nonce );
 
-			// buyer verification token data.
-			$( `input[name=wc-${ this.id_dasherized }-buyer-verification-token]` ).val( nonce );
 
 			// if we made it this far, we have payment data.
 			this.form.trigger( 'submit' );
@@ -407,7 +464,8 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @return {Promise<Object>} Verification details object.
 		 */
-		get_verification_details() {
+		async get_verification_details() {
+			const intent = await this.get_intent();
 			const verification_details = {
 				billingContact: {
 					familyName: $( '#billing_last_name' ).val() || '',
@@ -420,23 +478,26 @@ jQuery( document ).ready( ( $ ) => {
 					phone: $( '#billing_phone' ).val() || '',
 					addressLines: [ $( '#billing_address_1' ).val() || '', $( '#billing_address_2' ).val() || '' ],
 				},
-				intent: this.get_intent(),
+				intent,
 				customerInitiated: true,
 				sellerKeyedIn: false,
 			};
 
-			if ( 'CHARGE' === verification_details.intent ) {
+			if (
+				'CHARGE' === verification_details.intent ||
+				'CHARGE_AND_STORE' === verification_details.intent
+			) {
 				verification_details.currencyCode = this.currency_code;
-				return this.get_amount().then((amount) => {
+				return this.get_amount().then( ( amount ) => {
 					verification_details.amount = amount;
-					this.log(verification_details);
+					this.log( JSON.stringify( verification_details, null, 2 ) );
 					return verification_details;
 				});
 			}
 
-			return new Promise((resolve) => {
-				this.log(verification_details);
-				resolve(verification_details);
+			return new Promise(( resolve ) => {
+				this.log( JSON.stringify( verification_details, null, 2 ) );
+				resolve( verification_details );
 			});
 		}
 
@@ -448,9 +509,9 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @since 2.1.0
 		 *
-		 * @return {string} {'CHARGE'|'STORE'}
+		 * @return {string} {'CHARGE'|'STORE'|'CHARGE_AND_STORE'}
 		 */
-		get_intent() {
+		async get_intent() {
 			const $save_method_input = $( '#wc-square-credit-card-tokenize-payment-method' );
 
 			let save_payment_method;
@@ -461,11 +522,57 @@ jQuery( document ).ready( ( $ ) => {
 				save_payment_method = 'true' === $save_method_input.val();
 			}
 
-			if ( ! this.get_tokenized_payment_method_id() && save_payment_method ) {
-				return 'STORE';
+			if (
+				! this.get_tokenized_payment_method_id() &&
+				save_payment_method
+			) {
+				const should_charge = await this.should_charge_order();
+				return should_charge ? 'CHARGE_AND_STORE' : 'STORE';
 			}
 
 			return 'CHARGE';
+		}
+
+		/**
+		 * Gets whether the order be charged.
+		 *
+		 * @since 2.1.0
+		 *
+		 * @return {Promise<boolean>} Whether the order should be charged.
+		 */
+		async should_charge_order() {
+			return new Promise( ( resolve, reject ) => {
+				// If the request is to change payment method for a subscription, we don't need to charge the order.
+				if ( this.is_change_payment_method_request ) {
+					resolve( false );
+					return;
+				}
+
+				const data = {
+					action: 'wc_' + this.id + '_should_charge_order',
+					security: this.ajax_should_charge_order_nonce,
+					order_id: this.orderId,
+					is_pay_order: this.is_manual_order_payment,
+				};
+
+				$.ajax( {
+					url: this.ajax_url,
+					method: 'post',
+					cache: false,
+					data,
+					complete: ( response ) => {
+						const result = response.responseJSON;
+						if ( result && result.success ) {
+							return resolve( result.data );
+						}
+
+						return reject( result );
+					},
+					error: ( error ) => {
+						return reject( error );
+					},
+				} );
+			} );
 		}
 
 		/**
@@ -513,6 +620,7 @@ jQuery( document ).ready( ( $ ) => {
 
 			// clear any previous nonces
 			$( 'input[name=wc-square-credit-card-payment-nonce]' ).val( '' );
+			$( 'input[name=wc-square-credit-card-verified-token]' ).val( '' );
 			$( 'input[name=wc-square-credit-card-buyer-verification-token]' ).val( '' );
 
 			const messages = [];
@@ -651,6 +759,19 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
+		 * Determines if a verified token is present in the hidden input.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @return {boolean} True if verified token is present, otherwise false.
+		 */
+		has_verified_token() {
+			return $(
+				`input[name=wc-${ this.id_dasherized }-verified-token]`
+			).val();
+		}
+
+		/**
 		 * Logs data to the debug log via AJAX.
 		 *
 		 * @since 2.0.0
@@ -700,7 +821,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		/**
 		 * Start timing a performance metric
-		 * 
+		 *
 		 * @param {string} key Name of the metric to time
 		 */
 		start(key) {
@@ -717,7 +838,7 @@ jQuery( document ).ready( ( $ ) => {
 
 		/**
 		 * End timing a performance metric
-		 * 
+		 *
 		 * @param {string} key Name of the metric to stop timing
 		 * @param {boolean} is_error Whether the metric was captured during an error
 		 */
@@ -727,12 +848,12 @@ jQuery( document ).ready( ( $ ) => {
 				const memory_bytes = (performance.memory?.usedJSHeapSize || 0) - this.metrics[key].memory;
 
 				// Format duration: Show milliseconds if < 1 second, otherwise show seconds
-				const time_format = duration < 1000 
+				const time_format = duration < 1000
 					? `${Math.round(duration)}ms`
 					: `${(duration/1000).toFixed(3)}s`;
 
 				// Format memory: Show MB if > 1MB, otherwise KB
-				const memory_format = memory_bytes > 1048576 
+				const memory_format = memory_bytes > 1048576
 					? `${(memory_bytes / 1048576).toFixed(2)}MB`
 					: `${(memory_bytes / 1024).toFixed(2)}KB`;
 

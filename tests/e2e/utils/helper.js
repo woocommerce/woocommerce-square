@@ -5,6 +5,7 @@ import { listCatalog } from './square-sandbox';
 
 const { promisify } = require('util');
 const execAsync = promisify(require('child_process').exec);
+const { creditCard } = dummy;
 
 /**
  * Wait for blockUI to disappear.
@@ -241,7 +242,12 @@ export function getRandomExpiryDate() {
  * @param {Object} page Playwright page object.
  * @param {Boolean} isCheckout Indicates if page is Checkout page.
  */
-export async function fillCreditCardFields( page, isCheckout = true, isBlock = true ) {
+export async function fillCreditCardFields(
+	page,
+	isCheckout = true,
+	isBlock = true,
+	isSCA = false
+) {
 	const { creditCard } = dummy;
 
 	// Wait for overlay to disappear
@@ -284,26 +290,49 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 		}
 	}
 
+	const creditCardNumber = isSCA ? creditCard?.sca?.valid : creditCard.valid;
+	const cvv = isSCA ? creditCard?.sca?.cvv : creditCard.cvv;
+	const postalCode = isSCA ? creditCard?.sca?.postalCode : creditCard.postalCode;
+
 	// Fill credit card details.
 	const frameLocator = await page.frameLocator(frame).first();
 	const creditCardInputField = await frameLocator.locator('#cardNumber');
 	await creditCardInputField.waitFor({ state: 'visible' });
 
-	await creditCardInputField.fill(creditCard.valid);
+	await creditCardInputField.fill(creditCardNumber);
 
 	await frameLocator.locator('#expirationDate').fill(getRandomExpiryDate());
 
-	await frameLocator.locator('#cvv').fill(creditCard.cvv);
+	await frameLocator.locator('#cvv').fill(cvv);
 
 	const postalCodeInputField = await frameLocator.locator('#postalCode');
 
 	await postalCodeInputField.waitFor({ state: 'visible' });
-	await postalCodeInputField.fill(creditCard.postalCode);
+	await postalCodeInputField.fill(postalCode);
 }
 
-export async function placeOrder( page, isBlock = true ) {
+export async function placeOrder( page, isBlock = true, isSCA = false ) {
 	await page.waitForTimeout( 2000 );
-	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
+	await page
+		.locator(
+			'.wc-block-components-checkout-place-order-button, #place_order'
+		)
+		.first()
+		.click();
+	if ( isSCA ) {
+		const scaFrame = await page.frameLocator(
+			'#sq-threeds-challenge-flow-modal #sq-threeds-challenge-flow-iframe'
+		);
+		await scaFrame
+			.locator( 'input[placeholder="OTP"]' )
+			.waitFor( { state: 'visible' } );
+		await scaFrame
+			.locator( 'input[placeholder="OTP"]' )
+			.fill( creditCard?.sca?.verificationCode );
+		await scaFrame.locator( 'input[placeholder="OTP"]' ).blur();
+		await page.waitForTimeout( 2000 );
+		await scaFrame.locator( 'button#sendOtp' ).click();
+	}
 }
 
 export async function deleteAllPaymentMethods( page ) {

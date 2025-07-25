@@ -137,6 +137,17 @@ class Payment_Gateway_Payment_Tokens_Handler {
 
 		// perform the API request to tokenize the payment method if needed
 		if ( ! $response || $this->get_gateway()->tokenize_after_sale() ) {
+
+			/**
+			 * Set last Payment ID to payment nonce to use for tokenization.
+			 * This is used for tokenization when "CHARGE_AND_STORE" intent is used to generate a payment nonce.
+			 *
+			 * @see https://developer.squareup.com/docs/web-payments/sca-charge-and-store-card-on-file#charge-a-card-and-store-its-details
+			 */
+			if ( ! empty( $response ) && ! empty( $response->get_transaction_id() ) && ! empty( $order->payment->nonce->credit_card ) ) {
+				$order->payment->nonce->credit_card = $response->get_transaction_id();
+			}
+
 			$response = $gateway->get_api()->tokenize_payment_method( $order );
 		}
 

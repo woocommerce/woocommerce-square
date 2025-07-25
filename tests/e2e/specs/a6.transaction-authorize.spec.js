@@ -38,14 +38,14 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 			sku: 'simple-product',
 		} );
 
-		await expect( await page.getByText( 'Product published' ) ).toBeVisible();
+		await expect( page.getByText( 'Product published' ) ).toBeVisible();
 	}
 
 	await clearCart( page );
 	await browser.close();
 } );
 
-test.afterAll( async ( { baseURL} ) => {
+test.afterAll( async () => {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
 
@@ -58,41 +58,52 @@ const isBlockCheckout = [ true, false ];
 for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
-	test( title + 'Payment Gateway > Transaction Type > Authorization @general', async ( {
-		page,
-	} ) => {
-		await addOneOrMoreProductToCart( page, 'simple-product' );
+	for ( const isSCA of [ true, false ] ) {
+		const subTitle = isSCA ? ' [SCA]:' : ' ';
 
-		await visitCheckout( page, isBlock );
-		await fillAddressFields( page, isBlock );
-		await fillCreditCardFields( page, true, isBlock );
-		await placeOrder( page, isBlock );
+		test(
+			title +
+				subTitle +
+				'Payment Gateway > Transaction Type > Authorization @general',
+			async ( { page } ) => {
+				await addOneOrMoreProductToCart( page, 'simple-product' );
 
-		await expect(
-			page.locator( '.woocommerce-order-overview__total strong' )
-		).toHaveText( '$14.99' );
-		const orderId = await page
-			.locator( '.woocommerce-order-overview__order strong' )
-			.innerText();
+				await visitCheckout( page, isBlock );
+				await fillAddressFields( page, isBlock );
+				await fillCreditCardFields( page, true, isBlock, isSCA );
+				await placeOrder( page, isBlock, isSCA );
 
-		await gotoOrderEditPage( page, orderId );
+				await expect(
+					page.locator( '.woocommerce-order-overview__total strong' )
+				).toHaveText( '$14.99' );
+				const orderId = await page
+					.locator( '.woocommerce-order-overview__order strong' )
+					.innerText();
 
-		await expect( page.locator( '#order_status' ) ).toHaveValue( 'wc-on-hold' );
-		await expect(
-			page.getByText(
-				'Square Test Authorization Approved for an amount of $14.99: Visa ending in 1111'
-			)
-		).toBeVisible();
+				await gotoOrderEditPage( page, orderId );
 
-		page.on('dialog', dialog => dialog.accept());
-		await page.locator('button.wc-square-credit-card-capture').click();
+				await expect( page.locator( '#order_status' ) ).toHaveValue(
+					'wc-on-hold'
+				);
+				await expect(
+					page.getByText(
+						'Square Test Authorization Approved for an amount of $14.99: Visa ending in '
+					)
+				).toBeVisible();
 
-		// Verify order status and capture status.
-		await expect(page.locator('#order_status')).toHaveValue(
-			'wc-processing'
+				page.on( 'dialog', ( dialog ) => dialog.accept() );
+				await page
+					.locator( 'button.wc-square-credit-card-capture' )
+					.click();
+
+				// Verify order status and capture status.
+				await expect( page.locator( '#order_status' ) ).toHaveValue(
+					'wc-processing'
+				);
+				await expect(
+					page.getByText( 'Square Capture total of' )
+				).toBeVisible();
+			}
 		);
-		await expect(
-			page.getByText('Square Capture total of')
-		).toBeVisible();
-	} );
+	}
 }
