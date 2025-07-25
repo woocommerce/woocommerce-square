@@ -813,7 +813,7 @@ class Gateway extends Payment_Gateway_Direct {
 	 * Square requires we create a new customer & customer card before referencing that customer in a transaction.
 	 *
 	 * @since 2.0.0
-	 * @since x.x.x - Changed to false to do tokenization after sale.
+	 * @since 4.9.7 - Changed to false to do tokenization after sale.
 	 *
 	 * @return bool
 	 */
@@ -825,7 +825,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Determines whether new payment customers/tokens should be created after processing a payment.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.7
 	 *
 	 * @return bool
 	 */
@@ -1268,7 +1268,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Check if request is to change payment method.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.7
 	 *
 	 * @return boolean
 	 */
@@ -1279,7 +1279,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Returns whether the order should be charged.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.7
 	 */
 	public function should_charge_order() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_should_charge_order', 'security' );
