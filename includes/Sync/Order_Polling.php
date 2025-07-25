@@ -34,7 +34,7 @@ class Order_Polling {
 	 */
 	public function __construct() {
 		// Add filter to add custom cron schedule.
-		add_filter( 'cron_schedules', array( $this, 'add_custom_cron_schedule' ) );
+		add_filter( 'cron_schedules', array( $this, 'add_custom_cron_schedule' ) ); // phpcs:ignore WordPress.WP.CronInterval.ChangeDetected
 
 		// Add action to schedule polling.
 		add_action( 'init', array( $this, 'maybe_schedule_polling' ) );
@@ -106,7 +106,7 @@ class Order_Polling {
 			// Process orders to create WooCommerce orders.
 			$this->process_square_orders( $orders );
 
-			wc_square()->log( "Square order polling completed.", 'sync' );
+			wc_square()->log( 'Square order polling completed.', 'sync' );
 
 		} catch ( \Exception $e ) {
 			wc_square()->log( 'Square order polling failed: ' . $e->getMessage(), 'sync' );
@@ -154,8 +154,8 @@ class Order_Polling {
 			$settings_handler = wc_square()->get_settings_handler();
 			$location_id      = $settings_handler->get_location_id();
 
-			$all_orders = array();
-			$cursor = '';
+			$all_orders  = array();
+			$cursor      = '';
 			$batch_count = 0;
 			$max_batches = 10; // Prevent infinite loops
 
@@ -166,23 +166,29 @@ class Order_Polling {
 				if ( ! empty( $response['orders'] ) ) {
 					$all_orders = array_merge( $all_orders, $response['orders'] );
 
-					wc_square()->log( sprintf( 
-						'Batch %d: Found %d orders', 
-						$batch_count + 1, 
-						count( $response['orders'] ),
-					), 'sync' );
+					wc_square()->log(
+						sprintf(
+							'Batch %d: Found %d orders',
+							$batch_count + 1,
+							count( $response['orders'] ),
+						),
+						'sync'
+					);
 				}
 
 				// Update cursor for next iteration
 				$cursor = $response['cursor'] ?? '';
-				$batch_count++;
+				++$batch_count;
 
 			} while ( ! empty( $cursor ) && $batch_count < $max_batches );
 
-			wc_square()->log( sprintf( 
-				'Total found: %d Square orders', 
-				count( $all_orders ) 
-			), 'sync' );
+			wc_square()->log(
+				sprintf(
+					'Total found: %d Square orders',
+					count( $all_orders )
+				),
+				'sync'
+			);
 
 			return $all_orders;
 
@@ -205,9 +211,9 @@ class Order_Polling {
 		}
 
 		$processed_count = 0;
-		$updated_count = 0;
-		$skipped_count = 0;
-		$error_count = 0;
+		$updated_count   = 0;
+		$skipped_count   = 0;
+		$error_count     = 0;
 
 		$importer = new Order_Importer();
 
@@ -221,49 +227,62 @@ class Order_Polling {
 					$update_result = $importer->update_existing_woocommerce_order( $existing_order, $square_order );
 
 					if ( $update_result['updated'] ) {
-						wc_square()->log( sprintf( 
-							'Successfully updated WooCommerce order: Square ID %s -> WC ID %d (%s)', 
-							$square_order->getId(), 
-							$existing_order->get_id(),
-							$update_result['message']
-						), 'sync' );
-						$updated_count++;
+						wc_square()->log(
+							sprintf(
+								'Successfully updated WooCommerce order: Square ID %s -> WC ID %d (%s)',
+								$square_order->getId(),
+								$existing_order->get_id(),
+								$update_result['message']
+							),
+							'sync'
+						);
+						++$updated_count;
 					} else {
-						wc_square()->log( sprintf( 
-							'No updates needed for order: Square ID %s -> WC ID %d (%s)', 
-							$square_order->getId(), 
-							$existing_order->get_id(),
-							$update_result['message']
-						), 'sync' );
-						$skipped_count++;
+						wc_square()->log(
+							sprintf(
+								'No updates needed for order: Square ID %s -> WC ID %d (%s)',
+								$square_order->getId(),
+								$existing_order->get_id(),
+								$update_result['message']
+							),
+							'sync'
+						);
+						++$skipped_count;
 					}
 				}
-
 			} catch ( \Exception $e ) {
-				wc_square()->log( sprintf( 
-					'Error processing Square order %s: %s', 
-					$square_order->getId(), 
-					$e->getMessage() 
-				), 'error' );
-				$error_count++;
+				wc_square()->log(
+					sprintf(
+						'Error processing Square order %s: %s',
+						$square_order->getId(),
+						$e->getMessage()
+					),
+					'error'
+				);
+				++$error_count;
 
 				// Also add a order note and a meta tag to the order.
-				$existing_order->add_order_note( sprintf( 
-					'Error processing Square order %s: %s', 
-					$square_order->getId(), 
-					$e->getMessage() 
-				) );
+				$existing_order->add_order_note(
+					sprintf(
+						'Error processing Square order %s: %s',
+						$square_order->getId(),
+						$e->getMessage()
+					)
+				);
 				$existing_order->update_meta_data( '_square_sync_status', 'error' );
 			}
 		}
 
-		wc_square()->log( sprintf( 
-			'Order processing complete: %d created, %d updated, %d skipped, %d errors', 
-			$processed_count, 
-			$updated_count,
-			$skipped_count, 
-			$error_count 
-		), 'sync' );
+		wc_square()->log(
+			sprintf(
+				'Order processing complete: %d created, %d updated, %d skipped, %d errors',
+				$processed_count,
+				$updated_count,
+				$skipped_count,
+				$error_count
+			),
+			'sync'
+		);
 
 		// Update last polling timestamp.
 		$this->update_last_polling_time();
