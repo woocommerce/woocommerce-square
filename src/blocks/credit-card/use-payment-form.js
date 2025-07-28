@@ -1,12 +1,18 @@
 /**
  * External dependencies
  */
-import { useState, useCallback, useMemo } from '@wordpress/element';
+import { useState, useCallback } from '@wordpress/element';
 
 /**
  * Internal dependencies
  */
-import { getSquareServerData, log, convertAmount } from '../square-utils';
+import {
+	getSquareServerData,
+	log,
+	handleErrors,
+	convertAmount,
+	shouldChargeOrder,
+} from '../square-utils';
 import { PAYMENT_METHOD_NAME } from './constants';
 
 /**
@@ -32,8 +38,16 @@ export const usePaymentForm = (
 	const [ isLoaded, setLoaded ] = useState( false );
 	const [ cardType, setCardType ] = useState( '' );
 
-	const verificationDetails = useMemo( () => {
-		const intent = shouldSavePayment && ! token ? 'STORE' : 'CHARGE';
+	const getVerificationDetails = useCallback( async () => {
+		let intent = 'CHARGE';
+		if ( shouldSavePayment && ! token ) {
+			intent = 'STORE';
+			const shouldCharge = await shouldChargeOrder();
+			if ( shouldCharge ) {
+				intent = 'CHARGE_AND_STORE';
+			}
+		}
+
 		const newVerificationDetails = {
 			billingContact: {
 				familyName: billing.billingData.last_name || '',
@@ -54,7 +68,7 @@ export const usePaymentForm = (
 			sellerKeyedIn: false,
 		};
 
-		if ( intent === 'CHARGE' ) {
+		if ( intent === 'CHARGE' || intent === 'CHARGE_AND_STORE' ) {
 			newVerificationDetails.amount = convertAmount(
 				billing.cartTotal.value,
 				billing.currency.code
@@ -76,6 +90,7 @@ export const usePaymentForm = (
 				cardData = {},
 				nonce,
 				verificationToken,
+				verifiedToken,
 				notices,
 				logs,
 			} = inputData;
@@ -95,6 +110,8 @@ export const usePaymentForm = (
 				[ `wc-${ PAYMENT_METHOD_NAME }-payment-token` ]: token || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-buyer-verification-token` ]:
 					verificationToken || '',
+				[ `wc-${ PAYMENT_METHOD_NAME }-verified-token` ]:
+					verifiedToken || '',
 				[ `wc-${ PAYMENT_METHOD_NAME }-tokenize-payment-method` ]:
 					shouldSavePayment || false,
 				'log-data': logs.length > 0 ? JSON.stringify( logs ) : '',
@@ -121,12 +138,39 @@ export const usePaymentForm = (
 	const createNonce = useCallback(
 		async ( card ) => {
 			if ( ! token ) {
+				const verificationDetails = await getVerificationDetails();
 				return await card.tokenize( verificationDetails );
 			}
 
 			return token;
 		},
-		[ token ]
+		[ token, getVerificationDetails ]
+	);
+
+	/**
+	 * Tokenizes a saved card
+	 *
+	 * @param {Object} payments   Instance of Payments.
+	 * @param {string} savedToken Saved card token.
+	 *
+	 * @return {Promise} Returns Promise<TokenResult>
+	 */
+	const tokenizeSavedCard = useCallback(
+		async ( payments, savedToken ) => {
+			try {
+				const card = await payments.card();
+				const verificationDetails = await getVerificationDetails();
+				const tokenResult = await card.tokenize(
+					verificationDetails,
+					savedToken
+				);
+
+				return tokenResult;
+			} catch ( error ) {
+				handleErrors( [ error ] );
+			}
+		},
+		[ token, getVerificationDetails ]
 	);
 
 	/**
@@ -171,6 +215,7 @@ export const usePaymentForm = (
 		getPostalCode,
 		cardType,
 		createNonce,
+		tokenizeSavedCard,
 		getPaymentMethodData,
 	};
 };

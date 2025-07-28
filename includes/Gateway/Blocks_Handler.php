@@ -132,6 +132,9 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 				'payment_token_nonce'        => wp_create_nonce( 'payment_token_nonce' ),
 				'is_pay_for_order_page'      => is_wc_endpoint_url( 'order-pay' ),
 				'recalculate_totals_nonce'   => wp_create_nonce( 'wc-square-recalculate-totals' ),
+				'should_charge_order_nonce'  => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
+				'order_id'                   => absint( get_query_var( 'order-pay' ) ),
+				'is_change_payment_method'   => $this->get_gateway()->is_change_payment_method_request(),
 			),
 			$this->digital_wallets_handler->get_localised_data()
 		);

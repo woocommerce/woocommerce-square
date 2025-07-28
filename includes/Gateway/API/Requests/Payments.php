@@ -82,8 +82,9 @@ class Payments extends \WooCommerce\Square\API\Request {
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		} else {
+			$source_id            = ! empty( $order->payment->verified_token ) ? $order->payment->verified_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
 			$this->square_request = new \Square\Models\CreatePaymentRequest(
-				! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
+				$source_id,
 				wc_square()->get_idempotency_key( $order->unique_transaction_ref, false )
 			);
 		}
@@ -96,6 +97,11 @@ class Payments extends \WooCommerce\Square\API\Request {
 		if ( defined( 'WOOCOMMERCE_CHECKOUT' ) && WOOCOMMERCE_CHECKOUT ) {
 			$customer_details = new \Square\Models\CustomerDetails();
 			$customer_details->setCustomerInitiated( true );
+			$this->square_request->setCustomerDetails( $customer_details );
+		} elseif ( ! empty( $order->payment->token ) ) {
+			// Set customer initiated to false for the case of a renewal order or a pre-order release payment.
+			$customer_details = new \Square\Models\CustomerDetails();
+			$customer_details->setCustomerInitiated( false );
 			$this->square_request->setCustomerDetails( $customer_details );
 		}
 
@@ -127,10 +133,11 @@ class Payments extends \WooCommerce\Square\API\Request {
 			$this->square_request->setSourceId( $order->payment->nonce->cash_app_pay );
 		} else {
 			// payment token (card ID) or card nonce (from JS)
-			$this->square_request->setSourceId( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$source_id = ! empty( $order->payment->verified_token ) ? $order->payment->verified_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+			$this->square_request->setSourceId( $source_id );
 
 			// 3DS / SCA verification token (from JS)
-			if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {
+			if ( ! empty( $order->payment->verification_token ) ) {
 				$this->square_request->setVerificationToken( $order->payment->verification_token );
 			}
 		}

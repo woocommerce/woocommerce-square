@@ -38,7 +38,7 @@ export const CheckoutHandler = ( {
 		onCheckoutAfterProcessingWithSuccess,
 	} = eventRegistration;
 
-	const { getPaymentMethodData, createNonce, verifyBuyer } =
+	const { getPaymentMethodData, createNonce, tokenizeSavedCard } =
 		checkoutFormHandler;
 
 	usePaymentProcessing(
@@ -47,7 +47,7 @@ export const CheckoutHandler = ( {
 		square,
 		getPaymentMethodData,
 		createNonce,
-		verifyBuyer
+		tokenizeSavedCard
 	);
 
 	useAfterProcessingCheckout(

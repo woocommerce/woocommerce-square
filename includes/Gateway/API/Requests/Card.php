@@ -58,14 +58,15 @@ class Card extends \WooCommerce\Square\API\Request {
 		$card->setCardholderName( $order->get_formatted_billing_full_name() );
 		$card->setCustomerId( $order->customer_id );
 
-		$request = new \Square\Models\CreateCardRequest(
+		$source_id = ! empty( $order->payment->verified_token ) ? $order->payment->verified_token : ( ! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card );
+		$request   = new \Square\Models\CreateCardRequest(
 			wc_square()->get_idempotency_key( '', false ),
-			! empty( $order->payment->token ) ? $order->payment->token : $order->payment->nonce->credit_card,
+			$source_id,
 			$card
 		);
 
 		// 3DS / SCA verification token (from JS)
-		if ( ! empty( $order->payment->verification_token ) && 'saved_card' !== $order->payment->verification_token ) {
+		if ( ! empty( $order->payment->verification_token ) ) {
 			$request->setVerificationToken( $order->payment->verification_token );
 		}
 
