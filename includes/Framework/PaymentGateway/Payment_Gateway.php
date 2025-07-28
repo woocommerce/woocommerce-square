@@ -71,6 +71,15 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** Debug mode disabled */
 	const DEBUG_MODE_OFF = 'off';
 
+	/** Debug mode log non-payment errors */
+	const DEBUG_MODE_LOG_NON_PAYMENT_ERRORS = 'non-payment-save-to-log';
+
+	/** Debug mode show payment errors on Checkout, log non-payment errors */
+	const DEBUG_MODE_SHOW_PAYMENT_LOG_NON_PAYMENT = 'payment-show-and-non-payment-save-to-log';
+
+	/** Debug mode log all errors */
+	const DEBUG_MODE_LOG_ALL_ERRORS = 'all-errors-save-to-log';
+
 	/** Credit card payment type */
 	const PAYMENT_TYPE_CREDIT_CARD = 'credit-card';
 
@@ -4509,7 +4518,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return boolean if debug logging is enabled
 	 */
 	public function debug_log() {
-		return self::DEBUG_MODE_LOG === $this->debug_mode || self::DEBUG_MODE_BOTH === $this->debug_mode;
+		return self::DEBUG_MODE_LOG === $this->debug_mode
+			|| self::DEBUG_MODE_BOTH === $this->debug_mode
+			|| self::DEBUG_MODE_LOG_ALL_ERRORS === $this->debug_mode;
 	}
 
 
@@ -4521,7 +4532,9 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return boolean if checkout debugging is enabled
 	 */
 	public function debug_checkout() {
-		return self::DEBUG_MODE_CHECKOUT === $this->debug_mode || self::DEBUG_MODE_BOTH === $this->debug_mode;
+		return self::DEBUG_MODE_CHECKOUT === $this->debug_mode
+			|| self::DEBUG_MODE_BOTH === $this->debug_mode
+			|| self::DEBUG_MODE_SHOW_PAYMENT_LOG_NON_PAYMENT === $this->debug_mode;
 	}
 
 

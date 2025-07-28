@@ -64,7 +64,6 @@ export const OnboardingApp = () => {
 		sync_interval,
 		enable_customer_decline_messages,
 		debug_mode,
-		debug_logging_enabled,
 		enable_sandbox,
 	} = settings;
 
@@ -311,7 +310,6 @@ export const OnboardingApp = () => {
 									{
 										enable_customer_decline_messages,
 										debug_mode,
-										debug_logging_enabled,
 									}
 								);
 								setStep( 'payment-complete' );

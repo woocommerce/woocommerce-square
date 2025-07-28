@@ -189,9 +189,6 @@ export const getSquareSettings = async () => {
 			SQUARE_SETTINGS_DEFAULT_STATE.enable_customer_decline_messages,
 		debug_mode:
 			settings.debug_mode || SQUARE_SETTINGS_DEFAULT_STATE.debug_mode,
-		debug_logging_enabled:
-			settings.debug_logging_enabled ||
-			SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
 	};
 
 	return squareSettings;

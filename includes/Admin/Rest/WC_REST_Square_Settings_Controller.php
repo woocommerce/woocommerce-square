@@ -58,7 +58,6 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'locations',
 			'enable_customer_decline_messages',
 			'debug_mode',
-			'debug_logging_enabled',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -97,11 +96,6 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 					),
 					'sandbox_token'                    => array(
 						'description'       => __( 'Square sandbox ID.', 'woocommerce-square' ),
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'debug_logging_enabled'            => array(
-						'description'       => __( 'Log debug messages to the WooCommerce status log.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
