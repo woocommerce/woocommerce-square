@@ -73,7 +73,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 == Changelog ==
 
 = 4.9.7 - 2025-07-28 =
-* Fix - Resolve `CARD_DECLINED_VERIFICATION_REQUIRED` error for 3DS-required credit card payments
+* Fix - Resolve `CARD_DECLINED_VERIFICATION_REQUIRED` error for 3DS-required credit card payments.
 * Fix - Unblock UI and show a generic error when buyer verification fails.
 * Dev - Update NPM packages with security issues.
 
