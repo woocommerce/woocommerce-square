@@ -132,6 +132,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		);
 
 		$fields[] = 'buyer-verification-token';
+		$fields[] = 'verified-token';
 
 		foreach ( $fields as $field_id ) {
 			echo '<input type="hidden" name="wc-' . esc_attr( $this->get_gateway()->get_id_dasherized() ) . '-' . esc_attr( $field_id ) . '" />';
@@ -230,6 +231,8 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 			'payment_token_nonce'              => wp_create_nonce( 'payment_token_nonce' ),
 			'order_id'                         => absint( get_query_var( 'order-pay' ) ),
 			'ajax_get_order_amount_nonce'      => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_get_order_amount' ),
+			'ajax_should_charge_order_nonce'   => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
+			'is_change_payment_method_request' => $this->get_gateway()->is_change_payment_method_request(),
 		);
 
 		// map the unique square card type string to our framework standards
