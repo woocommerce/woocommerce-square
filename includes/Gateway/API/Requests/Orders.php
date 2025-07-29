@@ -113,9 +113,9 @@ class Orders extends API\Request {
 	 *
 	 * @since 3.7.0
 	 *
-	 * @param \WC_Order            $order        WooCommerce order object.
-	 * @param \Square\Models\Order $square_order Square order object.
-	 * @param string $order_request_type The type of order request.
+	 * @param \WC_Order            	$order        		WooCommerce order object.
+	 * @param \Square\Models\Order 	$square_order 		Square order object.
+	 * @param string 				$order_request_type The type of order request.
 	 */
 	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model, $order_request_type = 'update' ) {
 		$order_model->setReferenceId( $order->get_order_number() );
