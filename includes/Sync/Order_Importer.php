@@ -105,7 +105,7 @@ class Order_Importer {
 		$wc_order->update_meta_data( '_square_sync_status', 'updated' );
 
 		// 5. Update fulfillment data from Square
-		$this->update_fulfillment_data( $wc_order, $square_order );
+		$this->maybe_update_fulfillment_data( $wc_order, $square_order );
 
 		// Save changes if any updates were made
 		if ( ! empty( $updates_made ) ) {
@@ -136,7 +136,7 @@ class Order_Importer {
 	 * @param \WC_Order $wc_order WooCommerce order.
 	 * @param \Square\Models\Order $square_order Square order.
 	 */
-	private function update_fulfillment_data( $wc_order, $square_order ) {
+	private function maybe_update_fulfillment_data( $wc_order, $square_order ) {
 		$fulfillments = $square_order->getFulfillments();
 
 		if ( empty( $fulfillments ) ) {
