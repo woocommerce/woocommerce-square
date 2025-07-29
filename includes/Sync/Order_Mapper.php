@@ -45,22 +45,28 @@ class Order_Mapper {
 	 * @return bool True if status change is allowed.
 	 */
 	public static function is_status_change_allowed( $from_status, $to_status ) {
-		// Don't allow status changes from terminal states unless it's a specific case
+		// Don't allow status changes from terminal states unless it's a specific case.
 		$terminal_statuses = array( 'completed', 'cancelled', 'refunded', 'failed' );
 
+		// Return early true if status change is allowed by filter.
+		$allowed_status_changes = apply_filters( 'wc_square_allowed_status_changes', false, $from_status, $to_status );
+		if ( $allowed_status_changes ) {
+			return true;
+		}
+
 		if ( in_array( $from_status, $terminal_statuses, true ) ) {
-			// Only allow specific transitions from terminal states
+			// Only allow specific transitions from terminal states.
 			$allowed_terminal_transitions = array(
-				'completed' => array( 'cancelled' ), // Allow cancellation of completed orders
-				'cancelled' => array(), // No transitions from cancelled
-				'refunded'  => array(), // No transitions from refunded
-				'failed'    => array( 'pending', 'processing' ), // Allow retry of failed orders
+				'completed' => array( 'cancelled' ), // Allow cancellation of completed orders.
+				'cancelled' => array(), // No transitions from cancelled.
+				'refunded'  => array(), // No transitions from refunded.
+				'failed'    => array( 'pending', 'processing' ), // Allow retry of failed orders.
 			);
 
 			return in_array( $to_status, $allowed_terminal_transitions[ $from_status ] ?? array(), true );
 		}
 
-		// Allow all other status changes
+		// Allow all other status changes.
 		return true;
 	}
 }
