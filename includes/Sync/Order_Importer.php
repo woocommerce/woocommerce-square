@@ -12,6 +12,7 @@
 namespace WooCommerce\Square\Sync;
 
 use WooCommerce\Square\Sync\Order_Mapper;
+use WooCommerce\Square\Utilities\Money_Utility;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -81,14 +82,19 @@ class Order_Importer {
 
 		// 3. Update order total if changed (with safety checks).
 		if ( $square_total ) {
-			$square_total_amount = $square_total->getAmount() / 100;
-			$current_total       = (float) $wc_order->get_total();
+			$currency             = $square_total->getCurrency();
+			$square_total_amount = Money_Utility::cents_to_float( $square_total->getAmount(), $currency );
+			$current_total        = (float) $wc_order->get_total();
+			$decimals             = Money_Utility::get_currency_decimals( $currency );
 
-			if ( abs( $current_total - $square_total_amount ) > 0.01 ) { // Allow for rounding differences.
+			$square_total_rounded  = round( $square_total_amount, $decimals );
+			$current_total_rounded = round( $current_total, $decimals );
+
+			if ( $square_total_rounded !== $current_total_rounded ) {
 				// Only update total if order is not paid yet or if it's a refund scenario.
-				if ( ! $wc_order->is_paid() || $square_total_amount < $current_total ) {
-					$wc_order->set_total( $square_total_amount );
-					$updates_made[] = sprintf( 'Total: %s → %s', $current_total, $square_total_amount );
+				if ( ! $wc_order->is_paid() || $square_total_rounded < $current_total_rounded ) {
+					$wc_order->set_total( $square_total_rounded );
+					$updates_made[] = sprintf( 'Total: %s → %s', $current_total, $square_total_rounded );
 				}
 			}
 		}
