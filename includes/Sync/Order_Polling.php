@@ -28,6 +28,14 @@ class Order_Polling {
 	const CRON_HOOK = 'wc_square_sync_orders';
 
 	/**
+	 * Array to track processed order IDs within the current sync session.
+	 *
+	 * @since x.x.x
+	 * @var array
+	 */
+	private $processed_order_ids = [];
+
+	/**
 	 * Initialize the polling system.
 	 *
 	 * @since x.x.x
@@ -176,7 +184,7 @@ class Order_Polling {
 	}
 
 	/**
-	 * Process Square orders and create/update WooCommerce orders.
+	 * Process Square orders to create or update WooCommerce orders.
 	 *
 	 * @since x.x.x
 	 * @param array $square_orders Array of Square order objects.
@@ -187,27 +195,43 @@ class Order_Polling {
 			return;
 		}
 
+		// Reset processed order IDs for this sync session.
+		$this->processed_order_ids = [];
+
 		$processed_count = 0;
 		$updated_count   = 0;
 		$skipped_count   = 0;
 		$error_count     = 0;
+		$duplicate_count = 0;
 
 		$importer = new Order_Importer();
 
 		foreach ( $square_orders as $square_order ) {
+			$order_id = $square_order->getId();
+
+			// Skip if already processed in this sync session.
+			if ( in_array( $order_id, $this->processed_order_ids, true ) ) {
+				wc_square()->log( "Skipping duplicate order {$order_id} in current sync", 'sync' );
+				++$duplicate_count;
+				continue;
+			}
+
+			// Add to processed list.
+			$this->processed_order_ids[] = $order_id;
+
 			try {
-				// Check if order already exists in WooCommerce
-				$existing_order = $importer->find_existing_wc_order_by_square_order_id( $square_order->getId() );
+				// Check if order already exists in WooCommerce.
+				$existing_order = $importer->find_existing_wc_order_by_square_order_id( $order_id );
 
 				if ( $existing_order ) {
-					// Update existing order
+					// Update existing order.
 					$update_result = $importer->update_existing_woocommerce_order( $existing_order, $square_order );
 
 					if ( $update_result['updated'] ) {
 						wc_square()->log(
 							sprintf(
 								'Successfully updated WooCommerce order: Square ID %s -> WC ID %d (%s)',
-								$square_order->getId(),
+								$order_id,
 								$existing_order->get_id(),
 								$update_result['message']
 							),
@@ -218,7 +242,7 @@ class Order_Polling {
 						wc_square()->log(
 							sprintf(
 								'No updates needed for order: Square ID %s -> WC ID %d (%s)',
-								$square_order->getId(),
+								$order_id,
 								$existing_order->get_id(),
 								$update_result['message']
 							),
@@ -226,36 +250,48 @@ class Order_Polling {
 						);
 						++$skipped_count;
 					}
+				} else {
+					// Order doesn't exist in WooCommerce - skip for now.
+					wc_square()->log(
+						sprintf(
+							'Skipping Square order %s - no corresponding WooCommerce order found',
+							$order_id
+						),
+						'sync'
+					);
+					++$skipped_count;
 				}
 			} catch ( \Exception $e ) {
 				wc_square()->log(
 					sprintf(
 						'Error processing Square order %s: %s',
-						$square_order->getId(),
+						$order_id,
 						$e->getMessage()
 					),
 					'error'
 				);
 				++$error_count;
 
-				// Also add a order note and a meta tag to the order.
-				$existing_order->add_order_note(
-					sprintf(
-						'Error processing Square order %s: %s',
-						$square_order->getId(),
-						$e->getMessage()
-					)
-				);
-				$existing_order->update_meta_data( '_square_sync_status', 'error' );
+				// Add order note and meta tag if order exists.
+				if ( isset( $existing_order ) && $existing_order instanceof \WC_Order ) {
+					$existing_order->add_order_note(
+						sprintf(
+							'Error processing Square order %s: %s',
+							$order_id,
+							$e->getMessage()
+						)
+					);
+					$existing_order->update_meta_data( '_square_sync_status', 'error' );
+				}
 			}
 		}
 
 		wc_square()->log(
 			sprintf(
-				'Order processing complete: %d created, %d updated, %d skipped, %d errors',
-				$processed_count,
+				'Order processing complete: %d updated, %d skipped, %d duplicates, %d errors',
 				$updated_count,
 				$skipped_count,
+				$duplicate_count,
 				$error_count
 			),
 			'sync'
