@@ -204,7 +204,7 @@ class Orders extends API\Request {
 
 			// Add recipient information.
 			$recipient = new \Square\Models\OrderFulfillmentRecipient();
-			$recipient->setDisplayName( trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() ) );
+			$recipient->setDisplayName( trim( $order->get_formatted_shipping_full_name() ) );
 			$recipient->setPhoneNumber( $order->get_billing_phone() );
 
 			// Add shipping address.
