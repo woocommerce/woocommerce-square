@@ -79,7 +79,7 @@ class Order_Polling {
 	 */
 	public function poll_square_orders() {
 		// Capture sync start time to avoid missing orders updated during sync.
-		$sync_start_time = gmdate('c');
+		$sync_start_time = gmdate( 'c' );
 
 		wc_square()->log( 'Starting Square order polling', 'sync' );
 
@@ -347,7 +347,7 @@ class Order_Polling {
 	 */
 	private function update_last_polling_time( $timestamp = null ) {
 		if ( null === $timestamp ) {
-			$timestamp = gmdate('c');
+			$timestamp = gmdate( 'c' );
 		}
 
 		update_option( 'wc_square_last_order_polling_time', $timestamp );
