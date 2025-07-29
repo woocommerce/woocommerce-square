@@ -20,12 +20,12 @@ defined( 'ABSPATH' ) || exit;
 class Order_Polling {
 
 	/**
-	 * Cron hook name for order polling.
+	 * Action Scheduler hook name for order polling.
 	 *
 	 * @since x.x.x
 	 * @var string
 	 */
-	const CRON_HOOK = 'woocommerce_square_poll_orders';
+	const CRON_HOOK = 'wc_square_sync_orders';
 
 	/**
 	 * Initialize the polling system.
@@ -33,58 +33,35 @@ class Order_Polling {
 	 * @since x.x.x
 	 */
 	public function __construct() {
-		// Add filter to add custom cron schedule.
-		add_filter( 'cron_schedules', array( $this, 'add_custom_cron_schedule' ) ); // phpcs:ignore WordPress.WP.CronInterval.ChangeDetected
-
 		// Add action to schedule polling.
 		add_action( 'init', array( $this, 'maybe_schedule_polling' ) );
 
-		// Add action to poll square orders.
+		// Add action to poll square orders via Action Scheduler.
 		add_action( self::CRON_HOOK, array( $this, 'poll_square_orders' ) );
 	}
 
 	/**
-	 * Add custom cron schedule for Square order polling.
-	 *
-	 * @since x.x.x
-	 * @param array $schedules Existing cron schedules.
-	 * @return array Modified cron schedules.
-	 */
-	public function add_custom_cron_schedule( $schedules ) {
-		$polling_interval = $this->get_polling_interval_seconds();
-
-		$schedules['square_order_polling'] = array(
-			'interval' => $polling_interval,
-			'display'  => sprintf(
-				/* translators: %d: number of minutes */
-				__( 'Every %d minutes (Square Order Polling)', 'woocommerce-square' ),
-				round( $polling_interval / MINUTE_IN_SECONDS )
-			),
-		);
-
-		return $schedules;
-	}
-
-	/**
-	 * Maybe schedule the polling cron job.
+	 * Maybe schedule the polling Action Scheduler job.
 	 *
 	 * @since x.x.x
 	 */
 	public function maybe_schedule_polling() {
-		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
+		if ( false === as_next_scheduled_action( self::CRON_HOOK, array(), wc_square()->get_id() ) ) {
 			$this->schedule_polling();
 		}
 	}
 
 	/**
-	 * Schedule the polling cron job.
+	 * Schedule the polling Action Scheduler job.
 	 *
 	 * @since x.x.x
 	 */
 	public function schedule_polling() {
-		wp_schedule_event( time(), 'square_order_polling', self::CRON_HOOK );
+		$interval  = $this->get_polling_interval_seconds();
 
-		wc_square()->log( "Scheduled Square order polling with interval: {$this->get_polling_interval_seconds()}", 'sync' );
+		as_schedule_recurring_action( time() + $interval, $interval, self::CRON_HOOK, array(), wc_square()->get_id() );
+
+		wc_square()->log( "Scheduled Square order polling with interval: {$interval} seconds", 'sync' );
 	}
 
 	/**
