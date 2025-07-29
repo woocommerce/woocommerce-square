@@ -206,7 +206,7 @@ class Order_Importer {
 	 * @param string $square_order_id Square order ID.
 	 * @return \WC_Order|false
 	 */
-	public function find_existing_wc_order_by_square_id( $square_order_id ) {
+	public function find_existing_wc_order_by_square_order_id( $square_order_id ) {
 		global $wpdb;
 
 		// Check if HPOS is enabled.

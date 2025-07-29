@@ -220,7 +220,7 @@ class Order_Polling {
 		foreach ( $square_orders as $square_order ) {
 			try {
 				// Check if order already exists in WooCommerce
-				$existing_order = $importer->find_existing_wc_order_by_square_id( $square_order->getId() );
+				$existing_order = $importer->find_existing_wc_order_by_square_order_id( $square_order->getId() );
 
 				if ( $existing_order ) {
 					// Update existing order
