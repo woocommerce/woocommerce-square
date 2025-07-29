@@ -721,12 +721,12 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @since x.x.x
 	 *
-	 * @param array		$location_ids	Array of location IDs.
-	 * @param string	$start_time		Start time in the RFC 3339 format for the search.
-	 * @param int		$limit			Number of orders to retrieve.
-	 * @param string	$cursor			Cursor for pagination.
+	 * @param array	 $location_ids Array of location IDs.
+	 * @param string $start_time   Start time in the RFC 3339 format for the search.
+	 * @param int    $limit	       Number of orders to retrieve.
+	 * @param string $cursor       Cursor for pagination.
 	 *
-	 * @return array	Array			containing orders and cursor.
+	 * @return array Array containing orders and cursor.
 	 *
 	 * @throws \Exception
 	 */
@@ -744,7 +744,13 @@ class API extends \WooCommerce\Square\API {
 			return $response->get_response_data();
 		}
 
-		throw new \Exception( esc_html__( 'Failed to make request searchOrders: ' . $response->get_data(), 'woocommerce-square' ) );
+		throw new \Exception(
+			sprintf(
+				/* translators: %s: Error details from the searchOrders request. */
+				esc_html__( 'Failed to make request searchOrders: %s', 'woocommerce-square' ),
+				$response->get_data()
+			)
+		);
 	}
 
 	/**

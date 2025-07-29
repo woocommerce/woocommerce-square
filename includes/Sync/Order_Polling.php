@@ -33,7 +33,7 @@ class Order_Polling {
 	 * @since x.x.x
 	 * @var array
 	 */
-	private $processed_order_ids = [];
+	private $processed_order_ids = array();
 
 	/**
 	 * Initialize the polling system.
@@ -65,7 +65,7 @@ class Order_Polling {
 	 * @since x.x.x
 	 */
 	public function schedule_polling() {
-		$interval  = $this->get_polling_interval_seconds();
+		$interval = $this->get_polling_interval_seconds();
 
 		as_schedule_recurring_action( time() + $interval, $interval, self::CRON_HOOK, array(), wc_square()->get_id() );
 
@@ -204,7 +204,7 @@ class Order_Polling {
 		}
 
 		// Reset processed order IDs for this sync session.
-		$this->processed_order_ids = [];
+		$this->processed_order_ids = array();
 
 		$updated_count   = 0;
 		$skipped_count   = 0;

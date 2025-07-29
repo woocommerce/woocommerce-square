@@ -48,8 +48,20 @@ class Order_Mapper {
 		// Don't allow status changes from terminal states unless it's a specific case.
 		$terminal_statuses = array( 'completed', 'cancelled', 'refunded', 'failed' );
 
-		// Return early true if status change is allowed by filter.
+		/**
+		 * Filters the allowed status changes.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $allowed_status_changes True if status change is allowed.
+		 * @param string $from_status Current WooCommerce status.
+		 * @param string $to_status New status from Square.
+		 *
+		 * @return bool True if status change is allowed.
+		 */
 		$allowed_status_changes = apply_filters( 'wc_square_allowed_status_changes', false, $from_status, $to_status );
+
+		// Return early true if status change is allowed by filter.
 		if ( $allowed_status_changes ) {
 			return true;
 		}

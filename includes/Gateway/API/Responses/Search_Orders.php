@@ -51,5 +51,4 @@ class Search_Orders extends \WooCommerce\Square\Gateway\API\Response {
 			'cursor' => $this->get_cursor(),
 		);
 	}
-
 }
