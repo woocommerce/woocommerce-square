@@ -13,6 +13,7 @@ namespace WooCommerce\Square\Sync;
 
 use WooCommerce\Square\Sync\Order_Mapper;
 use WooCommerce\Square\Utilities\Money_Utility;
+use Automattic\WooCommerce\Utilities\OrderUtil;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -208,20 +209,42 @@ class Order_Importer {
 	public function find_existing_wc_order_by_square_id( $square_order_id ) {
 		global $wpdb;
 
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"
-				SELECT order_id, meta_key
-				FROM {$wpdb->prefix}wc_orders_meta
-				WHERE meta_value = %s
-				AND meta_key LIKE %s
-				LIMIT 1
-				",
-				$square_order_id,
-				'%_square_order_id'
-			),
-			ARRAY_A
-		);
+		// Check if HPOS is enabled.
+		if ( class_exists( OrderUtil::class ) && OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			// HPOS: Query wc_orders_meta table.
+			$results = $wpdb->get_results(
+				$wpdb->prepare(
+					"
+					SELECT order_id, meta_key
+					FROM {$wpdb->prefix}wc_orders_meta
+					WHERE meta_value = %s
+					AND meta_key LIKE %s
+					LIMIT 1
+					",
+					$square_order_id,
+					'%_square_order_id'
+				),
+				ARRAY_A
+			);
+		} else {
+			// Traditional: Query wp_postmeta table.
+			$results = $wpdb->get_results(
+				$wpdb->prepare(
+					"
+					SELECT p.ID as order_id, pm.meta_key
+					FROM {$wpdb->posts} p
+					INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+					WHERE pm.meta_value = %s
+					AND pm.meta_key LIKE %s
+					AND p.post_type = 'shop_order'
+					LIMIT 1
+					",
+					$square_order_id,
+					'%_square_order_id'
+				),
+				ARRAY_A
+			);
+		}
 
 		if ( ! empty( $results ) ) {
 			$order = wc_get_order( $results[0]['order_id'] );
