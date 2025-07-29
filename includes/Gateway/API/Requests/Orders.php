@@ -188,7 +188,8 @@ class Orders extends API\Request {
 		$order_model->setState( 'OPEN' );
 
 		// Create comprehensive fulfillment object.
-		$fulfillment = new \Square\Models\OrderFulfillment( 'PROPOSED' );
+		$fulfillment = new \Square\Models\OrderFulfillment();
+		$fulfillment->setState( 'PROPOSED' );
 		$fulfillment->setUid( 'woo_order_fulfillment_' . $order->get_id() );
 
 		// Determine fulfillment type based on shipping method.
@@ -604,6 +605,58 @@ class Orders extends API\Request {
 			$order->square_order_id,
 			$this->square_request,
 		);
+	}
+
+	/**
+	 * Sets the data for searching orders.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array  $location_ids Array of location IDs to search in.
+	 * @param string $start_time   Start time for the search (ISO 8601 format).
+	 * @param int    $limit        Maximum number of orders to return.
+	 * @param string $cursor       Cursor for pagination.
+	 */
+	public function set_search_orders_data( $location_ids, $start_time, $limit = 100, $cursor = '' ) {
+
+		$this->square_api_method = 'searchOrders';
+		$this->square_request    = new \Square\Models\SearchOrdersRequest();
+
+		$this->square_request->setLocationIds( $location_ids );
+		$this->square_request->setLimit( $limit );
+
+		// Set cursor for pagination if provided.
+		if ( ! empty( $cursor ) ) {
+			$this->square_request->setCursor( $cursor );
+		}
+
+		// Create the query object.
+		$query = new \Square\Models\SearchOrdersQuery();
+
+		// Create the filter.
+		$filter = new \Square\Models\SearchOrdersFilter();
+
+		// Set date filter.
+		$date_filter = new \Square\Models\SearchOrdersDateTimeFilter();
+		$closed_at   = new \Square\Models\TimeRange();
+		$closed_at->setStartAt( $start_time );
+		$date_filter->setUpdatedAt( $closed_at );
+		$filter->setDateTimeFilter( $date_filter );
+
+		// Set states filter - only get OPEN and COMPLETED orders.
+		$state_filter = new \Square\Models\SearchOrdersStateFilter( array( 'OPEN', 'COMPLETED' ) );
+		$filter->setStateFilter( $state_filter );
+
+		$query->setFilter( $filter );
+
+		// Set sort.
+		$sort = new \Square\Models\SearchOrdersSort( 'UPDATED_AT' );
+		$sort->setSortOrder( 'ASC' );
+		$query->setSort( $sort );
+
+		$this->square_request->setQuery( $query );
+
+		$this->square_api_args = array( $this->square_request );
 	}
 
 }
