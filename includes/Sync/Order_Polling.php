@@ -78,6 +78,9 @@ class Order_Polling {
 	 * @since x.x.x
 	 */
 	public function poll_square_orders() {
+		// Capture sync start time to avoid missing orders updated during sync.
+		$sync_start_time = gmdate('c');
+
 		wc_square()->log( 'Starting Square order polling', 'sync' );
 
 		try {
@@ -85,16 +88,21 @@ class Order_Polling {
 
 			if ( empty( $orders ) ) {
 				wc_square()->log( 'No new Square orders found during polling', 'sync' );
+				// Still update polling time to sync start time.
+				$this->update_last_polling_time( $sync_start_time );
 				return;
 			}
 
-			// Process orders to create WooCommerce orders.
 			$this->process_square_orders( $orders );
+
+			// Update polling time to sync START time (not current time).
+			$this->update_last_polling_time( $sync_start_time );
 
 			wc_square()->log( 'Square order polling completed.', 'sync' );
 
 		} catch ( \Exception $e ) {
 			wc_square()->log( 'Square order polling failed: ' . $e->getMessage(), 'sync' );
+			// Don't update polling time on failure.
 		}
 	}
 
@@ -198,7 +206,6 @@ class Order_Polling {
 		// Reset processed order IDs for this sync session.
 		$this->processed_order_ids = [];
 
-		$processed_count = 0;
 		$updated_count   = 0;
 		$skipped_count   = 0;
 		$error_count     = 0;
@@ -296,9 +303,6 @@ class Order_Polling {
 			),
 			'sync'
 		);
-
-		// Update last polling timestamp.
-		$this->update_last_polling_time();
 	}
 
 	/**
@@ -339,9 +343,14 @@ class Order_Polling {
 	 * Update last polling time.
 	 *
 	 * @since x.x.x
+	 * @param string $timestamp Optional timestamp to set. Defaults to current time.
 	 */
-	private function update_last_polling_time() {
-		$current_time = gmdate( 'c' );
-		update_option( 'wc_square_last_order_polling_time', $current_time );
+	private function update_last_polling_time( $timestamp = null ) {
+		if ( null === $timestamp ) {
+			$timestamp = gmdate('c');
+		}
+
+		update_option( 'wc_square_last_order_polling_time', $timestamp );
+		wc_square()->log( "Updated last polling time to: {$timestamp}", 'sync' );
 	}
 }
