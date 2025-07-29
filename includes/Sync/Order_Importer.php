@@ -147,57 +147,53 @@ class Order_Importer {
 			$fulfillment_state = $fulfillment->getState();
 			$fulfillment_type  = $fulfillment->getType();
 
-			// Update fulfillment meta
+			// Update fulfillment meta.
 			$wc_order->update_meta_data( '_square_fulfillment_state', $fulfillment_state );
 			$wc_order->update_meta_data( '_square_fulfillment_type', $fulfillment_type );
 
-			// Handle shipment details
+			// Handle shipment details.
 			$shipment_details = $fulfillment->getShipmentDetails();
-			if ( $shipment_details ) {
-				$tracking_number = $shipment_details->getTrackingNumber();
-				$tracking_url    = $shipment_details->getTrackingUrl();
-				$carrier         = $shipment_details->getCarrier();
+			$tracking_number  = $shipment_details->getTrackingNumber();
+			$tracking_url     = $shipment_details->getTrackingUrl();
+			$carrier          = $shipment_details->getCarrier();
 
-				if ( $tracking_number ) {
-					$wc_order->update_meta_data( '_square_tracking_number', $tracking_number );
-				}
-				if ( $tracking_url ) {
-					$wc_order->update_meta_data( '_square_tracking_url', $tracking_url );
-				}
-				if ( $carrier ) {
-					$wc_order->update_meta_data( '_square_carrier', $carrier );
-				}
-
-				// Add order note if fulfillment completed
-				if ( 'COMPLETED' === $fulfillment_state ) {
-					$note = __( 'Order fulfillment completed in Square.', 'woocommerce-square' );
-					if ( $tracking_number ) {
-						// translators: %s is the tracking number.
-						$note .= sprintf( __( ' Tracking: %s', 'woocommerce-square' ), $tracking_number );
-					}
-					$wc_order->add_order_note( $note );
-				}
+			if ( $tracking_number ) {
+				$wc_order->update_meta_data( '_square_tracking_number', $tracking_number );
+			}
+			if ( $tracking_url ) {
+				$wc_order->update_meta_data( '_square_tracking_url', $tracking_url );
+			}
+			if ( $carrier ) {
+				$wc_order->update_meta_data( '_square_carrier', $carrier );
 			}
 
-			// Handle pickup details
+			// Add order note if fulfillment completed.
+			if ( 'COMPLETED' === $fulfillment_state ) {
+				$note = __( 'Order fulfillment completed in Square.', 'woocommerce-square' );
+				if ( $tracking_number ) {
+					// translators: %s is the tracking number.
+					$note .= sprintf( __( ' Tracking: %s', 'woocommerce-square' ), $tracking_number );
+				}
+				$wc_order->add_order_note( $note );
+			}
+
+			// Handle pickup details.
 			$pickup_details = $fulfillment->getPickupDetails();
-			if ( $pickup_details ) {
-				$pickup_at     = $pickup_details->getPickupAt();
-				$schedule_type = $pickup_details->getScheduleType();
+			$pickup_at      = $pickup_details->getPickupAt();
+			$schedule_type  = $pickup_details->getScheduleType();
 
-				if ( $pickup_at ) {
-					$wc_order->update_meta_data( '_square_pickup_time', $pickup_at );
-				}
-				if ( $schedule_type ) {
-					$wc_order->update_meta_data( '_square_pickup_schedule', $schedule_type );
-				}
+			if ( $pickup_at ) {
+				$wc_order->update_meta_data( '_square_pickup_time', $pickup_at );
+			}
+			if ( $schedule_type ) {
+				$wc_order->update_meta_data( '_square_pickup_schedule', $schedule_type );
+			}
 
-				// Add order note if pickup completed
-				if ( 'COMPLETED' === $fulfillment_state ) {
-					$wc_order->add_order_note(
-						__( 'Order pickup completed in Square.', 'woocommerce-square' )
-					);
-				}
+			// Add order note if pickup completed.
+			if ( 'COMPLETED' === $fulfillment_state ) {
+				$wc_order->add_order_note(
+					__( 'Order pickup completed in Square.', 'woocommerce-square' )
+				);
 			}
 		}
 	}
