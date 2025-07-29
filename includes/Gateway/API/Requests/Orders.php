@@ -190,7 +190,7 @@ class Orders extends API\Request {
 		// Create comprehensive fulfillment object.
 		$fulfillment = new \Square\Models\OrderFulfillment();
 		$fulfillment->setState( 'PROPOSED' );
-		$fulfillment->setUid( 'woo_order_fulfillment_' . $order->get_id() );
+		$fulfillment->setUid( wc_square()->get_idempotency_key() );
 
 		// Determine fulfillment type based on shipping method.
 		$shipping_methods = $order->get_shipping_methods();
