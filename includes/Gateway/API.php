@@ -720,14 +720,17 @@ class API extends \WooCommerce\Square\API {
 	 * Searches for Square orders.
 	 *
 	 * @since x.x.x
-	 * @param array $location_ids Array of location IDs.
-	 * @param string $start_time Start time for the search.
-	 * @param int $limit Number of orders to retrieve.
-	 * @param string $cursor Cursor for pagination.
-	 * @return array Array containing orders and cursor.
+	 *
+	 * @param array		$location_ids	Array of location IDs.
+	 * @param string	$start_time		Start time in the RFC 3339 format for the search.
+	 * @param int		$limit			Number of orders to retrieve.
+	 * @param string	$cursor			Cursor for pagination.
+	 *
+	 * @return array	Array			containing orders and cursor.
+	 *
 	 * @throws \Exception
 	 */
-	public function search_orders( $location_ids, $start_time, $limit = 100, $cursor = '' ) {
+	public function search_orders( $location_ids = array(), $start_time, $limit = 100, $cursor = '' ) {
 		try {
 			// Create the search request
 			$search_request = new \Square\Models\SearchOrdersRequest();
