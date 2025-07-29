@@ -17,11 +17,6 @@ use WooCommerce\Square\Sync\Order_Polling;
  * @since x.x.x
  */
 class Order_Sync {
-	public function __construct() {
-		// Initialize hooks.
-		$this->init();
-	}
-
 	/**
 	 * Initialize hooks.
 	 *

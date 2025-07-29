@@ -173,6 +173,7 @@ class Plugin extends Payment_Gateway_Plugin {
 		}
 
 		$this->order_sync_handler = new Order_Sync();
+		$this->order_sync_handler->init();
 	}
 
 
