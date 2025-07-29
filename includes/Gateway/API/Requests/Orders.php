@@ -25,6 +25,7 @@ use WooCommerce\Square\API;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
+use Square\Models\FulfillmentType;
 
 /**
  * The Orders API request class.
@@ -194,11 +195,11 @@ class Orders extends API\Request {
 
 		// Determine fulfillment type based on shipping method.
 		$shipping_methods = $order->get_shipping_methods();
-		$fulfillment_type = empty( $shipping_methods ) ? 'PICKUP' : 'SHIPMENT';
+		$fulfillment_type = empty( $shipping_methods ) ? FulfillmentType::PICKUP : FulfillmentType::SHIPMENT;
 		$fulfillment->setType( $fulfillment_type );
 
 		// Add fulfillment details based on type.
-		if ( 'SHIPMENT' === $fulfillment_type ) {
+		if ( FulfillmentType::SHIPMENT === $fulfillment_type ) {
 			$shipment_details = new \Square\Models\OrderFulfillmentShipmentDetails();
 
 			// Add recipient information.
@@ -226,7 +227,7 @@ class Orders extends API\Request {
 
 			$fulfillment->setShipmentDetails( $shipment_details );
 
-		} elseif ( 'PICKUP' === $fulfillment_type ) {
+		} elseif ( FulfillmentType::PICKUP === $fulfillment_type ) {
 			$pickup_details = new \Square\Models\OrderFulfillmentPickupDetails();
 			$pickup_details->setScheduleType( 'ASAP' );
 
