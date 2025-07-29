@@ -56,6 +56,7 @@ class Order_Importer {
 					)
 				);
 			} else {
+				// @todo: move this to a separate order sync status page if exists.
 				wc_square()->log(
 					sprintf(
 						'Status change not allowed: %s → %s for order %d',
