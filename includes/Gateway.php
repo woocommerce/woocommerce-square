@@ -495,6 +495,7 @@ class Gateway extends Payment_Gateway_Direct {
 
 		if ( $response->get_square_order_id() ) {
 			$this->update_order_meta( $order, 'square_order_id', $response->get_square_order_id() );
+			$order->add_order_note( sprintf( esc_html__( 'Square Order ID: %s', 'woocommerce-square' ), $response->get_square_order_id() ) );
 		}
 
 		// store the plugin version on the order
