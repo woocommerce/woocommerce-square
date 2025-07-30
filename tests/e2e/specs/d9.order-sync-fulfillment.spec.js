@@ -2,19 +2,16 @@ import { test, expect } from '@playwright/test';
 import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
+	createProduct,
 	visitCheckout,
 	fillAddressFields,
 	fillCreditCardFields,
 	placeOrder,
+	runScheduledAction,
 	gotoOrderEditPage,
 } from '../utils/helper';
-import dummy from '../dummy-data/index';
-
-const { customer } = dummy;	
 
 test.describe('Order Sync and Fulfillment Tests @sync', () => {
-	let orderId;
-	let squareOrderId;
 
 	test('Should create order with fulfillment data and verify WooCommerce integration', async ({ page }) => {
 		// Step 1: Create a product
@@ -97,5 +94,86 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		}
 
 		console.log('PASSED: Order created with fulfillment data and WooCommerce integration verified');
+
+		// Step 9: Update the order state and fulfillment states to completed using API.
+		await page.goto('/wp-admin/admin.php?page=wc-status&tab=action-scheduler&status=pending');
+		if (squareOrderId && process.env.SQUARE_ACCESS_TOKEN) {
+			try {
+				// To update the order state, Square API requires the 'version' field in the order object.
+				// All fulfillments must have a state of COMPLETED, CANCELED, or FAILED before the order can be completed.
+				// First, fetch the current order to get its version and fulfillments.
+				const getOrderResponse = await fetch( `https://connect.squareupsandbox.com/v2/orders/${ squareOrderId }`, {
+					method: 'GET',
+					headers: {
+						'Square-Version': '2024-03-20',
+						'Authorization': `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+						'Content-Type': 'application/json',
+					},
+				} );
+
+				let orderVersion = null;
+				let fulfillments = null;
+				if ( getOrderResponse.ok ) {
+					const orderData = await getOrderResponse.json();
+					orderVersion = orderData?.order?.version;
+					fulfillments = orderData?.order?.fulfillments;
+
+					// update the fulfillments to COMPLETED
+					fulfillments.forEach( fulfillment => {
+						fulfillment.state = 'COMPLETED';
+					} );
+				}
+
+				if ( orderVersion === null ) {
+					throw new Error( 'Could not retrieve order version from Square.' );
+				}
+
+				const squareResponse = await fetch( `https://connect.squareupsandbox.com/v2/orders/${ squareOrderId }`, {
+					method: 'PUT',
+					headers: {
+						'Square-Version': '2024-03-20',
+						'Authorization': `Bearer ${ process.env.SQUARE_ACCESS_TOKEN }`,
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify( {
+						order: {
+							state: 'COMPLETED',
+							version: orderVersion,
+							fulfillments: fulfillments,
+						},
+					} ),
+				} );
+
+				console.log(squareResponse);
+
+				if (squareResponse.ok) {
+					console.log('Square order state updated to completed');
+
+
+				} else {
+					console.log('Square order state update failed');
+				}
+			} catch (error) {
+				console.log('Square API call failed:', error.message);
+			}
+		}
+		
+		// Step 10: Run the Square sync action.
+		if (squareOrderId) {
+			try {
+				await runScheduledAction(page, 'wc_square_sync_orders');
+				console.log('Successfully ran Square sync action');
+			} catch (error) {
+				console.log('Could not run Square sync action:', error.message);
+			}
+		}
+
+		// Step 11: Verify the order status is completed.
+		await gotoOrderEditPage( page, orderId );
+		const updatedOrderStatus = await page.locator('#order_status').inputValue();
+		expect(updatedOrderStatus).toBe('wc-completed');
+		console.log(`Order status is correct: ${updatedOrderStatus}`);
+
+		console.log('PASSED: Action Scheduler and sync infrastructure verified');
 	});
 });
