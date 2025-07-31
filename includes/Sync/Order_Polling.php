@@ -331,6 +331,11 @@ class Order_Polling {
 	private function get_last_polling_time() {
 		$last_time = get_option( 'wc_square_last_order_polling_time' );
 
+		// If the secondsPast parameter is set, reset the last polling time to the number of seconds past.
+		if ( isset( $_GET['seconds_past'] ) ) {
+			$last_time = gmdate( 'c', time() - intval( $_GET['seconds_past'] ) );
+		}
+
 		if ( ! $last_time ) {
 			// Default to 24 hours ago for first run.
 			$last_time = gmdate( 'c', time() - DAY_IN_SECONDS );
