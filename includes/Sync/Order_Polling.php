@@ -329,11 +329,12 @@ class Order_Polling {
 	 * @return string ISO 8601 timestamp.
 	 */
 	private function get_last_polling_time() {
-		$last_time = get_option( 'wc_square_last_order_polling_time' );
+		$last_time    = get_option( 'wc_square_last_order_polling_time' );
+		$seconds_past = filter_input( INPUT_GET, 'seconds_past', FILTER_VALIDATE_INT );
 
 		// If the secondsPast parameter is set, reset the last polling time to the number of seconds past.
-		if ( isset( $_GET['seconds_past'] ) ) {
-			$last_time = gmdate( 'c', time() - intval( $_GET['seconds_past'] ) );
+		if ( $seconds_past ) {
+			$last_time = gmdate( 'c', time() - intval( $seconds_past ) );
 		}
 
 		if ( ! $last_time ) {
