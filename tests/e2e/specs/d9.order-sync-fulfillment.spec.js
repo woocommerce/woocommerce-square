@@ -57,7 +57,7 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		// Step 7: Verify order status is processing (as expected for new orders)
 		const orderStatus = await page.locator('#order_status').inputValue();
 		expect(orderStatus).toBe('wc-processing');
-		console.log(`Order status is correct: ${orderStatus}`);
+		console.log(`Order status is (expected: wc-processing): ${orderStatus}`);
 
 		// Step 8: Try to verify Square API integration (if credentials are available)
 		if (squareOrderId && process.env.SQUARE_ACCESS_TOKEN) {
@@ -73,7 +73,6 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 
 				if (squareResponse.ok) {
 					const squareOrderData = await squareResponse.json();
-					console.log('Square Order Data:', squareOrderData);
 
 					// Verify fulfillment exists in the Square order response
 					expect(squareOrderData.order).toBeTruthy();
@@ -145,8 +144,6 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 					} ),
 				} );
 
-				console.log(squareResponse);
-
 				if (squareResponse.ok) {
 					console.log('Square order state updated to completed');
 
@@ -173,6 +170,7 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		await gotoOrderEditPage( page, orderId );
 		const updatedOrderStatus = await page.locator('#order_status').inputValue();
 		expect(updatedOrderStatus).toBe('wc-completed');
+		console.log(`Order status is (expected: wc-completed): ${updatedOrderStatus}`);
 
 		console.log('PASSED: Action Scheduler and sync infrastructure verified');
 	});
