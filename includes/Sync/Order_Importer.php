@@ -152,9 +152,9 @@ class Order_Importer {
 			// Handle shipment details.
 			$shipment_details = $fulfillment->getShipmentDetails();
 			if ( $shipment_details ) {
-				$tracking_number  = $shipment_details->getTrackingNumber();
-				$tracking_url     = $shipment_details->getTrackingUrl();
-				$carrier          = $shipment_details->getCarrier();
+				$tracking_number = $shipment_details->getTrackingNumber();
+				$tracking_url    = $shipment_details->getTrackingUrl();
+				$carrier         = $shipment_details->getCarrier();
 
 				if ( $tracking_number ) {
 					$wc_order->update_meta_data( '_square_tracking_number', $tracking_number );
@@ -166,7 +166,6 @@ class Order_Importer {
 					$wc_order->update_meta_data( '_square_carrier', $carrier );
 				}
 			}
-
 
 			// Add order note if fulfillment completed.
 			if ( 'COMPLETED' === $fulfillment_state ) {
@@ -181,8 +180,8 @@ class Order_Importer {
 			// Handle pickup details.
 			$pickup_details = $fulfillment->getPickupDetails();
 			if ( $pickup_details ) {
-				$pickup_at      = $pickup_details->getPickupAt();
-				$schedule_type  = $pickup_details->getScheduleType();
+				$pickup_at     = $pickup_details->getPickupAt();
+				$schedule_type = $pickup_details->getScheduleType();
 
 				if ( $pickup_at ) {
 					$wc_order->update_meta_data( '_square_pickup_time', $pickup_at );
