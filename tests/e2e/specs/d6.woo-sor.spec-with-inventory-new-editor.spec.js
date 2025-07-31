@@ -34,11 +34,14 @@ test.beforeAll( 'Setup', async ( ) => {
 } );
 
 test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
-	await page.goto( '/wp-admin/edit.php?post_type=product' );
-	await page
-		.locator( 'a.row-title' )
-		.filter( { hasText: 'OnePlus 8' } )
-		.click();
+	await createProduct(
+		page, {
+			name: 'OnePlus 8',
+			regularPrice: '299',
+			sku: 'oneplus-8',
+		},
+		false
+	);
 
 	await page.locator( '#woocommerce-product-tab__inventory' ).click();
 	await expect( await page.locator( '[name="stock_quantity"]' ) ).toBeDisabled();
@@ -56,8 +59,6 @@ test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
 		.locator( '.woocommerce-button-with-dropdown-menu .components-button' )
 		.filter( { hasText: 'Update' } )
 		.click();
-
-	// await expect( await page.getByText( 'Product updated.' ) ).toBeVisible();
 
 	const result = await new Promise( ( resolve ) => {
 		let intervalId = setInterval( async () => {
