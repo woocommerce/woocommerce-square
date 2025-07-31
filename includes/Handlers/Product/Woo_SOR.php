@@ -391,7 +391,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_item_values[] = $option_value_object;
 					}
 
-					$variation_index++;
+					++$variation_index;
 				}
 
 				// Set the name of the variation as the combination of all attribute values.
