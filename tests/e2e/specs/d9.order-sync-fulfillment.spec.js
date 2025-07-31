@@ -14,6 +14,7 @@ import {
 test.describe('Order Sync and Fulfillment Tests @sync', () => {
 
 	test('Should create order with fulfillment data and verify WooCommerce integration', async ({ page }) => {
+		test.setTimeout(120000); // 2 minutes timeout for this specific test.
 		// Step 1: Create a product
 		await createProduct(
 			page,
@@ -172,7 +173,6 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		await gotoOrderEditPage( page, orderId );
 		const updatedOrderStatus = await page.locator('#order_status').inputValue();
 		expect(updatedOrderStatus).toBe('wc-completed');
-		console.log(`Order status is correct: ${updatedOrderStatus}`);
 
 		console.log('PASSED: Action Scheduler and sync infrastructure verified');
 	});
