@@ -71,13 +71,10 @@ class Order_Importer {
 			}
 		}
 
-		// 2. Update fulfillment status if Square order is completed.
-		if ( 'COMPLETED' === $square_state && ! in_array( $wc_status, array( 'completed', 'cancelled', 'refunded' ), true ) ) {
-			$wc_order->set_status( 'completed' );
-			$updates_made[] = 'Marked as completed (fulfillment done in Square)';
-
+		// 2. Add order note if fulfillment completed.
+		if ( 'COMPLETED' === $square_state ) {
 			$wc_order->add_order_note(
-				__( 'Order marked as completed - fulfillment completed in Square Dashboard/POS.', 'woocommerce-square' )
+				__( 'Fulfillment completed in Square Dashboard/POS.', 'woocommerce-square' )
 			);
 		}
 
@@ -154,19 +151,22 @@ class Order_Importer {
 
 			// Handle shipment details.
 			$shipment_details = $fulfillment->getShipmentDetails();
-			$tracking_number  = $shipment_details->getTrackingNumber();
-			$tracking_url     = $shipment_details->getTrackingUrl();
-			$carrier          = $shipment_details->getCarrier();
+			if ( $shipment_details ) {
+				$tracking_number  = $shipment_details->getTrackingNumber();
+				$tracking_url     = $shipment_details->getTrackingUrl();
+				$carrier          = $shipment_details->getCarrier();
 
-			if ( $tracking_number ) {
-				$wc_order->update_meta_data( '_square_tracking_number', $tracking_number );
+				if ( $tracking_number ) {
+					$wc_order->update_meta_data( '_square_tracking_number', $tracking_number );
+				}
+				if ( $tracking_url ) {
+					$wc_order->update_meta_data( '_square_tracking_url', $tracking_url );
+				}
+				if ( $carrier ) {
+					$wc_order->update_meta_data( '_square_carrier', $carrier );
+				}
 			}
-			if ( $tracking_url ) {
-				$wc_order->update_meta_data( '_square_tracking_url', $tracking_url );
-			}
-			if ( $carrier ) {
-				$wc_order->update_meta_data( '_square_carrier', $carrier );
-			}
+
 
 			// Add order note if fulfillment completed.
 			if ( 'COMPLETED' === $fulfillment_state ) {
@@ -180,14 +180,16 @@ class Order_Importer {
 
 			// Handle pickup details.
 			$pickup_details = $fulfillment->getPickupDetails();
-			$pickup_at      = $pickup_details->getPickupAt();
-			$schedule_type  = $pickup_details->getScheduleType();
+			if ( $pickup_details ) {
+				$pickup_at      = $pickup_details->getPickupAt();
+				$schedule_type  = $pickup_details->getScheduleType();
 
-			if ( $pickup_at ) {
-				$wc_order->update_meta_data( '_square_pickup_time', $pickup_at );
-			}
-			if ( $schedule_type ) {
-				$wc_order->update_meta_data( '_square_pickup_schedule', $schedule_type );
+				if ( $pickup_at ) {
+					$wc_order->update_meta_data( '_square_pickup_time', $pickup_at );
+				}
+				if ( $schedule_type ) {
+					$wc_order->update_meta_data( '_square_pickup_schedule', $schedule_type );
+				}
 			}
 
 			// Add order note if pickup completed.
