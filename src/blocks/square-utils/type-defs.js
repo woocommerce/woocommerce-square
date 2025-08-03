@@ -55,7 +55,8 @@
  * @property {boolean}  isLoaded             Used to determine if PaymentsForm has finished loading
  * @property {Function} setLoaded            Function to set isLoaded state
  * @property {Function} getPostalCode        Function to return billingContact postalcode value
- * @property {Function} cardBrandClass       Function to return billingContact postalcode value
- * @property {Function} createNonce          Function to return billingContact postalcode value
- * @property {Function} getPaymentMethodData Function to return billingContact postalcode value
+ * @property {Function} cardBrandClass       Function to return card brand class
+ * @property {Function} createNonce          Function to create a nonce
+ * @property {Function} tokenizeSavedCard    Function to tokenize a saved card
+ * @property {Function} getPaymentMethodData Function to return payment method data
  */

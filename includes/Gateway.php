@@ -138,6 +138,8 @@ class Gateway extends Payment_Gateway_Direct {
 		// AJAX handler for get order amount
 		add_action( 'wp_ajax_wc_' . $this->get_id() . '_get_order_amount', array( $this, 'get_order_amount' ) );
 		add_action( 'wp_ajax_nopriv_wc_' . $this->get_id() . '_get_order_amount', array( $this, 'get_order_amount' ) );
+		add_action( 'wp_ajax_wc_' . $this->get_id() . '_should_charge_order', array( $this, 'should_charge_order' ) );
+		add_action( 'wp_ajax_nopriv_wc_' . $this->get_id() . '_should_charge_order', array( $this, 'should_charge_order' ) );
 
 		// Init Square digital wallets.
 		$this->digital_wallet = new Digital_Wallet( $this );
@@ -285,10 +287,6 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return Exception|null The validation exception if one exists, or null if no exception occurred.
 	 */
 	public function get_validation_exception() {
-		if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
-			throw new \Exception( '3D Secure Verification Token is missing' );
-		}
-
 		if ( ! Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-nonce' ) ) {
 			throw new \Exception( 'Payment nonce is missing' );
 		}
@@ -309,10 +307,6 @@ class Gateway extends Payment_Gateway_Direct {
 		}
 
 		try {
-			if ( '' === Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-buyer-verification-token' ) ) {
-				throw new \Exception( '3D Secure Verification Token is missing' );
-			}
-
 			if ( Square_Helper::get_post( 'wc-' . $this->get_id_dasherized() . '-payment-token' ) ) {
 				return $is_valid;
 			}
@@ -819,14 +813,25 @@ class Gateway extends Payment_Gateway_Direct {
 	 * Square requires we create a new customer & customer card before referencing that customer in a transaction.
 	 *
 	 * @since 2.0.0
+	 * @since 4.9.7 - Changed to false to do tokenization after sale.
 	 *
 	 * @return bool
 	 */
 	public function tokenize_before_sale() {
 
-		return true;
+		return false;
 	}
 
+	/**
+	 * Determines whether new payment customers/tokens should be created after processing a payment.
+	 *
+	 * @since 4.9.7
+	 *
+	 * @return bool
+	 */
+	public function tokenize_after_sale() {
+		return true;
+	}
 
 	/**
 	 * Determines if 3d secure is enabled.
@@ -1258,5 +1263,55 @@ class Gateway extends Payment_Gateway_Direct {
 			$total_amount = WC()->cart->total;
 		}
 		wp_send_json_success( $total_amount );
+	}
+
+	/**
+	 * Check if request is to change payment method.
+	 *
+	 * @since 4.9.7
+	 *
+	 * @return boolean
+	 */
+	public function is_change_payment_method_request() {
+		return class_exists( 'WC_Subscriptions_Change_Payment_Gateway' ) && \WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment;
+	}
+
+	/**
+	 * Returns whether the order should be charged.
+	 *
+	 * @since 4.9.7
+	 */
+	public function should_charge_order() {
+		check_ajax_referer( 'wc_' . $this->get_id() . '_should_charge_order', 'security' );
+
+		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( $_POST['is_pay_order'] );
+		if ( $is_pay_order ) {
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+			$order    = wc_get_order( $order_id );
+			if ( empty( $order ) ) {
+				wp_send_json_error( __( 'Order not found.', 'woocommerce-square' ) );
+			}
+
+			$total_amount            = $order->get_total();
+			$is_charged_upon_release = class_exists( 'WC_Pre_Orders_Order' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Order::order_contains_pre_order( $order_id ) && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Order::get_pre_order_product( $order_id ) );
+
+			if ( $is_charged_upon_release ) {
+				// If the order is a charged upon release pre-order, we don't need to charge the order.
+				$total_amount = 0;
+			}
+
+			wp_send_json_success( $total_amount > 0 );
+		} else {
+			$total_amount = WC()->cart->total;
+
+			$is_charged_upon_release = class_exists( 'WC_Pre_Orders_Cart' ) && class_exists( 'WC_Pre_Orders_Product' ) && \WC_Pre_Orders_Cart::cart_contains_pre_order() && \WC_Pre_Orders_Product::product_is_charged_upon_release( \WC_Pre_Orders_Cart::get_pre_order_product() );
+
+			if ( $is_charged_upon_release ) {
+				// If the cart contains a charged upon release pre-order, we don't need to charge the order.
+				$total_amount = 0;
+			}
+
+			wp_send_json_success( $total_amount > 0 );
+		}
 	}
 }
