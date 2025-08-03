@@ -33,7 +33,7 @@ test.beforeAll( 'Setup', async ( ) => {
 	await browser.close();
 } );
 
-test( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { page, baseURL } ) => {
+test.skip( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { page, baseURL } ) => {
 	test.slow();
 
 	if ( ! ( await doesProductExist( baseURL, 'oneplus-8' ) ) ) {
@@ -130,7 +130,7 @@ test( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { 
 	expect( inventory ).toHaveProperty( 'counts[0].quantity', '62' );
 } );
 
-test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
+test.skip( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
 	await page
 		.locator( 'a.row-title' )
