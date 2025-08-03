@@ -2,7 +2,6 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { ToggleControl } from '@wordpress/components';
 import parse from 'html-react-parser';
 
 /**
@@ -27,8 +26,7 @@ export const AdvancedSettings = () => {
 		stepData: { step },
 	} = useSteps();
 
-	const { enable_customer_decline_messages } =
-		settings;
+	const { enable_customer_decline_messages } = settings;
 
 	if ( ! squareSettingsLoaded ) {
 		return null;
