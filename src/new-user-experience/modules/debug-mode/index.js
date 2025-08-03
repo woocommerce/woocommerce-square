@@ -67,7 +67,7 @@ export const DebugMode = () => {
 		},
 		{
 			label: __(
-				'Payment — Show on Checkout, Non-Payment Errors — Save to Log',
+				'Payment Errors — Show on Checkout, Non-Payment Errors — Save to Log',
 				'woocommerce-square'
 			),
 			value: 'payment-show-and-non-payment-save-to-log',
@@ -78,7 +78,7 @@ export const DebugMode = () => {
 		},
 		{
 			label: __(
-				'(Payment + Non-payment) — Save to Log',
+				'(Payment + Non-payment) Errors — Save to Log',
 				'woocommerce-square'
 			),
 			value: 'all-errors-save-to-log',
