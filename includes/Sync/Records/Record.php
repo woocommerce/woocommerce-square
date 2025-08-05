@@ -86,7 +86,7 @@ class Record {
 			);
 		}
 
-		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) );
+		$date = date( 'Y-m-d H:i:s', current_time( 'timestamp', true ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date, WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC
 		$data = wp_parse_args(
 			(array) $data,
 			array(
@@ -321,7 +321,7 @@ class Record {
 	 */
 	public function get_date( $format = 'Y-m-d H:i:s' ) {
 
-		return date( (string) $format, $this->get_timestamp() );
+		return date( (string) $format, $this->get_timestamp() ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 	}
 
 
@@ -341,7 +341,7 @@ class Record {
 
 		try {
 
-			$date      = new \DateTime( date( (string) $format, $this->get_timestamp() ), new \DateTimeZone( 'UTC' ) );
+			$date      = new \DateTime( date( (string) $format, $this->get_timestamp() ), new \DateTimeZone( 'UTC' ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 			$timezone  = new \DateTimeZone( wc_timezone_string() );
 			$offset    = $timezone->getOffset( $date );
 			$timestamp = $date->getTimestamp() + $offset;
@@ -351,7 +351,7 @@ class Record {
 			$timestamp = $this->get_timestamp();
 		}
 
-		return date( (string) $format, $timestamp );
+		return date( (string) $format, $timestamp ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 	}
 
 

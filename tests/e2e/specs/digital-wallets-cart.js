@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { firefox } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	doesProductExist,
@@ -26,13 +27,12 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Digital Wallet - Cart', async () => {
+test( 'Digital Wallet - Cart @general', async () => {
 	test.slow();
 	const browser = await firefox.launch();
 	const page = await browser.newPage();
 
-	await page.goto( 'simple-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+	await addOneOrMoreProductToCart( page, 'simple-product' );
 
 	await page.goto( '/cart' );
 	await page.waitForSelector( '.gpay-card-info-container-fill', { state: 'visible' } );

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	visitCheckout,
@@ -22,9 +23,8 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	}
 } );
 
-test( 'Verify square credit card form fields', async ( { page } ) => {
-	await page.goto( '/product/simple-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+test( 'Verify square credit card form fields @general', async ( { page } ) => {
+	await addOneOrMoreProductToCart( page, 'simple-product' );
 	// Confirm that the Credit card is not visible on checkout page.
 	await visitCheckout(page, true);
 	

@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { test, expect } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	createProduct,
 	doesProductExist,
@@ -57,11 +58,10 @@ const isBlockCheckout = [ true, false ];
 for ( const isBlock of isBlockCheckout ) {
 	const title = isBlock ? '[Block]:' : '[non-Block]:';
 
-	test( title + 'Payment Gateway > Transaction Type > Authorization', async ( {
+	test( title + 'Payment Gateway > Transaction Type > Authorization @general', async ( {
 		page,
 	} ) => {
-		await page.goto( '/product/simple-product' );
-		await page.locator( '.single_add_to_cart_button' ).click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 
 		await visitCheckout( page, isBlock );
 		await fillAddressFields( page, isBlock );

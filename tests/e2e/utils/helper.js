@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import dummy from '../dummy-data';
 import { expect } from '@playwright/test';
+import { listCatalog } from './square-sandbox';
+
 const { promisify } = require('util');
 const execAsync = promisify(require('child_process').exec);
 
@@ -46,6 +48,7 @@ export async function clearCart( page ) {
 export async function visitCheckout( page, isBlock = true ) {
 	if ( isBlock ) {
 		await page.goto( '/checkout' );
+		await page.locator( 'form.wc-block-checkout__form' ).waitFor();
 	} else {
 		await page.goto( '/checkout-old' );
 	}
@@ -299,9 +302,7 @@ export async function fillCreditCardFields( page, isCheckout = true, isBlock = t
 }
 
 export async function placeOrder( page, isBlock = true ) {
-	if ( isBlock ) {
-		await page.waitForTimeout( 2000 );
-	}
+	await page.waitForTimeout( 2000 );
 	await page.locator( '.wc-block-components-checkout-place-order-button, #place_order' ).first().click();
 }
 
@@ -377,7 +378,7 @@ export async function doSquareRefund( page, amount = '' ) {
  */
 export async function deleteAllProducts( page, permanent = true ) {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
-	if ( ! await page.locator( '#cb-select-all-1' ).isVisible() ) {
+	if ( ! await page.locator( '#bulk-action-selector-top' ).isVisible() ) {
 		return;
 	}
 	await page.locator( '#cb-select-all-1' ).check();
@@ -387,6 +388,33 @@ export async function deleteAllProducts( page, permanent = true ) {
 	if ( permanent ) {
 		await page.goto( '/wp-admin/edit.php?post_status=trash&post_type=product' );
 		await page.locator( '#delete_all' ).first().click();
+	}
+}
+
+/**
+ * Deletes all product Attributes from WooCommerce.
+ *
+ * @param {Object} page Playwright page object.
+ */
+export async function deleteAllProductAttributes( page ) {
+	await page.goto(
+		'/wp-admin/edit.php?post_type=product&page=product_attributes'
+	);
+	if (
+		await page
+			.locator( 'table.attributes-table tr td strong a' )
+			.first()
+			.isVisible()
+	) {
+		const acceptDialog = ( dialog ) => dialog.accept();
+		page.on( 'dialog', acceptDialog );
+		const attributeRows = await page.locator( 'table.attributes-table tr' );
+		const count = await attributeRows.count();
+		for ( let i = 0; i < count - 1; i++ ) {
+			await attributeRows.nth( 1 ).locator( 'strong a' ).hover();
+			await attributeRows.nth( 1 ).locator( 'a.delete' ).click();
+		}
+		page.removeListener( 'dialog', acceptDialog );
 	}
 }
 
@@ -560,6 +588,7 @@ export async function isToggleChecked( page, selector ) {
 export async function saveSquareSettings( page ) {
 	await page.getByTestId( 'square-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
+	await page.waitForTimeout( 2000 );
 }
 
 export async function savePaymentGatewaySettings( page ) {
@@ -653,7 +682,7 @@ export async function completePreOrder(page, orderId) {
 
 /**
  * Subscription renewal.
- * 
+ *
  * @param {Page} page Playwright page object.
  */
 export async function renewSubscription(page) {
@@ -676,9 +705,84 @@ export async function runWpCliCommand(command) {
 		`npm --silent run env run tests-cli -- ${command}`
 	);
 
+	console.log(stdout);
+	if (stdout) {
+		return stdout;
+	}
+
 	if (!stderr) {
 		return true;
 	}
 	console.error(stderr);
 	return false;
+}
+
+/**
+ * Get Catalog data from Square.
+ *
+ * @param {Object} page              Playwright page object.
+ * @param {number} maxProcessingTime Maximum processing time.
+ * @param {number} expectedObjects   Expected objects.
+ */
+export async function getCatalogData( page, maxProcessingTime = 90000, expectedObjects = 1 ) {
+	const MAX_PROCESSING_TIME = maxProcessingTime;
+	const POLLING_INTERVAL_BETWEEN_RETRIES = 3000;
+
+	const getCatalogDataInner = async () => {
+		const result = await listCatalog();
+		return result;
+	};
+
+	// Expose getCatalogData function to page context
+	await page.exposeFunction( 'getCatalogDataInner', getCatalogDataInner );
+
+	const startTime = Date.now();
+	let catalogData = null;
+
+	while ( Date.now() - startTime < MAX_PROCESSING_TIME ) {
+		const result = await getCatalogDataInner();
+		if ( result?.objects?.length === expectedObjects ) {
+			catalogData = result;
+			break;
+		}
+		await page.waitForTimeout( POLLING_INTERVAL_BETWEEN_RETRIES );
+	}
+
+	if ( ! catalogData ) {
+		throw new Error(
+			`No catalog items found after ${ MAX_PROCESSING_TIME }ms of polling`
+		);
+	}
+
+	return catalogData;
+}
+
+/**
+ * Runs a scheduled action in WooCommerce.
+ *
+ * @param {Object} page                            The Puppeteer page object.
+ * @param {string} [action='wc_square_job_runner'] The action to run. Defaults to 'wc_square_job_runner'.
+ */
+export async function runScheduledAction(
+	page,
+	action = 'wc_square_job_runner'
+) {
+	// Trigger the subscription renewal.
+	await page.goto(
+		'wp-admin/tools.php?page=action-scheduler&status=pending&s=' + action
+	);
+
+	const actionLocator = page.getByRole( 'cell', { name: action } ).first();
+	if ( ! ( await actionLocator.isVisible() ) ) {
+		return;
+	}
+
+	const actionRow = await actionLocator.locator( '..' );
+	await actionRow.hover();
+	await actionRow.getByRole( 'link', { name: 'Run' } ).click();
+	// Wait for the action to be processed.
+	await page.waitForTimeout( 1500 );
+	await expect(
+		page.getByText( 'Successfully executed action' )
+	).toBeVisible();
 }

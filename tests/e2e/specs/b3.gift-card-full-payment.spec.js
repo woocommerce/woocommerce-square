@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	createProduct,
@@ -39,9 +40,8 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 
 let orderId;
 
-test( 'Gift card - Full payment', async ( { page } ) => {
-	await page.goto( '/product/dollar-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+test( 'Gift card - Full payment @giftcard', async ( { page } ) => {
+	await addOneOrMoreProductToCart( page, 'dollar-product' );
 
 	await page.goto( '/checkout-old' );
 	await fillAddressFields( page, false );

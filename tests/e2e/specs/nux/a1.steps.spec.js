@@ -5,7 +5,7 @@ import {
 	isToggleChecked,
 } from '../../utils/helper';
 
-test( 'Start onboarding', async ( { page } ) => {
+test( 'Start onboarding @general', async ( { page } ) => {
 	await visitOnboardingPage( page );
 	await page.getByTestId( 'business-location-field' ).selectOption( { label: 'Default Test Account' } );
 	await saveSquareSettings( page );

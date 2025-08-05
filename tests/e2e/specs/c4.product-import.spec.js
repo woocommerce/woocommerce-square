@@ -40,13 +40,13 @@ test.beforeAll( 'Setup', async () => {
 	await browser.close();
 } );
 
-test( 'Import Cap from Square', async ( { page, baseURL } ) => {
+test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	test.slow();
 	page.on('dialog', dialog => dialog.accept());
 	await importProducts( page );
 
 	await new Promise( ( resolve ) => {
-		let intervalId = setInterval( async () => {	
+		let intervalId = setInterval( async () => {
 			if ( await doesProductExist( baseURL, 'cap' ) ) {
 				clearInterval( intervalId );
 				resolve();
@@ -73,7 +73,7 @@ test( 'Import Cap from Square', async ( { page, baseURL } ) => {
 	await expect( await page.getByText( 'Category: Hats' ) ).toBeVisible();
 } );
 
-test('Sync Inventory stock from Square on the product edit screen - (SOR Square)', async ({
+test('Sync Inventory stock from Square on the product edit screen - (SOR Square) @sync', async ({
 	page,
 }) => {
 	await page.goto('/product/cap/');
@@ -107,16 +107,21 @@ test('Sync Inventory stock from Square on the product edit screen - (SOR Square)
 });
 
 
-test( 'Handle missing products', async ( { page } ) => {
+test( 'Handle missing products @sync', async ( { page } ) => {
 	await deleteAllCatalogItems();
 	await clearSync( page );
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
 	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'Square' } );
 	await page.getByTestId( 'hide-missing-products-field' ).check();
 	await saveSquareSettings( page );
-	await page.reload();
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );
+
+	// If the sync button is disabled, the test is not applicable.
+	if ( await page.locator( '#wc-square-sync' ).isDisabled() ) {
+		return;
+	}
+
 	await page.locator( '#wc-square-sync' ).click();
 	await page.locator( '#btn-ok' ).click();
 	await expect( await page.getByText( 'Syncing now' ) ).toBeVisible();

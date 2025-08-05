@@ -49,7 +49,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'iPhone Pro pushed to Square', async ( { page } ) => {
+test( 'iPhone Pro pushed to Square @sync', async ( { page } ) => {
 	test.slow();
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section=update' );

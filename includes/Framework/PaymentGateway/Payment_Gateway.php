@@ -36,7 +36,7 @@ use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\WC_Order_Square;
-
+use WooCommerce\Square\Utilities\Performance_Logger;
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -260,6 +260,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string order note for the voided order. */
 	protected $voided_order_message;
 
+	/** @var string Gift card product default placeholder provided by the plugin. */
+	protected $is_default_placeholder;
+
+	/** @var integer ID of the placeholder media. */
+	protected $placeholder_id;
+
 	/**
 	 * Initialize the gateway
 	 *
@@ -344,12 +350,6 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		// default icon filter  @see WC_Payment_Gateway::$icon
 		$this->icon = apply_filters( 'wc_' . $this->get_id() . '_icon', '' );
 
-		$square_settings = get_option( 'wc_square_settings', array() );
-
-		$this->debug_mode = $square_settings['debug_mode'] ?? 'off';
-
-		$this->enable_customer_decline_messages = $square_settings['enable_customer_decline_messages'] ?? 'no';
-
 		// Load the form fields
 		$this->init_form_fields();
 
@@ -357,6 +357,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$this->init_settings();
 
 		$this->load_settings();
+
+		$square_settings = get_option( 'wc_square_settings', array() );
+
+		$this->debug_mode = $square_settings['debug_mode'] ?? 'off';
+
+		$this->enable_customer_decline_messages = $square_settings['enable_customer_decline_messages'] ?? 'no';
 
 		$this->init_payment_tokens_handler();
 
@@ -799,7 +805,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		);
 
 		if ( $this->is_test_environment() ) {
-			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 );
+			$defaults['expiry'] = '01/' . ( date( 'y' ) + 1 ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 			$defaults['csc']    = '123';
 		}
 
@@ -1954,6 +1960,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param string         $payment_method Describes whether payment was made using a Square Gift or a Credit Card.
 	 */
 	protected function handle_single_payment_method( $response, $order ) {
+		Performance_Logger::start( 'handle_payment_response', $this->get_plugin() );
+
 		if ( $response->transaction_approved() || $response->transaction_held() ) {
 			if ( ! $this->is_cash_app_pay_gateway() && $response->is_gift_card_payment() ) {
 				$this->maybe_tokenize( $response, $order );
@@ -1973,9 +1981,11 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				$this->mark_order_as_held( $order, $this->supports( self::FEATURE_AUTHORIZATION ) && $this->perform_authorization( $order ) ? esc_html__( 'Authorization only transaction', 'woocommerce-square' ) : $response->get_status_message(), $response );
 			}
 
+			Performance_Logger::end( 'handle_payment_response', $this->get_plugin() );
 			return true;
 
 		} else {
+			Performance_Logger::end( 'handle_payment_response', $this->get_plugin(), true );
 			return $this->do_transaction_failed_result( $order, $response );
 		}
 	}
@@ -1988,6 +1998,8 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order      $order                   WooCommerce Order object.
 	 */
 	protected function handle_multi_payment_methods( $gift_card_response, $payment_method_response, $order ) {
+		Performance_Logger::start( 'handle_payment_response', $this->get_plugin() );
+
 		if ( $payment_method_response->transaction_approved() || $payment_method_response->transaction_held() ) {
 			$this->maybe_tokenize( $payment_method_response, $order );
 
@@ -2001,6 +2013,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// Cancel the Gift Card transaction if the other payment method transaction fails.
 			$this->gift_card_cancel_payment( $order, $gift_card_response );
 
+			Performance_Logger::end( 'handle_payment_response', $this->get_plugin(), true );
 			return $this->do_transaction_failed_result( $order, $payment_method_response );
 		}
 
@@ -2008,6 +2021,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// add the standard transaction data
 			$this->add_transaction_data( $order, $gift_card_response, 'gift_card', true );
 		} else {
+			Performance_Logger::end( 'handle_payment_response', $this->get_plugin(), true );
 			return $this->do_transaction_failed_result( $order, $gift_card_response );
 		}
 
@@ -2044,13 +2058,17 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				$this->update_order_meta( $order, 'charge_type', self::CHARGE_TYPE_PARTIAL );
 				$this->update_order_meta( $order, 'other_gateway_partial_total', $order->payment->partial_total->other_gateway );
 				$this->update_order_meta( $order, 'gift_card_partial_total', $order->payment->partial_total->gift_card );
+
+				Performance_Logger::end( 'handle_payment_response', $this->get_plugin() );
 				return true;
 			} else {
+				Performance_Logger::end( 'handle_payment_response', $this->get_plugin(), true );
 				$this->update_order_meta( $order, 'charge_captured', 'no' );
 				return false;
 			}
 		}
 
+		Performance_Logger::end( 'handle_payment_response', $this->get_plugin() );
 		return true;
 	}
 
@@ -2441,6 +2459,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 				$order->add_order_note(
 					sprintf(
+						/* translators: Placeholders: %1$s - refunded amount, %2$s - gift card number */
 						esc_html__( '-%1$s adjusted from the gift card with number %2$s.', 'woocommerce-square' ),
 						wc_price( $float_amount, array( 'currency' => $order->get_currency() ) ),
 						esc_html( $gan )
@@ -2538,6 +2557,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2570,7 +2590,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
-			/* translators %s transaction ID. */
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2784,6 +2804,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// adds the transaction id (if any) to the order note
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$message .= ' ' . sprintf( esc_html__( '(Transaction ID %s)', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -2885,6 +2906,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 		// add transaction id if there is one
 		if ( $response->get_transaction_id() ) {
+			/* translators: Placeholders: %s - transaction ID */
 			$order_note .= ' ' . sprintf( esc_html__( 'Transaction ID %s', 'woocommerce-square' ), $response->get_transaction_id() );
 		}
 
@@ -3554,6 +3576,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				'label'       => __( 'Capture Paid Orders', 'woocommerce-square' ),
 				'type'        => 'checkbox',
 				'description' => sprintf(
+					/* translators: %s - list of order statuses */
 					esc_html__( 'Automatically capture orders when they are changed to %s.', 'woocommerce-square' ),
 					esc_html( ! empty( $paid_statuses ) ? Square_Helper::list_array_items( $paid_statuses, $conjuction ) : __( 'a paid status', 'woocommerce-square' ) )
 				),
@@ -4717,7 +4740,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		if ( $this->icon ) {
 
 			// use icon provided by filter
-			$icon = sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" />', esc_url( \WC_HTTPS::force_https_url( $this->icon ) ), esc_attr( $this->get_title() ), esc_attr( $this->get_id_dasherized() ) );
+			$icon = sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" />', esc_url( \WC_HTTPS::force_https_url( $this->icon ) ), esc_attr( $this->get_title() ), esc_attr( $this->get_id_dasherized() ) ); // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 		}
 
 		// credit card images
@@ -4729,7 +4752,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				$card_type = Payment_Gateway_Helper::normalize_card_type( $card_type );
 
 				if ( $url = $this->get_payment_method_image_url( $card_type ) ) {
-					$icon .= sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" width="40" height="25" style="width: 40px; height: 25px;" />', esc_url( $url ), esc_attr( $card_type ), esc_attr( $this->get_id_dasherized() ) );
+					$icon .= sprintf( '<img src="%s" alt="%s" class="sv-wc-payment-gateway-icon wc-%s-payment-gateway-icon" width="40" height="25" style="width: 40px; height: 25px;" />', esc_url( $url ), esc_attr( $card_type ), esc_attr( $this->get_id_dasherized() ) ); // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
 				}
 			}
 		}
@@ -4802,4 +4825,47 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		}
 	}
 
+	/**
+	 * Check if the gateway has an account connected.
+	 *
+	 * @since 4.8.7
+	 *
+	 * @return bool true if the gateway has an account connected, false otherwise.
+	 */
+	public function is_account_connected() {
+		return $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
+	}
+
+	/**
+	 * Returns true if the current gateway environment is configured to 'sandbox'
+	 *
+	 * @since 4.8.7
+	 *
+	 * @return bool true if the current environment is test environment.
+	 */
+	public function is_in_test_mode() {
+		return $this->get_plugin()->get_settings_handler()->is_sandbox();
+	}
+
+	/**
+	 * Determine if the gateway still requires setup.
+	 *
+	 * @since 4.8.7
+	 *
+	 * @return bool tue if the gateway still requires setup, false otherwise.
+	 */
+	public function needs_setup() {
+		return ( ! $this->is_account_connected() );
+	}
+
+	/**
+	 * Returns the Onboarding URL for the gateway.
+	 *
+	 * @since 4.9.1
+	 *
+	 * @return string the Onboarding URL.
+	 */
+	public function get_connection_url() {
+		return admin_url( 'admin.php?page=woocommerce-square-onboarding' );
+	}
 }

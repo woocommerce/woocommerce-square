@@ -28,7 +28,7 @@ test.beforeAll( 'Setup', async () => {
 	await browser.close();
 } );
 
-test( 'Import Scarf from Square and Update', async ( { page, baseURL } ) => {
+test( 'Import Scarf from Square and Update @sync', async ( { page, baseURL } ) => {
 	test.setTimeout(250000);
 	page.on('dialog', dialog => dialog.accept());
 	await importProducts( page );

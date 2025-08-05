@@ -44,7 +44,6 @@
  * @typedef {Object} SquareContext
  *
  * @property {Function} onCreateNonce Triggers the SqPaymentCustomer billing data
- * @property {Function} verifyBuyer   Triggers Payments.verifyBuyer() function
  */
 
 /**
@@ -58,6 +57,5 @@
  * @property {Function} getPostalCode        Function to return billingContact postalcode value
  * @property {Function} cardBrandClass       Function to return billingContact postalcode value
  * @property {Function} createNonce          Function to return billingContact postalcode value
- * @property {Function} verifyBuyer          Function to return billingContact postalcode value
  * @property {Function} getPaymentMethodData Function to return billingContact postalcode value
  */

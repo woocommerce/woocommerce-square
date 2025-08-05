@@ -1,4 +1,5 @@
 import { test, expect, devices, chromium } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	clearCart,
 	createProduct,
@@ -12,7 +13,7 @@ import {
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay Tests', () => {
+test.describe('Cash App Pay Tests @cashapp', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
@@ -84,8 +85,7 @@ test.describe('Cash App Pay Tests', () => {
 					...iPhone,
 				});
 				const page = await context.newPage();
-				await page.goto('/product/simple-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-product' );
 				await visitCheckout(page, isBlock);
 				await fillAddressFields(page, isBlock);
 				await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -130,8 +130,7 @@ test.describe('Cash App Pay Tests', () => {
 			chargeVirtualOrders: true,
 		});
 
-		await page.goto('/product/virtual-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'virtual-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -163,8 +162,7 @@ test.describe('Cash App Pay Tests', () => {
 			capturePaidOrders: true,
 		});
 
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);

@@ -283,9 +283,9 @@ class Orders extends API\Request {
 				$line_item->setItemType( 'GIFT_CARD' );
 			}
 
-			$total_tax       = $item->get_total_tax();
-			$total_amount    = $item->get_total();
-			$subtotal_amount = $is_product ? $item->get_subtotal() : $total_amount;
+			$total_tax       = (float) $item->get_total_tax();
+			$total_amount    = (float) $item->get_total();
+			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
 
 			// Inlcude the tax in subtotal when prices are inclusive of taxes.
 			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
@@ -293,7 +293,7 @@ class Orders extends API\Request {
 			}
 
 			// Subtotal per quantity.
-			$subtotal_amount = $subtotal_amount / $item->get_quantity();
+			$subtotal_amount = $subtotal_amount / absint( $item->get_quantity() );
 
 			$line_item->setQuantity( $is_product ? (string) $item->get_quantity() : (string) 1 );
 			$line_item->setBasePriceMoney( Money_Utility::amount_to_money( $subtotal_amount, $order->get_currency() ) );
@@ -306,7 +306,7 @@ class Orders extends API\Request {
 
 			// CALCULATE DISCOUNT.
 			if ( $item instanceof \WC_Order_Item_Product ) {
-				$discount     = $item->get_subtotal() - $item->get_total();
+				$discount     = (float) $item->get_subtotal() - (float) $item->get_total();
 				$discount_uid = wc_square()->get_idempotency_key( '', false );
 
 				if ( $discount > 0 ) {
@@ -344,7 +344,7 @@ class Orders extends API\Request {
 					$item_uid            = $item->get_id();
 					$tax_uid             = $taxes[ $key ]->getUid();
 					$prev_percentage     = $taxes[ $key ]->getPercentage();
-					$adjusted_percentage = $tax_amount * 100 / $total_amount;
+					$adjusted_percentage = (float) $tax_amount * 100 / $total_amount;
 					$adjusted_percentage = number_format( (float) $adjusted_percentage, 2, '.', '' );
 
 					if ( $prev_percentage !== $adjusted_percentage ) {

@@ -150,6 +150,8 @@ class Interval_Polling extends Stepped_Job {
 
 		if ( $response->get_data() instanceof SearchCatalogObjectsResponse && is_array( $response->get_data()->getObjects() ) ) {
 
+			$product_import = new Product_Import();
+
 			foreach ( $response->get_data()->getObjects() as $object ) {
 
 				// filter out objects that aren't at our configured location
@@ -206,10 +208,22 @@ class Interval_Polling extends Stepped_Job {
 					} else {
 
 						try {
-							$thumbnail_image_id = Product::get_catalog_item_thumbnail_id( $object );
-							Product::update_from_square( $product, $object->getItemData(), false );
+							$data = $product_import->extract_product_data( $object, $product );
 
-							Product::update_image_from_square( $product, $thumbnail_image_id );
+							/**
+							 * Filters the data that is used to create update a WooCommerce product during import.
+							 *
+							 * @since 2.0.0
+							 *
+							 * @param array $data product data
+							 * @param \Square\Models\CatalogObject $object the catalog object from the Square API
+							 * @param Interval_Polling $this current class instance
+							 */
+							$data = apply_filters( 'woocommerce_square_create_product_data', $data, $object, $this );
+
+							// Update the product, this will update/create the variations as well.
+							$product_import->update_product( $product, $data );
+							Product::update_from_square( $product, $object->getItemData(), false );
 
 							$products_updated[] = $product->get_id();
 
@@ -278,12 +292,17 @@ class Interval_Polling extends Stepped_Job {
 		$catalog_objects_tracking_stats = Helper::get_catalog_inventory_tracking( $objects );
 		$catalog_objects_to_update      = array();
 
-		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $is_tracking_inventory ) {
-			$product = Product::get_product_by_square_variation_id( $catalog_object_id );
+		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
+			$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+			$sold_out              = $inventory_data['sold_out'] ?? false;
+			$product               = Product::get_product_by_square_variation_id( $catalog_object_id );
 			if ( $product instanceof \WC_Product ) {
 				$manage_stock = $product->get_manage_stock();
-				// If Inventory tracking is the same as the product's manage stock setting, skip.
-				if ( (bool) $is_tracking_inventory === (bool) $manage_stock ) {
+				$stock_status = $product->get_stock_status();
+				$out_of_stock = 'outofstock' === $stock_status;
+
+				// If Inventory tracking is the same as the product's manage stock setting and sold_old value same, skip.
+				if ( (bool) $is_tracking_inventory === (bool) $manage_stock && (bool) $sold_out === (bool) $out_of_stock ) {
 					continue;
 				}
 				$catalog_objects_to_update[] = $catalog_object_id;
@@ -297,9 +316,9 @@ class Interval_Polling extends Stepped_Job {
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
 				$product = Product::get_product_by_square_variation_id( $catalog_object_id );
 				if ( $product instanceof \WC_Product ) {
-					$is_tracking_inventory = isset( $catalog_objects_tracking_stats[ $catalog_object_id ] ) ?
-						$catalog_objects_tracking_stats[ $catalog_object_id ] :
-						true;
+					$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
+					$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+					$sold_out              = $inventory_data['sold_out'] ?? false;
 
 					/* If catalog object is tracked and has a quantity > 0 set in Square. */
 					if ( $is_tracking_inventory && isset( $inventory_hash[ $catalog_object_id ] ) ) {
@@ -313,7 +332,7 @@ class Interval_Polling extends Stepped_Job {
 
 						/* If the catalog object is not tracked in Square at all. */
 					} else {
-						$product->set_stock_status( 'instock' );
+						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 						$product->set_manage_stock( false );
 					}
 
@@ -401,15 +420,15 @@ class Interval_Polling extends Stepped_Job {
 
 			// Square can return multiple "types" of counts, WooCommerce only distinguishes whether a product is in stock or not
 			if ( $product instanceof \WC_Product ) {
-				$is_tracking_inventory = isset( $catalog_objects_tracking_stats[ $catalog_object_id ] ) ?
-					$catalog_objects_tracking_stats[ $catalog_object_id ] :
-					true;
+				$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
+				$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+				$sold_out              = $inventory_data['sold_out'] ?? false;
 
 				if ( $is_tracking_inventory ) {
 					$product->set_manage_stock( true );
 					$product->set_stock_quantity( $stats['quantity'] );
 				} else {
-					$product->set_stock_status( 'instock' );
+					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 					$product->set_manage_stock( false );
 				}
 

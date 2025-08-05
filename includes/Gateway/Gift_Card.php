@@ -613,7 +613,7 @@ class Gift_Card extends Payment_Gateway {
 	public function apply_gift_card() {
 		check_ajax_referer( 'wc-square-apply-gift-card', 'security' );
 
-		$payment_token = isset( $_POST['token'] ) ? wc_clean( wp_unslash( $_POST['token'] ) ) : false;
+		$payment_token = isset( $_POST['token'] ) ? wc_clean( wp_unslash( $_POST['token'] ) ) : false; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		if ( ! $payment_token ) {
 			wp_send_json_error();
@@ -652,8 +652,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @return boolean
 	 */
 	public static function is_new() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		return isset( $_POST['square-gift-card-buying-option'] ) ? 'new' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false;
+		return isset( $_POST['square-gift-card-buying-option'] ) ? 'new' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 
 	/**
@@ -664,7 +663,6 @@ class Gift_Card extends Payment_Gateway {
 	 * @return boolean
 	 */
 	public static function is_load() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		return isset( $_POST['square-gift-card-buying-option'] ) ? 'load' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false;
+		return isset( $_POST['square-gift-card-buying-option'] ) ? 'load' === wc_clean( wp_unslash( $_POST['square-gift-card-buying-option'] ) ) : false; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	}
 }

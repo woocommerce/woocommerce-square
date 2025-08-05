@@ -1,4 +1,5 @@
 import { test, expect, devices, chromium } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	clearCart,
 	createProduct,
@@ -9,12 +10,13 @@ import {
 	gotoOrderEditPage,
 	placeCashAppPayOrder,
 	saveCashAppPaySettings,
+	savePaymentGatewaySettings,
 	selectPaymentMethod,
 	visitCheckout,
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay - Gift Card Tests', () => {
+test.describe('Cash App Pay - Gift Card Tests @cashapp @giftcard', () => {
 	const isBlock = false;
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
@@ -37,6 +39,12 @@ test.describe('Cash App Pay - Gift Card Tests', () => {
 		await saveCashAppPaySettings(page, {
 			transactionType: 'charge',
 		});
+
+		await page.goto(
+			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=gift_cards_pay'
+		);	
+		await page.getByTestId( 'gift-card-gateway-toggle-field' ).check();
+		await savePaymentGatewaySettings( page );
 
 		await clearCart(page);
 		await browser.close();
@@ -62,8 +70,7 @@ test.describe('Cash App Pay - Gift Card Tests', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );
@@ -100,8 +107,7 @@ test.describe('Cash App Pay - Gift Card Tests', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );
@@ -139,8 +145,7 @@ test.describe('Cash App Pay - Gift Card Tests', () => {
 			transactionType: 'authorization',
 		});
 
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await fillGiftCardField( page );

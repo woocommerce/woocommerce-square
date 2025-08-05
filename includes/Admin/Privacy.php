@@ -40,18 +40,27 @@ class Privacy extends \WC_Abstract_Privacy {
 	 */
 	public function __construct() {
 
-		parent::__construct( __( 'Square', 'woocommerce-square' ) );
+		parent::__construct();
+
+		// Initialize data exporters and erasers.
+		add_action( 'init', array( $this, 'register_erasers_exporters' ) );
+	}
+
+	/**
+	 * Initial registration of privacy erasers and exporters.
+	 */
+	public function register_erasers_exporters() {
+		$this->name = __( 'Square', 'woocommerce-square' );
 
 		$this->add_eraser( 'woocommerce-square-customer-data', __( 'WooCommerce Square Customer Data', 'woocommerce-square' ), array( $this, 'customer_data_eraser' ) );
 	}
-
 
 	/**
 	 * Gets the message to display.
 	 *
 	 * @since 2.0.0
 	 */
-	public function get_message() {
+	public function get_privacy_message() {
 
 		return wpautop(
 			sprintf(
@@ -98,7 +107,4 @@ class Privacy extends \WC_Abstract_Privacy {
 			'done'           => true,
 		);
 	}
-
-
 }
-

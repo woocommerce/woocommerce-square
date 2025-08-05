@@ -1,4 +1,5 @@
 import { test, expect, devices, chromium } from '@playwright/test';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 import {
 	clearCart,
 	createProduct,
@@ -14,7 +15,7 @@ import {
 } from '../utils/helper';
 const iPhone = devices['iPhone 14 Pro Max'];
 
-test.describe('Cash App Pay Tests', () => {
+test.describe('Cash App Pay Tests @cashapp', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
@@ -41,10 +42,20 @@ test.describe('Cash App Pay Tests', () => {
 		const creditCard = await page.locator(
 			'table.wc_gateways tr[data-gateway_id="square_cash_app_pay"]'
 		);
-		await expect(creditCard).toBeVisible();
-		await expect(creditCard.locator('td.name a')).toContainText(
-			'Cash App Pay (Square)'
-		);
+		if (await creditCard.isVisible()) {
+			await expect(creditCard).toBeVisible();
+			await expect(creditCard.locator('td.name a')).toContainText(
+				'Cash App Pay (Square)'
+			);
+		} else {
+			await expect(
+				page
+					.locator(
+						'.settings-payment-gateways #square_cash_app_pay .woocommerce-list__item-title'
+					)
+					.first()
+			).toContainText( 'Cash App Pay (Square)');
+		}
 	});
 
 	test('Store owner can configure Cash App Pay payment gateway - @foundational', async ({
@@ -54,8 +65,7 @@ test.describe('Cash App Pay Tests', () => {
 			enabled: false,
 		});
 
-		await page.goto('/product/simple-product');
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 
 		// Confirm that the Cash App Pay is not visible on checkout page.
 		await visitCheckout(page, false);
@@ -305,8 +315,7 @@ test.describe('Cash App Pay Tests', () => {
 					...iPhone,
 				});
 				const page = await context.newPage();
-				await page.goto('/product/simple-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-product' );
 				await visitCheckout(page, isBlock);
 				await fillAddressFields(page, isBlock);
 				await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -332,8 +341,10 @@ test.describe('Cash App Pay Tests', () => {
 				...iPhone,
 			});
 			const page = await context.newPage();
-			await page.goto('/product/simple-product');
-			await page.locator('.single_add_to_cart_button').click();
+			await addOneOrMoreProductToCart( page, 'simple-product' );
+			await expect(
+				page.getByRole('link', { name: 'View cart' }).first()
+			).toBeVisible();
 			await visitCheckout(page, true);
 			await fillAddressFields(page, true);
 			await selectPaymentMethod(page, 'square_cash_app_pay', true);
@@ -363,9 +374,8 @@ test.describe('Cash App Pay Tests', () => {
 		});
 		const page = await context.newPage();
 		await clearCart( page );
-		await page.goto('/product/simple-product');
 		page.on('dialog', dialog => dialog.accept());
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);
@@ -385,9 +395,8 @@ test.describe('Cash App Pay Tests', () => {
 			...iPhone,
 		});
 		const page = await context.newPage();
-		await page.goto('/product/simple-product');
 		page.on('dialog', dialog => dialog.accept());
-		await page.locator('.single_add_to_cart_button').click();
+		await addOneOrMoreProductToCart( page, 'simple-product' );
 		await visitCheckout(page, isBlock);
 		await fillAddressFields(page, isBlock);
 		await selectPaymentMethod(page, 'square_cash_app_pay', isBlock);

@@ -21,7 +21,7 @@ process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = '0';
 module.exports = defineConfig({
   testDir: '../specs',
   /* Maximum time one test can run for. */
-  timeout: 80 * 1000,
+  timeout: 60 * 1000,
   globalSetup: './global-setup',
   // globalTeardown: './global-teardown',
   expect: {

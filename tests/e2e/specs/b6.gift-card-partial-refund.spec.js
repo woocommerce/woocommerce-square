@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { chromium } from 'playwright';
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 import {
 	createProduct,
@@ -39,10 +40,9 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Partial Refund – Gift card order', async ( { page } ) => {
+test( 'Partial Refund – Gift card order @giftcard', async ( { page } ) => {
 	page.on('dialog', dialog => dialog.accept());
-	await page.goto( '/product/dollar-product' );
-	await page.locator( '.single_add_to_cart_button' ).click();
+	await addOneOrMoreProductToCart( page, 'dollar-product' );
 
 	await page.goto( '/checkout-old' );
 	await fillAddressFields( page, false );

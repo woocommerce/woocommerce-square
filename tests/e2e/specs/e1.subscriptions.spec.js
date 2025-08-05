@@ -2,6 +2,7 @@
  * External dependencies
  */
 const { test, expect, chromium } = require('@playwright/test');
+import { addOneOrMoreProductToCart } from '@woocommerce/e2e-utils-playwright';
 
 /**
  * Internal dependencies
@@ -18,7 +19,7 @@ import {
 	savePaymentGatewaySettings,
 } from '../utils/helper';
 
-test.describe('Subscriptions Tests', () => {
+test.describe('Subscriptions Tests @general', () => {
 	test.beforeAll('Setup', async ({ baseURL }) => {
 		const browser = await chromium.launch();
 		const page = await browser.newPage();
@@ -57,8 +58,7 @@ test.describe('Subscriptions Tests', () => {
 					test.skip();
 				}
 
-				await page.goto('/product/simple-subscription-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-subscription-product' );
 				await expect(
 					page.getByRole('link', { name: 'View cart' }).first()
 				).toBeVisible();
@@ -100,8 +100,7 @@ test.describe('Subscriptions Tests', () => {
 			title +
 				'Customer can sign up to subscription using Saved CreditCard',
 			async ({ page }) => {
-				await page.goto('/product/simple-subscription-product');
-				await page.locator('.single_add_to_cart_button').click();
+				await addOneOrMoreProductToCart( page, 'simple-subscription-product' );
 				await expect(
 					page.getByRole('link', { name: 'View cart' }).first()
 				).toBeVisible();
@@ -179,13 +178,14 @@ test.describe('Subscriptions Tests', () => {
 					)
 					.first()
 					.click();
-				await page
+				const methodLocator = await page
 					.locator(
 						'.wc-block-checkout__payment-method .wc-block-components-radio-control'
 					)
-					.locator('input.wc-block-components-radio-control__input')
-					.first()
-					.check();
+					.locator('input.wc-block-components-radio-control__input');
+				await methodLocator.first().waitFor();
+				await methodLocator.first().check();
+
 				await placeOrder(page, isBlock);
 
 				// verify order received page
