@@ -203,13 +203,15 @@ export function useApplePay( payments, paymentRequest ) {
  * @param {Object}   tokenResult    Tokenization response object.
  * @param {Object}   emitResponse   Object containing properties referencing the various response types.
  * @param {Function} onPaymentSetup Event emitter when payment method context is `PROCESSING`.
+ * @param {Object}   tokenResultRef Tokenization response object.
  */
 export function usePaymentProcessing(
 	payments,
 	billing,
 	tokenResult,
 	emitResponse,
-	onPaymentSetup
+	onPaymentSetup,
+	tokenResultRef
 ) {
 	const verificationDetails = buildVerificationDetails( billing );
 
@@ -219,7 +221,7 @@ export function usePaymentProcessing(
 				async function handlePaymentProcessing() {
 					let response = { type: emitResponse.responseTypes.SUCCESS };
 
-					if ( ! tokenResult ) {
+					if ( ! tokenResultRef.current ) {
 						response = {
 							type: emitResponse.responseTypes.FAILURE,
 						};
@@ -229,13 +231,14 @@ export function usePaymentProcessing(
 					const {
 						details: { card, method },
 						token,
-					} = tokenResult;
+					} = tokenResultRef.current;
 
-					const billingContact = tokenResult?.details?.billing || {};
+					const billingContact =
+						tokenResultRef.current?.details?.billing || {};
 					const {
 						contact: shippingContact = {},
 						option: shippingOption = {},
-					} = tokenResult?.details?.shipping || {};
+					} = tokenResultRef.current?.details?.shipping || {};
 
 					const verificationResult = await verifyBuyer(
 						payments,
@@ -347,6 +350,13 @@ export function usePaymentProcessing(
 
 				return handlePaymentProcessing();
 			} ),
-		[ onPaymentSetup, billing.billingData, tokenResult ]
+		[
+			onPaymentSetup,
+			billing.billingData,
+			tokenResult,
+			payments,
+			emitResponse.responseTypes.SUCCESS,
+			emitResponse.responseTypes.FAILURE,
+		]
 	);
 }

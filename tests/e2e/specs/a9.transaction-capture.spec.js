@@ -29,31 +29,35 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await browser.close();
 } );
 
-test( 'Payment Gateway > Transaction Type > Authorization @general', async ( {
-	page,
-} ) => {
-	await addOneOrMoreProductToCart( page, 'simple-product' );
+for ( const isSCA of [ true, false ] ) {
+	const title = isSCA ? ' [SCA]:' : ' ';
+	test(
+		title + 'Payment Gateway > Transaction Type > Authorization @general',
+		async ( { page } ) => {
+			await addOneOrMoreProductToCart( page, 'simple-product' );
 
-	await visitCheckout( page, false );
-	await fillAddressFields( page, false );
-	await fillCreditCardFields( page, true, false );
-	await placeOrder( page, false );
+			await visitCheckout( page, false );
+			await fillAddressFields( page, false );
+			await fillCreditCardFields( page, true, false, isSCA );
+			await placeOrder( page, false, isSCA );
 
-	await expect(
-		page.locator( '.woocommerce-order-overview__total strong' )
-	).toHaveText( '$14.99' );
-	const orderId = await page
-		.locator( '.woocommerce-order-overview__order strong' )
-		.innerText();
+			await expect(
+				page.locator( '.woocommerce-order-overview__total strong' )
+			).toHaveText( '$14.99' );
+			const orderId = await page
+				.locator( '.woocommerce-order-overview__order strong' )
+				.innerText();
 
-	await gotoOrderEditPage( page, orderId );
+			await gotoOrderEditPage( page, orderId );
 
-	await expect( page.locator( '#order_status' ) ).toHaveValue(
-		'wc-processing'
+			await expect( page.locator( '#order_status' ) ).toHaveValue(
+				'wc-processing'
+			);
+			await expect(
+				page.getByText(
+					'Square Test Charge Approved for an amount of $14.99: Visa ending in '
+				)
+			).toBeVisible();
+		}
 	);
-	await expect(
-		page.getByText(
-			'Square Test Charge Approved for an amount of $14.99: Visa ending in 1111'
-		)
-	).toBeVisible();
-} );
+}
