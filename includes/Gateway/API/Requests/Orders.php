@@ -642,12 +642,12 @@ class Orders extends API\Request {
 		$date_filter = new \Square\Models\SearchOrdersDateTimeFilter();
 		$time_range  = new \Square\Models\TimeRange();
 		$time_range->setStartAt( $start_time );
-		
+
 		// If end time is provided, set it to create a bounded time window.
 		if ( ! empty( $end_time ) ) {
 			$time_range->setEndAt( $end_time );
 		}
-		
+
 		$date_filter->setUpdatedAt( $time_range );
 		$filter->setDateTimeFilter( $date_filter );
 
