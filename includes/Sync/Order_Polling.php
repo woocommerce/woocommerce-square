@@ -76,18 +76,18 @@ class Order_Polling {
 		wc_square()->log( 'Starting Square order polling', 'sync' );
 
 		try {
-			$orders = $this->fetch_recent_square_orders();
+			$orders = $this->fetch_recent_square_orders( $sync_start_time );
 
 			if ( empty( $orders ) ) {
 				wc_square()->log( 'No new Square orders found during polling', 'sync' );
-				// Still update polling time to sync start time.
+				// Update polling time to sync start time to avoid missing orders.
 				$this->update_last_polling_time( $sync_start_time );
 				return;
 			}
 
 			$this->process_square_orders( $orders );
 
-			// Update polling time to sync START time (not current time).
+			// Update polling time to sync start time to avoid missing orders.
 			$this->update_last_polling_time( $sync_start_time );
 
 			wc_square()->log( 'Square order polling completed.', 'sync' );
@@ -102,9 +102,10 @@ class Order_Polling {
 	 * Fetch recent Square orders.
 	 *
 	 * @since x.x.x
+	 * @param string $sync_start_time Optional sync start time for bounded time window.
 	 * @return array Array of Square order objects.
 	 */
-	private function fetch_recent_square_orders() {
+	private function fetch_recent_square_orders( $sync_start_time = null ) {
 		$settings_handler = wc_square()->get_settings_handler();
 		$access_token     = $settings_handler->get_access_token();
 		$location_id      = $settings_handler->get_location_id();
@@ -119,21 +120,23 @@ class Order_Polling {
 
 		// Get orders since last polling time.
 		$last_polling_time = $this->get_last_polling_time();
-		$orders            = $this->search_square_orders_since( $api, $last_polling_time );
+		$orders            = $this->search_square_orders_since( $api, $last_polling_time, $sync_start_time );
 
 		return $orders;
 	}
 
 	/**
-	 * Search Square orders since a specific time.
+	 * Search Square orders since a specific time with bounded time window.
 	 *
 	 * @since x.x.x
 	 * @param \WooCommerce\Square\Gateway\API $api API instance.
 	 * @param string                          $since_time ISO 8601 timestamp.
+	 * @param string                          $sync_start_time Optional sync start time for bounded time window.
 	 * @return array Array of Square order objects.
 	 */
-	private function search_square_orders_since( $api, $since_time ) {
-		wc_square()->log( "Searching Square orders since: {$since_time}", 'sync' );
+	private function search_square_orders_since( $api, $since_time, $sync_start_time = null ) {
+		$end_time = isset( $sync_start_time ) ? $sync_start_time : gmdate( 'c' );
+		wc_square()->log( "Searching Square orders with bounded time window: {$since_time} to {$end_time}", 'sync' );
 
 		try {
 			$settings_handler = wc_square()->get_settings_handler();
@@ -145,8 +148,8 @@ class Order_Polling {
 			$max_batches = 10; // Prevent infinite loops.
 
 			do {
-				// Use the API's search_orders method with cursor.
-				$response = $api->search_orders( array( $location_id ), $since_time, 100, $cursor );
+				// Use the API's search_orders method with bounded time window.
+				$response = $api->search_orders( array( $location_id ), $since_time, 100, $cursor, $end_time );
 
 				if ( ! empty( $response['orders'] ) ) {
 					$all_orders = array_merge( $all_orders, $response['orders'] );

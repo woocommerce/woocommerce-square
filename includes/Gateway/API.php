@@ -725,16 +725,17 @@ class API extends \WooCommerce\Square\API {
 	 * @param string $start_time   Start time in the RFC 3339 format for the search.
 	 * @param int    $limit        Number of orders to retrieve.
 	 * @param string $cursor       Cursor for pagination.
+	 * @param string $end_time     Optional end time in the RFC 3339 format for the search.
 	 *
 	 * @return array Array containing orders and cursor.
 	 *
 	 * @throws \Exception
 	 */
-	public function search_orders( $location_ids = array(), $start_time, $limit = 100, $cursor = '' ) {
+	public function search_orders( $location_ids = array(), $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
 
 		$request = new API\Requests\Orders( $this->client );
 
-		$request->set_search_orders_data( $location_ids, $start_time, $limit, $cursor );
+		$request->set_search_orders_data( $location_ids, $start_time, $limit, $cursor, $end_time );
 
 		$this->set_response_handler( API\Responses\Search_Orders::class );
 

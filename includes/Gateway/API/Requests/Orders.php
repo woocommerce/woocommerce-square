@@ -617,8 +617,9 @@ class Orders extends API\Request {
 	 * @param string $start_time   Start time for the search (ISO 8601 format).
 	 * @param int    $limit        Maximum number of orders to return.
 	 * @param string $cursor       Cursor for pagination.
+	 * @param string $end_time     Optional end time for the search (ISO 8601 format).
 	 */
-	public function set_search_orders_data( $location_ids, $start_time, $limit = 100, $cursor = '' ) {
+	public function set_search_orders_data( $location_ids, $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
 
 		$this->square_api_method = 'searchOrders';
 		$this->square_request    = new \Square\Models\SearchOrdersRequest();
@@ -637,11 +638,17 @@ class Orders extends API\Request {
 		// Create the filter.
 		$filter = new \Square\Models\SearchOrdersFilter();
 
-		// Set date filter.
+		// Set date filter with bounded time window.
 		$date_filter = new \Square\Models\SearchOrdersDateTimeFilter();
-		$closed_at   = new \Square\Models\TimeRange();
-		$closed_at->setStartAt( $start_time );
-		$date_filter->setUpdatedAt( $closed_at );
+		$time_range  = new \Square\Models\TimeRange();
+		$time_range->setStartAt( $start_time );
+		
+		// If end time is provided, set it to create a bounded time window.
+		if ( ! empty( $end_time ) ) {
+			$time_range->setEndAt( $end_time );
+		}
+		
+		$date_filter->setUpdatedAt( $time_range );
 		$filter->setDateTimeFilter( $date_filter );
 
 		// Set states filter - only get OPEN and COMPLETED orders.
