@@ -119,8 +119,9 @@ class Order_Polling {
 		$api = new \WooCommerce\Square\Gateway\API( $access_token, $location_id, $is_sandbox );
 
 		// Get orders since last polling time.
-		$last_polling_time = $this->get_last_polling_time();
-		$orders            = $this->search_square_orders_since( $api, $last_polling_time, $sync_start_time );
+		$last_polling_time   = $this->get_last_polling_time();
+		$adjusted_start_time = gmdate( 'c', strtotime( $last_polling_time ) + 1 ); // To avoid re-processing the same orders.
+		$orders              = $this->search_square_orders_since( $api, $adjusted_start_time, $sync_start_time );
 
 		return $orders;
 	}
