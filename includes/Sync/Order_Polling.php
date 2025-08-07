@@ -28,14 +28,6 @@ class Order_Polling {
 	const CRON_HOOK = 'wc_square_sync_orders';
 
 	/**
-	 * Array to track processed order IDs within the current sync session.
-	 *
-	 * @since x.x.x
-	 * @var array
-	 */
-	private $processed_order_ids = array();
-
-	/**
 	 * Initialize the polling system.
 	 *
 	 * @since x.x.x
@@ -150,10 +142,10 @@ class Order_Polling {
 			$all_orders  = array();
 			$cursor      = '';
 			$batch_count = 0;
-			$max_batches = 10; // Prevent infinite loops
+			$max_batches = 10; // Prevent infinite loops.
 
 			do {
-				// Use the API's search_orders method with cursor
+				// Use the API's search_orders method with cursor.
 				$response = $api->search_orders( array( $location_id ), $since_time, 100, $cursor );
 
 				if ( ! empty( $response['orders'] ) ) {
@@ -169,7 +161,7 @@ class Order_Polling {
 					);
 				}
 
-				// Update cursor for next iteration
+				// Update cursor for next iteration.
 				$cursor = $response['cursor'] ?? '';
 				++$batch_count;
 
@@ -203,28 +195,14 @@ class Order_Polling {
 			return;
 		}
 
-		// Reset processed order IDs for this sync session.
-		$this->processed_order_ids = array();
-
-		$updated_count   = 0;
-		$skipped_count   = 0;
-		$error_count     = 0;
-		$duplicate_count = 0;
+		$updated_count = 0;
+		$skipped_count = 0;
+		$error_count   = 0;
 
 		$importer = new Order_Importer();
 
 		foreach ( $square_orders as $square_order ) {
 			$order_id = $square_order->getId();
-
-			// Skip if already processed in this sync session.
-			if ( in_array( $order_id, $this->processed_order_ids, true ) ) {
-				wc_square()->log( "Skipping duplicate order {$order_id} in current sync", 'sync' );
-				++$duplicate_count;
-				continue;
-			}
-
-			// Add to processed list.
-			$this->processed_order_ids[] = $order_id;
 
 			try {
 				// Check if order already exists in WooCommerce.
@@ -295,10 +273,9 @@ class Order_Polling {
 
 		wc_square()->log(
 			sprintf(
-				'Order processing complete: %d updated, %d skipped, %d duplicates, %d errors',
+				'Order processing complete: %d updated, %d skipped, %d errors',
 				$updated_count,
 				$skipped_count,
-				$duplicate_count,
 				$error_count
 			),
 			'sync'
