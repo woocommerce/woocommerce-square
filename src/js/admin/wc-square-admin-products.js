@@ -817,19 +817,23 @@ jQuery( document ).ready( ( $ ) => {
 			);
 		};
 
-		const validateMaxAttributeValues = ($field) => {
+	const validateMaxAttributeValues = ($field) => {
 			let attrValues = $field.val();
 
-			// if attrValues is array (when taxonomy attribute), convert to string and combine values by '|'.
+			// Count the actual number of values.
+			let valueCount;
 			if (Array.isArray(attrValues)) {
-				attrValues = attrValues.join('|');
+				valueCount = attrValues.length;
+			} else {
+				// If it's already a string (pipe-separated), split and count.
+				valueCount = attrValues.split('|').filter(value => value.trim() !== '').length;
 			}
 
 			return validateLimit(
-				attrValues.length,
+				valueCount,
 				250,
 				$field,
-				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + attrValues.substring(0, 50) + '...'
+				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + valueCount + ' values (max 250)'
 			);
 		};
 
