@@ -817,7 +817,7 @@ jQuery( document ).ready( ( $ ) => {
 			);
 		};
 
-	const validateMaxAttributeValues = ($field) => {
+		const validateMaxAttributeValues = ($field) => {
 			let attrValues = $field.val();
 
 			// Count the actual number of values.
@@ -833,7 +833,7 @@ jQuery( document ).ready( ( $ ) => {
 				valueCount,
 				250,
 				$field,
-				wc_square_admin_products.i18n.too_many_attribute_values + ': ' + valueCount + ' values (max 250)'
+				wc_square_admin_products.i18n.too_many_attribute_values.replace( '%d', valueCount )
 			);
 		};
 
