@@ -81,11 +81,11 @@ export const PaymentMethods = () => {
 						</p>
 					</SectionDescription>
 				</div>
+			</div>
+			<div className="woo-square-onbarding__payment-settings--right">
 				<div className="woo-square-onbarding__payment-settings__center-icon">
 					<RightArrowInCircle />
 				</div>
-			</div>
-			<div className="woo-square-onbarding__payment-settings--right">
 				<div className="woo-square-onbarding__payment-settings__toggles">
 					<SectionTitle
 						title={ __(
