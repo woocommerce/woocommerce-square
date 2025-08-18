@@ -68,6 +68,9 @@
     "@wordpress/scripts": {
       "cross-spawn@<7.0.6": "^7.0.6",
       "axios@<0.30.0": "^0.30.0"
-    }
+    },
+    "form-data": "^4.0.4",
+    "@babel/runtime": "^7.26.10",
+    "webpack-dev-server": "^5.2.1"
   }
 }
