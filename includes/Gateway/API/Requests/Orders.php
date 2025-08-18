@@ -652,7 +652,7 @@ class Orders extends API\Request {
 		$filter->setDateTimeFilter( $date_filter );
 
 		// Set states filter - only get OPEN and COMPLETED orders.
-		$state_filter = new \Square\Models\SearchOrdersStateFilter( array( 'OPEN', 'COMPLETED', 'CANCELLED' ) );
+		$state_filter = new \Square\Models\SearchOrdersStateFilter( array( 'OPEN', 'COMPLETED', 'CANCELED' ) );
 		$filter->setStateFilter( $state_filter );
 
 		$query->setFilter( $filter );
