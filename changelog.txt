@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 4.9.7 - 2025-07-28 =
+* Fix - Resolve `CARD_DECLINED_VERIFICATION_REQUIRED` error for 3DS-required credit card payments.
+* Fix - Unblock UI and show a generic error when buyer verification fails.
+* Dev - Update NPM packages with security issues.
+
 = 4.9.6 - 2025-07-10 =
 * Add - When importing products from Square, a new "View Progress" link on the "Update" page allows ability to more closely monitor that progress.
 * Fix - Ensure that Digital Wallet payment methods and Cash App Pay function properly in Block Checkout when using Safari.

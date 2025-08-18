@@ -16,24 +16,25 @@ import {
 } from '../utils/square-sandbox';
 
 test.describe.configure( { mode: 'serial' } );
-test.beforeAll( 'Setup', async ( ) => {
-	const browser = await chromium.launch();
-	const page = await browser.newPage();
+// test.beforeAll( 'Setup', async ( ) => {
+// 	const browser = await chromium.launch();
+// 	const page = await browser.newPage();
 
-	await deleteAllProducts( page );
-	await deleteAllCatalogItems();
+// 	await deleteAllProducts( page );
+// 	await deleteAllCatalogItems();
 
-	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
+// 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
 
-	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
-	await page.getByTestId( 'push-inventory-field' ).check();
-	await saveSquareSettings( page );
+// 	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
+// 	await page.getByTestId( 'push-inventory-field' ).check();
+// 	await saveSquareSettings( page );
 
-	await clearSync( page );
-	await browser.close();
-} );
+// 	await clearSync( page );
+// 	await browser.close();
+// } );
 
-test( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { page, baseURL } ) => {
+// Skipping it for now, as WooCommerce 10.1 has removed new product editor.
+test.skip( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { page, baseURL } ) => {
 	test.slow();
 
 	if ( ! ( await doesProductExist( baseURL, 'oneplus-8' ) ) ) {
@@ -130,7 +131,8 @@ test( 'OnePlus 8 pushed to Square with inventory (New Editor) @sync', async ( { 
 	expect( inventory ).toHaveProperty( 'counts[0].quantity', '62' );
 } );
 
-test( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
+// Skipping it for now, as WooCommerce 10.1 has removed new product editor.
+test.skip( 'Update inventory from Woo to Square @sync', async ( { page } ) => {
 	await page.goto( '/wp-admin/edit.php?post_type=product' );
 	await page
 		.locator( 'a.row-title' )
