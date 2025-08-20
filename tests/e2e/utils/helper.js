@@ -707,6 +707,7 @@ export async function completePreOrder(page, orderId) {
 		.check();
 	await page.locator('#bulk-action-selector-top').selectOption('complete');
 	await page.locator('#doaction').click();
+	await page.locator('#confirm-complete-btn').click();
 }
 
 /**
