@@ -666,8 +666,8 @@ export async function createPreOrderProduct(page, options = {}) {
 		.fill(product.availabilityDate);
 	await page.locator('#_wc_pre_orders_fee').fill(product.preOrderFee);
 	await page
-		.locator('#_wc_pre_orders_when_to_charge')
-		.selectOption(product.whenToCharge);
+		.locator( `input[name="_wc_pre_orders_when_to_charge"][value="${ product.whenToCharge }"]` )
+		.check();
 
 	await page.locator('#publish').waitFor();
 	await page.locator('#publish').click();
