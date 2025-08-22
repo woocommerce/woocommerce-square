@@ -202,10 +202,6 @@ abstract class Plugin {
 
 		// initialize the plugin admin
 		add_action( 'admin_init', array( $this, 'init_admin' ), 0 );
-
-		// hook for translations seperately to ensure they're loaded
-		add_action( 'init', array( $this, 'load_translations' ) );
-
 		add_action( 'admin_footer', array( $this, 'add_delayed_admin_notices' ) );
 
 		// add a 'Configure' link to the plugin action links
@@ -238,68 +234,6 @@ abstract class Plugin {
 	public function __wakeup() {
 		/* translators: Placeholders: %s - plugin name */
 		_doing_it_wrong( __FUNCTION__, sprintf( esc_html__( 'You cannot unserialize instances of %s.', 'woocommerce-square' ), esc_html( $this->get_plugin_name() ) ), '3.1.0' );
-	}
-
-
-	/**
-	 * Load plugin & framework text domains.
-	 *
-	 * @internal
-	 *
-	 * @since 3.0.0
-	 */
-	public function load_translations() {
-
-		$this->load_framework_textdomain();
-
-		// if this plugin passes along its text domain, load its translation files
-		if ( $this->text_domain ) {
-			$this->load_plugin_textdomain();
-		}
-	}
-
-
-	/**
-	 * Loads the framework textdomain.
-	 *
-	 * @since 3.0.0
-	 */
-	protected function load_framework_textdomain() {
-		$this->load_textdomain( 'woocommerce-square', dirname( plugin_basename( $this->get_framework_file() ) ) );
-	}
-
-
-	/**
-	 * Loads the plugin textdomain.
-	 *
-	 * @since 3.0.0
-	 */
-	protected function load_plugin_textdomain() {
-		$this->load_textdomain( $this->text_domain, dirname( plugin_basename( $this->get_plugin_file() ) ) );
-	}
-
-
-	/**
-	 * Loads the plugin textdomain.
-	 *
-	 * @since 3.0.0
-	 * @param string $textdomain the plugin textdomain
-	 * @param string $path the i18n path
-	 */
-	protected function load_textdomain( $textdomain, $path ) {
-
-		// user's locale if in the admin for WP 4.7+, or the site locale otherwise
-		$locale = is_admin() && is_callable( 'get_user_locale' ) ? get_user_locale() : get_locale();
-
-		/**
-		 * @see https://developer.wordpress.org/reference/hooks/plugin_locale/ plugin_locale
-		 * @since 3.0.0
-		*/
-		$locale = apply_filters( 'plugin_locale', $locale, $textdomain );
-
-		load_textdomain( $textdomain, WP_LANG_DIR . '/' . $textdomain . '/' . $textdomain . '-' . $locale . '.mo' );
-
-		load_plugin_textdomain( $textdomain, false, untrailingslashit( $path ) . '/i18n/languages' );
 	}
 
 	/**
