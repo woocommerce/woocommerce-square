@@ -44,6 +44,10 @@ if ( ! defined( 'WC_SQUARE_OPTION_ANY' ) ) {
 	define( 'WC_SQUARE_OPTION_ANY', 'Any' );
 }
 
+if ( ! defined( 'WC_SQUARE_SYNC_ORDERS_EVENT_HOOK' ) ) {
+	define( 'WC_SQUARE_SYNC_ORDERS_EVENT_HOOK', 'wc_square_sync_orders' );
+}
+
 /**
  * The plugin loader class.
  *
