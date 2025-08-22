@@ -152,7 +152,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	/**
 	 * Unschedule order sync event if order sync is disabled.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 */
 	public function unschedule_order_sync() {
 		if ( ! $this->get_settings_handler()->is_order_fulfillment_sync_enabled() && as_has_scheduled_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() ) ) {
@@ -815,7 +815,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	/**
 	 * Gets the order sync handler instance.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 *
 	 * @return Order_Sync
 	 */
