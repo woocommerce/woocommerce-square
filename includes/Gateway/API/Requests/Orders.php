@@ -120,8 +120,8 @@ class Orders extends API\Request {
 	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model, $order_request_type = 'update' ) {
 		$order_model->setReferenceId( $order->get_order_number() );
 
-		// Set fulfillment data for create order request.
-		if ( 'create' === $order_request_type ) {
+		// Set fulfillment data for create order request if order sync is enabled.
+		if ( $this->is_order_fulfillment_sync_enabled() && 'create' === $order_request_type ) {
 			$order_model = $this->set_fulfillment_data( $order, $order_model );
 		}
 
@@ -665,6 +665,16 @@ class Orders extends API\Request {
 		$this->square_request->setQuery( $query );
 
 		$this->square_api_args = array( $this->square_request );
+	}
+
+	/**
+	 * Check if order fulfillment sync is enabled.
+	 *
+	 * @since x.x.x
+	 * @return bool True if enabled, false otherwise.
+	 */
+	private function is_order_fulfillment_sync_enabled() {	
+		return wc_square()->get_settings_handler()->is_order_fulfillment_sync_enabled();
 	}
 
 }
