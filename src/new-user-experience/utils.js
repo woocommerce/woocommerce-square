@@ -192,6 +192,9 @@ export const getSquareSettings = async () => {
 		debug_logging_enabled:
 			settings.debug_logging_enabled ||
 			SQUARE_SETTINGS_DEFAULT_STATE.debug_logging_enabled,
+		enable_order_fulfillment_sync:
+			settings.enable_order_fulfillment_sync ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_order_fulfillment_sync,
 	};
 
 	return squareSettings;
