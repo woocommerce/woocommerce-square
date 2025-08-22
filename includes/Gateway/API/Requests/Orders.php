@@ -673,7 +673,7 @@ class Orders extends API\Request {
 	 * @since x.x.x
 	 * @return bool True if enabled, false otherwise.
 	 */
-	private function is_order_fulfillment_sync_enabled() {	
+	public function is_order_fulfillment_sync_enabled() {
 		return wc_square()->get_settings_handler()->is_order_fulfillment_sync_enabled();
 	}
 
