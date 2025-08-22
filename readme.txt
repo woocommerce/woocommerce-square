@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.7
+Stable tag: 4.9.8
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,17 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.8 - 2025-08-21 =
+* Fix - Ensure there is no fatal error on the product page when the product price is blank.
+* Fix - Corrected variation option assignment logic to prevent mismatched item option IDs during manual syncs to Square.
+* Fix - Prevent mixing Production tokens when in Sandbox mode.
+* Fix - Vertical spacing on "Enable Payment Methods" step.
+* Dev - Bump WooCommerce "tested up to" version 10.1.
+* Dev - Bump WooCommerce minimum supported version to 9.9.
+* Dev - Bump WordPress minimum supported version to 6.7.
+* Dev - Update vulnerable NPM packages.
+* Dev - Remove loading translations, as it is automatically handled by WordPress since version 4.6.
 
 = 4.9.7 - 2025-07-28 =
 * Fix - Resolve `CARD_DECLINED_VERIFICATION_REQUIRED` error for 3DS-required credit card payments.
