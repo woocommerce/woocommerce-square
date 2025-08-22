@@ -18,15 +18,6 @@ defined( 'ABSPATH' ) || exit;
  * @since x.x.x
  */
 class Order_Polling {
-
-	/**
-	 * Action Scheduler hook name for order polling.
-	 *
-	 * @since x.x.x
-	 * @var string
-	 */
-	const CRON_HOOK = 'wc_square_sync_orders';
-
 	/**
 	 * Initialize the polling system.
 	 *
@@ -37,7 +28,7 @@ class Order_Polling {
 		add_action( 'init', array( $this, 'maybe_schedule_polling' ) );
 
 		// Add action to poll square orders via Action Scheduler.
-		add_action( self::CRON_HOOK, array( $this, 'poll_square_orders' ) );
+		add_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array( $this, 'poll_square_orders' ) );
 	}
 
 	/**
@@ -46,7 +37,7 @@ class Order_Polling {
 	 * @since x.x.x
 	 */
 	public function maybe_schedule_polling() {
-		if ( false === as_next_scheduled_action( self::CRON_HOOK, array(), wc_square()->get_id() ) ) {
+		if ( false === as_next_scheduled_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() ) ) {
 			$this->schedule_polling();
 		}
 	}
@@ -59,7 +50,7 @@ class Order_Polling {
 	public function schedule_polling() {
 		$interval = $this->get_polling_interval_seconds();
 
-		as_schedule_recurring_action( time() + $interval, $interval, self::CRON_HOOK, array(), wc_square()->get_id() );
+		as_schedule_recurring_action( time() + $interval, $interval, WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() );
 
 		wc_square()->log( "Scheduled Square order polling with interval: {$interval} seconds", 'sync' );
 	}
