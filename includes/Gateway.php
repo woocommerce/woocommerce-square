@@ -504,7 +504,7 @@ class Gateway extends Payment_Gateway_Direct {
 				sprintf(
 					// translators: %s is the Square order ID linked to the Square order in the admin.
 					__( 'Square Order ID: %s', 'woocommerce-square' ),
-					'<a href="' . esc_url( $square_url . $response->get_square_order_id() ) . '" target="_blank">' . $response->get_square_order_id() . '</a>'
+					'<a href="' . esc_url( $square_url . $response->get_square_order_id() ) . '" target="_blank">' . esc_html( $response->get_square_order_id() ) . '</a>'
 				)
 			);
 		}

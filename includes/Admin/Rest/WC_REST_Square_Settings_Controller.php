@@ -152,7 +152,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'sanitize_callback' => '',
 					),
 					'enable_order_fulfillment_sync'    => array(
-						'description'       => __( 'Enable bidirectional order fulfillment synchronization between WooCommerce and Square orders.', 'woocommerce-square' ),
+						'description'       => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),

@@ -346,7 +346,7 @@ export const ConfigureSync = ( {
 										'woocommerce-square'
 									) }
 									description={ __(
-										'Enable bidirectional order fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.',
+										'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.',
 										'woocommerce-square'
 									) }
 									indent={ indent }
