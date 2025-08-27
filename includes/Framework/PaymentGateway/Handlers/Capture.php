@@ -199,7 +199,7 @@ class Capture {
 			}
 
 			// bail early if the capture wasn't approved
-			if ( ! $response->transaction_approved() ) {
+			if ( $response->has_errors() ) {
 
 				$this->do_capture_failed( $order, $response );
 

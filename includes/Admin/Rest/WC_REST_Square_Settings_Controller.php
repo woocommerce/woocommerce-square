@@ -59,6 +59,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'enable_customer_decline_messages',
 			'debug_mode',
 			'debug_logging_enabled',
+			'enable_order_fulfillment_sync',
 		);
 
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
@@ -149,6 +150,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'description'       => __( 'Enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
+					),
+					'enable_order_fulfillment_sync'    => array(
+						'description'       => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
 					),
 				),
 			)
