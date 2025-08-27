@@ -11,6 +11,19 @@ import {
 	gotoOrderEditPage,
 } from '../utils/helper';
 
+test.beforeEach(async ({ page }) => {
+	await page.goto('/wp-admin/admin.php?page=wc-settings&tab=square');
+
+	// Check only if already not enabled.
+	const isEnabled = await page.locator('[data-testid="order-fulfillment-sync-field"]').isChecked();
+	if (!isEnabled) {
+		await page.locator('[data-testid="order-fulfillment-sync-field"]').check();
+		await page.locator('[data-testid="square-settings-save-button"]').click();
+	}
+
+	await page.waitForTimeout(2000);
+});
+
 test.describe('Order Sync and Fulfillment Tests @sync', () => {
 
 	test('Should create order with fulfillment data and verify WooCommerce integration', async ({ page }) => {

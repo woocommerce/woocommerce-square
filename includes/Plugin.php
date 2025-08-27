@@ -144,6 +144,21 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
 		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
+
+		// Unschedule order sync event if order sync is disabled.
+		add_action( 'admin_init', array( $this, 'unschedule_order_sync' ) );
+	}
+
+	/**
+	 * Unschedule order sync event if order sync is disabled.
+	 *
+	 * @since 4.9.9
+	 */
+	public function unschedule_order_sync() {
+		if ( ! $this->get_settings_handler()->is_order_fulfillment_sync_enabled() && as_has_scheduled_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() ) ) {
+			// Delete the order sync event.
+			as_unschedule_all_actions( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() );
+		}
 	}
 
 	/**
@@ -171,9 +186,6 @@ class Plugin extends Payment_Gateway_Plugin {
 		if ( class_exists( '\WooCommerce\Square\Handlers\Async_Request' ) ) {
 			$this->async_request_handler = new Async_Request();
 		}
-
-		$this->order_sync_handler = new Order_Sync();
-		$this->order_sync_handler->init();
 	}
 
 
@@ -260,6 +272,12 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		if ( ! $this->admin_handler && is_admin() ) {
 			$this->admin_handler = new Admin( $this );
+		}
+
+		// Initialize order sync handler if order sync is enabled.
+		if ( $this->get_settings_handler()->is_order_fulfillment_sync_enabled() ) {
+			$this->order_sync_handler = new Order_Sync();
+			$this->order_sync_handler->init();
 		}
 
 		// WooPayments compatibility.
@@ -797,7 +815,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	/**
 	 * Gets the order sync handler instance.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 *
 	 * @return Order_Sync
 	 */

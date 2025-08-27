@@ -5,7 +5,7 @@
  * Maps data between Square and WooCommerce order formats.
  *
  * @package WooCommerce\Square\Sync
- * @since   x.x.x
+ * @since   4.9.9
  */
 
 namespace WooCommerce\Square\Sync;
@@ -15,13 +15,13 @@ namespace WooCommerce\Square\Sync;
  *
  * Provides static methods to map order data between Square and WooCommerce.
  *
- * @since x.x.x
+ * @since 4.9.9
  */
 class Order_Mapper {
 	/**
 	 * Map Square order state to WooCommerce order status.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 * @param string $square_state Square order state.
 	 * @return string WooCommerce order status.
 	 */
@@ -39,7 +39,7 @@ class Order_Mapper {
 	/**
 	 * Check if order status change is allowed.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 * @param string $from_status Current WooCommerce status.
 	 * @param string $to_status New status from Square.
 	 * @return bool True if status change is allowed.
@@ -51,7 +51,7 @@ class Order_Mapper {
 		/**
 		 * Filters the allowed status changes.
 		 *
-		 * @since x.x.x
+		 * @since 4.9.9
 		 *
 		 * @param bool $allowed_status_changes True if status change is allowed.
 		 * @param string $from_status Current WooCommerce status.

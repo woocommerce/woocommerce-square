@@ -120,8 +120,8 @@ class Orders extends API\Request {
 	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model, $order_request_type = 'update' ) {
 		$order_model->setReferenceId( $order->get_order_number() );
 
-		// Set fulfillment data for create order request.
-		if ( 'create' === $order_request_type ) {
+		// Set fulfillment data for create order request if order sync is enabled.
+		if ( $this->is_order_fulfillment_sync_enabled() && 'create' === $order_request_type ) {
 			$order_model = $this->set_fulfillment_data( $order, $order_model );
 		}
 
@@ -179,7 +179,7 @@ class Orders extends API\Request {
 	/**
 	 * Sets the fulfillment data for an order.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 *
 	 * @param \WC_Order            $order        WooCommerce order object.
 	 * @param \Square\Models\Order $order_model Square order object.
@@ -611,7 +611,7 @@ class Orders extends API\Request {
 	/**
 	 * Sets the data for searching orders.
 	 *
-	 * @since x.x.x
+	 * @since 4.9.9
 	 *
 	 * @param array  $location_ids Array of location IDs to search in.
 	 * @param string $start_time   Start time for the search (ISO 8601 format).
@@ -665,6 +665,16 @@ class Orders extends API\Request {
 		$this->square_request->setQuery( $query );
 
 		$this->square_api_args = array( $this->square_request );
+	}
+
+	/**
+	 * Check if order fulfillment sync is enabled.
+	 *
+	 * @since 4.9.9
+	 * @return bool True if enabled, false otherwise.
+	 */
+	public function is_order_fulfillment_sync_enabled() {
+		return wc_square()->get_settings_handler()->is_order_fulfillment_sync_enabled();
 	}
 
 }
