@@ -459,7 +459,8 @@ class Digital_Wallet {
 			return $this->build_payment_request( WC()->cart->total );
 		}
 
-		$amount         = number_format( $quantity * $product->get_price(), 2, '.', '' );
+		$product_price  = (float) $product->get_price();
+		$amount         = number_format( $quantity * $product_price, 2, '.', '' );
 		$quantity_label = 1 < $quantity ? ' x ' . $quantity : '';
 
 		$items[] = array(

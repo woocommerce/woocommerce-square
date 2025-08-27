@@ -2,15 +2,14 @@
 body.woocommerce_page_woocommerce-square-onboarding {
 	background: #FFF;
 
-    #wpbody-content {
-        padding-bottom: 0;
-    	margin-top: 90px;
-    }
+	#wpbody-content {
+		padding-bottom: 0;
+	}
 
-    .notice:not(.import-notice),
+	.notice:not(.import-notice),
 	#wpfooter {
-        display: none !important;
-    }
+		display: none !important;
+	}
 }
 
 #woocommerce-square-onboarding {
@@ -57,23 +56,23 @@ body.woocommerce_page_woocommerce-square-onboarding {
 
 // Styles as per theme.
 body.admin-color-light.woocommerce_page_woocommerce-square-onboarding {
-    --wp-admin-theme-color: #0085ba;
-    --wp-admin-theme-color--rgb: 0, 133, 186;
-    --wp-admin-theme-color-darker-10: #0073a1;
-    --wp-admin-theme-color-darker-10--rgb: 0, 115, 161;
-    --wp-admin-theme-color-darker-20: #006187;
-    --wp-admin-theme-color-darker-20--rgb: 0, 97, 135;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #0085ba;
+	--wp-admin-theme-color--rgb: 0, 133, 186;
+	--wp-admin-theme-color-darker-10: #0073a1;
+	--wp-admin-theme-color-darker-10--rgb: 0, 115, 161;
+	--wp-admin-theme-color-darker-20: #006187;
+	--wp-admin-theme-color-darker-20--rgb: 0, 97, 135;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-blue {
-    --wp-admin-theme-color: #096484;
-    --wp-admin-theme-color--rgb: 9, 100, 132;
-    --wp-admin-theme-color-darker-10: #07526c;
-    --wp-admin-theme-color-darker-10--rgb: 7, 82, 108;
-    --wp-admin-theme-color-darker-20: #064054;
-    --wp-admin-theme-color-darker-20--rgb: 6, 64, 84;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #096484;
+	--wp-admin-theme-color--rgb: 9, 100, 132;
+	--wp-admin-theme-color-darker-10: #07526c;
+	--wp-admin-theme-color-darker-10--rgb: 7, 82, 108;
+	--wp-admin-theme-color-darker-20: #064054;
+	--wp-admin-theme-color-darker-20--rgb: 6, 64, 84;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-coffee.woocommerce_page_woocommerce-square-onboarding {
@@ -87,251 +86,467 @@ body.admin-color-coffee.woocommerce_page_woocommerce-square-onboarding {
 }
 
 body.admin-color-ectoplasm {
-    --wp-admin-theme-color: #523f6d;
-    --wp-admin-theme-color--rgb: 82, 63, 109;
-    --wp-admin-theme-color-darker-10: #46365d;
-    --wp-admin-theme-color-darker-10--rgb: 70, 54, 93;
-    --wp-admin-theme-color-darker-20: #3a2c4d;
-    --wp-admin-theme-color-darker-20--rgb: 58, 44, 77;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #523f6d;
+	--wp-admin-theme-color--rgb: 82, 63, 109;
+	--wp-admin-theme-color-darker-10: #46365d;
+	--wp-admin-theme-color-darker-10--rgb: 70, 54, 93;
+	--wp-admin-theme-color-darker-20: #3a2c4d;
+	--wp-admin-theme-color-darker-20--rgb: 58, 44, 77;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-midnight {
-    --wp-admin-theme-color: #e14d43;
-    --wp-admin-theme-color--rgb: 225, 77, 67;
-    --wp-admin-theme-color-darker-10: #dd382d;
-    --wp-admin-theme-color-darker-10--rgb: 221, 56, 45;
-    --wp-admin-theme-color-darker-20: #d02c21;
-    --wp-admin-theme-color-darker-20--rgb: 208, 44, 33;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #e14d43;
+	--wp-admin-theme-color--rgb: 225, 77, 67;
+	--wp-admin-theme-color-darker-10: #dd382d;
+	--wp-admin-theme-color-darker-10--rgb: 221, 56, 45;
+	--wp-admin-theme-color-darker-20: #d02c21;
+	--wp-admin-theme-color-darker-20--rgb: 208, 44, 33;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-ocean {
-    --wp-admin-theme-color: #627c83;
-    --wp-admin-theme-color--rgb: 98, 124, 131;
-    --wp-admin-theme-color-darker-10: #576e74;
-    --wp-admin-theme-color-darker-10--rgb: 87, 110, 116;
-    --wp-admin-theme-color-darker-20: #4c6066;
-    --wp-admin-theme-color-darker-20--rgb: 76, 96, 102;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #627c83;
+	--wp-admin-theme-color--rgb: 98, 124, 131;
+	--wp-admin-theme-color-darker-10: #576e74;
+	--wp-admin-theme-color-darker-10--rgb: 87, 110, 116;
+	--wp-admin-theme-color-darker-20: #4c6066;
+	--wp-admin-theme-color-darker-20--rgb: 76, 96, 102;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-modern {
-    --wp-admin-theme-color: #3858e9;
-    --wp-admin-theme-color--rgb: 56, 88, 233;
-    --wp-admin-theme-color-darker-10: #2145e6;
-    --wp-admin-theme-color-darker-10--rgb: 33, 69, 230;
-    --wp-admin-theme-color-darker-20: #183ad6;
-    --wp-admin-theme-color-darker-20--rgb: 24, 58, 214;
-    --wp-admin-border-width-focus: 2px
+	--wp-admin-theme-color: #3858e9;
+	--wp-admin-theme-color--rgb: 56, 88, 233;
+	--wp-admin-theme-color-darker-10: #2145e6;
+	--wp-admin-theme-color-darker-10--rgb: 33, 69, 230;
+	--wp-admin-theme-color-darker-20: #183ad6;
+	--wp-admin-theme-color-darker-20--rgb: 24, 58, 214;
+	--wp-admin-border-width-focus: 2px
 }
 
 body.admin-color-sunrise {
-    --wp-admin-theme-color: #dd823b;
-    --wp-admin-theme-color--rgb: 221, 130, 59;
-    --wp-admin-theme-color-darker-10: #d97426;
-    --wp-admin-theme-color-darker-10--rgb: 217, 116, 38;
-    --wp-admin-theme-color-darker-20: #c36922;
-    --wp-admin-theme-color-darker-20--rgb: 195, 105, 34;
-    --wp-admin-border-width-focus: 2px
-}
-
-// Styles for Payment Methods and Payment Complete Steps.
-.woo-square-onbarding__payment-settings {
-	display: flex;
-	justify-content: center;
-	align-items: stretch;
-	width: 100%;
-	height: auto;
-	z-index: 9999;
-	text-align: left;
-
-	&--left {
-		background-color: #fff;
-		width: 50%;
-		position: relative;
-	}
-
-	&__intro {
-		position: relative;
-		max-width: 400px;
-		width: 100%;
-		top: 50%;
-		left: 50%;
-		transform: translate( -50%, -50% );
-	}
-
-	&__center-icon {
-		position: absolute;
-		top: 50%;
-		right: 0;
-		z-index: 999;
-		transform: translate( 0, -50% );
-	}
-
-	&--right {
-		width: 50%;
-
-		&:before {
-			content: '';
-			width: 50%;
-			right: 0;
-			height: 120vh;
-			position: absolute;
-			display: block;
-			top: 0;
-			background: #F0F0F1;
-		}
-	}
-
-	&__intro--title {
-		display: flex;
-		align-items: center;
-		text-align: left;
-		margin-bottom: 24px;
-
-		&-icon {
-			max-width: 45px;
-			height: auto;
-			margin-left: 24px;
-		}
-	}
-
-	&__toggles {
-		position: relative;
-		background-color: #fff;
-		padding: 98px 110px 130px 110px;
-		border: 1px solid rgba(0, 0, 0, 0.25);
-		transform: none;
-    	top: 10%;
-		left: -50px;
-		max-width: 915px;
-		width: 100%;
-		box-sizing: border-box;
-		
-
-		&__next-btn {
-			position: absolute;
-			top: calc(100% + 46px);
-			right: 0;
-		}
-
-		.woo-square-setting__section-title {
-			text-align: left;
-		}
-	}
-
-	& > * {
-		width: 100%;
-	}
-
-	.woo-square-setting__input-wrapper--boxed-bg {
-		background-color: rgba( 244, 244, 244, 0.5 );
-	}
-
-	.flexItem.iconBox {
-		margin: 0 20px 0 10px;
-	}
-
-	.flexItem.contentBox {
-		margin-right: 80px;
-	}
+	--wp-admin-theme-color: #dd823b;
+	--wp-admin-theme-color--rgb: 221, 130, 59;
+	--wp-admin-theme-color-darker-10: #d97426;
+	--wp-admin-theme-color-darker-10--rgb: 217, 116, 38;
+	--wp-admin-theme-color-darker-20: #c36922;
+	--wp-admin-theme-color-darker-20--rgb: 195, 105, 34;
+	--wp-admin-border-width-focus: 2px
 }
 
 @media screen and (max-width: 1900px) {
 	.flexItem.contentBox {
 		margin-right: 20px;
 	}
+}
 
-	.woo-square-onbarding__payment-settings--left {
-		width: 75%;
+@mixin is-below-mobile {
+	@media screen and (max-width: 600px) {
+		@content;
 	}
 }
 
-@media screen and (max-width: 1600px) {
-	.woo-square-onboarding__cover {
-		&.payment-methods,
-		&.payment-complete {
-			.woo-square-onbarding__payment-settings {
-				&__toggles {
-					top: auto;
-					transform: none;
-					padding: 50px 70px 40px;
-				}
+@mixin is-mobile {
+	@media screen and (min-width: 601px) and (max-width: 782px) {
+		@content;
+	}
+}
 
-				&__intro {
-					transform: none;
-					left: 0;
-					top: 30%;
-					background: border-box;
-					max-width: 70%;
-					display: inline-block;
+@mixin is-tablet {
+	@media screen and (min-width: 783px) and (max-width: 960px) {
+		@content;
+	}
+}
 
-					@media screen and (max-width: 1400px) {
-						max-width: 90%;
-					}
-				}
+@mixin is-tablet-and-above {
+	@media screen and (min-width: 783px) {
+		@content;
+	}
+}
 
-				.flexItem.contentBox {
-					margin-right: 20px;
-				}
+@mixin is-desktop {
+	@media screen and (min-width: 961px) {
+		@content;
+	}
+}
+
+#wpcontent {
+	padding-left: 0 !important;
+}
+
+body.woocommerce_page_woocommerce-square-onboarding #wpbody-content {
+	@include is-below-mobile() {
+		margin-top: 46px;
+	}
+
+	@include is-mobile() {
+		margin-top: 46px;
+	}
+
+	@include is-tablet() {
+		margin-top: 80px;
+	}
+
+	@include is-desktop() {
+		margin-top: 80px;
+	}
+}
+
+.woo-square-onbarding__payment-settings {
+	font-family: 'SF Pro', sans-serif;
+
+	& * {
+		box-sizing: border-box;
+	}
+
+	@include is-mobile {
+		padding: 0 1rem;
+	}
+
+	@include is-tablet {
+		height: calc( 100vh - 112px );
+	}
+
+	@include is-desktop {
+		height: calc( 100vh - 112px );
+		width: calc( 100% - 160px );
+		display: flex;
+		justify-content: center;
+		align-items: stretch;
+		position: fixed;
+	}
+
+	@media screen and (max-width: 960px) {
+		padding: 0 1rem;
+	}
+}
+
+.woo-square-onbarding__payment-settings--left {
+	background-color: #FFF;
+
+	@include is-desktop() {
+		flex-grow: 1;
+		flex-basis: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 5rem 0 1rem;
+	}
+
+	@media screen and (max-width: 960px) {
+		margin-top: 2rem;
+
+		.woo-square-setting__section-description {
+			text-align: center;
+			max-width: 780px;
+		}
+	}
+
+	.woo-square-onbarding__payment-settings__intro--title {
+		display: flex;
+		justify-content: center;
+
+		@include is-desktop() {
+			text-align: left;
+			justify-content: flex-start;
+		}
+	}
+}
+
+.woo-square-onbarding__payment-settings--right {
+	background-color: #F0F0F1;
+	position: relative;
+
+	@include is-desktop() {
+		flex-grow: 1;
+		flex-basis: 0;
+		display: flex;
+		align-items: center;
+	}
+
+	@media screen and (max-width: 960px) {
+		margin-top: 3rem;
+
+		.woo-square-setting__section-description {
+			text-align: center;
+			max-width: 780px;
+		}
+	}
+
+	.woo-square-setting__section-title {
+		@include is-desktop() {
+			text-align: left;
+		}
+
+		@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+			font-size: 1.5rem;
+		}
+	}
+
+	.woo-square-setting__input-wrapper--boxed-bg {
+		@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+			padding: 0.5rem 1rem !important;
+		}
+
+		.woo-square-setting__input-label {
+			@media screen and (min-width: 960px) and (max-width: 1024px) and (max-height: 740px) {
+				font-size: 15px;
 			}
 		}
-
-		&.payment-complete .woo-square-onbarding__payment-settings__intro {
-			top: 20%;
-		}
 	}
 }
 
-@media screen and (max-width: 1400px) {
-	.woo-square-onboarding__cover {
-		margin-bottom: 30px;
+.woo-square-onbarding__payment-settings__intro {
+	@include is-desktop {
+		max-width: 589px;
+	}
+}
+
+.woo-square-onbarding__payment-settings__toggles {
+	background-color: #FFF;
+	transition: padding 0.3s ease;
+
+	@include is-desktop() {
+		position: relative;
+		border: 0.5px solid #bfbfbf;
+		transform: translateX(-3rem);
+		padding: 4rem;
+		max-width: 756px;
 	}
 
-	.woo-square-onbarding__payment-settings {
+	@media screen and (min-width: 960px) and (max-width: 1280px) {
+		padding: 3rem
+	}
+
+	@media screen and (max-height: 880px) and (min-width: 960px) {
+		padding: 2rem 3rem;
+	}
+
+	@media screen and (min-width: 1400px) and (min-height: 1100px) {
+		padding: 100px 110px 100px 110px;
+	}
+}
+
+.woo-square-onbarding__payment-settings__center-icon {
+	display: none;
+
+	@include is-desktop() {
+		position: absolute;
 		display: block;
-		height: auto;
+		top: 50%;
+		left: -48px;
+		z-index: 99;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
 
-		&__toggles {
-			left: 0;
+.woo-square-onbarding__payment-settings {
+	@media screen and (max-height: 1120px) {
+		.woo-square-setting__input-wrapper--boxed-bg {
+			padding: 1rem 2rem;
 		}
 
-		&--left {
-			width: 100%;
+		.woo-square-setting__input-wrapper--boxed {
+			margin: 1rem 0;
 		}
-
-		&--right:before {
-			display: none;
-		}
-		
-		&__center-icon {
-			display: none;
-		}
-		
-		&__intro {
-			top: auto;
-			transform: none;
-			margin: 50px 0 30px;
-			left: 0;
-			max-width: 650px;
-		}
-		
-		&--right {
-			margin-bottom: 30px;
-		}		
 	}
 
-	.woo-square-onboarding__cover {
-		&.payment-complete {
-			.woo-square-onbarding__payment-settings__intro {
-				text-align: center;
-			}
+	@media screen and (max-width: 480px) {
+		.woo-square-setting__input-wrapper--boxed-bg {
+			padding: 1rem;
+		}
+	}
+}
 
-			.woo-square-onbarding__payment-settings__intro--title {
-				text-align: center;
-				display: inline-block;
+.woo-square-onbarding__payment-settings__toggles__next-btn {
+	position: absolute;
+	top: calc(100% + 46px);
+	right: 0;
+
+	&:after {
+		content: '';
+		display: block;
+		width: 10px;
+		height: 1rem;
+		position: absolute;
+		background-color: rgba(0, 0, 0, 0);
+	}
+
+	@media screen and (max-width: 960px) {
+		max-width: 780px;
+	}
+
+	@media screen and (max-height: 770px) and (min-width: 960px) {
+		position: relative;
+		top: auto;
+		right: auto;
+		margin-top: 3rem;
+	}
+}
+
+.woo-square-onbarding__payment-settings__intro--title-icon {
+	margin-left: 16px;
+}
+
+// Payment complete.
+.woo-square-onboarding__payment-complete {
+	display: block;
+	padding: 1rem;
+
+	@media screen and (min-width: 1280px) {
+		display: flex;
+		padding: 0;
+	}
+
+	&--left,
+	&--right {
+		@media screen and (min-width: 1280px) {
+			width: 50%;
+		}
+
+		.woo-square-setting__section-description {
+			text-align: center;
+
+			@media screen and (min-width: 1280px) {
+				text-align: left;
 			}
 		}
 	}
+
+	&--left {
+		margin-top: 2rem;
+
+		@media screen and (min-width: 1280px) {
+			margin-top: 0;
+			padding: 2rem;
+		}
+	}
+
+	&--right {
+		position: relative;
+		margin-top: 3rem;
+
+		@media screen and (min-width: 1280px) {
+			margin-top: 0;
+
+			&:after {
+				display: block;
+				content: '';
+				position: absolute;
+				background-color: #F0F0F1;
+				top: 0;
+				left: 0;
+				width: 100%;
+				min-height: 750px;
+				height: 100%;
+				z-index: 0;
+			}
+		}
+
+		@media screen and (min-width: 1280px) and (min-height: 750px) {
+			&:after {
+				height: calc(100vh - 112px);
+			}
+		}
+
+		.woo-square-setting__section-title {
+			@media screen and (min-width: 1280px) {
+				text-align: left;
+			}
+		}
+	}
+
+	&__toggles {
+		@media screen and (min-width: 1280px) {
+			position: relative;
+			transform: translateX(-3rem);
+			z-index: 1;
+			border: 0.5px solid #bfbfbf;
+			padding: 30px 42px;
+			background-color: #fff;
+			max-width: 687px;
+		}
+
+		@media screen and (min-width: 1920px) {
+			position: relative;
+			top: 140px;
+			padding: 60px 85px;
+		}
+
+		@media screen and (min-height: 720px) and (min-width: 1280px) {
+			top: 5vh;
+		}
+	}
+
+	.woo-square-onboarding__payment-complete__intro {
+		@media screen and (min-width: 1280px) {
+			position: sticky;
+			top: 30vh;
+			max-width: 400px;
+			margin-right: 100px;
+			float: right;
+		}
+
+		@media screen and (min-width: 1920px) {
+			position: sticky;
+			top: 460px;
+			margin-right: 200px;
+		}
+
+		&--title {
+			color: #000;
+			font-weight: 600;
+			font-size: 30px;
+			line-height: 35.8px;
+			text-align: center;
+
+			@media screen and (min-width: 1280px) {
+				text-align: left;
+			}
+		}
+	}
+
+	.woo-square-onboarding__payment-setting-row {
+		display: flex !important;
+		flex-direction: row !important;
+		flex-wrap: wrap !important;
+		align-items: flex-start;
+
+		@media screen and (min-width: 1280px) {
+			justify-content: flex-start;
+		}
+
+		button {
+			margin: 0 0 1.25rem 0 !important;
+		}
+
+		.components-divider {
+			margin: 30px 0 !important;
+		}
+
+		.contentBox {
+			flex: 1;
+			margin-left: 18px;
+
+			@media screen and (min-width: 1920px) {
+				max-width: 314px;
+			}
+		}
+
+		.settings-fields {
+			flex-basis: 100%;
+
+			@media screen and (min-width: 1920px) {
+				flex-basis: auto;
+				margin-left: auto;
+			}
+		}
+	}
+}
+
+.woo-square-onboarding__settings-wrapper {
+	max-width: 400px;
+	// margin: 0 auto;
+	margin: 100px auto 50px;
 }

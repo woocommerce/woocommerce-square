@@ -2,7 +2,7 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
 import parse from 'html-react-parser';
 import { SelectControl, Button } from '@wordpress/components';
 
@@ -26,10 +26,12 @@ export const SettingsApp = () => {
 		isSquareSettingsSaving,
 		squareSettingsLoaded,
 		setSquareSettingData,
+		saveSquareSettings,
 	} = useSquareSettings( true );
 
 	const [ initialState, setInitialState ] = useState( false );
 	const [ isFormDirty, setIsFormDirty ] = useState( false );
+	const isProd = useRef( null );
 
 	const {
 		enable_sandbox = 'no',
@@ -45,6 +47,17 @@ export const SettingsApp = () => {
 	const _location_id =
 		enable_sandbox === 'yes' ? sandbox_location_id : production_location_id;
 
+	async function connectToProd() {
+		if ( ! isProd.current ) {
+			await saveSquareSettings();
+		}
+
+		window.location.href =
+			isProd.current && access_tokens.production
+				? disconnection_url
+				: connection_url;
+	}
+
 	// Set the initial state.
 	useEffect( () => {
 		if ( ! squareSettingsLoaded ) {
@@ -52,6 +65,7 @@ export const SettingsApp = () => {
 		}
 
 		setInitialState( settings );
+		isProd.current = enable_sandbox === 'no';
 	}, [ squareSettingsLoaded ] );
 
 	// We set the state for `isFormDirty` here.
@@ -138,15 +152,11 @@ export const SettingsApp = () => {
 						data-testid="connect-to-square-button"
 						variant="button-primary"
 						className="button-primary"
-						href={
-							access_tokens?.production
-								? disconnection_url
-								: connection_url
-						}
+						onClick={ connectToProd }
 						isBusy={ isSquareSettingsSaving }
 						disabled={ ! wcSquareSettings.depsCheck }
 					>
-						{ access_tokens?.production
+						{ isProd.current && access_tokens.production
 							? __(
 									'Disconnect from Square',
 									'woocommerce-square'
