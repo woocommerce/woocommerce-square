@@ -56,17 +56,6 @@ export const DebugMode = () => {
 		},
 		{
 			label: __(
-				'Non-Payment Errors — Save to Log',
-				'woocommerce-square'
-			),
-			value: 'non-payment-save-to-log',
-			desc: __(
-				'Save non-payment errors, such as API failures or sync issues to log. These are not shown on the checkout page.',
-				'woocommerce-square'
-			),
-		},
-		{
-			label: __(
 				'Payment Errors — Show on Checkout, Non-Payment Errors — Save to Log',
 				'woocommerce-square'
 			),
@@ -84,6 +73,17 @@ export const DebugMode = () => {
 			value: 'all-errors-save-to-log',
 			desc: __(
 				'Log all types of errors (payment and non-payment) to the debug log. No errors are shown on the checkout page.',
+				'woocommerce-square'
+			),
+		},
+		{
+			label: __(
+				'Non-Payment Errors — Save to Log',
+				'woocommerce-square'
+			),
+			value: 'non-payment-save-to-log',
+			desc: __(
+				'Save non-payment errors, such as API failures or sync issues to log. These are not shown on the checkout page.',
 				'woocommerce-square'
 			),
 		},
