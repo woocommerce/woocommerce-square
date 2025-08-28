@@ -90,6 +90,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		// if dealing with a variable product, try and match the variations
 		if ( $product->is_type( 'variable' ) ) {
 
+			$options_ids = array();
+
 			/**
 			 * If there are multiple variations, it must be a considered as Dynamic Options supported product.
 			 * Create/Update and Assign Dynamic Options only if a product
@@ -98,7 +100,6 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			if (
 				count( $attributes ) > 1
 			) {
-				$options_ids  = array();
 				$result       = wc_square()->get_api()->retrieve_options_data();
 				$options_data = $result[1] ?? array();
 
@@ -171,7 +172,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 						if ( $product_variation instanceof \WC_Product ) {
 
-							$catalog_variations[ $object_key ] = self::update_catalog_variation( $variation_object, $product_variation );
+							$catalog_variations[ $object_key ] = self::update_catalog_variation( $variation_object, $product_variation, $options_ids );
 
 							// consider this variation taken care of
 							unset( $product_variation_ids[ $key ] );
@@ -201,7 +202,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				$catalog_item_variation->setItemId( $catalog_object->getId() );
 				$variation_object->setItemVariationData( $catalog_item_variation );
 
-				$catalog_variations[] = self::update_catalog_variation( $variation_object, $product_variation );
+				$catalog_variations[] = self::update_catalog_variation( $variation_object, $product_variation, $options_ids );
 			}
 		} else { // otherwise, we have a simple product
 
@@ -250,11 +251,13 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	 * @since 2.0.0
 	 *
 	 * @param CatalogObject $catalog_object Square SDK catalog object
-	 * @param \WC_Product $product WooCommerce product
+	 * @param \WC_Product   $product        WooCommerce product
+	 * @param array         $options_ids    Array of options IDs
+	 *
 	 * @return CatalogObject
 	 * @throws \Exception
 	 */
-	public static function update_catalog_variation( CatalogObject $catalog_object, \WC_Product $product ) {
+	public static function update_catalog_variation( CatalogObject $catalog_object, \WC_Product $product, $options_ids = array() ) {
 
 		if ( 'ITEM_VARIATION' !== $catalog_object->getType() || ! $catalog_object->getItemVariationData() ) {
 			throw new \Exception( 'Type of $catalog_object must be an ITEM_VARIATION' );
@@ -305,7 +308,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 				$variation_data->setItemOptionValues( null );
 			} else {
 				// If there are multiple attributes, the name of the variation is the combination of all attribute values.
-				$variation_name = array();
+				$variation_name  = array();
+				$variation_index = 0;
 
 				/**
 				 * Set the `item_option_values` for the variation.
@@ -327,26 +331,21 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$taxonomy_exists  = true;
 					} else {
 						// For custom attributes, simply use the cleaned-up attribute ID
-						$attribute_name   = ucwords( str_replace( '-', ' ', $attribute_id ) );
+						$attribute_name   = str_replace( '-', ' ', $attribute_id );
 						$attribute_id     = $attribute_name;
 						$variation_name[] = $attribute_value;
 					}
 
-					foreach ( $options_data as $option_id_transient => $option_data_transient ) {
-						$option_id       = '';
-						$option_value_id = '';
+					$option_id       = '';
+					$option_value_id = '';
+					if ( isset( $options_data[ $options_ids[ $variation_index ] ] ) ) {
+						$option_id = $options_ids[ $variation_index ];
 
-						// Check for the Square ID of $attribute_name.
-						if ( $option_data_transient['name'] === $attribute_id ) { // @TODO: If merchant changes the name of the attribute, this will create a new item at Square. Think of a way to handle this.
-							$option_id = $option_id_transient;
-							// Check for the Square ID of $attribute_value.
-							foreach ( $option_data_transient['value_ids'] as $value_id => $value_name ) {
-								if ( $value_name === $attribute_value ) {
-									$option_value_id = $value_id;
-									break;
-								}
+						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
+							if ( $value_name === $attribute_value ) {
+								$option_value_id = $value_id;
+								break;
 							}
-							break;
 						}
 					}
 
@@ -391,6 +390,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 						$variation_item_values[] = $option_value_object;
 					}
+
+					++$variation_index;
 				}
 
 				// Set the name of the variation as the combination of all attribute values.
