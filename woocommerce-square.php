@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 4.9.7
+ * Version: 4.9.8
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.7
  * Tested up to: 6.8
@@ -29,7 +29,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '4.9.7' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '4.9.8' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
@@ -42,6 +42,10 @@ if ( ! defined( 'WC_SQUARE_PLUGIN_PATH' ) ) {
 
 if ( ! defined( 'WC_SQUARE_OPTION_ANY' ) ) {
 	define( 'WC_SQUARE_OPTION_ANY', 'Any' );
+}
+
+if ( ! defined( 'WC_SQUARE_SYNC_ORDERS_EVENT_HOOK' ) ) {
+	define( 'WC_SQUARE_SYNC_ORDERS_EVENT_HOOK', 'wc_square_sync_orders' );
 }
 
 /**
