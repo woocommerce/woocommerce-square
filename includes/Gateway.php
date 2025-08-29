@@ -495,6 +495,18 @@ class Gateway extends Payment_Gateway_Direct {
 
 		if ( $response->get_square_order_id() ) {
 			$this->update_order_meta( $order, 'square_order_id', $response->get_square_order_id() );
+
+			// Prepare the Square order URL.
+			$is_sandbox = $this->get_plugin()->get_settings_handler()->is_sandbox();
+			$square_url = $is_sandbox ? 'https://app.squareupsandbox.com/dashboard/orders/overview/' : 'https://app.squareup.com/dashboard/orders/overview/';
+
+			$order->add_order_note(
+				sprintf(
+					// translators: %s is the Square order ID linked to the Square order in the admin.
+					__( 'Square Order ID: %s', 'woocommerce-square' ),
+					'<a href="' . esc_url( $square_url . $response->get_square_order_id() ) . '" target="_blank">' . esc_html( $response->get_square_order_id() ) . '</a>'
+				)
+			);
 		}
 
 		// store the plugin version on the order
