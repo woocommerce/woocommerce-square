@@ -502,8 +502,9 @@ export const ConfigureSync = ( {
 								}
 								onChange={ ( value ) =>
 									setSquareSettingData( {
-										enable_order_fulfillment_sync:
-											value ? 'yes' : 'no',
+										enable_order_fulfillment_sync: value
+											? 'yes'
+											: 'no',
 									} )
 								}
 								label={ __(
