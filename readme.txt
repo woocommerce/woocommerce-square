@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 5.0.0 - 2025-09-02 =
+= 5.0.0 - 2025-09-03 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
 * Fix - Accurately count attribute values – 250 values, not characters.
