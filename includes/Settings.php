@@ -647,7 +647,7 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Determines if order fulfillment sync is enabled.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @return bool
 	 */
@@ -655,7 +655,7 @@ class Settings extends \WC_Settings_API {
 		/**
 		 * Filter to enable/disable order fulfillment sync.
 		 *
-		 * @since 4.9.9
+		 * @since 5.0.0
 		 *
 		 * @param boolean 'should_sync' Boolean flag to toggle order fulfillment sync feature.
 		 */

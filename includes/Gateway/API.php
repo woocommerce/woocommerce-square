@@ -719,7 +719,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Searches for Square orders.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @param array  $location_ids Array of location IDs.
 	 * @param string $start_time   Start time in the RFC 3339 format for the search.

@@ -179,7 +179,7 @@ class Orders extends API\Request {
 	/**
 	 * Sets the fulfillment data for an order.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @param \WC_Order            $order        WooCommerce order object.
 	 * @param \Square\Models\Order $order_model Square order object.
@@ -611,7 +611,7 @@ class Orders extends API\Request {
 	/**
 	 * Sets the data for searching orders.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @param array  $location_ids Array of location IDs to search in.
 	 * @param string $start_time   Start time for the search (ISO 8601 format).
@@ -670,7 +670,7 @@ class Orders extends API\Request {
 	/**
 	 * Check if order fulfillment sync is enabled.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @return bool True if enabled, false otherwise.
 	 */
 	public function is_order_fulfillment_sync_enabled() {
