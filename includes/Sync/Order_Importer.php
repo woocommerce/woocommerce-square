@@ -6,7 +6,7 @@
  * Used by both webhook handlers and scheduled polling.
  *
  * @package WooCommerce\Square\Sync
- * @since 4.9.9
+ * @since 5.0.0
  */
 
 namespace WooCommerce\Square\Sync;
@@ -20,14 +20,14 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class to handle importing Square orders into WooCommerce.
  *
- * @since 4.9.9
+ * @since 5.0.0
  */
 class Order_Importer {
 
 	/**
 	 * Update existing WooCommerce order with Square order data.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param \WC_Order $wc_order Existing WooCommerce order.
 	 * @param \Square\Models\Order $square_order Square order object.
 	 * @return array Update result with 'updated' flag and message.
@@ -130,7 +130,7 @@ class Order_Importer {
 	/**
 	 * Update fulfillment data from Square order.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param \WC_Order $wc_order WooCommerce order.
 	 * @param \Square\Models\Order $square_order Square order.
 	 */
@@ -203,7 +203,7 @@ class Order_Importer {
 	/**
 	 * Find existing WooCommerce order by Square order ID.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param string $square_order_id Square order ID.
 	 * @return \WC_Order|false
 	 */

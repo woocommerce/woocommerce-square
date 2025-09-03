@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The Search Orders API response object.
  *
- * @since 4.9.9
+ * @since 5.0.0
  *
  * @method \Square\Models\SearchOrdersResponse get_data()
  */
@@ -16,7 +16,7 @@ class Search_Orders extends \WooCommerce\Square\Gateway\API\Response {
 	/**
 	 * Gets the orders from the response.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @return array
 	 */
@@ -28,7 +28,7 @@ class Search_Orders extends \WooCommerce\Square\Gateway\API\Response {
 	/**
 	 * Gets the cursor for pagination.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @return string
 	 */
@@ -40,7 +40,7 @@ class Search_Orders extends \WooCommerce\Square\Gateway\API\Response {
 	/**
 	 * Gets the response data as an array with orders and cursor.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 *
 	 * @return array
 	 */
