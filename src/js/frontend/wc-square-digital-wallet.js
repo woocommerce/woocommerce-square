@@ -175,11 +175,26 @@ jQuery( document ).ready( ( $ ) => {
 				/**
 				 * Create a Google Pay button in the target element.
 				 */
-				this.googlePay.attach( '#wc-square-google-pay', {
-					buttonSizeMode: 'fill',
-					buttonType: 'long',
-					buttonColor: this.args.google_pay_color,
-				} );
+				this.googlePay
+					.attach( '#wc-square-google-pay', {
+						buttonSizeMode: 'fill',
+						buttonType: 'long',
+						buttonColor: this.args.google_pay_color,
+					} )
+					.then( () => {
+						// Append 'opens in a new window' to the aria-label of the Google Pay button.
+						const button = $(
+							'#wc-square-google-pay button'
+						).first();
+						if ( button.length > 0 ) {
+							button.attr(
+								'aria-label',
+								`${ button.attr( 'aria-label' ) || '' } (${
+									this.args.opens_in_new_window_text
+								})`
+							);
+						}
+					} );
 
 				/**
 				 * Click event handler for when the Google Pay button is clicked.
