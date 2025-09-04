@@ -142,7 +142,8 @@ export function useGooglePay( payments, paymentRequest ) {
 							googlePayRef.current.querySelector( 'button' );
 						if ( button ) {
 							const existingAriaLabel =
-								button.getAttribute( 'aria-label' ) || '';
+								button.getAttribute( 'aria-label' ) ||
+								__( 'Buy with GPay', 'woocommerce-square' );
 							const opensInNewWindowText = __(
 								'opens in a new window',
 								'woocommerce-square'

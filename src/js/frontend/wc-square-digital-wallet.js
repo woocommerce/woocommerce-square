@@ -188,7 +188,8 @@ jQuery( document ).ready( ( $ ) => {
 						).first();
 						if ( button.length > 0 ) {
 							const existingAriaLabel =
-								button.attr( 'aria-label' ) || '';
+								button.attr( 'aria-label' ) ||
+								this.args.buy_with_gpay_text;
 							button.attr(
 								'aria-label',
 								`${ existingAriaLabel } (${ this.args.opens_in_new_window_text })`
