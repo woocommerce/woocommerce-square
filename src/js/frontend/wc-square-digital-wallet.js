@@ -187,11 +187,11 @@ jQuery( document ).ready( ( $ ) => {
 							'#wc-square-google-pay button'
 						).first();
 						if ( button.length > 0 ) {
+							const existingAriaLabel =
+								button.attr( 'aria-label' ) || '';
 							button.attr(
 								'aria-label',
-								`${ button.attr( 'aria-label' ) || '' } (${
-									this.args.opens_in_new_window_text
-								})`
+								`${ existingAriaLabel } (${ this.args.opens_in_new_window_text })`
 							);
 						}
 					} );
