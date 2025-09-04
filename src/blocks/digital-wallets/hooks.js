@@ -8,6 +8,7 @@ import {
 	verifyBuyer,
 	buildVerificationDetails,
 } from './utils';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Initialises Square.
@@ -129,11 +130,29 @@ export function useGooglePay( payments, paymentRequest ) {
 		( async () => {
 			try {
 				const __googlePay = await payments.googlePay( paymentRequest );
-				await __googlePay.attach( googlePayRef.current, {
-					buttonColor: getSquareServerData().googlePayColor,
-					buttonSizeMode: 'fill',
-					buttonType: 'long',
-				} );
+				await __googlePay
+					.attach( googlePayRef.current, {
+						buttonColor: getSquareServerData().googlePayColor,
+						buttonSizeMode: 'fill',
+						buttonType: 'long',
+					} )
+					.then( () => {
+						// Append 'opens in a new window' to the aria-label of the Google Pay button.
+						const button =
+							googlePayRef.current.querySelector( 'button' );
+						if ( button ) {
+							const opensInNewWindowText = __(
+								'opens in a new window',
+								'woocommerce-square'
+							);
+							button.setAttribute(
+								'aria-label',
+								`${
+									button.getAttribute( 'aria-label' ) || ''
+								} (${ opensInNewWindowText })`
+							);
+						}
+					} );
 
 				setGooglePay( __googlePay );
 			} catch ( e ) {}
