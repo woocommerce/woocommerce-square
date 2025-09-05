@@ -51,6 +51,8 @@ const getSquareServerData = () => {
 		shouldChargeOrderNonce: squareData.should_charge_order_nonce || '',
 		isChangePaymentMethod: squareData.is_change_payment_method || false,
 		orderId: squareData.order_id || '',
+		opensInNewWindowText: squareData.opens_in_new_window_text || '',
+		buyWithGpayText: squareData.buy_with_gpay_text || '',
 	};
 
 	return cachedSquareData;

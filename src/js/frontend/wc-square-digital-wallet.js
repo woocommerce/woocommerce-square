@@ -192,7 +192,7 @@ jQuery( document ).ready( ( $ ) => {
 								this.args.buy_with_gpay_text;
 							button.attr(
 								'aria-label',
-								`${ existingAriaLabel } (${ this.args.opens_in_new_window_text })`
+								`${ existingAriaLabel }, ${ this.args.opens_in_new_window_text }`
 							);
 						}
 					} );

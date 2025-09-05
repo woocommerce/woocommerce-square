@@ -8,7 +8,6 @@ import {
 	verifyBuyer,
 	buildVerificationDetails,
 } from './utils';
-import { __ } from '@wordpress/i18n';
 
 /**
  * Initialises Square.
@@ -141,16 +140,14 @@ export function useGooglePay( payments, paymentRequest ) {
 						const button =
 							googlePayRef.current.querySelector( 'button' );
 						if ( button ) {
+							const opensInNewWindowText =
+								getSquareServerData().opensInNewWindowText;
 							const existingAriaLabel =
 								button.getAttribute( 'aria-label' ) ||
-								__( 'Buy with GPay', 'woocommerce-square' );
-							const opensInNewWindowText = __(
-								'opens in a new window',
-								'woocommerce-square'
-							);
+								getSquareServerData().buyWithGpayText;
 							button.setAttribute(
 								'aria-label',
-								`${ existingAriaLabel } (${ opensInNewWindowText })`
+								`${ existingAriaLabel }, ${ opensInNewWindowText }`
 							);
 						}
 					} );
