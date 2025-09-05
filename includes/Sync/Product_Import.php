@@ -661,7 +661,7 @@ class Product_Import extends Stepped_Job {
 			$options = $catalog_object->getItemData()->getItemOptions() ? $catalog_object->getItemData()->getItemOptions() : array();
 
 			if ( count( $options ) ) {
-				$data['attributes']                      = $this->extract_attributes_from_square_options( $options );
+				$data['attributes']                      = $this->extract_attributes_from_square_options( $options, $data['variations'] );
 				$data['custom_meta']['_dynamic_options'] = true;
 			} else {
 				$data['attributes']                      = $this->extract_attributes_from_square_variations( $data['variations'] );
@@ -807,13 +807,30 @@ class Product_Import extends Stepped_Job {
 	 *
 	 * @since 4.9.0
 	 *
-	 * @param array $data the product data
-	 * @return int
+	 * @param array $options    the Square options
+	 * @param array $variations the product variations to determine which option values are actually used
+	 * @return array
 	 * @throws \Exception
 	 */
-	protected function extract_attributes_from_square_options( $options ) {
+	protected function extract_attributes_from_square_options( $options, $variations = array() ) {
 
 		$data_attributes = array();
+
+		// Collect all option values that are actually used by variations.
+		$used_option_values = array();
+		foreach ( $variations as $variation ) {
+			if ( isset( $variation['attributes'] ) ) {
+				foreach ( $variation['attributes'] as $attribute ) {
+					if ( isset( $attribute['name'] ) && isset( $attribute['option'] ) ) {
+						$attribute_name = $attribute['name'];
+						if ( ! isset( $used_option_values[ $attribute_name ] ) ) {
+							$used_option_values[ $attribute_name ] = array();
+						}
+						$used_option_values[ $attribute_name ][] = $attribute['option'];
+					}
+				}
+			}
+		}
 
 		foreach ( $options as $option ) {
 			$option_id = $option->getItemOptionId();
@@ -845,12 +862,20 @@ class Product_Import extends Stepped_Job {
 				set_transient( 'wc_square_options_data', $options_data );
 			}
 
+			// Filter option values to only include those actually used by variations.
+			$clean_option_name = str_replace( 'pa_', '', $option_name );
+			$filtered_values   = $option_values;
+
+			if ( isset( $used_option_values[ $clean_option_name ] ) ) {
+				$filtered_values = array_intersect( $option_values, array_unique( $used_option_values[ $clean_option_name ] ) );
+			}
+
 			$data_attributes[] = array(
-				'name'      => str_replace( 'pa_', '', $option_name ),
+				'name'      => $clean_option_name,
 				'slug'      => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
 				'visible'   => true,
 				'variation' => true,
-				'options'   => $option_values,
+				'options'   => $filtered_values,
 				'pa_prefix' => strpos( $option_name, 'pa_' ) !== false,
 			);
 		}
