@@ -819,7 +819,7 @@ class Product_Import extends Stepped_Job {
 		// Collect all option values that are actually used by variations.
 		$used_option_values = array();
 		foreach ( $variations as $variation ) {
-			if ( isset( $variation['attributes'] ) ) {
+			if ( isset( $variation['attributes'] ) && is_array( $variation['attributes'] ) ) {
 				foreach ( $variation['attributes'] as $attribute ) {
 					if ( isset( $attribute['name'] ) && isset( $attribute['option'] ) ) {
 						$attribute_name = $attribute['name'];
