@@ -47,6 +47,7 @@ export const ConfigureSync = ( {
 		hide_missing_products = 'no',
 		sync_interval = '0.25',
 		is_connected = false,
+		enable_order_fulfillment_sync = 'no',
 	} = settings;
 
 	const sync_interval_options = [
@@ -482,6 +483,36 @@ export const ConfigureSync = ( {
 								) }
 							</>
 						) }
+
+						<InputWrapper
+							label={ __(
+								'Order Fulfillment Sync',
+								'woocommerce-square'
+							) }
+							description={ __(
+								'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.',
+								'woocommerce-square'
+							) }
+							indent={ indent }
+						>
+							<SquareCheckboxControl
+								data-testid="order-fulfillment-sync-field"
+								checked={
+									enable_order_fulfillment_sync === 'yes'
+								}
+								onChange={ ( value ) =>
+									setSquareSettingData( {
+										enable_order_fulfillment_sync: value
+											? 'yes'
+											: 'no',
+									} )
+								}
+								label={ __(
+									'Enable bidirectional order fulfillment sync',
+									'woocommerce-square'
+								) }
+							/>
+						</InputWrapper>
 					</div>
 				</Section>
 			) }

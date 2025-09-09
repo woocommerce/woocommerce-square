@@ -119,6 +119,8 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	locations: [],
 	enable_customer_decline_messages: 'no',
 	debug_mode: 'off',
+	debug_logging_enabled: 'no',
+	enable_order_fulfillment_sync: 'no',
 };
 
 const squareSettingsReducer = (

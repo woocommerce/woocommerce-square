@@ -25,6 +25,7 @@ use WooCommerce\Square\API;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Utilities\Money_Utility;
+use Square\Models\FulfillmentType;
 
 /**
  * The Orders API request class.
@@ -65,7 +66,7 @@ class Orders extends API\Request {
 		}
 
 		// Set the data.
-		$this->set_order_data( $order, $order_model );
+		$this->set_order_data( $order, $order_model, 'create' );
 	}
 
 	/**
@@ -112,11 +113,17 @@ class Orders extends API\Request {
 	 *
 	 * @since 3.7.0
 	 *
-	 * @param \WC_Order            $order        WooCommerce order object.
-	 * @param \Square\Models\Order $square_order Square order object.
+	 * @param \WC_Order            $order              WooCommerce order object.
+	 * @param \Square\Models\Order $square_order       Square order object.
+	 * @param string               $order_request_type The type of order request.
 	 */
-	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model ) {
+	public function set_order_data( \WC_Order $order, \Square\Models\Order $order_model, $order_request_type = 'update' ) {
 		$order_model->setReferenceId( $order->get_order_number() );
+
+		// Set fulfillment data for create order request if order sync is enabled.
+		if ( $this->is_order_fulfillment_sync_enabled() && 'create' === $order_request_type ) {
+			$order_model = $this->set_fulfillment_data( $order, $order_model );
+		}
 
 		$taxes          = $this->get_order_taxes( $order );
 		$all_line_items = $this->get_api_line_items(
@@ -167,6 +174,92 @@ class Orders extends API\Request {
 		$this->square_request->setOrder( $order_model );
 
 		$this->square_api_args = array( $this->square_request );
+	}
+
+	/**
+	 * Sets the fulfillment data for an order.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @param \WC_Order            $order        WooCommerce order object.
+	 * @param \Square\Models\Order $order_model Square order object.
+	 * @return \Square\Models\Order
+	 */
+	protected function set_fulfillment_data( \WC_Order $order, \Square\Models\Order $order_model ) {
+		$order_model->setState( 'OPEN' );
+
+		// Create comprehensive fulfillment object.
+		$fulfillment = new \Square\Models\OrderFulfillment();
+		$fulfillment->setState( 'PROPOSED' );
+		$fulfillment->setUid( wc_square()->get_idempotency_key( '', false ) );
+
+		// Determine fulfillment type based on shipping method.
+		$shipping_methods = $order->get_shipping_methods();
+		$fulfillment_type = empty( $shipping_methods ) ? FulfillmentType::PICKUP : FulfillmentType::SHIPMENT;
+		$fulfillment->setType( $fulfillment_type );
+
+		// Add fulfillment details based on type.
+		if ( FulfillmentType::SHIPMENT === $fulfillment_type ) {
+			$shipment_details = new \Square\Models\OrderFulfillmentShipmentDetails();
+
+			// Add recipient information.
+			$recipient = new \Square\Models\OrderFulfillmentRecipient();
+			$recipient->setDisplayName( trim( $order->get_formatted_shipping_full_name() ) );
+			$recipient->setPhoneNumber( $order->get_billing_phone() );
+
+			// Add shipping address.
+			$shipping_address = new \Square\Models\Address();
+			$shipping_address->setAddressLine1( $order->get_shipping_address_1() );
+			$shipping_address->setAddressLine2( $order->get_shipping_address_2() );
+			$shipping_address->setLocality( $order->get_shipping_city() );
+			$shipping_address->setAdministrativeDistrictLevel1( $order->get_shipping_state() );
+			$shipping_address->setPostalCode( $order->get_shipping_postcode() );
+			$shipping_address->setCountry( $order->get_shipping_country() );
+			$recipient->setAddress( $shipping_address );
+
+			$shipment_details->setRecipient( $recipient );
+
+			// Add shipping method as carrier if available.
+			foreach ( $shipping_methods as $shipping_method ) {
+				$shipment_details->setCarrier( $shipping_method->get_method_title() );
+				break; // Use first shipping method.
+			}
+
+			$fulfillment->setShipmentDetails( $shipment_details );
+
+		} elseif ( FulfillmentType::PICKUP === $fulfillment_type ) {
+			$pickup_details = new \Square\Models\OrderFulfillmentPickupDetails();
+			$pickup_details->setScheduleType( 'ASAP' );
+
+			// Add recipient information for pickup.
+			$recipient = new \Square\Models\OrderFulfillmentRecipient();
+			$recipient->setDisplayName( trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ) );
+			$recipient->setPhoneNumber( $order->get_billing_phone() );
+
+			// Use billing address for pickup.
+			$pickup_address = new \Square\Models\Address();
+			$pickup_address->setAddressLine1( $order->get_billing_address_1() );
+			$pickup_address->setAddressLine2( $order->get_billing_address_2() );
+			$pickup_address->setLocality( $order->get_billing_city() );
+			$pickup_address->setAdministrativeDistrictLevel1( $order->get_billing_state() );
+			$pickup_address->setPostalCode( $order->get_billing_postcode() );
+			$pickup_address->setCountry( $order->get_billing_country() );
+			$recipient->setAddress( $pickup_address );
+
+			$pickup_details->setRecipient( $recipient );
+
+			// Add customer note if available.
+			if ( $order->get_customer_note() ) {
+				$pickup_details->setNote( Square_Helper::str_truncate( $order->get_customer_note(), 500 ) );
+			}
+
+			$fulfillment->setPickupDetails( $pickup_details );
+		}
+
+		// Set the fulfillment on the order.
+		$order_model->setFulfillments( array( $fulfillment ) );
+
+		return $order_model;
 	}
 
 	/**
@@ -513,6 +606,75 @@ class Orders extends API\Request {
 			$order->square_order_id,
 			$this->square_request,
 		);
+	}
+
+	/**
+	 * Sets the data for searching orders.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @param array  $location_ids Array of location IDs to search in.
+	 * @param string $start_time   Start time for the search (ISO 8601 format).
+	 * @param int    $limit        Maximum number of orders to return.
+	 * @param string $cursor       Cursor for pagination.
+	 * @param string $end_time     Optional end time for the search (ISO 8601 format).
+	 */
+	public function set_search_orders_data( $location_ids, $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
+
+		$this->square_api_method = 'searchOrders';
+		$this->square_request    = new \Square\Models\SearchOrdersRequest();
+
+		$this->square_request->setLocationIds( $location_ids );
+		$this->square_request->setLimit( $limit );
+
+		// Set cursor for pagination if provided.
+		if ( ! empty( $cursor ) ) {
+			$this->square_request->setCursor( $cursor );
+		}
+
+		// Create the query object.
+		$query = new \Square\Models\SearchOrdersQuery();
+
+		// Create the filter.
+		$filter = new \Square\Models\SearchOrdersFilter();
+
+		// Set date filter with bounded time window.
+		$date_filter = new \Square\Models\SearchOrdersDateTimeFilter();
+		$time_range  = new \Square\Models\TimeRange();
+		$time_range->setStartAt( $start_time );
+
+		// If end time is provided, set it to create a bounded time window.
+		if ( ! empty( $end_time ) ) {
+			$time_range->setEndAt( $end_time );
+		}
+
+		$date_filter->setUpdatedAt( $time_range );
+		$filter->setDateTimeFilter( $date_filter );
+
+		// Set states filter - only get OPEN and COMPLETED orders.
+		$state_filter = new \Square\Models\SearchOrdersStateFilter( array( 'OPEN', 'COMPLETED', 'CANCELED' ) );
+		$filter->setStateFilter( $state_filter );
+
+		$query->setFilter( $filter );
+
+		// Set sort.
+		$sort = new \Square\Models\SearchOrdersSort( 'UPDATED_AT' );
+		$sort->setSortOrder( 'ASC' );
+		$query->setSort( $sort );
+
+		$this->square_request->setQuery( $query );
+
+		$this->square_api_args = array( $this->square_request );
+	}
+
+	/**
+	 * Check if order fulfillment sync is enabled.
+	 *
+	 * @since 5.0.0
+	 * @return bool True if enabled, false otherwise.
+	 */
+	public function is_order_fulfillment_sync_enabled() {
+		return wc_square()->get_settings_handler()->is_order_fulfillment_sync_enabled();
 	}
 
 }
