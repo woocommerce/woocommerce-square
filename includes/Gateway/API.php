@@ -716,6 +716,43 @@ class API extends \WooCommerce\Square\API {
 		return $this->perform_request( $request );
 	}
 
+	/**
+	 * Searches for Square orders.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @param array  $location_ids Array of location IDs.
+	 * @param string $start_time   Start time in the RFC 3339 format for the search.
+	 * @param int    $limit        Number of orders to retrieve.
+	 * @param string $cursor       Cursor for pagination.
+	 * @param string $end_time     Optional end time in the RFC 3339 format for the search.
+	 *
+	 * @return array Array containing orders and cursor.
+	 *
+	 * @throws \Exception
+	 */
+	public function search_orders( $location_ids = array(), $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
+
+		$request = new API\Requests\Orders( $this->client );
+
+		$request->set_search_orders_data( $location_ids, $start_time, $limit, $cursor, $end_time );
+
+		$this->set_response_handler( API\Responses\Search_Orders::class );
+
+		$response = $this->perform_request( $request );
+
+		if ( $response->get_data() instanceof \Square\Models\SearchOrdersResponse ) {
+			return $response->get_response_data();
+		}
+
+		throw new \Exception(
+			sprintf(
+				/* translators: %s: Error details from the searchOrders request. */
+				esc_html__( 'Failed to make request searchOrders: %s', 'woocommerce-square' ),
+				esc_html( $response->get_data() )
+			)
+		);
+	}
 
 	/**
 	 * Validates the parsed response.

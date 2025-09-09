@@ -34,6 +34,7 @@ use WooCommerce\Square\Handlers\Background_Job;
 use WooCommerce\Square\Handlers\Async_Request;
 use WooCommerce\Square\Handlers\Email;
 use WooCommerce\Square\Handlers\Order;
+use WooCommerce\Square\Handlers\Order_Sync;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Handlers\Sync;
 use WooCommerce\Square\Handlers\Products;
@@ -94,6 +95,9 @@ class Plugin extends Payment_Gateway_Plugin {
 	/** @var Async_Request Asynchronous request handler */
 	private $async_request_handler;
 
+	/** @var Order_Sync order sync handler */
+	private $order_sync_handler;
+
 	/**
 	 * Constructs the plugin.
 	 *
@@ -140,6 +144,21 @@ class Plugin extends Payment_Gateway_Plugin {
 		add_action( 'action_scheduler_init', array( $this, 'schedule_token_migration_job' ) );
 		add_action( 'wc_square_init_payment_token_migration_v2', array( $this, 'register_payment_tokens_migration_scheduler' ) );
 		add_action( 'wc_square_init_payment_token_migration', '__return_false' );
+
+		// Unschedule order sync event if order sync is disabled.
+		add_action( 'admin_init', array( $this, 'unschedule_order_sync' ) );
+	}
+
+	/**
+	 * Unschedule order sync event if order sync is disabled.
+	 *
+	 * @since 5.0.0
+	 */
+	public function unschedule_order_sync() {
+		if ( ! $this->get_settings_handler()->is_order_fulfillment_sync_enabled() && as_has_scheduled_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() ) ) {
+			// Delete the order sync event.
+			as_unschedule_all_actions( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() );
+		}
 	}
 
 	/**
@@ -253,6 +272,12 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		if ( ! $this->admin_handler && is_admin() ) {
 			$this->admin_handler = new Admin( $this );
+		}
+
+		// Initialize order sync handler if order sync is enabled.
+		if ( $this->get_settings_handler()->is_order_fulfillment_sync_enabled() ) {
+			$this->order_sync_handler = new Order_Sync();
+			$this->order_sync_handler->init();
 		}
 
 		// WooPayments compatibility.
@@ -785,6 +810,17 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function get_async_request_handler() {
 		return $this->async_request_handler;
+	}
+
+	/**
+	 * Gets the order sync handler instance.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return Order_Sync
+	 */
+	public function get_order_sync_handler() {
+		return $this->order_sync_handler;
 	}
 
 	/**

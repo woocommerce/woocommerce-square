@@ -177,6 +177,11 @@ class Category {
 
 			$inserted_term = wp_insert_term( $name, 'product_cat' );
 
+			if ( is_wp_error( $inserted_term ) ) {
+				wc_square()->log( 'Error inserting category: ' . $inserted_term->get_error_message() );
+				return null;
+			}
+
 			$category_id = isset( $inserted_term['term_id'] ) ? $inserted_term['term_id'] : null;
 		}
 

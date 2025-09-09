@@ -644,6 +644,24 @@ class Settings extends \WC_Settings_API {
 		return (bool) apply_filters( 'wc_square_override_product_images_enabled', 'yes' === $this->get_option( 'override_product_images' ) );
 	}
 
+	/**
+	 * Determines if order fulfillment sync is enabled.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return bool
+	 */
+	public function is_order_fulfillment_sync_enabled() {
+		/**
+		 * Filter to enable/disable order fulfillment sync.
+		 *
+		 * @since 5.0.0
+		 *
+		 * @param boolean 'should_sync' Boolean flag to toggle order fulfillment sync feature.
+		 */
+		return (bool) apply_filters( 'wc_square_order_fulfillment_sync_enabled', 'yes' === $this->get_option( 'enable_order_fulfillment_sync' ) );
+	}
+
 
 	/**
 	 * Determines if product sync is enabled.
