@@ -612,9 +612,9 @@ class Product_Import extends Stepped_Job {
 			'custom_meta' => array(),
 		);
 
-		// Process multiple categories from Square
-		$item_data  = $catalog_object->getItemData();
-		$categories = array();
+		// Process multiple categories from Square.
+		$item_data            = $catalog_object->getItemData();
+		$categories           = array();
 		$missing_category_ids = array();
 
 		if ( $item_data->getCategories() && is_array( $item_data->getCategories() ) ) {
