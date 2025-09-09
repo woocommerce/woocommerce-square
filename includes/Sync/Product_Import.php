@@ -558,8 +558,6 @@ class Product_Import extends Stepped_Job {
 			return null;
 		}
 
-		$square_category_id  = Category::get_square_category_id( $catalog_object->getItemData() );
-		$category_id         = Category::get_category_id_by_square_id( $square_category_id );
 		$product_name        = $catalog_object->getItemData()->getName();
 		$product_description = Product::get_catalog_item_description( $catalog_object->getItemData() );
 
@@ -600,13 +598,29 @@ class Product_Import extends Stepped_Job {
 			'sku'         => '', // make sure to reset SKU when simple product is updated to variable.
 			'description' => $product_description,
 			'image_id'    => Product::get_catalog_item_thumbnail_id( $catalog_object ),
-			'categories'  => array( $category_id ),
+			'categories'  => array(), // Will be populated below.
 			'square_meta' => array(
 				'item_id'      => $catalog_object->getId(),
 				'item_version' => $catalog_object->getVersion(),
 			),
 			'custom_meta' => array(),
 		);
+
+		// Process multiple categories from Square
+		$item_data  = $catalog_object->getItemData();
+		$categories = array();
+		if ( $item_data->getCategories() && is_array( $item_data->getCategories() ) ) {
+			foreach ( $item_data->getCategories() as $category ) {
+				if ( $category instanceof \Square\Models\CatalogObjectCategory ) {
+					// $category_id = Category::import_or_update( $category );
+					$category_id = Category::get_category_id_by_square_id( $category->getId() );
+					if ( $category_id ) {
+						$categories[] = $category_id;
+					}
+				}
+			}
+		}
+		$data['categories'] = array_unique( $categories );
 
 		// variable product
 		if ( 'variable' === $data['type'] ) {
