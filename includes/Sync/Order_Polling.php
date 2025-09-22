@@ -5,7 +5,7 @@
  * Handles scheduled polling to sync orders from Square to WooCommerce.
  *
  * @package WooCommerce\Square\Sync
- * @since 4.9.9
+ * @since 5.0.0
  */
 
 namespace WooCommerce\Square\Sync;
@@ -15,13 +15,13 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Order Polling Class.
  *
- * @since 4.9.9
+ * @since 5.0.0
  */
 class Order_Polling {
 	/**
 	 * Initialize the polling system.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 */
 	public function __construct() {
 		// Add action to schedule polling.
@@ -34,7 +34,7 @@ class Order_Polling {
 	/**
 	 * Maybe schedule the polling Action Scheduler job.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 */
 	public function maybe_schedule_polling() {
 		if ( false === as_next_scheduled_action( WC_SQUARE_SYNC_ORDERS_EVENT_HOOK, array(), wc_square()->get_id() ) ) {
@@ -45,7 +45,7 @@ class Order_Polling {
 	/**
 	 * Schedule the polling Action Scheduler job.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 */
 	public function schedule_polling() {
 		$interval = $this->get_polling_interval_seconds();
@@ -58,7 +58,7 @@ class Order_Polling {
 	/**
 	 * Poll Square for new orders.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 */
 	public function poll_square_orders() {
 		// Capture sync start time to avoid missing orders updated during sync.
@@ -92,7 +92,7 @@ class Order_Polling {
 	/**
 	 * Fetch recent Square orders.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param string $sync_start_time Optional sync start time for bounded time window.
 	 * @return array Array of Square order objects.
 	 */
@@ -120,7 +120,7 @@ class Order_Polling {
 	/**
 	 * Search Square orders since a specific time with bounded time window.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param \WooCommerce\Square\Gateway\API $api API instance.
 	 * @param string                          $since_time ISO 8601 timestamp.
 	 * @param string                          $sync_start_time Optional sync start time for bounded time window.
@@ -181,7 +181,7 @@ class Order_Polling {
 	/**
 	 * Process Square orders to create or update WooCommerce orders.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param array $square_orders Array of Square order objects.
 	 */
 	private function process_square_orders( $square_orders ) {
@@ -280,14 +280,14 @@ class Order_Polling {
 	/**
 	 * Get polling interval in seconds.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @return int
 	 */
 	private function get_polling_interval_seconds() {
 		/**
 		 * Filters the polling interval in seconds for Square orders.
 		 *
-		 * @since 4.9.9
+		 * @since 5.0.0
 		 * @param int $interval The polling interval in seconds.
 		 * @return int The polling interval in seconds.
 		 */
@@ -297,7 +297,7 @@ class Order_Polling {
 	/**
 	 * Get last polling time.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @return string ISO 8601 timestamp.
 	 */
 	private function get_last_polling_time() {
@@ -320,7 +320,7 @@ class Order_Polling {
 	/**
 	 * Update last polling time.
 	 *
-	 * @since 4.9.9
+	 * @since 5.0.0
 	 * @param string $timestamp Optional timestamp to set. Defaults to current time.
 	 */
 	private function update_last_polling_time( $timestamp = null ) {
