@@ -978,6 +978,11 @@ class Order {
 	 * @return array
 	 */
 	public function filter_order_item_totals( $total_rows, $order ) {
+		// Ensure $order is an instance of WC_Order before calling get_payment_method().
+		if ( ! $order instanceof \WC_Order ) {
+			return $total_rows;
+		}
+
 		$charge_type = wc_square()->get_gateway( $order->get_payment_method() )->get_order_meta( $order, 'charge_type' );
 
 		if ( Payment_Gateway::CHARGE_TYPE_PARTIAL !== $charge_type ) {
