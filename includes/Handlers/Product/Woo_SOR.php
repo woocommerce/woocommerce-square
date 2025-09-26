@@ -59,7 +59,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		$item_data->setName( $product->get_name() );
 		$item_data->setDescriptionHtml( $product->get_description() );
 
-		$square_category_id = 0;
+		$square_categories  = array();
+		$reporting_category = null;
 
 		foreach ( $product->get_category_ids() as $category_id ) {
 
@@ -67,18 +68,23 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 			if ( ! empty( $map['square_id'] ) ) {
 
-				$square_category_id = $map['square_id'];
-				break;
+				$square_category = new \Square\Models\CatalogObjectCategory();
+				$square_category->setId( $map['square_id'] );
+				$square_categories[] = $square_category;
+
+				if ( ! $reporting_category ) {
+					$reporting_category = $square_category;
+				}
 			}
 		}
 
-		// if a category with a Square ID was found
-		if ( $square_category_id ) {
-			$square_category = new \Square\Models\CatalogObjectCategory();
-			$square_category->setId( $square_category_id );
-			$item_data->setCategories( array( $square_category ) );
-			// Set the reporting category.
-			$item_data->setReportingCategory( $square_category );
+		// if categories with Square IDs were found
+		if ( ! empty( $square_categories ) ) {
+			$item_data->setCategories( $square_categories );
+
+			if ( $reporting_category ) {
+				$item_data->setReportingCategory( $reporting_category );
+			}
 		}
 
 		// Only use attributes that are used for variations.
