@@ -2,7 +2,6 @@
  * External dependencies.
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { ToggleControl } from '@wordpress/components';
 import parse from 'html-react-parser';
 
 /**
@@ -27,8 +26,7 @@ export const AdvancedSettings = () => {
 		stepData: { step },
 	} = useSteps();
 
-	const { enable_customer_decline_messages, debug_logging_enabled = 'no' } =
-		settings;
+	const { enable_customer_decline_messages } = settings;
 
 	if ( ! squareSettingsLoaded ) {
 		return null;
@@ -86,33 +84,6 @@ export const AdvancedSettings = () => {
 					</InputWrapper>
 
 					<DebugMode />
-
-					<InputWrapper
-						label={ __( 'Enable Logging', 'woocommerce-square' ) }
-						variant="boxed"
-						description={ parse(
-							sprintf(
-								/* translators: %1$s and %2$s are HTML tags for the link to the WooCommerce status log */
-								__(
-									'Log debug messages to the %1$sWooCommerce status log%2$s',
-									'woocommerce-square'
-								),
-								`<a href="${ wcSquareSettings.adminUrl }admin.php?page=wc-status&tab=logs">`, // eslint-disable-line no-undef
-								'</a>'
-							)
-						) }
-					>
-						<ToggleControl
-							checked={ debug_logging_enabled === 'yes' }
-							onChange={ ( enabled ) =>
-								setSquareSettingData( {
-									debug_logging_enabled: enabled
-										? 'yes'
-										: 'no',
-								} )
-							}
-						/>
-					</InputWrapper>
 				</div>
 			</Section>
 		</>

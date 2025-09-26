@@ -73,6 +73,15 @@ class Settings extends \WC_Settings_API {
 	/** Debug mode disabled */
 	const DEBUG_MODE_OFF = 'off';
 
+	/** Debug mode log non-payment errors */
+	const DEBUG_MODE_LOG_NON_PAYMENT_ERRORS = 'non-payment-save-to-log';
+
+	/** Debug mode show payment errors on Checkout, log non-payment errors */
+	const DEBUG_MODE_SHOW_PAYMENT_LOG_NON_PAYMENT = 'payment-show-and-non-payment-save-to-log';
+
+	/** Debug mode log all errors */
+	const DEBUG_MODE_LOG_ALL_ERRORS = 'all-errors-save-to-log';
+
 	/**
 	 * Refresh token
 	 *
@@ -101,6 +110,13 @@ class Settings extends \WC_Settings_API {
 	 */
 	protected $plugin;
 
+	/**
+	 * The current debug mode.
+	 *
+	 * @var string Returns from the settings.
+	 */
+	private $debug_mode;
+
 
 	/**
 	 * Constructs the class.
@@ -111,9 +127,11 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function __construct( Plugin $plugin ) {
 
-		$this->plugin    = $plugin;
-		$this->plugin_id = 'wc_';
-		$this->id        = $plugin->get_id();
+		$this->plugin     = $plugin;
+		$this->plugin_id  = 'wc_';
+		$this->id         = $plugin->get_id();
+		$square_settings  = get_option( 'wc_square_settings', array() );
+		$this->debug_mode = $square_settings['debug_mode'] ?? 'off';
 
 		add_action( 'init', array( $this, 'init' ) );
 
@@ -758,8 +776,9 @@ class Settings extends \WC_Settings_API {
 	 * @return bool
 	 */
 	public function is_debug_enabled() {
-
-		return 'yes' === $this->get_option( 'debug_logging_enabled' );
+		return self::DEBUG_MODE_LOG_NON_PAYMENT_ERRORS === $this->debug_mode
+			|| self::DEBUG_MODE_SHOW_PAYMENT_LOG_NON_PAYMENT === $this->debug_mode
+			|| self::DEBUG_MODE_LOG_ALL_ERRORS === $this->debug_mode;
 	}
 
 
