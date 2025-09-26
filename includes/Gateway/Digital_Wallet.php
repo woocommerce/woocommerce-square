@@ -153,6 +153,8 @@ class Digital_Wallet {
 				'google_pay_color'         => $this->gateway->get_option( 'digital_wallets_google_pay_button_color', 'black' ),
 				'apple_pay_color'          => $this->gateway->get_option( 'digital_wallets_apple_pay_button_color', 'black' ),
 				'apple_pay_type'           => $this->gateway->get_option( 'digital_wallets_button_type', 'buy' ),
+				'buy_with_gpay_text'       => __( 'Buy with GPay', 'woocommerce-square' ),
+				'opens_in_new_window_text' => __( 'opens in a new window', 'woocommerce-square' ),
 			);
 		}
 
