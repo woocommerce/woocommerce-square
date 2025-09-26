@@ -370,7 +370,9 @@ class Orders extends API\Request {
 		/** @var \WC_Order_Item_Product $item */
 		foreach ( $line_items as $item ) {
 			$is_product = $item instanceof \WC_Order_Item_Product;
-			$line_item  = new \Square\Models\OrderLineItem( $is_product ? (string) $item->get_quantity() : (string) 1 );
+			// Plugins can make the quantity a float, eg https://wordpress.org/plugins/decimal-product-quantity-for-woocommerce/
+			$quantity  = $is_product ? (float) $item->get_quantity() : 1;
+			$line_item = new \Square\Models\OrderLineItem( (string) $quantity );
 
 			if ( $is_product && Product::is_gift_card( $item->get_product() ) ) {
 				$line_item->setItemType( 'GIFT_CARD' );
@@ -386,9 +388,13 @@ class Orders extends API\Request {
 			}
 
 			// Subtotal per quantity.
-			$subtotal_amount = $subtotal_amount / absint( $item->get_quantity() );
+			if ( $quantity > 0 ) {
+				$subtotal_amount = $subtotal_amount / $quantity;
+			} else {
+				$subtotal_amount = 0;
+			}
 
-			$line_item->setQuantity( $is_product ? (string) $item->get_quantity() : (string) 1 );
+			$line_item->setQuantity( (string) $quantity );
 			$line_item->setBasePriceMoney( Money_Utility::amount_to_money( $subtotal_amount, $order->get_currency() ) );
 
 			if ( $is_product && $item->get_meta( Product::SQUARE_VARIATION_ID_META_KEY ) ) {
