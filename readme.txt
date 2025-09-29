@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 5.0.0
+Stable tag: 5.1.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.1.0 - 2025-09-29 =
+* Add - Support for multiple categories in WooCommerce-Square product synchronization.
+* Add - Improve debugging with more options and verbose descriptions.
+* Fix - Sync only the utilized option values.
+* Fix - Fatal error when using partial product quantities.
+* Fix - Ensure the outline is properly visible when the Google Pay button is focused.
+* Fix - Ensure users are warned that clicking “Buy with GPay” opens in a new window.
+* Dev - Bump WooCommerce "tested up to" version 10.2.
+* Dev - Bump WooCommerce minimum supported version to 10.0.
 
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.

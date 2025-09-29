@@ -1,5 +1,15 @@
 *** WooCommerce Square Changelog ***
 
+= 5.1.0 - 2025-09-29 =
+* Add - Support for multiple categories in WooCommerce-Square product synchronization.
+* Add - Improve debugging with more options and verbose descriptions.
+* Fix - Sync only the utilized option values.
+* Fix - Fatal error when using partial product quantities.
+* Fix - Ensure the outline is properly visible when the Google Pay button is focused.
+* Fix - Ensure users are warned that clicking “Buy with GPay” opens in a new window.
+* Dev - Bump WooCommerce "tested up to" version 10.2.
+* Dev - Bump WooCommerce minimum supported version to 10.0.
+
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
