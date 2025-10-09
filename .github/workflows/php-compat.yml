@@ -53,4 +53,4 @@ jobs:
       - name: Run PHPCompatibility on all files
         run: |
           cd ~/prod/woocommerce-square
-          ~/.composer/vendor/bin/phpcs . --standard=phpcs-compat.xml.dist -ps
+          ~/.composer/vendor/bin/phpcs . --standard=phpcs-compat.xml.dist -ps --basepath=.
