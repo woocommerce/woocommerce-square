@@ -32,6 +32,7 @@ jobs:
       # Unzip the newly created zip file to a separate directory.
       - name: Unzip production bundle
         run: |
+          mv woocommerce-square.zip ~
           cd ~
           mkdir prod
           unzip woocommerce-square.zip -d prod
