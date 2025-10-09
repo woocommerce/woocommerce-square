@@ -4002,12 +4002,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 			if ( 'message' === $type ) {
 
-				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message ) ), 'notice' );
+				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) ), 'notice' );
 
 			} else {
 
 				// defaults to error message
-				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message ) ), 'error' );
+				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) ), 'error' );
 			}
 		}
 	}
