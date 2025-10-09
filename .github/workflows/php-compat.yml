@@ -27,12 +27,18 @@ jobs:
       # In order to ensure PHP Compatibility, the build step must be run in order to ensure all
       # files in the production release of the plugin are compatible with the target PHP versions.
       - name: Build production bundle
-        run: npm run build:webpack
+        run: npm run build
 
-      # The PHP Compatibility sniffs need to include the vendor directory to ensure all files
-      # in the production release of the plugin are compatible with the target PHP versions.
-      - name: Install composer production dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
+      # Unzip the newly created zip file to a separate directory.
+      - name: Unzip production bundle
+        run: |
+          cd ~
+          mkdir prod
+          unzip woocommerce-square.zip -d prod
+          cd -
+
+      - name: Copy phpcompat sniffs to production directory
+        run: cp phpcs-compat.xml.dist ~/prod/woocommerce-square/phpcs-compat.xml.dist
 
       # Installed globally to ensure dev dependencies are not included in compatibility sniffs.
       # At the time of writing no production version of PHPCompatibility/PHP-Compatibility supports
@@ -44,4 +50,6 @@ jobs:
           composer global require --dev phpcompatibility/php-compatibility:dev-develop#8daeec54772a592ad369be23ae02ed593c71e7f1
 
       - name: Run PHPCompatibility on all files
-        run: ~/.composer/vendor/bin/phpcs . --standard=phpcs-compat.xml.dist -q --report=checkstyle | cs2pr
+        run: |
+          cd ~/prod
+          ~/.composer/vendor/bin/phpcs . --standard=phpcs-compat.xml.dist -ps
