@@ -731,7 +731,7 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @throws \Exception
 	 */
-	public function search_orders( $location_ids = array(), $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
+	public function search_orders( $location_ids, $start_time, $limit = 100, $cursor = '', $end_time = '' ) {
 
 		$request = new API\Requests\Orders( $this->client );
 
