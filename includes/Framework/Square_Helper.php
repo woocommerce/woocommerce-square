@@ -98,11 +98,14 @@ class Square_Helper {
 	 */
 	public static function str_to_ascii( $string ) {
 
-		// strip ASCII chars 32 and under
-		$string = filter_var( $string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW );
+		// Remove HTML tags.
+		$string = wp_strip_all_tags( $string );
 
-		// strip ASCII chars 127 and higher
-		return filter_var( $string, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH );
+		// Encode HTML special characters.
+		$string = htmlspecialchars( $string, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
+
+		// strip ASCII chars 32 and under; 127 and higher
+		return filter_var( $string, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH );
 	}
 
 	/**
