@@ -783,7 +783,7 @@ class Product_Import extends Stepped_Job {
 			} else {
 				// Fetch option data from Square.
 				$response    = wc_square()->get_api()->retrieve_catalog_object( $option_id );
-				$option_name = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
+				$option_name = $response->get_data()->getObject()->getItemOptionData()->getName();
 
 				$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
 				$option_matched       = '';
@@ -888,7 +888,7 @@ class Product_Import extends Stepped_Job {
 			} else {
 				// Fetch option name from Square.
 				$response             = wc_square()->get_api()->retrieve_catalog_object( $option_id );
-				$option_name          = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
+				$option_name          = $response->get_data()->getObject()->getItemOptionData()->getName();
 				$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
 				$option_value_ids     = array();
 				$option_values        = array();

@@ -627,7 +627,7 @@ class API extends Base {
 		$objects = $response->get_data()->getObjects() ? $response->get_data()->getObjects() : array();
 
 		foreach ( $objects as $object ) {
-			$options_data[ $object->getId() ]['name'] = $object->getItemOptionData()->getDisplayName();
+			$options_data[ $object->getId() ]['name'] = $object->getItemOptionData()->getName();
 
 			$option_values_object = $object->getItemOptionData()->getValues();
 			$option_values        = array();
