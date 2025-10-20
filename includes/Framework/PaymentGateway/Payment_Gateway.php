@@ -3621,7 +3621,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order Optional. The order being charged
 	 * @return bool
 	 */
-	public function perform_credit_card_charge( \WC_Order $order = null ) {
+	public function perform_credit_card_charge( ?\WC_Order $order = null ) {
 
 		assert( $this->supports_credit_card_charge() );
 
@@ -3652,7 +3652,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order Optional. The order being authorized
 	 * @return bool
 	 */
-	public function perform_credit_card_authorization( \WC_Order $order = null ) {
+	public function perform_credit_card_authorization( ?\WC_Order $order = null ) {
 
 		assert( $this->supports_credit_card_authorization() );
 
@@ -3677,7 +3677,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order Optional. The order being charged
 	 * @return bool
 	 */
-	public function perform_charge( \WC_Order $order = null ) {
+	public function perform_charge( ?\WC_Order $order = null ) {
 
 		assert( $this->supports_charge() );
 
@@ -3708,7 +3708,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @param \WC_Order $order Optional. The order being authorized
 	 * @return bool
 	 */
-	public function perform_authorization( \WC_Order $order = null ) {
+	public function perform_authorization( ?\WC_Order $order = null ) {
 
 		assert( $this->supports_authorization() );
 
@@ -4002,12 +4002,12 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 			if ( 'message' === $type ) {
 
-				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message ) ), 'notice' );
+				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) ), 'notice' );
 
 			} else {
 
 				// defaults to error message
-				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message ) ), 'error' );
+				Square_Helper::wc_add_notice( str_replace( "\n", '<br/>', htmlspecialchars( $message, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) ), 'error' );
 			}
 		}
 	}

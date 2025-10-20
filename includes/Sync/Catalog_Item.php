@@ -78,7 +78,7 @@ class Catalog_Item {
 	 * @return \Square\Models\CatalogObjectBatch
 	 * @throws \Exception
 	 */
-	public function get_batch( \Square\Models\CatalogObject $catalog_object = null ) {
+	public function get_batch( ?\Square\Models\CatalogObject $catalog_object = null ) {
 
 		if ( ! $this->batch ) {
 			$this->create_batch( $catalog_object );
@@ -122,7 +122,7 @@ class Catalog_Item {
 	 * @param \Square\Models\CatalogObject|null $catalog_object existing catalog object or null to create a new one
 	 * @throws \Exception
 	 */
-	protected function create_batch( \Square\Models\CatalogObject $catalog_object = null ) {
+	protected function create_batch( ?\Square\Models\CatalogObject $catalog_object = null ) {
 
 		if ( ! $catalog_object ) {
 			$catalog_id     = Product\Woo_SOR::get_square_item_id( $this->product );
