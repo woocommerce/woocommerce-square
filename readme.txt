@@ -132,6 +132,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 = 4.9.1 - 2025-05-05 =
 * Add - Set the onboarding URL for the "Complete setup" button on the new payment settings page.
+* Change - Remove the `wc_square_update_product_set_variation_name` filter.
 * Fix - Issue with Product Price override update logic.
 * Fix - Show detailed error messages on Checkout Page based on Debug Mode settings.
 * Fix - Ensure that debug logs for payment gateways are being generated as expected.
