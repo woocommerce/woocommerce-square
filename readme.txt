@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 5.0.0
+Stable tag: 5.1.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 5.1.0 - 2025-09-29 =
+* Add - Support for multiple categories in WooCommerce-Square product synchronization.
+* Add - Improve debugging with more options and verbose descriptions.
+* Fix - Sync only the utilized option values.
+* Fix - Fatal error when using partial product quantities.
+* Fix - Ensure the outline is properly visible when the Google Pay button is focused.
+* Fix - Ensure users are warned that clicking “Buy with GPay” opens in a new window.
+* Dev - Bump WooCommerce "tested up to" version 10.2.
+* Dev - Bump WooCommerce minimum supported version to 10.0.
+
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
@@ -122,6 +132,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 = 4.9.1 - 2025-05-05 =
 * Add - Set the onboarding URL for the "Complete setup" button on the new payment settings page.
+* Change - Remove the `wc_square_update_product_set_variation_name` filter.
 * Fix - Issue with Product Price override update logic.
 * Fix - Show detailed error messages on Checkout Page based on Debug Mode settings.
 * Fix - Ensure that debug logs for payment gateways are being generated as expected.
