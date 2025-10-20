@@ -26,6 +26,7 @@ namespace WooCommerce\Square;
 use WooCommerce\Square\Framework\Api\Base;
 use WooCommerce\Square\API\Requests;
 use WooCommerce\Square\API\Responses;
+use Square\Models\CatalogObject;
 use Square\Models\ListCatalogResponse;
 use Square\SquareClient;
 use Square\Environment;
@@ -610,7 +611,13 @@ class API extends Base {
 
 		// Stop if transient exists and we don't want to refresh.
 		if ( $options_data && ! $refresh ) {
-			return array( '', $options_data, $cursor );
+			if ( $this->options_transient_needs_refresh( $options_data ) ) {
+				$refresh      = true;
+				$options_data = array();
+				delete_transient( 'wc_square_options_data' );
+			} else {
+				return array( '', $options_data, $cursor );
+			}
 		}
 
 		// If transient doesn't exist, initialize the array.
@@ -627,7 +634,8 @@ class API extends Base {
 		$objects = $response->get_data()->getObjects() ? $response->get_data()->getObjects() : array();
 
 		foreach ( $objects as $object ) {
-			$options_data[ $object->getId() ]['name'] = $object->getItemOptionData()->getDisplayName();
+			$option_name                              = $this->get_item_option_name_from_catalog_object( $object );
+			$options_data[ $object->getId() ]['name'] = $option_name;
 
 			$option_values_object = $object->getItemOptionData()->getValues();
 			$option_values        = array();
@@ -643,7 +651,7 @@ class API extends Base {
 
 		$cursor = $response->get_data()->getCursor();
 		if ( ! $cursor ) {
-			set_transient( 'wc_square_options_data', $options_data );
+			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 		}
 
 		return array( $response, $options_data, $cursor );
@@ -749,6 +757,61 @@ class API extends Base {
 		}
 
 		return $option;
+	}
+
+	/**
+	 * Determines the best available name for a catalog option.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\CatalogObject $catalog_object Catalog option object.
+	 * @return string
+	 */
+	public function get_item_option_name_from_catalog_object( ?CatalogObject $catalog_object ) {
+
+		if ( ! $catalog_object instanceof CatalogObject || ! $catalog_object->getItemOptionData() ) {
+			return '';
+		}
+
+		$option_data = $catalog_object->getItemOptionData();
+		$name        = $option_data->getName();
+		$name        = is_string( $name ) ? trim( $name ) : '';
+
+		if ( '' === $name && method_exists( $option_data, 'getDisplayName' ) ) {
+			$display_name = $option_data->getDisplayName();
+			$name         = is_string( $display_name ) ? trim( $display_name ) : '';
+		}
+
+		return $name;
+	}
+
+	/**
+	 * Checks if the cached options data is missing names and needs refreshing.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param mixed $options_data Cached options data.
+	 * @return bool
+	 */
+	private function options_transient_needs_refresh( $options_data ) {
+
+		if ( ! is_array( $options_data ) ) {
+			return true;
+		}
+
+		foreach ( $options_data as $option_data ) {
+			$name = '';
+
+			if ( is_array( $option_data ) && isset( $option_data['name'] ) ) {
+				$name = is_string( $option_data['name'] ) ? trim( $option_data['name'] ) : '';
+			}
+
+			if ( '' === $name ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 
