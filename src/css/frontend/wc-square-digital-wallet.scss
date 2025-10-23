@@ -32,6 +32,10 @@
     background-color: white;
 }
 
+#express-payment-method-square-credit-card #gpay-button-online-api-id.focus{
+    outline-offset: -2px;
+}
+
 /*
  * Google Pay Button Styles
  */

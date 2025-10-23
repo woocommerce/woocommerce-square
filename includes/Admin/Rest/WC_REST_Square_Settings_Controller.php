@@ -101,11 +101,6 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'debug_logging_enabled'            => array(
-						'description'       => __( 'Log debug messages to the WooCommerce status log.', 'woocommerce-square' ),
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
 					'sandbox_location_id'              => array(
 						'description'       => __( 'Square location ID. (Sandbox)', 'woocommerce-square' ),
 						'type'              => 'string',

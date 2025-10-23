@@ -186,12 +186,18 @@ class Product_Import extends Stepped_Job {
 				continue;
 			}
 
-			// import or update categories related to the products that are being imported
-			$catalog_category_id = Category::get_square_category_id( $catalog_object->getItemData() );
-
-			if ( $catalog_category_id && isset( $categories[ $catalog_category_id ] ) ) {
-				Category::import_or_update( $categories[ $catalog_category_id ] );
-				unset( $categories[ $catalog_category_id ] ); // don't import/update the same category multiple times per batch
+			// Import or update categories related to the products that are being imported.
+			$item_data = $catalog_object->getItemData();
+			if ( $item_data->getCategories() && is_array( $item_data->getCategories() ) ) {
+				foreach ( $item_data->getCategories() as $category ) {
+					if ( $category instanceof \Square\Models\CatalogObjectCategory ) {
+						$catalog_category_id = $category->getId();
+						if ( $catalog_category_id && isset( $categories[ $catalog_category_id ] ) ) {
+							Category::import_or_update( $categories[ $catalog_category_id ] );
+							unset( $categories[ $catalog_category_id ] ); // don't import/update the same category multiple times per batch.
+						}
+					}
+				}
 			}
 
 			$data = $this->extract_product_data( $catalog_object, $product );
@@ -558,8 +564,6 @@ class Product_Import extends Stepped_Job {
 			return null;
 		}
 
-		$square_category_id  = Category::get_square_category_id( $catalog_object->getItemData() );
-		$category_id         = Category::get_category_id_by_square_id( $square_category_id );
 		$product_name        = $catalog_object->getItemData()->getName();
 		$product_description = Product::get_catalog_item_description( $catalog_object->getItemData() );
 
@@ -600,13 +604,53 @@ class Product_Import extends Stepped_Job {
 			'sku'         => '', // make sure to reset SKU when simple product is updated to variable.
 			'description' => $product_description,
 			'image_id'    => Product::get_catalog_item_thumbnail_id( $catalog_object ),
-			'categories'  => array( $category_id ),
+			'categories'  => array(), // Will be populated below.
 			'square_meta' => array(
 				'item_id'      => $catalog_object->getId(),
 				'item_version' => $catalog_object->getVersion(),
 			),
 			'custom_meta' => array(),
 		);
+
+		// Process multiple categories from Square.
+		$item_data            = $catalog_object->getItemData();
+		$categories           = array();
+		$missing_category_ids = array();
+
+		if ( $item_data->getCategories() && is_array( $item_data->getCategories() ) ) {
+			foreach ( $item_data->getCategories() as $category ) {
+				if ( $category instanceof \Square\Models\CatalogObjectCategory ) {
+					$category_id = Category::get_category_id_by_square_id( $category->getId() );
+					if ( $category_id ) {
+						$categories[] = $category_id;
+					} else {
+						$missing_category_ids[] = $category->getId();
+					}
+				}
+			}
+		}
+
+		// Fetch and import missing categories.
+		if ( ! empty( $missing_category_ids ) ) {
+			try {
+				$response = wc_square()->get_api()->batch_retrieve_catalog_objects( $missing_category_ids );
+				if ( $response->get_data() instanceof \Square\Models\BatchRetrieveCatalogObjectsResponse ) {
+					$missing_categories = $response->get_data()->getObjects();
+					if ( $missing_categories && is_array( $missing_categories ) ) {
+						foreach ( $missing_categories as $missing_category ) {
+							$imported_category_id = Category::import_or_update( $missing_category );
+							if ( $imported_category_id ) {
+								$categories[] = $imported_category_id;
+							}
+						}
+					}
+				}
+			} catch ( \Exception $e ) {
+				wc_square()->log( 'Error fetching missing categories for product ' . $product_name . ': ' . $e->getMessage() );
+			}
+		}
+
+		$data['categories'] = array_unique( $categories );
 
 		// variable product
 		if ( 'variable' === $data['type'] ) {
@@ -661,7 +705,7 @@ class Product_Import extends Stepped_Job {
 			$options = $catalog_object->getItemData()->getItemOptions() ? $catalog_object->getItemData()->getItemOptions() : array();
 
 			if ( count( $options ) ) {
-				$data['attributes']                      = $this->extract_attributes_from_square_options( $options );
+				$data['attributes']                      = $this->extract_attributes_from_square_options( $options, $data['variations'] );
 				$data['custom_meta']['_dynamic_options'] = true;
 			} else {
 				$data['attributes']                      = $this->extract_attributes_from_square_variations( $data['variations'] );
@@ -807,13 +851,30 @@ class Product_Import extends Stepped_Job {
 	 *
 	 * @since 4.9.0
 	 *
-	 * @param array $data the product data
-	 * @return int
+	 * @param array $options    the Square options
+	 * @param array $variations the product variations to determine which option values are actually used
+	 * @return array
 	 * @throws \Exception
 	 */
-	protected function extract_attributes_from_square_options( $options ) {
+	protected function extract_attributes_from_square_options( $options, $variations = array() ) {
 
 		$data_attributes = array();
+
+		// Collect all option values that are actually used by variations.
+		$used_option_values = array();
+		foreach ( $variations as $variation ) {
+			if ( isset( $variation['attributes'] ) && is_array( $variation['attributes'] ) ) {
+				foreach ( $variation['attributes'] as $attribute ) {
+					if ( isset( $attribute['name'] ) && isset( $attribute['option'] ) ) {
+						$attribute_name = $attribute['name'];
+						if ( ! isset( $used_option_values[ $attribute_name ] ) ) {
+							$used_option_values[ $attribute_name ] = array();
+						}
+						$used_option_values[ $attribute_name ][] = $attribute['option'];
+					}
+				}
+			}
+		}
 
 		foreach ( $options as $option ) {
 			$option_id = $option->getItemOptionId();
@@ -845,12 +906,20 @@ class Product_Import extends Stepped_Job {
 				set_transient( 'wc_square_options_data', $options_data );
 			}
 
+			// Filter option values to only include those actually used by variations.
+			$clean_option_name = str_replace( 'pa_', '', $option_name );
+			$filtered_values   = $option_values;
+
+			if ( isset( $used_option_values[ $clean_option_name ] ) ) {
+				$filtered_values = array_intersect( $option_values, array_unique( $used_option_values[ $clean_option_name ] ) );
+			}
+
 			$data_attributes[] = array(
-				'name'      => str_replace( 'pa_', '', $option_name ),
+				'name'      => $clean_option_name,
 				'slug'      => str_replace( 'pa_', '', sanitize_title( $option_name ) ),
 				'visible'   => true,
 				'variation' => true,
-				'options'   => $option_values,
+				'options'   => $filtered_values,
 				'pa_prefix' => strpos( $option_name, 'pa_' ) !== false,
 			);
 		}

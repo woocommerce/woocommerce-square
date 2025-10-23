@@ -129,11 +129,28 @@ export function useGooglePay( payments, paymentRequest ) {
 		( async () => {
 			try {
 				const __googlePay = await payments.googlePay( paymentRequest );
-				await __googlePay.attach( googlePayRef.current, {
-					buttonColor: getSquareServerData().googlePayColor,
-					buttonSizeMode: 'fill',
-					buttonType: 'long',
-				} );
+				await __googlePay
+					.attach( googlePayRef.current, {
+						buttonColor: getSquareServerData().googlePayColor,
+						buttonSizeMode: 'fill',
+						buttonType: 'long',
+					} )
+					.then( () => {
+						// Append 'opens in a new window' to the aria-label of the Google Pay button.
+						const button =
+							googlePayRef.current.querySelector( 'button' );
+						if ( button ) {
+							const opensInNewWindowText =
+								getSquareServerData().opensInNewWindowText;
+							const existingAriaLabel =
+								button.getAttribute( 'aria-label' ) ||
+								getSquareServerData().buyWithGpayText;
+							button.setAttribute(
+								'aria-label',
+								`${ existingAriaLabel }, ${ opensInNewWindowText }`
+							);
+						}
+					} );
 
 				setGooglePay( __googlePay );
 			} catch ( e ) {}
