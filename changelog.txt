@@ -1,5 +1,13 @@
 *** WooCommerce Square Changelog ***
 
+= 5.1.1 - 2025-11-03 =
+* Fix - Missing attribute names after Product Import.
+* Fix - Update for PHP 8.4 compatibility.
+* Dev - Bump WooCommerce "tested up to" version 10.3.
+* Dev - Bump WooCommerce minimum supported version to 10.1.
+* Dev - Updates to our QIT GitHub Action workflow.
+* Dev - Add new deploy workflow.
+
 = 5.1.0 - 2025-09-29 =
 * Add - Support for multiple categories in WooCommerce-Square product synchronization.
 * Add - Improve debugging with more options and verbose descriptions.
