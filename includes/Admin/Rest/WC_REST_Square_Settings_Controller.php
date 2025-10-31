@@ -179,7 +179,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$filtered_settings['connection_url']         = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( false );
 		$filtered_settings['connection_url_wizard']  = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( false, array( 'from' => 'wizard' ) );
 		$filtered_settings['connection_url_sandbox'] = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( true, array( 'from' => 'wizard' ) );
-		$filtered_settings['disconnection_url']      = html_entity_decode( wp_nonce_url( $url, $action ) );
+		$filtered_settings['disconnection_url']      = html_entity_decode( wp_nonce_url( $url, $action ), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 
 		// Add locations to the response.
 		if ( wc_square()->get_settings_handler()->is_connected() ) {

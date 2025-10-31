@@ -1012,7 +1012,7 @@ class Product {
 	 * * @param bool $is_soft_delete whether or not this item data is for a soft-delete
 	 * @return array
 	 */
-	public static function extract_catalog_item_variation_data( \WC_Product $product, \WC_Product $parent_product = null, $is_soft_delete = false ) {
+	public static function extract_catalog_item_variation_data( \WC_Product $product, ?\WC_Product $parent_product = null, $is_soft_delete = false ) {
 
 		if ( ! $product ) {
 			return null;

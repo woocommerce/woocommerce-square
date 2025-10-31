@@ -462,7 +462,7 @@ class Payment_Gateway_Admin_Order {
 
 			wp_send_json_success(
 				array(
-					'message' => html_entity_decode( wp_strip_all_tags( $result['message'] ) ), // ensure any HTML tags are removed and the currency symbol entity is decoded
+					'message' => html_entity_decode( wp_strip_all_tags( $result['message'] ), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ), // ensure any HTML tags are removed and the currency symbol entity is decoded
 				)
 			);
 

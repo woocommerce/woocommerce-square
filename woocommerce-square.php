@@ -7,7 +7,7 @@
  * Requires at least: 6.7
  * Tested up to: 6.8
  * Requires PHP: 7.4
- * PHP tested up to: 8.3
+ * PHP tested up to: 8.4
  *
  * Description: Securely accept payments, synchronize sales, and seamlessly manage inventory and product data between WooCommerce and Square POS.
  * Author: WooCommerce
