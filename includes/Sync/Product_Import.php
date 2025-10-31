@@ -782,10 +782,11 @@ class Product_Import extends Stepped_Job {
 				$option_matched = $options_data[ $option_id ]['value_ids'][ $option_value_id ];
 			} else {
 				// Fetch option data from Square.
-				$response    = wc_square()->get_api()->retrieve_catalog_object( $option_id );
-				$option_name = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
+				$response      = wc_square()->get_api()->retrieve_catalog_object( $option_id );
+				$option_object = $response->get_data()->getObject();
+				$option_name   = wc_square()->get_api()->get_item_option_name_from_catalog_object( $option_object );
 
-				$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
+				$option_values_object = $option_object && $option_object->getItemOptionData() ? $option_object->getItemOptionData()->getValues() : array();
 				$option_matched       = '';
 				$option_values        = array();
 				$option_value_ids     = array();
@@ -807,7 +808,7 @@ class Product_Import extends Stepped_Job {
 					'value_ids' => $option_value_ids,
 				);
 
-				set_transient( 'wc_square_options_data', $options_data );
+				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 			}
 
 			$attributes[] = array(
@@ -888,8 +889,9 @@ class Product_Import extends Stepped_Job {
 			} else {
 				// Fetch option name from Square.
 				$response             = wc_square()->get_api()->retrieve_catalog_object( $option_id );
-				$option_name          = $response->get_data()->getObject()->getItemOptionData()->getDisplayName();
-				$option_values_object = $response->get_data()->getObject()->getItemOptionData()->getValues();
+				$option_object        = $response->get_data()->getObject();
+				$option_name          = wc_square()->get_api()->get_item_option_name_from_catalog_object( $option_object );
+				$option_values_object = $option_object && $option_object->getItemOptionData() ? $option_object->getItemOptionData()->getValues() : array();
 				$option_value_ids     = array();
 				$option_values        = array();
 
@@ -903,7 +905,7 @@ class Product_Import extends Stepped_Job {
 					'values'    => $option_values,
 					'value_ids' => array_combine( $option_value_ids, $option_values ),
 				);
-				set_transient( 'wc_square_options_data', $options_data );
+				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 			}
 
 			// Filter option values to only include those actually used by variations.
