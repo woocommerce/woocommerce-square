@@ -32,7 +32,7 @@ test( 'Verify the Digital Wallet Button type and color settings @general', async
 	await savePaymentGatewaySettings( page );
 
 	await page.goto( '/simple-product/' );
-	await expect( await page.locator( '.gpay-card-info-container' ) ).toHaveClass( /black/ );
+	await expect( await page.locator( '#wc-square-google-pay button.gpay-button' ) ).toHaveClass( /black/ );
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
 	await page.getByTestId( 'digital-wallet-gateway-toggle-field' ).check();
@@ -40,5 +40,5 @@ test( 'Verify the Digital Wallet Button type and color settings @general', async
 	await savePaymentGatewaySettings( page );
 
 	await page.goto( '/simple-product/' );
-	await expect( await page.locator( '.gpay-card-info-container' ) ).toHaveClass( /white/ );
+	await expect( await page.locator( '#wc-square-google-pay button.gpay-button' ) ).toHaveClass( /white/ );
 } );
