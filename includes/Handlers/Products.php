@@ -333,7 +333,7 @@ class Products {
 	 * @param int    $post_id     The post ID
 	 */
 	public function render_product_list_columns( $column_name, $post_id ) {
-		if ( 'wc_square_sync_status' !== $column_name && 'wc_square_sync_time' !== $column_name ) {
+		if ( 'wc_square_sync_status' !== $column_name ) {
 			return;
 		}
 
