@@ -303,7 +303,7 @@ class Products {
 	 *
 	 * @internal
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @param array $columns Array of column names
 	 * @return array Modified array of column names
@@ -322,7 +322,6 @@ class Products {
 		
 		return $new_columns;
 	}
-
 
 	/**
 	 * Renders the content for custom columns in the product list page.
@@ -346,193 +345,50 @@ class Products {
 
 		$is_synced_with_square = Product::is_synced_with_square( $product );
 		$can_sync_with_square  = Product::can_sync_with_square( $product );
-		$record = $this->get_product_sync_record( $product->get_id(), $is_synced_with_square, $can_sync_with_square );
-	
-		$has_any_records = $this->has_product_sync_records( $product->get_id() );
 
-		if ( 'wc_square_sync_status' === $column_name ) {
-			$this->render_sync_status_column( $record, $is_synced_with_square, $can_sync_with_square, $has_any_records );
-		} elseif ( 'wc_square_sync_time' === $column_name ) {
-			$this->render_sync_time_column( $record, $is_synced_with_square );
-		}
-	}
-
-
-	/**
-	 * Renders the sync status column content using early returns.
-	 *
-	 * @internal
-	 *
-	 * @since x.x.x
-	 *
-	 * @param \WooCommerce\Square\Sync\Records\Record|null $record The sync record
-	 * @param bool $is_synced_with_square Whether the product is synced with Square
-	 * @param bool $can_sync_with_square Whether the product can sync with Square
-	 * @param bool $has_any_records Whether the product has any sync records
-	 */
-	private function render_sync_status_column( $record, $is_synced_with_square, $can_sync_with_square, $has_any_records ) {
-		// if ( ! $can_sync_with_square ){
-		// 	return;
-		// }
-
-		if ( $is_synced_with_square ) {
-			printf(
-				'<mark class="%s"><span>%s</span></mark>',
-				esc_attr( sanitize_html_class( 'info' ) ),
-				esc_html( __( 'Synced', 'woocommerce-square' ) )
-			);
-			return;
-		}
-
-		if ( $record ) {
-			printf(
-				'<mark class="%s"><span>%s</span></mark>',
-				esc_attr( sanitize_html_class( $record->get_type() ) ),
-				esc_html( $record->get_label() )
-			);
-			return;
-		}
-
-		if ( $can_sync_with_square && ! $has_any_records ) {
-			printf(
-				'<mark class="%s"><span>%s</span></mark>',
-				esc_attr( sanitize_html_class( 'notice' ) ),
-				esc_html( __( 'Ready to Sync', 'woocommerce-square' ) )
-			);
-			return;
-		}
-
-		return;
-	}
-
-
-	/**
-	 * Renders the sync time column content using early returns.
-	 *
-	 * @internal
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param \WooCommerce\Square\Sync\Records\Record|null $record The sync record
-	 * @param bool $is_synced_with_square Whether the product is synced with Square
-	 */
-	private function render_sync_time_column( $record, $is_synced_with_square ) {
-		if ( $record ) {
-			echo esc_html( $record->get_local_date() );
-			return;
-		}
-
-		// Product is synced but no product-specific record - use global last sync time
-		if ( $is_synced_with_square ) {
-			$global_sync_time = $this->plugin->get_sync_handler()->get_last_synced_at();
-			if ( $global_sync_time ) {
-				$date_time_format = wc_date_format() . ' ' . wc_time_format();
-				$sync_date = new \DateTime();
-				$sync_date->setTimestamp( $global_sync_time );
-				$sync_date->setTimezone( new \DateTimeZone( wc_timezone_string() ) );
-				echo esc_html( $sync_date->format( $date_time_format ) );
-				return;
-			}
-		}
-
-		return;
-	}
-
-
-	/**
-	 * Gets the sync record to display for a product.
-	 * Prioritizes unresolved alerts/notices, then latest record of any type.
-	 *
-	 * @internal
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param int  $product_id          The product ID
-	 * @param bool $is_synced_with_square Whether the product is synced with Square
-	 * @param bool $can_sync_with_square  Whether the product can sync with Square
-	 * @return \WooCommerce\Square\Sync\Records\Record|null The record to display or null
-	 */
-	private function get_product_sync_record( $product_id, $is_synced_with_square, $can_sync_with_square = false ) {
-		// Only check records if product can sync with Square
-		if ( ! $can_sync_with_square ) {
-			return null;
-		}
-
-		// First, check for unresolved issues (alerts and notices) - these take priority
-		$unresolved_records = Records::get_records(
-			array(
-				'product' => $product_id,
-				'type'    => array( 'alert', 'notice' ),
+		// Get the failed records for the product.
+		$unresolved_records = Records::get_records( 
+			array( 
+				'product' => $post_id, 
+				'type' => array( 'alert', 'notice' ), 
 				'orderby' => 'date',
 				'sort'    => 'DESC',
-				'limit'   => 1,
-			)
+				'limit' => 1
+			) 
 		);
+		$unresolved_records = reset( $unresolved_records );
 
-		if ( ! empty( $unresolved_records ) ) {
-			return reset( $unresolved_records );
-		}
+		if ( 'wc_square_sync_status' === $column_name ) {	
+			if( $can_sync_with_square || $is_synced_with_square){
+				if( $is_synced_with_square ){
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'synced' ) ),
+						esc_html( __( 'Synced', 'woocommerce-square' ) )
+					);
+					return;
+				}
 
-		// If product is synced, get the latest record of any type
-		if ( $is_synced_with_square ) {
-			$all_records = Records::get_records(
-				array(
-					'product' => $product_id,
-					'orderby' => 'date',
-					'sort'    => 'DESC',
-					'limit'   => 1,
-				)
-			);
+				if( !empty( $unresolved_records ) ){
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'failed-to-sync' ) ),
+						esc_html( __( 'Failed to Sync', 'woocommerce-square' ) )
+					);
+					return;
+				}
 
-			if ( ! empty( $all_records ) ) {
-				return reset( $all_records );
+				if( empty( $unresolved_records ) && $can_sync_with_square && !$is_synced_with_square ){
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'to-sync' ) ),
+						esc_html( __( 'Ready to Sync', 'woocommerce-square' ) )
+					);
+					return;
+				}
 			}
 		}
-
-		// If product is not synced, check for any records (success or failure)
-		if ( ! $is_synced_with_square ) {
-			$all_records = Records::get_records(
-				array(
-					'product' => $product_id,
-					'orderby' => 'date',
-					'sort'    => 'DESC',
-					'limit'   => 1,
-				)
-			);
-
-			if ( ! empty( $all_records ) ) {
-				return reset( $all_records );
-			}
-		}
-
-		return null;
 	}
-
-
-	/**
-	 * Checks if a product has any sync records (of any type).
-	 * Used to determine if a product is truly "ready to sync" (has no records yet).
-	 *
-	 * @internal
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param int $product_id The product ID
-	 * @return bool True if product has any sync records, false otherwise
-	 */
-	private function has_product_sync_records( $product_id ) {
-		$all_records = Records::get_records(
-			array(
-				'product' => $product_id,
-				'orderby' => 'date',
-				'sort'    => 'DESC',
-				'limit'   => 1,
-			)
-		);
-
-		return ! empty( $all_records );
-	}
-
 
 	/**
 	 * Adds general product data options to a product metabox.
