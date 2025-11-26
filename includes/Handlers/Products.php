@@ -315,7 +315,6 @@ class Products {
 		foreach ( $columns as $key => $value ) {
 			if ( 'date' === $key ) {
 				$new_columns['wc_square_sync_status'] = __( 'Sync Status', 'woocommerce-square' );
-				$new_columns['wc_square_sync_time']   = __( 'Last Sync Time', 'woocommerce-square' );
 			}
 			$new_columns[ $key ] = $value;
 		}
@@ -359,7 +358,7 @@ class Products {
 		$unresolved_records = reset( $unresolved_records );
 
 		if ( 'wc_square_sync_status' === $column_name ) {	
-			if( $can_sync_with_square || $is_synced_with_square){
+			if( $can_sync_with_square || $is_synced_with_square ){
 				if( $is_synced_with_square ){
 					printf(
 						'<mark class="%s"><span>%s</span></mark>',
