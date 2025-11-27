@@ -106,8 +106,8 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 			return array();
 		}
 		return array(
-			'title'                      => $this->get_setting( 'title' ),
-			'description'                => $this->get_setting( 'description' ),
+			'title'                      => $this->get_title(),
+			'description'                => $this->get_description(),
 			'application_id'             => $this->get_gateway()->get_application_id(),
 			'location_id'                => $this->plugin->get_settings_handler()->get_location_id(),
 			'is_sandbox'                 => $this->plugin->get_settings_handler()->is_sandbox(),
@@ -127,6 +127,28 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 			'is_continuation'            => $this->get_gateway()->is_cash_app_pay_continuation(),
 			'reference_id'               => WC()->cart ? WC()->cart->get_cart_hash() : '',
 		);
+	}
+
+	/**
+	 * Helper function to get title of Square Cash App gateway to be displayed as Label on checkout block.
+	 * Defaults to "Cash App Pay"
+	 *
+	 * @since x.x.x
+	 * @return string
+	 */
+	private function get_title() {
+		return ! empty( $this->get_setting( 'title' ) ) ? $this->get_setting( 'title' ) : esc_html__( 'Cash App Pay', 'woocommerce-square' );
+	}
+
+	/**
+	 * Helper function to get description of Square Cash App gateway to be displayed on checkout block.
+	 * Defaults to "Cash App Pay"
+	 *
+	 * @since x.x.x
+	 * @return string
+	 */
+	private function get_description() {
+		return ! empty( $this->get_setting( 'description' ) ) ? $this->get_setting( 'description' ) : esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
 	}
 
 	/**
