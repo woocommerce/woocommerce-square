@@ -23,7 +23,7 @@ jobs:
       SQUARE_APPLICATION_ID: ${{ secrets.SQUARE_APPLICATION_ID }}
       SQUARE_ACCESS_TOKEN: ${{ secrets.SQUARE_ACCESS_TOKEN }}
       SQUARE_LOCATION_ID: ${{ secrets.SQUARE_LOCATION_ID }}
-      GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
+      GH_TOKEN: ${{ secrets.ORG_DOWNLOADS }}
     permissions:
       pull-requests: write
     name: E2E tests (${{ matrix.type }})
