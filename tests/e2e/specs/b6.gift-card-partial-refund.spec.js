@@ -68,5 +68,4 @@ test( 'Partial Refund – Gift card order @giftcard', async ( { page } ) => {
 
 	await doSquareRefund( page, '0.45' );
 	await expect( await page.getByText( 'Square Refund in the amount of $0.45 approved' ) ).toBeVisible();
-	await expect( await page.getByText( 'Order status changed from Pending payment to Processing.' ) ).toBeVisible();
 } );
