@@ -311,14 +311,14 @@ class Products {
 	public function add_product_list_columns( $columns ) {
 		// Insert the new columns before the "date" column
 		$new_columns = array();
-		
+
 		foreach ( $columns as $key => $value ) {
 			if ( 'date' === $key ) {
 				$new_columns['wc_square_sync_status'] = __( 'Sync Status', 'woocommerce-square' );
 			}
 			$new_columns[ $key ] = $value;
 		}
-		
+
 		return $new_columns;
 	}
 
@@ -346,20 +346,20 @@ class Products {
 		$can_sync_with_square  = Product::can_sync_with_square( $product );
 
 		// Get the failed records for the product.
-		$unresolved_records = Records::get_records( 
-			array( 
-				'product' => $post_id, 
-				'type' => array( 'alert', 'notice' ), 
+		$unresolved_records = Records::get_records(
+			array(
+				'product' => $post_id,
+				'type'    => array( 'alert', 'notice' ),
 				'orderby' => 'date',
 				'sort'    => 'DESC',
-				'limit' => 1
-			) 
+				'limit'   => 1,
+			)
 		);
 		$unresolved_records = reset( $unresolved_records );
 
-		if ( 'wc_square_sync_status' === $column_name ) {	
-			if( $can_sync_with_square || $is_synced_with_square ){
-				if( $is_synced_with_square ){
+		if ( 'wc_square_sync_status' === $column_name ) {
+			if ( $can_sync_with_square || $is_synced_with_square ) {
+				if ( $is_synced_with_square ) {
 					printf(
 						'<mark class="%s"><span>%s</span></mark>',
 						esc_attr( sanitize_html_class( 'synced' ) ),
@@ -368,7 +368,7 @@ class Products {
 					return;
 				}
 
-				if( !empty( $unresolved_records ) ){
+				if ( ! empty( $unresolved_records ) ) {
 					printf(
 						'<mark class="%s"><span>%s</span></mark>',
 						esc_attr( sanitize_html_class( 'failed-to-sync' ) ),
@@ -377,7 +377,7 @@ class Products {
 					return;
 				}
 
-				if( empty( $unresolved_records ) && $can_sync_with_square && !$is_synced_with_square ){
+				if ( empty( $unresolved_records ) && $can_sync_with_square && ! $is_synced_with_square ) {
 					printf(
 						'<mark class="%s"><span>%s</span></mark>',
 						esc_attr( sanitize_html_class( 'to-sync' ) ),
