@@ -2094,8 +2094,18 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 				$order = $this->get_payment_tokens_handler()->create_token( $order, $response );
 			} catch ( \Exception $e ) {
 
-				// handle the case of a "tokenize-after-sale" request failing by marking the order as on-hold with an explanatory note
-				if ( ! $response->transaction_held() && ! ( $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ) ) {
+				/*
+				 * Handle the request failing by marking the order as on-hold with an explanatory note
+				 *
+				 * Exclude the tokenize_after_sale() case, to avoid marking the order as on-hold when tokenization is done after sale.
+				 * This is for handling the edge case where Square successfully charge for the order, but failed to tokenize/save the same card.
+				 * @see https://linear.app/a8c/issue/SQUARE-208/store-then-charge-cards
+				 */
+				if (
+					! $response->transaction_held() &&
+					! ( $this->supports( self::FEATURE_CREDIT_CARD_AUTHORIZATION ) && $this->perform_credit_card_authorization( $order ) ) &&
+					! $this->tokenize_after_sale()
+				) {
 
 					// transaction has already been successful, but we've encountered an issue with the post-tokenization, add an order note to that effect and continue on
 					$message = sprintf(
