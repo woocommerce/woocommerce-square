@@ -239,7 +239,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * Get the default payment method title, which is configurable within the
 	 * admin and displayed on checkout
 	 *
-	 * @since x.x.x
+	 * @since 4.5.0
 	 * @return string payment method title to show on checkout
 	 */
 	protected function get_default_title() {
