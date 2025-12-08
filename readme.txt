@@ -74,6 +74,8 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 = 5.1.2 - 2025-12-10 =
 * Security - Resolve CVE-2025-13457.
+* Dev - Bump WooCommerce "tested up to" version 10.4.
+* Dev - Bump WordPress "tested up to" version 6.9.
 
 = 5.1.1 - 2025-11-03 =
 * Fix - Missing attribute names after Product Import.
