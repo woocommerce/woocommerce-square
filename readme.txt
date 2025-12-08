@@ -72,6 +72,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 5.1.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
+
 = 5.1.1 - 2025-11-03 =
 * Fix - Missing attribute names after Product Import.
 * Fix - Update for PHP 8.4 compatibility.
