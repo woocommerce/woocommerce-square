@@ -232,6 +232,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Upgrade Notice ==
 
+= 5.1.2 =
+Security release affecting versions 4.2 upward, please update promptly. Minor releases are available on wordpress.org.
+
 = 3.5.0 =
 * Note that this version bumps the minimum PHP version from 7.2 to 7.4.
 
