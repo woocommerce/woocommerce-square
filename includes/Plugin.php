@@ -71,6 +71,9 @@ class Plugin extends Payment_Gateway_Plugin {
 	/** @var Handlers\Connection connection handler instance  */
 	private $connection_handler;
 
+	/** @var Coupons coupons handler instance */
+	private $coupons_handler;
+
 	/** @var Admin admin handler instance */
 	private $admin_handler;
 
@@ -269,6 +272,7 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		$this->settings_handler = new Settings( $this );
 		$this->products_handler = new Products( $this );
+		$this->coupons_handler  = Coupons::instance();
 
 		if ( ! $this->admin_handler && is_admin() ) {
 			$this->admin_handler = new Admin( $this );
