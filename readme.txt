@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.5
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 4.9.8
+Stable tag: 4.9.9
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.9.9 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
 
 = 4.9.8 - 2025-08-21 =
 * Fix - Ensure there is no fatal error on the product page when the product price is blank.
