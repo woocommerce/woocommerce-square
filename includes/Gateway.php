@@ -126,7 +126,6 @@ class Gateway extends Payment_Gateway_Direct {
 		add_action( 'wp_ajax_nopriv_wc_' . $this->get_id() . '_log_js_data', array( $this, 'log_js_data' ) );
 
 		add_action( 'wp_ajax_wc_' . $this->get_id() . '_get_token_by_id', array( $this, 'get_token_by_id' ) );
-		add_action( 'wp_ajax_nopriv_wc_' . $this->get_id() . '_get_token_by_id', array( $this, 'get_token_by_id' ) );
 
 		// store the Square item variation ID to order items
 		add_action( 'woocommerce_new_order_item', array( $this, 'store_new_order_item_square_meta' ), 10, 3 );
@@ -162,20 +161,52 @@ class Gateway extends Payment_Gateway_Direct {
 	public function get_token_by_id() {
 		$nonce = isset( $_GET['nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['nonce'] ) ) : false;
 
-		if ( ! wp_verify_nonce( $nonce, 'payment_token_nonce' ) ) {
-			wp_send_json_error( esc_html__( 'Nonce verification failed.', 'woocommerce-square' ) );
+		if ( ! wp_verify_nonce( $nonce, 'payment_token_nonce' ) || ! is_user_logged_in() ) {
+			wp_send_json_error( esc_html__( 'Verification failed.', 'woocommerce-square' ), \WP_Http::UNAUTHORIZED );
 		}
 
 		$token_id = isset( $_GET['token_id'] ) ? absint( wp_unslash( $_GET['token_id'] ) ) : false;
 
 		if ( ! $token_id ) {
-			wp_send_json_error( esc_html__( 'Token ID missing.', 'woocommerce-square' ) );
+			wp_send_json_error( esc_html__( 'Token ID missing.', 'woocommerce-square' ), \WP_Http::BAD_REQUEST );
 		}
 
 		$token_obj = \WC_Payment_Tokens::get( $token_id );
 
+		/*
+		 * Verify token belongs to this gateway.
+		 *
+		 * This ajax endpoint is for retrieving Square payment tokens only.
+		 */
+		if ( is_object( $token_obj ) && $this->get_id() !== $token_obj->get_gateway_id() ) {
+			wp_send_json_error( esc_html__( 'Verification failed.', 'woocommerce-square' ), \WP_Http::FORBIDDEN );
+		}
+
+		/*
+		 * Ensure user has permission to access token.
+		 *
+		 * Store administrators can request any token but other users can only
+		 * access tokens belonging to their own account.
+		 */
+		if (
+			! current_user_can( 'manage_woocommerce' )
+			&& (
+				is_null( $token_obj )
+				|| get_current_user_id() !== $token_obj->get_user_id()
+			)
+		) {
+			wp_send_json_error( esc_html__( 'Verification failed.', 'woocommerce-square' ), \WP_Http::FORBIDDEN );
+		}
+
+		/*
+		 * Show invalid Token ID to store admins only.
+		 *
+		 * The condition above will present a generic "validation failed" message to other
+		 * users, this will only provide the details of why validation failed to store
+		 * admins to avoid information disclosure.
+		 */
 		if ( is_null( $token_obj ) ) {
-			wp_send_json_error( esc_html__( 'No payment token exists for this ID.', 'woocommerce-square' ) );
+			wp_send_json_error( esc_html__( 'No payment token exists for this ID.', 'woocommerce-square' ), \WP_Http::NOT_FOUND );
 		}
 
 		wp_send_json_success( $token_obj->get_token() );
