@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.1
 Tested up to: 6.4.0
 Requires PHP: 7.4
-Stable tag: 4.4.1
+Stable tag: 4.4.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 4.4.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
 
 = 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
