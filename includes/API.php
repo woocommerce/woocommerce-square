@@ -195,13 +195,16 @@ class API extends Base {
 	 *
 	 * @param string $object_id the Square catalog object ID
 	 * @param bool $include_related_objects whether or not to include related objects (such as categories)
+	 * @param int|null $object_version The specific version of the object to retrieve. Optional - defaults to latest.
+	 *                                 If the specified version of the object does not exist, the Square API will
+	 *                                 return the latest version. If the version provided is not known to exist consumers
+	 *                                 of this function should validate the version returned by the API.
 	 * @return Responses\Catalog
 	 * @throws \Exception
 	 */
-	public function retrieve_catalog_object( $object_id, $include_related_objects = false ) {
-
+	public function retrieve_catalog_object( $object_id, $include_related_objects = false, $object_version = null ) {
 		$request = $this->get_catalog_request();
-		$request->set_retrieve_catalog_object_data( $object_id, $include_related_objects );
+		$request->set_retrieve_catalog_object_data( $object_id, $include_related_objects, $object_version );
 
 		return $this->perform_request( $request );
 	}
