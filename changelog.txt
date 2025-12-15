@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 5.1.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
+* Dev - Bump WooCommerce "tested up to" version 10.4.
+* Dev - Bump WordPress "tested up to" version 6.9.
+
 = 5.1.1 - 2025-11-03 =
 * Fix - Missing attribute names after Product Import.
 * Fix - Update for PHP 8.4 compatibility.
@@ -18,10 +23,16 @@
 * Dev - Bump WooCommerce "tested up to" version 10.2.
 * Dev - Bump WooCommerce minimum supported version to 10.0.
 
+= 5.0.1 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 5.0.
+
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
 * Fix - Accurately count attribute values – 250 values, not characters.
+
+= 4.9.9 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.9.
 
 = 4.9.8 - 2025-08-21 =
 * Fix - Ensure there is no fatal error on the product page when the product price is blank.
@@ -89,6 +100,9 @@
 * Dev - Updates to E2E tests setup.
 * Dev - Update all third-party actions our workflows rely on to use versions based on specific commit hashes.
 
+= 4.8.8 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.8.
+
 = 4.8.7 - 2025-03-06 =
 * Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
 * Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
@@ -153,6 +167,9 @@
 * Dev - Bump WooCommerce "tested up to" version 9.2.
 * Dev - Bump WooCommerce minimum supported version to 9.0.
 
+= 4.7.4 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.7.
+
 = 4.7.3 - 2024-08-19 =
 * Fix - Inconsistency in the height of Express Payment Button and compliance with the new Woo Express Payment Method Styling API.
 * Fix - Ensure the "Uncaught TypeError" JavaScript console error does not occur for out-of-stock products.
@@ -176,6 +193,9 @@
 * Dev - Bump WooCommerce "tested up to" version 9.0.
 * Dev - Bump WooCommerce minimum supported version to 8.8.
 * Dev - Bump WordPress minimum supported version to 6.4.
+
+= 4.6.4 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.6.
 
 = 4.6.3 - 2024-06-17 =
 * Add - ESLint GitHub Action workflow to enforce ESLint rules on pull requests.
@@ -211,6 +231,9 @@
 * Fix - npm ERR! Missing script: "test:e2e".
 * Fix - Issue with Square payment gateway being shown for unsupported currencies.
 
+= 4.5.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.5.
+
 = 4.5.1 - 2024-02-27 =
 * Fix - Address the repetitive creation of `wc_square_init_payment_token_migration` actions in the payment token migration process.
 * Dev - Bump WooCommerce "tested up to" version 8.6.
@@ -223,6 +246,9 @@
 * Dev - Bump WooCommerce minimum supported version to 8.3.
 * Dev - Bump WordPress minimum supported version to 6.3.
 * Fix - Issue with syncing products that have a description more than 4096 characters.
+
+= 4.4.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.4.
 
 = 4.4.1 - 2024-01-18 =
 * Fix - Resolved the issue of double-counted inventory drops when WooPayments is used as the payment processor.
@@ -246,6 +272,9 @@
 * Dev - Add Playwright e2e coverage for Cart Block and Checkout Block.
 * Tweak - Admin settings colour to match admin theme colour scheme.
 
+= 4.3.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.3.
+
 = 4.3.1 - 2023-11-06 =
 * Fix - Fatal error caused when the Action Scheduler API method `as_has_scheduled_action` is used for migrating payment tokens.
 * Fix - Missing payment token and customer ID in subscription orders when HPOS is enabled.
@@ -260,6 +289,9 @@
 * Dev - Bump WooCommerce "tested up to" version 8.1.
 * Dev - Bump WooCommerce minimum supported version to 7.9.
 * Dev - Bump woocommerce-sniffs to 1.0.0.
+
+= 4.2.3 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.2.
 
 = 4.2.2 - 2023-10-11 =
 * Dev - Update PHPCS and PHPCompatibility GitHub Actions.
