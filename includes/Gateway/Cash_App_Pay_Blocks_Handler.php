@@ -142,13 +142,14 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 
 	/**
 	 * Helper function to get description of Square Cash App gateway to be displayed on checkout block.
-	 * Defaults to "Cash App Pay"
+	 * Defaults to "Pay securely using Cash App Pay."
 	 *
 	 * @since x.x.x
 	 * @return string
 	 */
 	private function get_description() {
-		return ! empty( $this->get_setting( 'description' ) ) ? $this->get_setting( 'description' ) : esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
+		$description = $this->get_setting( 'description', null );
+		return null !== $description ? $description : esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
 	}
 
 	/**
