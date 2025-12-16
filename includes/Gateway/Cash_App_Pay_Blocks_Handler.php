@@ -149,7 +149,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	 */
 	private function get_description() {
 		$description = $this->get_setting( 'description', null );
-		return null !== $description ? $description : esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
+		return null === $description ? esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' ) : $description;
 	}
 
 	/**
