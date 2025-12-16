@@ -1,10 +1,10 @@
 === WooCommerce Square ===
 Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
-Requires at least: 6.5
+Requires at least: 6.7
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.1.1
+Stable tag: 5.1.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 5.1.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
+* Dev - Bump WooCommerce "tested up to" version 10.4.
+* Dev - Bump WordPress "tested up to" version 6.9.
+
 = 5.1.1 - 2025-11-03 =
 * Fix - Missing attribute names after Product Import.
 * Fix - Update for PHP 8.4 compatibility.
@@ -90,10 +95,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 * Dev - Bump WooCommerce "tested up to" version 10.2.
 * Dev - Bump WooCommerce minimum supported version to 10.0.
 
+= 5.0.1 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 5.0.
+
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
 * Fix - Accurately count attribute values – 250 values, not characters.
+
+= 4.9.9 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.9.
 
 = 4.9.8 - 2025-08-21 =
 * Fix - Ensure there is no fatal error on the product page when the product price is blank.
@@ -160,6 +171,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 * Dev - Bump WordPress "tested up to" version 6.8.
 * Dev - Updates to E2E tests setup.
 * Dev - Update all third-party actions our workflows rely on to use versions based on specific commit hashes.
+
+= 4.8.8 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.8.
 
 = 4.8.7 - 2025-03-06 =
 * Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
@@ -228,6 +242,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 [View historical changelog details here](https://github.com/woocommerce/woocommerce-square/blob/trunk/changelog.txt).
 
 == Upgrade Notice ==
+
+= 5.1.2 =
+Security release affecting versions 4.2 upward, please update promptly. Minor releases are available on wordpress.org.
 
 = 3.5.0 =
 * Note that this version bumps the minimum PHP version from 7.2 to 7.4.
