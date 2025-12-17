@@ -25,6 +25,8 @@ namespace WooCommerce\Square;
 
 defined( 'ABSPATH' ) || exit;
 
+use WooCommerce\Square\Utilities\Coupon_Utility;
+
 /**
  * Class Coupons
  *
@@ -76,7 +78,63 @@ class Coupons {
 	 * @return false|array Modified coupon data.
 	 */
 	public static function filter_woocommerce_get_shop_coupon_data( $coupon, $coupon_data, \WC_Coupon $wc_coupon ) {
-		return $coupon;
+		// Coupon has already been found via preflight.
+		if ( false !== $coupon ) {
+			return $coupon;
+		}
+
+		// Only handle requests for string coupon codes.
+		if ( ! is_string( $coupon_data ) ) {
+			return $coupon;
+		}
+
+		$bearer_token = wc_square()->get_settings_handler()->get_access_token();
+		$is_sandbox   = wc_square()->get_settings_handler()->is_sandbox();
+		$api_url      = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
+
+		$query = array(
+			'query' => array(
+				'filter' => array(
+					'code' => $coupon_data,
+				),
+			),
+		);
+
+		$response = wp_remote_post(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization'  => 'Bearer ' . $bearer_token,
+					'Content-Type'   => 'application/json',
+					'Square-Version' => '2025-01-23',
+				),
+				'body'    => wp_json_encode( $query ),
+			)
+		);
+
+		// Do not pre-flight the coupon if there was an error or non-200 response.
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return $coupon;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+
+		if ( empty( $data['discount_codes'] ) ) {
+			// No codes found.
+			return $coupon;
+		}
+
+		foreach ( $data['discount_codes'] as $code ) {
+			if ( $code['code'] === $coupon_data ) {
+				$code_data = $code;
+				break;
+			}
+		}
+
+		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
+
+		return $wc_coupon;
 	}
 
 	/**
