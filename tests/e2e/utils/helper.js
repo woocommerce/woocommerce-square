@@ -29,6 +29,7 @@ export async function clearCart( page ) {
 	await page.goto( '/cart' );
 
 	if ( await page.locator( '.wp-block-woocommerce-cart-items-block' ).isVisible() ) {
+		await page.locator( 'tr[aria-label="Loading products in cart…"]' ).first().waitFor({ state: 'hidden' });
 		const removeBtns = await page.$$( '.wc-block-cart-item__remove-link' );
 
 		for ( const button of removeBtns ) {
