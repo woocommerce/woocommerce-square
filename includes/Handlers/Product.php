@@ -535,8 +535,10 @@ class Product {
 			array(
 				'hierarchical'          => false,
 				'update_count_callback' => '_update_generic_term_count',
+				'public'                => false,
 				'show_ui'               => false,
 				'show_in_nav_menus'     => false,
+				'publicly_queryable'    => false,
 				'query_var'             => is_admin(),
 				'rewrite'               => false,
 			)
