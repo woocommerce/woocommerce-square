@@ -326,13 +326,18 @@ class WooCommerce_Square_Loader {
 	 * @return bool
 	 */
 	public function is_environment_compatible() {
-		$is_wc_compatible        = $this->is_wc_compatible();
-		$is_wp_compatible        = $this->is_wp_compatible();
-		$is_php_valid            = $this->is_php_version_valid();
-		$is_opcache_config_valid = $this->is_opcache_save_message_enabled();
-		$error_message           = '';
+		static $error_message_registered = false;
+		$is_wc_compatible                = $this->is_wc_compatible();
+		$is_wp_compatible                = $this->is_wp_compatible();
+		$is_php_valid                    = $this->is_php_version_valid();
+		$is_opcache_config_valid         = $this->is_opcache_save_message_enabled();
+		$error_message                   = '';
 
 		if ( ! $is_php_valid || ! $is_opcache_config_valid || ! $is_wc_compatible || ! $is_wp_compatible ) {
+			if ( $error_message_registered ) {
+				// Error message has already been registered, do not register again.
+				return false;
+			}
 			$error_message .= sprintf(
 				// translators: plugin name
 				__( '<strong>All features in %1$s have been disabled</strong> due to unsupported settings:<br>', 'woocommerce-square' ),
@@ -389,7 +394,8 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
-		if ( ! empty( $error_message ) ) {
+		if ( ! empty( $error_message ) && ! $error_message_registered ) {
+			$error_message_registered = true;
 			$this->add_admin_notice(
 				'bad_environment',
 				'error',
@@ -456,6 +462,10 @@ class WooCommerce_Square_Loader {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
 
+			if ( ! $this->is_environment_compatible() ) {
+				// Environment not compatible, do not configure features.
+				return;
+			}
 			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
