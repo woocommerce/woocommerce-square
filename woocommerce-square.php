@@ -353,7 +353,7 @@ class WooCommerce_Square_Loader {
 			$error_message .= sprintf(
 				// translators: link to documentation
 				__( '&bull;&nbsp;<strong>Invalid OPcache config: </strong><a href="%s" target="_blank">Please ensure the <code>save_comments</code> PHP option is enabled.</a> You may need to contact your hosting provider to change caching options.', 'woocommerce-square' ),
-				'https://woocommerce.com/document/woocommerce-square/troubleshooting/#section-3'
+				'https://woocommerce.com/document/woocommerce-square/troubleshooting/#recommended-caching-settings'
 			);
 		}
 
