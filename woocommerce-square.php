@@ -463,7 +463,12 @@ class WooCommerce_Square_Loader {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
 
 			if ( ! $this->is_environment_compatible() ) {
-				// Environment not compatible, do not configure features.
+				/*
+				 * Environment not compatible, do not configure features.
+				 *
+				 * The autoloader is not configured if the environment is not compatible,
+				 * so calling the line below will result in a fatal error on such systems.
+				 */
 				return;
 			}
 			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
