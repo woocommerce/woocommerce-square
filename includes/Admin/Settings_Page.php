@@ -169,12 +169,16 @@ class Settings_Page extends \WC_Settings_Page {
 				<div class="wc-backbone-modal-content">
 					<section class="wc-backbone-modal-main" role="main">
 						<header class="wc-backbone-modal-header">
-							<h1><?php esc_html_e( 'Import Products From Square', 'woocommerce-square' ); ?></h1>
+							<h1><?php esc_html_e( 'Import New Products From Square', 'woocommerce-square' ); ?></h1>
 							<button class="modal-close modal-close-link dashicons dashicons-no-alt">
 								<span class="screen-reader-text"><?php esc_html_e( 'Close modal window', 'woocommerce-square' ); ?></span>
 							</button>
 						</header>
 						<article>
+							<p style="background: #f0f6fc; border-left: 4px solid #2271b1; padding: 10px 12px; margin-bottom: 16px;">
+								<strong><?php esc_html_e( 'This is for importing new products.', 'woocommerce-square' ); ?></strong>
+								<?php esc_html_e( 'To update existing synced products, use "Sync Now" on the Update tab instead.', 'woocommerce-square' ); ?>
+							</p>
 							<p><?php esc_html_e( 'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.', 'woocommerce-square' ); ?></p>
 							<hr>
 							<h4><?php esc_html_e( 'Do you wish to import existing product updates from Square?', 'woocommerce-square' ); ?></h4>

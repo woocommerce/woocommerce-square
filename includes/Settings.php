@@ -424,6 +424,7 @@ class Settings extends \WC_Settings_API {
 				<a id="wc_square_import_products" href='#' class='button js-import-square-products <?php echo ( ! $this->get_location_id() ? 'disabled' : '' ); ?>'>
 					<?php echo esc_html__( 'Import all products from Square', 'woocommerce-square' ); ?>
 				</a>
+				<p class="description" style="margin-top: 8px;"><?php esc_html_e( 'Use this to bring new products from Square into WooCommerce. This is different from "Sync Now" which only updates products that are already synced.', 'woocommerce-square' ); ?></p>
 				<p class="description wc_square_save_changes_message" style="display: none;"><?php esc_html_e( 'You have made changes to the settings. Please save the changes to enable the button.', 'woocommerce-square' ); ?></p>
 			</td>
 		</tr>

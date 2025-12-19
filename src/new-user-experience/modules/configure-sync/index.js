@@ -347,6 +347,10 @@ export const ConfigureSync = ( {
 									) }
 									indent={ indent }
 									className="import-products-wrapper"
+									description={ __(
+										'Use this to bring new products from Square into WooCommerce. This is different from "Sync Now" which only updates products that are already synced.',
+										'woocommerce-square'
+									) }
 								>
 									<Button
 										data-testid="import-products-button"
@@ -406,12 +410,35 @@ export const ConfigureSync = ( {
 
 								{ isOpen && (
 									<Modal
-										title="Import Products From Square"
+										title={ __(
+											'Import New Products From Square',
+											'woocommerce-square'
+										) }
 										size={ 'large' }
 										onRequestClose={ closeModal }
 									>
 										<div className="import-modal-cover">
 											<div className="import-modal-content">
+												<p
+													style={ {
+														background: '#f0f6fc',
+														borderLeft:
+															'4px solid #2271b1',
+														padding: '10px 12px',
+														marginBottom: '16px',
+													} }
+												>
+													<strong>
+														{ __(
+															'This is for importing new products.',
+															'woocommerce-square'
+														) }
+													</strong>{ ' ' }
+													{ __(
+														'To update existing synced products, use "Sync Now" on the Update tab instead.',
+														'woocommerce-square'
+													) }
+												</p>
 												<p>
 													{ __(
 														'You are about to import all new products, variations and categories from Square. This will create a new product in WooCommerce for every product retrieved from Square. If you have products in the trash from the previous imports, these will be ignored in the import.',
