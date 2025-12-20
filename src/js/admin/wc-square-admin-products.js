@@ -31,6 +31,39 @@ jQuery( document ).ready( ( $ ) => {
 
 	// products quick edit screen.
 	if ( 'edit-product' === pagenow ) {
+		// Add notice near stock field in bulk edit when Square SOR and inventory sync is enabled.
+		if ( wc_square_admin_products.is_square_sor && wc_square_admin_products.is_inventory_sync_enabled ) {
+			// Use MutationObserver to detect when bulk edit form is inserted into the DOM.
+			const bulkEditObserver = new MutationObserver( ( mutations ) => {
+				mutations.forEach( ( mutation ) => {
+					mutation.addedNodes.forEach( ( node ) => {
+						if ( node.nodeType === 1 && node.id === 'bulk-edit' ) {
+							const $bulkEdit = $( node );
+							// Find the "In stock?" field label which is the start of stock-related fields.
+							// In bulk edit, stock fields are wrapped in <label> elements, not .inline-edit-group.
+							const $stockStatusField = $bulkEdit.find( 'select.stock_status' ).closest( 'label' );
+
+							// Add notice if not already present.
+							if ( $stockStatusField.length && ! $bulkEdit.find( '.wc-square-bulk-edit-notice' ).length ) {
+								const bulkEditNotice = '<div class="wc-square-bulk-edit-notice notice notice-warning inline" style="margin: 10px 0; padding: 8px 12px;">' +
+									'<p style="margin: 0;">' +
+									__( 'Inventory updates made here will not apply to Square-synced products. Stock values for these products are managed in Square and will be overwritten during the next sync.', 'woocommerce-square' ) +
+									'</p>' +
+									'</div>';
+								$stockStatusField.before( bulkEditNotice );
+							}
+						}
+					} );
+				} );
+			} );
+
+			// Start observing the table body for bulk edit form insertion.
+			const tableBody = document.querySelector( '#the-list' );
+			if ( tableBody && tableBody.parentNode ) {
+				bulkEditObserver.observe( tableBody.parentNode, { childList: true, subtree: true } );
+			}
+		}
+
 		// when clicking the quick edit button fetch the default Synced with Square checkbox
 		$( '#the-list' ).on( 'click', '.editinline', ( e ) => {
 			const $row = $( e.target ).closest( 'tr' );
