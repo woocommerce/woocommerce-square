@@ -49,7 +49,6 @@ class Sync_Page {
 			<h2><?php esc_html_e( 'Update', 'woocommerce-square' ); ?></h2>
 			<?php self::output_system_record_of_data_info(); ?>
 			<?php self::output_sync_status(); ?>
-			<?php self::output_import_products_notice(); ?>
 
 			<h2><?php esc_html_e( 'Sync records', 'woocommerce-square' ); ?></h2>
 			<?php self::output_sync_records(); ?>
@@ -253,9 +252,11 @@ class Sync_Page {
 							<?php echo ! empty( $disabled_reason ) ? sprintf( 'disabled="disabled" title="%s"', esc_attr( $disabled_reason ) ) : ''; ?>
 						><?php esc_html_e( 'Sync now', 'woocommerce-square' ); ?></button>
 						<div id="wc-square-sync-progress-spinner" class="spinner" style="float:none; <?php echo $sync_in_progress ? 'visibility:visible;' : ''; ?>"></div>
-						<p class="description" style="margin-top: 8px; font-style: italic; color: #646970;">
-							<?php esc_html_e( 'Updates existing synced products only. Does not import new products from Square.', 'woocommerce-square' ); ?>
-						</p>
+						<?php if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) : ?>
+							<p class="description" style="margin-top: 8px; font-style: italic; color: #646970;">
+								<?php esc_html_e( 'Updates existing synced products only. Does not import new products from Square.', 'woocommerce-square' ); ?>
+							</p>
+						<?php endif; ?>
 					</td>
 				</tr>
 			</tbody>
