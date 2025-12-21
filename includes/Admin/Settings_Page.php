@@ -169,7 +169,7 @@ class Settings_Page extends \WC_Settings_Page {
 				<div class="wc-backbone-modal-content">
 					<section class="wc-backbone-modal-main" role="main">
 						<header class="wc-backbone-modal-header">
-							<h1><?php esc_html_e( 'Import New Products From Square', 'woocommerce-square' ); ?></h1>
+							<h1><?php esc_html_e( 'Import Products From Square', 'woocommerce-square' ); ?></h1>
 							<button class="modal-close modal-close-link dashicons dashicons-no-alt">
 								<span class="screen-reader-text"><?php esc_html_e( 'Close modal window', 'woocommerce-square' ); ?></span>
 							</button>
