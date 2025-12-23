@@ -264,40 +264,6 @@ class Sync_Page {
 		<?php
 	}
 
-
-	/**
-	 * Outputs an informational notice about importing new products from Square.
-	 *
-	 * @since 4.8.0
-	 */
-	private static function output_import_products_notice() {
-
-		if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
-			return;
-		}
-
-		$settings_url = admin_url( 'admin.php?page=wc-settings&tab=square' );
-
-		?>
-		<div class="wc-square-import-notice" style="background: #f0f6fc; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 20px 0;">
-			<p style="margin: 0 0 8px 0;">
-				<strong><?php esc_html_e( 'Looking to import new products from Square?', 'woocommerce-square' ); ?></strong>
-			</p>
-			<p style="margin: 0;">
-				<?php
-				printf(
-					/* translators: Placeholders: %1$s - opening <a> tag, %2$s - closing </a> tag */
-					esc_html__( 'The "Sync Now" button only updates products that are already synced with Square. To import new products from Square that don\'t exist in WooCommerce yet, use the %1$sImport all Products from Square%2$s button on the Settings tab.', 'woocommerce-square' ),
-					'<a href="' . esc_url( $settings_url ) . '"><strong>',
-					'</strong></a>'
-				);
-				?>
-			</p>
-		</div>
-		<?php
-	}
-
-
 	/**
 	 * Outputs tabular HTML with sync record logs and UI.
 	 *
@@ -386,17 +352,19 @@ class Sync_Page {
 				<div class="wc-backbone-modal-content">
 					<section class="wc-backbone-modal-main" role="main">
 						<header class="wc-backbone-modal-header">
-							<h1><?php esc_html_e( 'Sync existing products with Square', 'woocommerce-square' ); ?></h1>
+							<h1><?php esc_html_e( 'Sync products with Square', 'woocommerce-square' ); ?></h1>
 							<button class="modal-close modal-close-link dashicons dashicons-no-alt">
 								<span class="screen-reader-text"><?php esc_html_e( 'Close modal window', 'woocommerce-square' ); ?></span>
 							</button>
 						</header>
 						<article>
 							<?php $square_settings = wc_square()->get_settings_handler(); ?>
+							<?php if ( $square_settings->is_product_sync_enabled() ) : ?>
 							<p style="background: #fcf9e8; border-left: 4px solid #dba617; padding: 10px 12px; margin-bottom: 16px;">
 								<strong><?php esc_html_e( 'Note:', 'woocommerce-square' ); ?></strong>
 								<?php esc_html_e( 'This will only update products that are already synced with Square. New products in Square will not be imported. To import new products, use "Import all Products from Square" on the Settings tab.', 'woocommerce-square' ); ?>
 							</p>
+							<?php endif; ?>
 							<?php ob_start(); ?>
 							<ul>
 								<?php if ( $square_settings->is_system_of_record_square() ) : ?>
@@ -418,7 +386,7 @@ class Sync_Page {
 							<?php
 							printf(
 								/* translators: Placeholders: %1$s - the name of the system of record set in the sync settings (e.g. Square or WooCommerce), %3%s - unordered HTML list of additional information item(s) */
-								esc_html__( 'You are about to sync existing products with Square. %1$s is your system of record set in the sync settings. For all products currently synced with Square: %2$s', 'woocommerce-square' ),
+								esc_html__( 'You are about to sync products with Square. %1$s is your system of record set in the sync settings. For all products currently synced with Square: %2$s', 'woocommerce-square' ),
 								esc_html( $square_settings->get_system_of_record_name() ),
 								$additional_info // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The contents of $additional_info is already escaped above.
 							);
