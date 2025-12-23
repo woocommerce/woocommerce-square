@@ -32,7 +32,7 @@ jQuery( document ).ready( ( $ ) => {
 	// products quick edit screen.
 	if ( 'edit-product' === pagenow ) {
 		// Add notice near stock field in bulk edit when Square SOR and inventory sync is enabled.
-		if ( wc_square_admin_products.is_square_sor && wc_square_admin_products.is_inventory_sync_enabled ) {
+		if ( wc_square_admin_products.is_inventory_sync_enabled ) {
 			// Use MutationObserver to detect when bulk edit form is inserted into the DOM.
 			const bulkEditObserver = new MutationObserver( ( mutations ) => {
 				mutations.forEach( ( mutation ) => {
