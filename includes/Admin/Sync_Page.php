@@ -359,7 +359,7 @@ class Sync_Page {
 						</header>
 						<article>
 							<?php $square_settings = wc_square()->get_settings_handler(); ?>
-							<?php if ( $square_settings->is_product_sync_enabled() ) : ?>
+							<?php if ( $square_settings->is_system_of_record_square() ) : ?>
 							<p style="background: #fcf9e8; border-left: 4px solid #dba617; padding: 10px 12px; margin-bottom: 16px;">
 								<strong><?php esc_html_e( 'Note:', 'woocommerce-square' ); ?></strong>
 								<?php esc_html_e( 'This will only update products that are already synced with Square. New products in Square will not be imported. To import new products, use "Import all Products from Square" on the Settings tab.', 'woocommerce-square' ); ?>
@@ -386,7 +386,7 @@ class Sync_Page {
 							<?php
 							printf(
 								/* translators: Placeholders: %1$s - the name of the system of record set in the sync settings (e.g. Square or WooCommerce), %3%s - unordered HTML list of additional information item(s) */
-								esc_html__( 'You are about to sync products with Square. %1$s is your system of record set in the sync settings. For all products currently synced with Square: %2$s', 'woocommerce-square' ),
+								esc_html__( 'You are about to sync products with Square. %1$s is your system of record set in the sync settings. For all products synced with Square: %2$s', 'woocommerce-square' ),
 								esc_html( $square_settings->get_system_of_record_name() ),
 								$additional_info // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The contents of $additional_info is already escaped above.
 							);
