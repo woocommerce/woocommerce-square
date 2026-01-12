@@ -293,7 +293,7 @@ class Interval_Polling extends Stepped_Job {
 		$catalog_objects_to_update      = array();
 
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
-			$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+			$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 			$sold_out              = $inventory_data['sold_out'] ?? false;
 			$product               = Product::get_product_by_square_variation_id( $catalog_object_id );
 			if ( $product instanceof \WC_Product ) {
@@ -317,7 +317,7 @@ class Interval_Polling extends Stepped_Job {
 				$product = Product::get_product_by_square_variation_id( $catalog_object_id );
 				if ( $product instanceof \WC_Product ) {
 					$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
-					$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
 
 					/* If catalog object is tracked and has a quantity > 0 set in Square. */
@@ -421,7 +421,7 @@ class Interval_Polling extends Stepped_Job {
 			// Square can return multiple "types" of counts, WooCommerce only distinguishes whether a product is in stock or not
 			if ( $product instanceof \WC_Product ) {
 				$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
-				$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+				$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 				$sold_out              = $inventory_data['sold_out'] ?? false;
 
 				if ( $is_tracking_inventory ) {
