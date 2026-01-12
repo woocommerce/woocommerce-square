@@ -347,6 +347,17 @@ export const ConfigureSync = ( {
 									) }
 									indent={ indent }
 									className="import-products-wrapper"
+									description={
+										system_of_record === 'square'
+											? __(
+													'Use this to bring new products from Square into WooCommerce. This is different from "Sync Now" which only updates products that are already synced.',
+													'woocommerce-square'
+											  )
+											: __(
+													'Use this to bring products from Square into WooCommerce.',
+													'woocommerce-square'
+											  )
+									}
 								>
 									<Button
 										data-testid="import-products-button"
@@ -406,7 +417,10 @@ export const ConfigureSync = ( {
 
 								{ isOpen && (
 									<Modal
-										title="Import Products From Square"
+										title={ __(
+											'Import Products From Square',
+											'woocommerce-square'
+										) }
 										size={ 'large' }
 										onRequestClose={ closeModal }
 									>
