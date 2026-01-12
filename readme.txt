@@ -1,10 +1,10 @@
 === WooCommerce Square ===
 Contributors: woocommerce, automattic
 Tags: credit card, square, woocommerce, inventory sync
-Requires at least: 6.5
-Tested up to: 6.8
+Requires at least: 6.7
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.1.0
+Stable tag: 5.1.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -72,6 +72,19 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 5.1.2 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457.
+* Dev - Bump WooCommerce "tested up to" version 10.4.
+* Dev - Bump WordPress "tested up to" version 6.9.
+
+= 5.1.1 - 2025-11-03 =
+* Fix - Missing attribute names after Product Import.
+* Fix - Update for PHP 8.4 compatibility.
+* Dev - Bump WooCommerce "tested up to" version 10.3.
+* Dev - Bump WooCommerce minimum supported version to 10.1.
+* Dev - Updates to our QIT GitHub Action workflow.
+* Dev - Add new deploy workflow.
+
 = 5.1.0 - 2025-09-29 =
 * Add - Support for multiple categories in WooCommerce-Square product synchronization.
 * Add - Improve debugging with more options and verbose descriptions.
@@ -82,10 +95,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 * Dev - Bump WooCommerce "tested up to" version 10.2.
 * Dev - Bump WooCommerce minimum supported version to 10.0.
 
+= 5.0.1 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 5.0.
+
 = 5.0.0 - 2025-09-10 =
 * Add - Order fulfillment sync between WooCommerce and Square orders for those that opt-in.
 * Fix - Ensure inventory sync isn’t interrupted in case of a category insert failure.
 * Fix - Accurately count attribute values – 250 values, not characters.
+
+= 4.9.9 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.9.
 
 = 4.9.8 - 2025-08-21 =
 * Fix - Ensure there is no fatal error on the product page when the product price is blank.
@@ -153,6 +172,9 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 * Dev - Updates to E2E tests setup.
 * Dev - Update all third-party actions our workflows rely on to use versions based on specific commit hashes.
 
+= 4.8.8 - 2025-12-10 =
+* Security - Resolve CVE-2025-13457 for version 4.8.
+
 = 4.8.7 - 2025-03-06 =
 * Add - Support for syncing the "Mark as Sold Out" field value during inventory sync.
 * Fix - Ensure payment methods display the correct buttons and statuses in the new WooCommerce Payments settings.
@@ -217,45 +239,12 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 * Dev - Bump WooCommerce "tested up to" version 9.2.
 * Dev - Bump WooCommerce minimum supported version to 9.0.
 
-= 4.7.3 - 2024-08-19 =
-* Fix - Inconsistency in the height of Express Payment Button and compliance with the new Woo Express Payment Method Styling API.
-* Fix - Ensure the "Uncaught TypeError" JavaScript console error does not occur for out-of-stock products.
-* Fix - Ensure compatibility with WooPayments extension.
-* Dev - Bump WooCommerce "tested up to" version 9.1.
-* Dev - Bump WooCommerce minimum supported version to 8.9.
-* Dev - Update NPM packages and node version to v20 to modernize developer experience.
-
-= 4.7.2 - 2024-07-29 =
-* Fix - Check if dependencies are loaded before showing onboarding process.
-* Fix - Ensure the product category syncs properly between the Square and WooCommerce store.
-* Dev - Fix QIT E2E tests and add support for a few new test types.
-
-= 4.7.1 - 2024-07-22 =
-* Fix - Remove double encoding from the redirect_url param in the oauth connect url.
-* Dev - Bump WordPress "tested up to" version 6.6.
-
-= 4.7.0 - 2024-06-27 =
-* Add - New Merchant Onboarding experience with a new wizard flow & settings pages.
-* Add - Support for WooCommerce Product Blocks.
-* Dev - Bump WooCommerce "tested up to" version 9.0.
-* Dev - Bump WooCommerce minimum supported version to 8.8.
-* Dev - Bump WordPress minimum supported version to 6.4.
-
-= 4.6.3 - 2024-06-17 =
-* Add - ESLint GitHub Action workflow to enforce ESLint rules on pull requests.
-* Dev - Bump Square PHP SDK version from `29.0.0.20230720` to `35.1.0.20240320`.
-* Dev - Improved codebase by addressing PHPCS errors.
-* Dev - Improved codebase by resolving issues reported by ESLint.
-* Dev - Address QIT PHPStan test errors.
-* Dev - Address QIT Security test errors.
-* Fix - A fatal error could occur when running incompatible versions of WooCommerce.
-* Fix - Apple Pay button is now available on Cart and Checkout Block pages.
-* Fix - Ensure that the 'Sync stock from Square' and 'Sync inventory' links work properly on the edit product screen.
-* Fix - Prevent cancelled Digital Wallet payments from blocking the Checkout form.
-
 [View historical changelog details here](https://github.com/woocommerce/woocommerce-square/blob/trunk/changelog.txt).
 
 == Upgrade Notice ==
+
+= 5.1.2 =
+Security release affecting versions 4.2 upward, please update promptly. Minor releases are available on wordpress.org.
 
 = 3.5.0 =
 * Note that this version bumps the minimum PHP version from 7.2 to 7.4.

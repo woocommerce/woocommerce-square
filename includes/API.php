@@ -762,7 +762,7 @@ class API extends Base {
 	/**
 	 * Determines the best available name for a catalog option.
 	 *
-	 * @since x.x.x
+	 * @since 5.1.1
 	 *
 	 * @param \Square\Models\CatalogObject $catalog_object Catalog option object.
 	 * @return string
@@ -788,7 +788,7 @@ class API extends Base {
 	/**
 	 * Checks if the cached options data is missing names and needs refreshing.
 	 *
-	 * @since x.x.x
+	 * @since 5.1.1
 	 *
 	 * @param mixed $options_data Cached options data.
 	 * @return bool
