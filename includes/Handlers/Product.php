@@ -445,7 +445,7 @@ class Product {
 		}
 
 		$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
-		$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? true;
+		$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 		$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
 		if ( $is_inventory_tracking ) {
@@ -499,7 +499,7 @@ class Product {
 				$square_id               = $catalog_object->getId();
 				$stock                   = $inventory_hash[ $square_id ] ?? 0;
 				$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
-				$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? true;
+				$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 				$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
 				$product_id = $products_map[ $square_id ]['product_id'];
