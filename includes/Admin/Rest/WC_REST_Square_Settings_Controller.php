@@ -112,7 +112,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'sanitize_callback' => 'sanitize_text_field',
 					),
 					'system_of_record'                 => array(
-						'description'       => __( 'Choose where data will be updated for synced products.', 'woocommerce-square' ),
+						'description'       => __( 'Choose the origin for updates to synced products.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
