@@ -250,15 +250,19 @@ class Sync_Page {
 							id="wc-square-sync"
 							class="button button-large"
 							<?php echo ! empty( $disabled_reason ) ? sprintf( 'disabled="disabled" title="%s"', esc_attr( $disabled_reason ) ) : ''; ?>
-						><?php esc_html_e( 'Sync now', 'woocommerce-square' ); ?></span></button>
+						><?php esc_html_e( 'Sync now', 'woocommerce-square' ); ?></button>
 						<div id="wc-square-sync-progress-spinner" class="spinner" style="float:none; <?php echo $sync_in_progress ? 'visibility:visible;' : ''; ?>"></div>
+						<?php if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) : ?>
+							<p class="description" style="margin-top: 8px; font-style: italic; color: #646970;">
+								<?php esc_html_e( 'Updates existing synced products only. Does not import new products from Square.', 'woocommerce-square' ); ?>
+							</p>
+						<?php endif; ?>
 					</td>
 				</tr>
 			</tbody>
 		</table>
 		<?php
 	}
-
 
 	/**
 	 * Outputs tabular HTML with sync record logs and UI.
@@ -355,6 +359,12 @@ class Sync_Page {
 						</header>
 						<article>
 							<?php $square_settings = wc_square()->get_settings_handler(); ?>
+							<?php if ( $square_settings->is_system_of_record_square() ) : ?>
+							<p style="background: #fcf9e8; border-left: 4px solid #dba617; padding: 10px 12px; margin-bottom: 16px;">
+								<strong><?php esc_html_e( 'Note:', 'woocommerce-square' ); ?></strong>
+								<?php esc_html_e( 'This will only update products that are already synced with Square. New products in Square will not be imported. To import new products, use "Import all Products from Square" on the Settings tab.', 'woocommerce-square' ); ?>
+							</p>
+							<?php endif; ?>
 							<?php ob_start(); ?>
 							<ul>
 								<?php if ( $square_settings->is_system_of_record_square() ) : ?>
