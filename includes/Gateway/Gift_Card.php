@@ -62,6 +62,19 @@ class Gift_Card extends Payment_Gateway {
 	}
 
 	/**
+	 * Get the payment method title or show default if not set.
+	 *
+	 * @since x.x.x
+	 * @return string payment method title to show on checkout
+	 */
+	public function get_title() {
+		if ( $this->title ) {
+			return $this->title;
+		}
+		return esc_html__( 'Square Gift Card', 'woocommerce-square' );
+	}
+
+	/**
 	 * Returns true if the gateway is properly configured to perform transactions
 	 *
 	 * @since 4.7.0

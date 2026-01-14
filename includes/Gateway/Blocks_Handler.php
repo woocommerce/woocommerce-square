@@ -117,7 +117,7 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 	public function get_payment_method_data() {
 		return empty( $this->get_gateway() ) ? array() : array_merge(
 			array(
-				'title'                      => $this->get_setting( 'title' ),
+				'title'                      => $this->get_title(),
 				'application_id'             => $this->get_gateway()->get_application_id(),
 				'location_id'                => $this->plugin->get_settings_handler()->get_location_id(),
 				'is_sandbox'                 => $this->plugin->get_settings_handler()->is_sandbox(),
