@@ -465,18 +465,18 @@ class Gift_Card extends Payment_Gateway {
 					$response['is_error'] = true;
 
 					if ( is_array( $gift_card_data ) ) {
-						$log = new \WC_Logger();
-
 						foreach ( $gift_card_data as $square_error ) {
 							if ( $square_error instanceof \Square\Models\Error ) {
 								/** @var \Square\Models\Error $square_error */
-								$log->log( 'error', $square_error->getDetail() );
+								wc_square()->log( 'error', 'Gift card error: ' . $square_error->getDetail(), array( 'source' => 'woocommerce-square-gift-card' ) );
 							}
 						}
 					}
 				}
 			} else {
 				$response['is_error'] = true;
+
+				wc_square()->log( 'error', 'Gift card error: Payment token (woocommerce_square_gift_card_payment_token) is missing from session.', array( 'source' => 'woocommerce-square-gift-card' ) );
 			}
 		}
 
