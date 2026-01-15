@@ -133,7 +133,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	 * Helper function to get title of Square Cash App gateway to be displayed as Label on checkout block.
 	 * Defaults to "Cash App Pay"
 	 *
-	 * @since x.x.x
+	 * @since 5.2.0
 	 * @return string
 	 */
 	private function get_title() {
@@ -144,7 +144,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 	 * Helper function to get description of Square Cash App gateway to be displayed on checkout block.
 	 * Defaults to "Pay securely using Cash App Pay."
 	 *
-	 * @since x.x.x
+	 * @since 5.2.0
 	 * @return string
 	 */
 	private function get_description() {

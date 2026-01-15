@@ -147,7 +147,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Get the payment method title or show default if not set.
 	 *
-	 * @since x.x.x
+	 * @since 5.2.0
 	 * @return string payment method title to show on checkout
 	 */
 	public function get_title() {
@@ -160,7 +160,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Get the payment method description or show default if not set.
 	 *
-	 * @since x.x.x
+	 * @since 5.2.0
 	 * @return string payment method description to show on checkout
 	 */
 	public function get_description() {

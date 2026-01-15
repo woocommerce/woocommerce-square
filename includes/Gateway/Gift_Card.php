@@ -64,7 +64,7 @@ class Gift_Card extends Payment_Gateway {
 	/**
 	 * Get the payment method title or show default if not set.
 	 *
-	 * @since x.x.x
+	 * @since 5.2.0
 	 * @return string payment method title to show on checkout
 	 */
 	public function get_title() {
