@@ -113,12 +113,10 @@ class Coupon_Utility {
 		$wc_coupon = array(
 			'code'            => $square_discount_code['code'],
 			'discount_type'   => self::map_discount_type(),
-			'discount_amount' => self::map_discount_amount(),
+			'discount_amount' => 0,
 			'product_ids'     => self::map_product_ids(),
 		);
 
-		echo "\n\nMapped WC Coupon\n\n";
-		var_dump( $wc_coupon );
 
 		return $wc_coupon;
 	}
@@ -176,16 +174,6 @@ class Coupon_Utility {
 		self::$pricing_rule_object = $pricing_rule;
 		self::$discount_object     = $discount_object[0];
 		self::$product_set_object  = $product_set_object[0];
-
-		echo "<pre>";
-		echo "Pricing Rule\n\n";
-		var_dump( $pricing_rule );
-		echo "\n\nDiscount Object\n\n";
-		var_dump( $discount_object );
-		echo "\n\nProduct Set Object\n\n";
-		var_dump( $product_set_object );
-
-		echo '<hr>';
 
 		return true;
 	}
