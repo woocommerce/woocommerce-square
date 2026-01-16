@@ -139,7 +139,7 @@ export const ConfigureSync = ( {
 								sprintf(
 									/* translators: %1$s and %2$s are placeholders for the link to the documentation, %3$s and %4$s are placeholders for the link to the support forum */
 									__(
-										"Choose where data will be updated for synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you're experiencing technical issues.",
+										"Choose the origin for updates to synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1$sLearn more%2$s about choosing a system of record or %3$screate a ticket%4$s if you're experiencing technical issues.",
 										'woocommerce-square'
 									),
 									'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank">',
@@ -347,6 +347,17 @@ export const ConfigureSync = ( {
 									) }
 									indent={ indent }
 									className="import-products-wrapper"
+									description={
+										system_of_record === 'square'
+											? __(
+													'Use this to bring new products from Square into WooCommerce. This is different from "Sync Now" which only updates products that are already synced.',
+													'woocommerce-square'
+											  )
+											: __(
+													'Use this to bring products from Square into WooCommerce.',
+													'woocommerce-square'
+											  )
+									}
 								>
 									<Button
 										data-testid="import-products-button"
@@ -406,7 +417,10 @@ export const ConfigureSync = ( {
 
 								{ isOpen && (
 									<Modal
-										title="Import Products From Square"
+										title={ __(
+											'Import Products From Square',
+											'woocommerce-square'
+										) }
 										size={ 'large' }
 										onRequestClose={ closeModal }
 									>

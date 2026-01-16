@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 5.1.2
+ * Version: 5.2.0
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.7
  * Tested up to: 6.9
@@ -29,7 +29,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '5.1.2' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '5.2.0' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
@@ -326,13 +326,18 @@ class WooCommerce_Square_Loader {
 	 * @return bool
 	 */
 	public function is_environment_compatible() {
-		$is_wc_compatible        = $this->is_wc_compatible();
-		$is_wp_compatible        = $this->is_wp_compatible();
-		$is_php_valid            = $this->is_php_version_valid();
-		$is_opcache_config_valid = $this->is_opcache_save_message_enabled();
-		$error_message           = '';
+		static $error_message_registered = false;
+		$is_wc_compatible                = $this->is_wc_compatible();
+		$is_wp_compatible                = $this->is_wp_compatible();
+		$is_php_valid                    = $this->is_php_version_valid();
+		$is_opcache_config_valid         = $this->is_opcache_save_message_enabled();
+		$error_message                   = '';
 
 		if ( ! $is_php_valid || ! $is_opcache_config_valid || ! $is_wc_compatible || ! $is_wp_compatible ) {
+			if ( $error_message_registered ) {
+				// Error message has already been registered, do not register again.
+				return false;
+			}
 			$error_message .= sprintf(
 				// translators: plugin name
 				__( '<strong>All features in %1$s have been disabled</strong> due to unsupported settings:<br>', 'woocommerce-square' ),
@@ -352,8 +357,8 @@ class WooCommerce_Square_Loader {
 		if ( ! $is_opcache_config_valid ) {
 			$error_message .= sprintf(
 				// translators: link to documentation
-				__( '&bull;&nbsp;<strong>Invalid OPcache config: </strong><a href="%s" target="_blank">Please ensure the <code>save_comments</code> PHP option is enabled.</a> You may need to contact your hosting provider to change caching options.', 'woocommerce-square' ),
-				'https://woocommerce.com/document/woocommerce-square/troubleshooting/#section-3'
+				__( '&bull;&nbsp;<strong>Invalid OPcache config: </strong><a href="%s" target="_blank">Please ensure the <code>save_comments</code> PHP option is enabled.</a> You may need to contact your hosting provider to change caching options.<br />', 'woocommerce-square' ),
+				'https://woocommerce.com/document/woocommerce-square/troubleshooting/#recommended-caching-settings'
 			);
 		}
 
@@ -389,7 +394,8 @@ class WooCommerce_Square_Loader {
 			);
 		}
 
-		if ( ! empty( $error_message ) ) {
+		if ( ! empty( $error_message ) && ! $error_message_registered ) {
+			$error_message_registered = true;
 			$this->add_admin_notice(
 				'bad_environment',
 				'error',
@@ -456,6 +462,15 @@ class WooCommerce_Square_Loader {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
 
+			if ( ! $this->is_environment_compatible() ) {
+				/*
+				 * Environment not compatible, do not configure features.
+				 *
+				 * The autoloader is not configured if the environment is not compatible,
+				 * so calling the line below will result in a fatal error on such systems.
+				 */
+				return;
+			}
 			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}

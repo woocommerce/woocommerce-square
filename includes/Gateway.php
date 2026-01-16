@@ -145,6 +145,32 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
+	 * Get the payment method title or show default if not set.
+	 *
+	 * @since 5.2.0
+	 * @return string payment method title to show on checkout
+	 */
+	public function get_title() {
+		if ( $this->title ) {
+			return $this->title;
+		}
+		return esc_html__( 'Credit Card', 'woocommerce-square' );
+	}
+
+	/**
+	 * Get the payment method description or show default if not set.
+	 *
+	 * @since 5.2.0
+	 * @return string payment method description to show on checkout
+	 */
+	public function get_description() {
+		if ( $this->description ) {
+			return $this->description;
+		}
+		return esc_html__( 'Pay securely using your credit card.', 'woocommerce-square' );
+	}
+
+	/**
 	 * Ajax callback to return payment token by token ID.
 	 *
 	 * @since 4.2.0
