@@ -77,6 +77,73 @@ class Coupons {
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
+
+		// Prevent multiple coupon codes when Square coupon is used.
+		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_multiple_coupon_codes' ), 10, 3 );
+	}
+
+	/**
+	 * Prevent multiple coupon codes when Square coupon is used.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param bool      $is_valid Whether the coupon is valid.
+	 * @param \WC_Coupon $coupon  Coupon object.
+	 * @param \WC_Discounts $discounts Discounts object.
+	 * @return bool|WP_Error True if valid, false or WP_Error if invalid.
+	 */
+	public static function prevent_multiple_coupon_codes( $is_valid, $coupon, $discounts ) {
+		// If coupon is already invalid, don't override.
+		if ( ! $is_valid ) {
+			return $is_valid;
+		}
+
+		$cart = WC()->cart;
+		if ( ! $cart ) {
+			return $is_valid;
+		}
+
+		$coupon_code = $coupon->get_code();
+		$applied_coupons = $cart->get_applied_coupons();
+
+		// Check if this is a Square discount code.
+		$is_square_coupon = ! empty( self::get_square_discount_code_id_by_code( $coupon_code ) );
+
+		// Check if there are any applied coupons.
+		if ( ! empty( $applied_coupons ) ) {
+			// Check if any applied coupon is a Square coupon.
+			$has_square_coupon = false;
+			foreach ( $applied_coupons as $applied_code ) {
+				if ( ! empty( self::get_square_discount_code_id_by_code( $applied_code ) ) ) {
+					$has_square_coupon = true;
+					break;
+				}
+			}
+
+			// If trying to apply Square coupon but WooCommerce coupon exists.
+			if ( $is_square_coupon && ! $has_square_coupon ) {
+				$coupon->set_error_message( 
+					sprintf( 
+						__( 'Sorry, coupon "%s" cannot be used in combination with other coupons. Please remove the existing coupon and try again.', 'woocommerce-square' ),
+						esc_html( $coupon_code )
+					)
+				);
+				return false;
+			}
+
+			// If trying to apply WooCommerce coupon but Square coupon exists.
+			if ( ! $is_square_coupon && $has_square_coupon ) {
+				$coupon->set_error_message( 
+					sprintf( 
+						__( 'Sorry, coupon "%s" cannot be used in combination with Square discount codes. Please remove the Square discount code and try again.', 'woocommerce-square' ),
+						esc_html( $coupon_code )
+					)
+				);
+				return false;
+			}
+		}
+
+		return $is_valid;
 	}
 
 	/**
