@@ -76,6 +76,7 @@ class Coupons {
 
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
+		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 	}
 
 	/**
@@ -188,7 +189,7 @@ class Coupons {
 	public static function handle_coupon_applied( $coupon_code ) {
 		// Check if this is a Square discount code.
 		$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
-		
+
 		if ( empty( $square_discount_code_id ) ) {
 			// Not a Square discount code, skip.
 			return;
@@ -258,7 +259,7 @@ class Coupons {
 
 		// Get Square discount code ID from cart session (already stored when coupon was applied).
 		$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
-		
+
 		// Fallback: if not in session, try to get it from API.
 		if ( empty( $square_discount_code_id ) ) {
 			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
@@ -392,7 +393,7 @@ class Coupons {
 		}
 
 		$cart = WC()->cart;
-		
+
 		if ( ! $cart || $cart->is_empty() ) {
 			throw new \Exception( 'Cart is empty.' );
 		}
@@ -470,7 +471,7 @@ class Coupons {
 
 					// Try to match this Square line item to a cart item.
 					$matched_cart_item_key = null;
-					
+
 					// First try to match by catalog object ID.
 					if ( isset( $square_line_item['catalog_object_id'] ) && ! empty( $square_line_item['catalog_object_id'] ) ) {
 						foreach ( $cart_items_by_key as $cart_key => $cart_item_info ) {
@@ -480,7 +481,7 @@ class Coupons {
 							}
 						}
 					}
-					
+
 					// If no match by catalog ID, try to match by name.
 					if ( ! $matched_cart_item_key && isset( $square_line_item['name'] ) ) {
 						foreach ( $cart_items_by_key as $cart_key => $cart_item_info ) {
@@ -512,17 +513,17 @@ class Coupons {
 				$cart_fee_total += (float) $fee->amount;
 			}
 			$cart_tax_total = $cart->get_total_tax();
-			
+
 			// Total before discount (in dollars).
 			$total_before_discount = $cart_subtotal + $cart_shipping_total + $cart_fee_total + $cart_tax_total;
 
 			// Get calculated total from Square (in cents).
 			$total_after_discount_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
 			$total_after_discount = Money_Utility::cents_to_float( $total_after_discount_cents );
-			
+
 			// Discount amount is the difference.
 			$total_discount_amount = $total_before_discount - $total_after_discount;
-			
+
 			// Ensure discount is not negative.
 			if ( $total_discount_amount < 0 ) {
 				$total_discount_amount = 0;
@@ -568,7 +569,7 @@ class Coupons {
 				$tax_item->setName( $tax->label );
 				$tax_item->setType( $tax_type );
 				$tax_item->setScope( 'LINE_ITEM' );
-				
+
 				// Get tax rate percentage.
 				$rate_percentage = 0;
 				$tax_rate        = \WC_Tax::_get_tax_rate( $rate_id );
@@ -584,7 +585,7 @@ class Coupons {
 		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
 			$product  = $cart_item['data'];
 			$quantity = (float) $cart_item['quantity'];
-			
+
 			$line_item = new \Square\Models\OrderLineItem( (string) $quantity );
 
 			// Check if gift card.
@@ -603,7 +604,7 @@ class Coupons {
 			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
 				$subtotal_per_unit += $line_subtotal_tax;
 			}
-			
+
 			if ( $quantity > 0 ) {
 				$subtotal_per_unit = $subtotal_per_unit / $quantity;
 			} else {
@@ -633,7 +634,7 @@ class Coupons {
 					}
 				}
 			}
-			
+
 			if ( ! empty( $applied_taxes ) ) {
 				$line_item->setAppliedTaxes( $applied_taxes );
 			}
@@ -650,12 +651,12 @@ class Coupons {
 				if ( isset( $chosen_shipping_methods[ $package_index ] ) ) {
 					$shipping_method = $chosen_shipping_methods[ $package_index ];
 					$shipping_cost = 0;
-					
+
 					// Get shipping cost from package.
 					if ( isset( $package['rates'][ $shipping_method ] ) ) {
 						$shipping_rate = $package['rates'][ $shipping_method ];
 						$shipping_cost = (float) $shipping_rate->get_cost();
-						
+
 						if ( $shipping_cost > 0 ) {
 							$shipping_line_item = new \Square\Models\OrderLineItem( '1' );
 							$shipping_line_item->setName( $shipping_rate->get_label() );
@@ -686,5 +687,94 @@ class Coupons {
 		}
 
 		return $order_model;
+	}
+
+	/**
+	 * Override WooCommerce discount calculation with Square's calculated amount.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param float      $discount      Discount amount.
+	 * @param float      $discounting_amount Amount the coupon is being applied to.
+	 * @param array|null $cart_item     Cart item being discounted.
+	 * @param bool       $single        True if discounting a single qty item.
+	 * @param \WC_Coupon $coupon        Coupon object.
+	 * @return float Discount amount.
+	 */
+	public static function override_discount_amount_with_square( $discount, $discounting_amount, $cart_item, $single, $coupon ) {
+		$coupon_code = $coupon->get_code();
+
+		// Verify the coupon is actually applied to the cart before using session data.
+		$cart = WC()->cart;
+		if ( ! $cart ) {
+			return $discount;
+		}
+
+		$applied_coupons = $cart->get_applied_coupons();
+		$is_coupon_applied = false;
+		foreach ( $applied_coupons as $applied_code ) {
+			if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
+				$is_coupon_applied = true;
+				break;
+			}
+		}
+
+		// If coupon is not applied, don't use Square discount data (might be stale).
+		if ( ! $is_coupon_applied ) {
+			return $discount;
+		}
+
+		// Check if we have Square discount data stored for this coupon.
+		$square_discount_per_item = WC()->session->get( '_square_discount_per_item_' . $coupon_code );
+
+		if ( $square_discount_per_item !== null && is_array( $square_discount_per_item ) ) {
+			// This is a Square discount code - use Square's calculated per-item amounts.
+			// Get the cart item key to look up the discount.
+			if ( $cart_item && is_array( $cart_item ) && isset( $cart_item['key'] ) ) {
+				$cart_item_key = $cart_item['key'];
+
+				// Check if we have a discount for this specific cart item.
+				if ( isset( $square_discount_per_item[ $cart_item_key ] ) && $square_discount_per_item[ $cart_item_key ] > 0 ) {
+					$item_line_discount = (float) $square_discount_per_item[ $cart_item_key ];
+					$quantity = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
+
+					// If $single is true, return discount per unit; if false, return discount for the line.
+					if ( $single ) {
+						return $quantity > 0 ? $item_line_discount / $quantity : 0;
+					} else {
+						return $item_line_discount;
+					}
+				}
+			}
+
+			// If no per-item discount found for this item, return 0 (item doesn't get discount).
+			return 0;
+		}
+
+		// Fallback: if per-item discounts not available, check for total discount and distribute proportionally.
+		$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
+		if ( $square_discount_amount !== null && $square_discount_amount > 0 ) {
+			$cart = WC()->cart;
+			if ( $cart && $cart_item && is_array( $cart_item ) ) {
+				// Calculate proportion of this item to total cart subtotal.
+				$cart_subtotal = $cart->get_subtotal();
+				if ( $cart_subtotal > 0 ) {
+					$item_subtotal = isset( $cart_item['line_subtotal'] ) ? (float) $cart_item['line_subtotal'] : 0;
+					$proportion = $item_subtotal / $cart_subtotal;
+					$item_line_discount = $square_discount_amount * $proportion;
+
+					// If $single is true, return discount per unit; if false, return discount for the line.
+					if ( $single ) {
+						$quantity = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
+						return $quantity > 0 ? $item_line_discount / $quantity : 0;
+					} else {
+						return $item_line_discount;
+					}
+				}
+			}
+		}
+
+		// Not a Square discount code, use WooCommerce's calculation.
+		return $discount;
 	}
 }
