@@ -460,6 +460,53 @@ class Gateway extends Payment_Gateway_Direct {
 
 				$order->square_order_id = $response->getId();
 
+				// Create Redemption to link Square discount code to Square order.
+				// Note: CalculateOrder was already called when coupon was applied, so we only need to create the redemption here.
+				$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
+				
+				// Fallback: if not in order meta, check cart session (in case woocommerce_checkout_create_order didn't fire).
+				if ( empty( $square_discount_code_id ) && WC()->cart ) {
+					$applied_coupons = WC()->cart->get_applied_coupons();
+					if ( ! empty( $applied_coupons ) ) {
+						$coupon_code             = $applied_coupons[0];
+						$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
+						
+						// If found in session, store it in order meta for future use.
+						if ( ! empty( $square_discount_code_id ) ) {
+							$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
+							$order->save();
+						}
+					}
+				}
+				
+				if ( ! empty( $square_discount_code_id ) && ! empty( $order->square_order_id ) ) {
+					try {
+						// REQUIRED: Create Redemption to link discount code to order.
+						$redemption_result = $this->get_api()->create_redemption( $square_discount_code_id, $order->square_order_id );
+
+						if ( ! is_wp_error( $redemption_result ) && ! empty( $redemption_result['id'] ) ) {
+							// Store redemption ID in order meta for reference.
+							$order->update_meta_data( '_square_redemption_id', $redemption_result['id'] );
+							$order->save();
+
+							if ( $this->debug_log() ) {
+								$this->get_plugin()->log( sprintf( 'Square: Created redemption %s for discount code %s on order #%s', $redemption_result['id'], $square_discount_code_id, $order->get_id() ), $this->get_id() );
+							}
+						} else {
+							// Log redemption failure but don't fail the payment.
+							if ( $this->debug_log() ) {
+								$error_message = is_wp_error( $redemption_result ) ? $redemption_result->get_error_message() : 'Unknown error';
+								$this->get_plugin()->log( sprintf( 'Square: Failed to create redemption for discount code %s on order #%s: %s', $square_discount_code_id, $order->get_id(), $error_message ), $this->get_id() );
+							}
+						}
+					} catch ( \Exception $redemption_exception ) {
+						// Log redemption errors but don't fail the payment.
+						if ( $this->debug_log() ) {
+							$this->get_plugin()->log( sprintf( 'Square: Error creating redemption for discount code %s on order #%s: %s', $square_discount_code_id, $order->get_id(), $redemption_exception->getMessage() ), $this->get_id() );
+						}
+					}
+				}
+
 				// adjust order by difference between WooCommerce and Square order totals
 				$wc_total     = Money_Utility::amount_to_cents( $order->get_total() );
 				$square_total = $response->getTotalMoney()->getAmount();
