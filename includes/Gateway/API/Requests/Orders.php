@@ -367,6 +367,24 @@ class Orders extends API\Request {
 		$api_line_items = array();
 		$tax_type       = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
 
+		// Check for Square discount code ID - first from order meta, then from cart session as fallback.
+		$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
+		
+		// Fallback: if not in order meta, check cart session (in case woocommerce_checkout_create_order didn't fire).
+		if ( empty( $square_discount_code_id ) && WC()->cart ) {
+			$applied_coupons = WC()->cart->get_applied_coupons();
+			if ( ! empty( $applied_coupons ) ) {
+				$coupon_code             = $applied_coupons[0];
+				$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
+				
+				// If found in session, store it in order meta for future use.
+				if ( ! empty( $square_discount_code_id ) ) {
+					$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
+					$order->save_meta_data();
+				}
+			}
+		}
+
 		/** @var \WC_Order_Item_Product $item */
 		foreach ( $line_items as $item ) {
 			$is_product = $item instanceof \WC_Order_Item_Product;
@@ -404,11 +422,15 @@ class Orders extends API\Request {
 			}
 
 			// CALCULATE DISCOUNT.
+			// Skip adding discount line items if Square discount code is present (discount will be applied via CreateRedemption).
 			if ( $item instanceof \WC_Order_Item_Product ) {
-				$discount     = (float) $item->get_subtotal() - (float) $item->get_total();
-				$discount_uid = wc_square()->get_idempotency_key( '', false );
+				$discount = (float) $item->get_subtotal() - (float) $item->get_total();
 
-				if ( $discount > 0 ) {
+				// Only add discount line items if Square discount code is NOT present.
+				// If Square discount code is present, the discount will be applied via CreateRedemption.
+				if ( $discount > 0 && empty( $square_discount_code_id ) ) {
+					$discount_uid = wc_square()->get_idempotency_key( '', false );
+
 					$line_item->setAppliedDiscounts(
 						array( new \Square\Models\OrderLineItemAppliedDiscount( $discount_uid ) )
 					);
