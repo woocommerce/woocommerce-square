@@ -72,6 +72,7 @@ class Coupons {
 		// Hooks for handling coupon application and removal.
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
 		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
+		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_ids_in_order' ), 10, 2 );
 
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
@@ -220,6 +221,56 @@ class Coupons {
 			// Remove coupon and show error.
 			$cart->remove_coupon( $coupon_code );
 			wc_add_notice( sprintf( __( 'Unable to apply coupon "%s": %s', 'woocommerce-square' ), $coupon_code, $e->getMessage() ), 'error' );
+		}
+	}
+
+	/**
+	 * Store Square discount code IDs when order is created from cart.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order $order The order object being created.
+	 * @param array     $data  Posted checkout data.
+	 */
+	public static function store_square_discount_code_ids_in_order( $order, $data ) {
+		// Only proceed if WooCommerce Square is active.
+		if ( ! function_exists( 'wc_square' ) ) {
+			return;
+		}
+
+		// Get applied coupons from cart.
+		$cart = WC()->cart;
+		if ( ! $cart ) {
+			return;
+		}
+
+		$applied_coupons = $cart->get_applied_coupons();
+		if ( empty( $applied_coupons ) ) {
+			return;
+		}
+
+		// For now, we'll store the first coupon's Square discount code ID.
+		// If multiple coupons are supported, we can extend this later.
+		$coupon_code = $applied_coupons[0];
+		if ( empty( $coupon_code ) ) {
+			return;
+		}
+
+		// Get Square discount code ID from cart session (already stored when coupon was applied).
+		$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
+		
+		// Fallback: if not in session, try to get it from API.
+		if ( empty( $square_discount_code_id ) ) {
+			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
+		}
+
+		if ( ! empty( $square_discount_code_id ) ) {
+			$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
+			// Not calling save() here as the order hasn't been saved yet, it will be saved by WooCommerce after this hook,
+			$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
+			if ( ! empty( $square_discount_amount ) ) {
+				$order->update_meta_data( '_square_discount_amount', $square_discount_amount );
+			}
 		}
 	}
 
