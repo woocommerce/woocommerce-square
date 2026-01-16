@@ -117,7 +117,6 @@ class Coupon_Utility {
 			'product_ids'   => self::map_product_ids(),
 		);
 
-
 		return $wc_coupon;
 	}
 

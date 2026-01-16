@@ -73,7 +73,7 @@ class Coupons {
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
 		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
 		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_ids_in_order' ), 10, 2 );
-		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 4 );
+		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
 
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
@@ -496,7 +496,8 @@ class Coupons {
 		}
 
 		// Call CalculateOrder with discount code and get raw response for per-line-item discounts.
-		$calculate_result      = $api->calculate_order( $square_order, array( $square_discount_code_id ), true );
+		// Note: We pass null for WC_Order since we're calculating from cart, not an existing order.
+		$calculate_result      = $api->calculate_order( null, $square_order, array( $square_discount_code_id ), true );
 		$calculated_order      = $calculate_result['order'];
 		$calculated_order_data = $calculate_result['raw_response'];
 
@@ -876,11 +877,11 @@ class Coupons {
 		// Check if any Square coupons are still applied and recalculate.
 		foreach ( $applied_coupons as $coupon_code ) {
 			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
-			
+
 			if ( ! empty( $square_discount_code_id ) ) {
 				// This is a Square coupon - recalculate the discount for the new cart contents.
 				$recalculating = true;
-				
+
 				try {
 					self::calculate_square_discount_from_cart( $coupon_code );
 				} catch ( \Exception $e ) {
@@ -906,12 +907,12 @@ class Coupons {
 	 * @param int    $old_quantity  Old quantity.
 	 * @param \WC_Cart $cart        Cart object.
 	 */
-	public static function handle_cart_item_quantity_update( $cart_item_key, $quantity, $old_quantity, $cart ) {
+	public static function handle_cart_item_quantity_update( $cart_item_key, $quantity, $old_quantity ) {
 		// Only recalculate if quantity actually changed.
 		if ( $quantity === $old_quantity ) {
 			return;
 		}
-		
+
 		// Trigger recalculation if Square coupons are applied.
 		self::handle_cart_contents_changed();
 	}
