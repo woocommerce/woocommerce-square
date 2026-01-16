@@ -73,6 +73,7 @@ class Coupons {
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
 		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
 		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_ids_in_order' ), 10, 2 );
+		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 4 );
 
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
@@ -843,5 +844,75 @@ class Coupons {
 
 		// Not a Square discount code, use WooCommerce's calculation.
 		return $discount;
+	}
+
+	/**
+	 * Handle cart contents changed - recalculate Square discounts if applied.
+	 *
+	 * @since x.x.x
+	 */
+	public static function handle_cart_contents_changed() {
+		// Prevent infinite loops - check if we're already recalculating.
+		static $recalculating = false;
+		if ( $recalculating ) {
+			return;
+		}
+
+		$cart = WC()->cart;
+		if ( ! $cart || $cart->is_empty() ) {
+			return;
+		}
+
+		$applied_coupons = $cart->get_applied_coupons();
+		if ( empty( $applied_coupons ) ) {
+			return;
+		}
+
+		// Only recalculate if we're not in the middle of adding items (check if doing_action).
+		if ( doing_action( 'woocommerce_add_to_cart' ) || doing_action( 'woocommerce_cart_item_removed' ) ) {
+			return;
+		}
+
+		// Check if any Square coupons are still applied and recalculate.
+		foreach ( $applied_coupons as $coupon_code ) {
+			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
+			
+			if ( ! empty( $square_discount_code_id ) ) {
+				// This is a Square coupon - recalculate the discount for the new cart contents.
+				$recalculating = true;
+				
+				try {
+					self::calculate_square_discount_from_cart( $coupon_code );
+				} catch ( \Exception $e ) {
+					// If recalculation fails, log the error but don't remove the coupon during cart operations.
+					// The coupon will be validated later during checkout.
+					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+						error_log( sprintf( 'Square: Error recalculating discount after cart change for coupon %s: %s', $coupon_code, $e->getMessage() ) );
+					}
+				} finally {
+					$recalculating = false;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Handle cart item quantity update - trigger recalculation.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $cart_item_key Cart item key.
+	 * @param int    $quantity      New quantity.
+	 * @param int    $old_quantity  Old quantity.
+	 * @param \WC_Cart $cart        Cart object.
+	 */
+	public static function handle_cart_item_quantity_update( $cart_item_key, $quantity, $old_quantity, $cart ) {
+		// Only recalculate if quantity actually changed.
+		if ( $quantity === $old_quantity ) {
+			return;
+		}
+		
+		// Trigger recalculation if Square coupons are applied.
+		self::handle_cart_contents_changed();
 	}
 }
