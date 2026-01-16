@@ -485,4 +485,155 @@ class Coupons {
 
 		return $total_discount_amount;
 	}
+
+	/**
+	 * Build Square Order object from cart data (for calculation only, no order creation).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $location_id Square location ID.
+	 * @return \Square\Models\Order Square Order object ready for CalculateOrder.
+	 */
+	private static function build_square_order_from_cart( $location_id ) {
+		$cart = WC()->cart;
+		if ( ! $cart || $cart->is_empty() ) {
+			return null;
+		}
+
+		$currency    = get_woocommerce_currency();
+		$order_model = new \Square\Models\Order( $location_id );
+
+		// Build line items from cart.
+		$line_items = array();
+		$tax_type   = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
+
+		// Get tax rates for cart.
+		$tax_rates = array();
+		if ( wc_tax_enabled() ) {
+			$tax_totals = $cart->get_tax_totals();
+			foreach ( $tax_totals as $rate_id => $tax ) {
+				$tax_item = new \Square\Models\OrderLineItemTax();
+				$tax_item->setUid( uniqid() );
+				$tax_item->setName( $tax->label );
+				$tax_item->setType( $tax_type );
+				$tax_item->setScope( 'LINE_ITEM' );
+				
+				// Get tax rate percentage.
+				$rate_percentage = 0;
+				$tax_rate        = \WC_Tax::_get_tax_rate( $rate_id );
+				if ( $tax_rate && isset( $tax_rate['tax_rate'] ) ) {
+					$rate_percentage = (float) $tax_rate['tax_rate'];
+				}
+				$tax_item->setPercentage( Square_Helper::number_format( $rate_percentage ) );
+				$tax_rates[ $rate_id ] = $tax_item;
+			}
+		}
+
+		// Convert cart items to Square line items.
+		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+			$product  = $cart_item['data'];
+			$quantity = (float) $cart_item['quantity'];
+			
+			$line_item = new \Square\Models\OrderLineItem( (string) $quantity );
+
+			// Check if gift card.
+			if ( Product::is_gift_card( $product ) ) {
+				$line_item->setItemType( 'GIFT_CARD' );
+			}
+
+			// Calculate amounts.
+			$line_subtotal     = (float) $cart_item['line_subtotal'];
+			$line_total        = (float) $cart_item['line_total'];
+			$line_subtotal_tax = (float) $cart_item['line_subtotal_tax'];
+			$line_tax          = (float) $cart_item['line_tax'];
+
+			// Base price per unit (before any discounts).
+			$subtotal_per_unit = $line_subtotal;
+			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
+				$subtotal_per_unit += $line_subtotal_tax;
+			}
+			
+			if ( $quantity > 0 ) {
+				$subtotal_per_unit = $subtotal_per_unit / $quantity;
+			} else {
+				$subtotal_per_unit = 0;
+			}
+
+			$line_item->setQuantity( (string) $quantity );
+			$line_item->setBasePriceMoney( Money_Utility::amount_to_money( $subtotal_per_unit, $currency ) );
+
+			// Set catalog object ID if available.
+			$square_variation_id = $product->get_meta( Product::SQUARE_VARIATION_ID_META_KEY );
+			if ( ! empty( $square_variation_id ) ) {
+				$line_item->setCatalogObjectId( $square_variation_id );
+			} else {
+				$line_item->setName( $product->get_name() );
+			}
+
+			// Apply taxes.
+			$applied_taxes = array();
+			if ( ! empty( $cart_item['line_tax_data'] ) && is_array( $cart_item['line_tax_data'] ) ) {
+				$tax_data = $cart_item['line_tax_data'];
+				if ( isset( $tax_data['total'] ) && is_array( $tax_data['total'] ) ) {
+					foreach ( $tax_data['total'] as $rate_id => $tax_amount ) {
+						if ( ! empty( $tax_amount ) && isset( $tax_rates[ $rate_id ] ) ) {
+							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $tax_rates[ $rate_id ]->getUid() );
+						}
+					}
+				}
+			}
+			
+			if ( ! empty( $applied_taxes ) ) {
+				$line_item->setAppliedTaxes( $applied_taxes );
+			}
+
+			// Note: We do NOT add WooCommerce discounts here - Square will calculate via discount codes.
+			$line_items[] = $line_item;
+		}
+
+		// Add shipping as line item (only if shipping method is selected).
+		$chosen_shipping_methods = WC()->session->get( 'chosen_shipping_methods' );
+		if ( ! empty( $chosen_shipping_methods ) && $cart->needs_shipping() ) {
+			$packages = WC()->shipping()->get_packages();
+			foreach ( $packages as $package_index => $package ) {
+				if ( isset( $chosen_shipping_methods[ $package_index ] ) ) {
+					$shipping_method = $chosen_shipping_methods[ $package_index ];
+					$shipping_cost = 0;
+					
+					// Get shipping cost from package.
+					if ( isset( $package['rates'][ $shipping_method ] ) ) {
+						$shipping_rate = $package['rates'][ $shipping_method ];
+						$shipping_cost = (float) $shipping_rate->get_cost();
+						
+						if ( $shipping_cost > 0 ) {
+							$shipping_line_item = new \Square\Models\OrderLineItem( '1' );
+							$shipping_line_item->setName( $shipping_rate->get_label() );
+							$shipping_line_item->setBasePriceMoney( Money_Utility::amount_to_money( $shipping_cost, $currency ) );
+							$line_items[] = $shipping_line_item;
+						}
+					}
+				}
+			}
+		}
+
+		// Add fees as line items.
+		foreach ( $cart->get_fees() as $fee_key => $fee ) {
+			$fee_amount = (float) $fee->amount;
+			if ( $fee_amount != 0 ) {
+				$fee_line_item = new \Square\Models\OrderLineItem( '1' );
+				$fee_line_item->setName( $fee->name );
+				$fee_line_item->setBasePriceMoney( Money_Utility::amount_to_money( $fee_amount, $currency ) );
+				$line_items[] = $fee_line_item;
+			}
+		}
+
+		$order_model->setLineItems( $line_items );
+
+		// Set taxes.
+		if ( ! empty( $tax_rates ) ) {
+			$order_model->setTaxes( array_values( $tax_rates ) );
+		}
+
+		return $order_model;
+	}
 }
