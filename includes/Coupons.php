@@ -296,4 +296,165 @@ class Coupons {
 
 		return null;
 	}
+
+	/**
+	 * Calculate Square discount from cart using CalculateOrder API.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to calculate discount for.
+	 * @return float The calculated discount amount.
+	 * @throws \Exception If calculation fails.
+	 */
+	private static function calculate_square_discount_from_cart( $coupon_code ) {
+		// Only proceed if WooCommerce Square is active
+		if ( ! function_exists( 'wc_square' ) ) {
+			throw new \Exception( 'WooCommerce Square plugin is not available.' );
+		}
+
+		$cart = WC()->cart;
+		
+		if ( ! $cart || $cart->is_empty() ) {
+			throw new \Exception( 'Cart is empty.' );
+		}
+
+		// Get Square discount code ID.
+		$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
+		if ( empty( $square_discount_code_id ) ) {
+			throw new \Exception( 'Square discount code not found.' );
+		}
+
+		// Get location ID.
+		$settings_handler = wc_square()->get_settings_handler();
+		if ( ! $settings_handler ) {
+			throw new \Exception( 'Square settings handler is not available.' );
+		}
+
+		$location_id = $settings_handler->get_location_id();
+		if ( empty( $location_id ) ) {
+			throw new \Exception( 'Square location ID is not configured.' );
+		}
+
+		// Build Square Order from cart.
+		$square_order = self::build_square_order_from_cart( $location_id );
+		if ( ! $square_order ) {
+			throw new \Exception( 'Failed to build Square order from cart.' );
+		}
+
+		// Get API instance.
+		$api = wc_square()->get_gateway()->get_api();
+		if ( ! $api ) {
+			throw new \Exception( 'Square API is not available.' );
+		}
+
+		// Call CalculateOrder with discount code and get raw response for per-line-item discounts.
+		$calculate_result      = $api->calculate_order( $square_order, array( $square_discount_code_id ), true );
+		$calculated_order      = $calculate_result['order'];
+		$calculated_order_data = $calculate_result['raw_response'];
+
+		// Extract per-line-item discounts from Square's response.
+		$line_item_discounts   = array();
+		$total_discount_amount = 0;
+
+		if ( isset( $calculated_order_data['line_items'] ) && is_array( $calculated_order_data['line_items'] ) ) {
+			// Map Square line items to cart items by matching catalog object ID or name.
+			$cart_items_by_key = array();
+			foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+				$product             = $cart_item['data'];
+				$square_variation_id = $product->get_meta( Product::SQUARE_VARIATION_ID_META_KEY );
+				$product_name        = $product->get_name();
+
+				// Skip if square variation id is not set or the product is not set for square sync.
+				if ( empty( $square_variation_id ) || ! $product ) {
+					continue;
+				}
+
+				// Create mapping keys: catalog object ID (preferred) or product name.
+				$cart_items_by_key[ $cart_item_key ] = array(
+					'catalog_object_id' => $square_variation_id,
+					'name' => $product_name,
+					'quantity' => (float) $cart_item['quantity'],
+				);
+			}
+
+			// Extract discounts from Square's calculated line items.
+			foreach ( $calculated_order_data['line_items'] as $square_line_item ) {
+				// Get discount amount for this line item (in cents).
+				$line_item_discount_cents = 0;
+				if ( isset( $square_line_item['total_discount_money'] ) && isset( $square_line_item['total_discount_money']['amount'] ) ) {
+					$line_item_discount_cents = (int) $square_line_item['total_discount_money']['amount'];
+				}
+
+				if ( $line_item_discount_cents > 0 ) {
+					$line_item_discount = Money_Utility::cents_to_float( $line_item_discount_cents );
+					$total_discount_amount += $line_item_discount;
+
+					// Try to match this Square line item to a cart item.
+					$matched_cart_item_key = null;
+					
+					// First try to match by catalog object ID.
+					if ( isset( $square_line_item['catalog_object_id'] ) && ! empty( $square_line_item['catalog_object_id'] ) ) {
+						foreach ( $cart_items_by_key as $cart_key => $cart_item_info ) {
+							if ( $cart_item_info['catalog_object_id'] === $square_line_item['catalog_object_id'] ) {
+								$matched_cart_item_key = $cart_key;
+								break;
+							}
+						}
+					}
+					
+					// If no match by catalog ID, try to match by name.
+					if ( ! $matched_cart_item_key && isset( $square_line_item['name'] ) ) {
+						foreach ( $cart_items_by_key as $cart_key => $cart_item_info ) {
+							if ( $cart_item_info['name'] === $square_line_item['name'] ) {
+								$matched_cart_item_key = $cart_key;
+								break;
+							}
+						}
+					}
+
+					// Store discount for this cart item.
+					if ( $matched_cart_item_key ) {
+						if ( ! isset( $line_item_discounts[ $matched_cart_item_key ] ) ) {
+							$line_item_discounts[ $matched_cart_item_key ] = 0;
+						}
+						$line_item_discounts[ $matched_cart_item_key ] += $line_item_discount;
+					}
+				}
+			}
+		}
+
+		// If we couldn't extract per-item discounts, fall back to total discount calculation.
+		if ( empty( $line_item_discounts ) ) {
+			// Calculate order total without discount for comparison.
+			$cart_subtotal = $cart->get_subtotal();
+			$cart_shipping_total = $cart->get_shipping_total();
+			$cart_fee_total = 0;
+			foreach ( $cart->get_fees() as $fee ) {
+				$cart_fee_total += (float) $fee->amount;
+			}
+			$cart_tax_total = $cart->get_total_tax();
+			
+			// Total before discount (in dollars).
+			$total_before_discount = $cart_subtotal + $cart_shipping_total + $cart_fee_total + $cart_tax_total;
+
+			// Get calculated total from Square (in cents).
+			$total_after_discount_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
+			$total_after_discount = Money_Utility::cents_to_float( $total_after_discount_cents );
+			
+			// Discount amount is the difference.
+			$total_discount_amount = $total_before_discount - $total_after_discount;
+			
+			// Ensure discount is not negative.
+			if ( $total_discount_amount < 0 ) {
+				$total_discount_amount = 0;
+			}
+		}
+
+		// Store per-item discounts and total in cart session.
+		WC()->session->set( '_square_discount_amount_' . $coupon_code, $total_discount_amount );
+		WC()->session->set( '_square_discount_per_item_' . $coupon_code, $line_item_discounts );
+		WC()->session->set( '_square_discount_code_id_' . $coupon_code, $square_discount_code_id );
+
+		return $total_discount_amount;
+	}
 }
