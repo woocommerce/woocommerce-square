@@ -34,6 +34,46 @@ use Square\Models\FulfillmentType;
  */
 class Orders extends API\Request {
 
+	/**
+	 * Square order object for calculateOrder request.
+	 * Used to store the order object when calculating discounts.
+	 *
+	 * @var \Square\Models\Order
+	 */
+	protected $square_order;
+
+	/**
+	 * Proposed discount codes for calculateOrder request.
+	 * Array of discount code IDs to propose for calculation.
+	 *
+	 * @var array
+	 */
+	protected $proposed_discount_codes = array();
+
+	/**
+	 * Whether to return raw response data for calculateOrder.
+	 * When true, the raw JSON response will be available in addition to the parsed order object.
+	 *
+	 * @var bool
+	 */
+	protected $return_raw_response = false;
+
+	/**
+	 * WooCommerce order object.
+	 * Stored for reference during calculateOrder request.
+	 *
+	 * @var \WC_Order
+	 */
+	protected $wc_order;
+
+	/**
+	 * Raw response data from calculateOrder API call.
+	 * This is populated by the API.php do_square_request method when handling calculateOrder.
+	 * Used to provide access to the full JSON response including per-line-item discount details.
+	 *
+	 * @var array
+	 */
+	public $raw_calculate_order_response;
 
 	/**
 	 * Initializes a new Catalog request.
@@ -106,6 +146,35 @@ class Orders extends API\Request {
 		// Set the data.
 		$this->set_order_data( $order, $order_model );
 		$this->square_api_args = array( $order->square_order_id, $this->square_request );
+	}
+
+	/**
+	 * Sets the data for calculating a Square order.
+	 *
+	 * Note: CalculateOrder is an Alpha API endpoint that is not yet available in the Square PHP SDK.
+	 * This method follows the same pattern as other order request methods (set_create_order_data, etc.)
+	 * but the actual API call is handled as a special case in API.php::do_square_request() using direct HTTP.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param \WC_Order|null      $order                   Optional. WooCommerce order object. Can be null when called from cart context.
+	 * @param \Square\Models\Order $square_order            Square order object to calculate.
+	 * @param array                $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
+	 * @param bool                 $return_raw_response    Optional. If true, the raw JSON response will be available.
+	 */
+	public function set_calculate_order_data( $order, \Square\Models\Order $square_order, array $proposed_discount_codes = array(), $return_raw_response = false ) {
+		// Set the API method name - this will be intercepted in API.php::do_square_request()
+		// since calculateOrder is not available in the Square SDK
+		$this->square_api_method = 'calculateOrder';
+
+		// Store the order objects and parameters for use in the custom HTTP request handler
+		$this->square_order            = $square_order;
+		$this->proposed_discount_codes = $proposed_discount_codes;
+		$this->return_raw_response     = $return_raw_response;
+		$this->wc_order                = $order;
+
+		// Note: square_api_args is not used for calculateOrder since we handle it via direct HTTP
+		$this->square_api_args = array();
 	}
 
 	/**
