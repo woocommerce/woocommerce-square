@@ -111,10 +111,10 @@ class Coupon_Utility {
 
 		// Map the Square coupon format to the WC coupon format.
 		$wc_coupon = array(
-			'code'            => $square_discount_code['code'],
-			'discount_type'   => self::map_discount_type(),
-			'discount_amount' => 0,
-			'product_ids'     => self::map_product_ids(),
+			'code'          => $square_discount_code['code'],
+			'discount_type' => self::map_discount_type(),
+			'amount'        => 0,
+			'product_ids'   => self::map_product_ids(),
 		);
 
 
