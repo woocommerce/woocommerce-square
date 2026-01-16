@@ -205,7 +205,7 @@ class Coupons {
 		}
 
 		foreach ( $data['discount_codes'] as $code ) {
-			if ( $code['code'] === $coupon_data ) {
+			if ( strtoupper( $code['code'] ) === strtoupper( $coupon_data ) ) {
 				$code_data = $code;
 				break;
 			}
