@@ -242,6 +242,13 @@ class Coupons {
 			return null;
 		}
 
+		// Return from transient if available.
+		$transient_key  = 'square_discount_code_id_' . $coupon_code;
+		$transient_data = get_transient( $transient_key );
+		if ( $transient_data ) {
+			return $transient_data;
+		}
+
 		$bearer_token = $settings_handler->get_access_token();
 		$is_sandbox   = $settings_handler->is_sandbox();
 
@@ -290,7 +297,13 @@ class Coupons {
 		// Find matching code.
 		foreach ( $data['discount_codes'] as $code ) {
 			if ( isset( $code['code'] ) && strtoupper( $code['code'] ) === strtoupper( $coupon_code ) ) {
-				return isset( $code['id'] ) ? $code['id'] : null;
+				$discount_code_id = isset( $code['id'] ) ? $code['id'] : null;
+
+				// Cache the discount code ID.
+				set_transient( $transient_key, $discount_code_id, HOUR_IN_SECONDS * 1 );
+
+				// Return the discount code ID.
+				return $discount_code_id;
 			}
 		}
 
