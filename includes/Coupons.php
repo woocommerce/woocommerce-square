@@ -147,6 +147,37 @@ class Coupons {
 	}
 
 	/**
+	 * Retrieve discount code from the Square API.
+	 *
+	 * @param string $discount_code The discount code to retrieve.
+	 * @return array|null Discount code details, or null if not found.
+	 */
+	public static function get_discount_code( $discount_code ) {}
+
+	/**
+	 * Cache discount code details.
+	 *
+	 * @param string     $discount_code The discount code.
+	 * @param array|null $code_details  The discount code details to cache. Null if not found.
+	 */
+	public static function set_cache_discount_code( $discount_code, $code_details ) {}
+
+	/**
+	 * Retrieve cached discount code details.
+	 *
+	 * @param string $discount_code The discount code.
+	 * @return array|null Cached discount code details, or null if not found (known unknown).
+	 */
+	public static function get_cache_discount_code( $discount_code ) {}
+
+	/**
+	 * Clear cached discount code details.
+	 *
+	 * @param string $discount_code The discount code.
+	 */
+	public static function clear_cache_discount_code( $discount_code ) {}
+
+	/**
 	 * Handle coupon application - trigger Square discount calculation if conditions are met.
 	 *
 	 * @since x.x.x
@@ -193,33 +224,76 @@ class Coupons {
 	}
 
 	/**
-	 * Retrieve discount code from the Square API.
+	 * Get Square discount code ID by coupon code.
 	 *
-	 * @param string $discount_code The discount code to retrieve.
-	 * @return array|null Discount code details, or null if not found.
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to search for.
+	 * @return string|null The discount code ID or null if not found.
 	 */
-	public static function get_discount_code( $discount_code ) {}
+	public static function get_square_discount_code_id_by_code( $coupon_code ) {
+		// Only proceed if WooCommerce Square is active.
+		if ( ! function_exists( 'wc_square' ) ) {
+			return null;
+		}
 
-	/**
-	 * Cache discount code details.
-	 *
-	 * @param string     $discount_code The discount code.
-	 * @param array|null $code_details  The discount code details to cache. Null if not found.
-	 */
-	public static function set_cache_discount_code( $discount_code, $code_details ) {}
+		$settings_handler = wc_square()->get_settings_handler();
+		if ( ! $settings_handler ) {
+			return null;
+		}
 
-	/**
-	 * Retrieve cached discount code details.
-	 *
-	 * @param string $discount_code The discount code.
-	 * @return array|null Cached discount code details, or null if not found (known unknown).
-	 */
-	public static function get_cache_discount_code( $discount_code ) {}
+		$bearer_token = $settings_handler->get_access_token();
+		$is_sandbox   = $settings_handler->is_sandbox();
 
-	/**
-	 * Clear cached discount code details.
-	 *
-	 * @param string $discount_code The discount code.
-	 */
-	public static function clear_cache_discount_code( $discount_code ) {}
+		if ( empty( $bearer_token ) ) {
+			return null;
+		}
+
+		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
+
+		$query = array(
+			'query' => array(
+				'filter' => array(
+					'code' => $coupon_code,
+				),
+			),
+		);
+
+		$response = wp_remote_post(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization'  => 'Bearer ' . $bearer_token,
+					'Content-Type'   => 'application/json',
+					'Square-Version' => '2025-01-23',
+				),
+				'body'    => wp_json_encode( $query ),
+				'timeout' => 30,
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				$error_message = is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_message( $response );
+				error_log( sprintf( 'Square: Error searching for discount code %s: %s', $coupon_code, $error_message ) );
+			}
+			return null;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+
+		if ( empty( $data['discount_codes'] ) ) {
+			return null;
+		}
+
+		// Find matching code.
+		foreach ( $data['discount_codes'] as $code ) {
+			if ( isset( $code['code'] ) && strtoupper( $code['code'] ) === strtoupper( $coupon_code ) ) {
+				return isset( $code['id'] ) ? $code['id'] : null;
+			}
+		}
+
+		return null;
+	}
 }
