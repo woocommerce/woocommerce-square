@@ -428,21 +428,55 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Calculates a Square order without creating one.
 	 *
-	 * @param \WC_Order            $order        Woo order object.
-	 * @param \Square\Models\Order $square_order Square order object.
+	 * This method follows the standard request/response pattern used throughout the plugin.
+	 * It uses API\Requests\Orders::set_calculate_order_data() to prepare the request,
+	 * and API.php::do_square_request() handles the actual API call as a special case
+	 * (since calculateOrder is not yet available in the Square PHP SDK).
 	 *
-	 * @return \Square\Models\Order
+	 * Note: CalculateOrder is an Alpha API endpoint that is not yet available in the Square PHP SDK.
+	 * The actual HTTP request is handled in API.php::do_square_request() to maintain consistency
+	 * with the plugin's request/response pattern while supporting this Alpha endpoint.
+	 *
+	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
+	 * @param \Square\Models\Order $square_order            Square order object to calculate.
+	 * @param array                 $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
+	 * @param bool                  $return_raw_response     Optional. If true, returns array with both order and raw response data.
+	 *
+	 * @return \Square\Models\Order|array Returns Order object, or array with 'order' and 'raw_response' if $return_raw_response is true.
+	 * @throws \Exception
 	 */
-	public function calculate_order( \WC_Order $order, \Square\Models\Order $square_order ) {
+	public function calculate_order( $order, \Square\Models\Order $square_order, array $proposed_discount_codes = array(), $return_raw_response = false ) {
+		// Create a new Orders request object following the standard pattern.
 		$request = new API\Requests\Orders( $this->client );
 
-		$request->set_calculate_order_data( $order, $square_order );
+		// Set the request data - this stores the order, discount codes, and flags.
+		// The actual API call will be handled in API.php::do_square_request().
+		$request->set_calculate_order_data( $order, $square_order, $proposed_discount_codes, $return_raw_response );
 
+		// Set the response handler to use the standard API Response class.
 		$this->set_response_handler( \WooCommerce\Square\API\Response::class );
 
+		// Perform the request - this will call API.php::do_square_request() which
+		// handles calculateOrder as a special case using direct HTTP.
 		$response = $this->perform_request( $request );
 
-		return $response->get_data()->getOrder();
+		// Get the calculated order from the response.
+		$calculated_order = $response->get_data();
+
+		// If raw response was requested, return both the parsed order and raw JSON data.
+		// The raw response contains per-line-item discount details that aren't easily
+		// accessible from the Order object, which is needed for accurate discount display.
+		if ( $return_raw_response ) {
+			// Get raw response from request object (populated by do_square_request)
+			$raw_response = $request->raw_calculate_order_response;
+			return array(
+				'order'        => $calculated_order,
+				'raw_response' => $raw_response,
+			);
+		}
+
+		// Return the calculated order object.
+		return $calculated_order;
 	}
 
 	/**
@@ -461,6 +495,90 @@ class API extends \WooCommerce\Square\API {
 		$response = $this->perform_request( $request );
 
 		return $response->get_data()->getOrder();
+	}
+
+	/**
+	 * Creates a Redemption to link a Square discount code to a Square order.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param string $discount_code_id The Square discount code ID.
+	 * @param string $order_id          The Square order ID.
+	 * @param string $idempotency_key   Optional. Idempotency key for the request.
+	 * @return array|WP_Error Redemption object data or WP_Error on failure.
+	 */
+	public function create_redemption( $discount_code_id, $order_id, $idempotency_key = null ) {
+		if ( empty( $discount_code_id ) || empty( $order_id ) ) {
+			return new \WP_Error( 'missing_parameters', 'discount_code_id and order_id are required.' );
+		}
+
+		// Get Square API credentials.
+		if ( ! function_exists( 'wc_square' ) ) {
+			return new \WP_Error( 'plugin_not_available', 'WooCommerce Square plugin is not available.' );
+		}
+
+		$settings_handler = wc_square()->get_settings_handler();
+		if ( ! $settings_handler ) {
+			return new \WP_Error( 'settings_not_available', 'Square settings handler is not available.' );
+		}
+
+		$bearer_token = $settings_handler->get_access_token();
+		$is_sandbox   = $settings_handler->is_sandbox();
+
+		if ( empty( $bearer_token ) ) {
+			return new \WP_Error( 'missing_token', 'Square access token is not configured.' );
+		}
+
+		// Build API URL.
+		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/' . urlencode( $discount_code_id ) . '/redemptions';
+
+		// Generate idempotency key if not provided.
+		if ( empty( $idempotency_key ) ) {
+			$idempotency_key = wc_square()->get_idempotency_key( 'redemption_' . $discount_code_id . '_' . $order_id );
+		}
+
+		// Build request body.
+		$request_body = array(
+			'idempotency_key' => $idempotency_key,
+			'redemption'       => array(
+				'order_id' => $order_id,
+			),
+		);
+
+		// Make HTTP request.
+		$response = wp_remote_post(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization'  => 'Bearer ' . $bearer_token,
+					'Content-Type'   => 'application/json',
+					'Square-Version' => '2025-01-23',
+				),
+				'body'    => wp_json_encode( $request_body ),
+				'timeout' => 30,
+			)
+		);
+
+		// Handle errors.
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+
+		if ( 200 !== $response_code ) {
+			$error_data = json_decode( $response_body, true );
+			$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
+				? $error_data['errors'][0]['detail']
+				: wp_remote_retrieve_response_message( $response );
+
+			return new \WP_Error( 'api_error', $error_message, array( 'status' => $response_code, 'response' => $error_data ) );
+		}
+
+		$data = json_decode( $response_body, true );
+
+		return isset( $data['redemption'] ) ? $data['redemption'] : $data;
 	}
 
 	/**
