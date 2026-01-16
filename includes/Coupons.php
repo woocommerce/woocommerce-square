@@ -26,6 +26,10 @@ namespace WooCommerce\Square;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Utilities\Coupon_Utility;
+use WooCommerce\Square\API;
+use WooCommerce\Square\Handlers\Product;
+use WooCommerce\Square\Utilities\Money_Utility;
+use WooCommerce\Square\Framework\Square_Helper;
 
 /**
  * Class Coupons
@@ -65,6 +69,11 @@ class Coupons {
 	 * Initialize Coupons class.
 	 */
 	public static function init() {
+		// Hooks for handling coupon application and removal.
+		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
+		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
+
+		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
 	}
 
@@ -135,6 +144,52 @@ class Coupons {
 		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
 
 		return $wc_coupon;
+	}
+
+	/**
+	 * Handle coupon application - trigger Square discount calculation if conditions are met.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code that was applied.
+	 */
+	public static function handle_coupon_applied( $coupon_code ) {
+		// Check if this is a Square discount code.
+		$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
+		
+		if ( empty( $square_discount_code_id ) ) {
+			// Not a Square discount code, skip.
+			return;
+		}
+
+		// Store discount code ID in cart session for later use.
+		WC()->session->set( '_square_discount_code_id_' . $coupon_code, $square_discount_code_id );
+
+		// Check if we can calculate now (shipping must be selected if required).
+		$cart = WC()->cart;
+
+		if ( ! $cart ) {
+			return;
+		}
+
+		// Check if shipping is required and selected.
+		if ( $cart->needs_shipping() ) {
+			$chosen_shipping_methods = WC()->session->get( 'chosen_shipping_methods' );
+			if ( empty( $chosen_shipping_methods ) ) {
+				// Shipping not selected yet, mark for later calculation.
+				WC()->session->set( '_square_discount_pending_recalc_' . $coupon_code, true );
+				return;
+			}
+		}
+
+		// Shipping is selected (or not required), calculate now.
+		try {
+			self::calculate_square_discount_from_cart( $coupon_code );
+		} catch ( \Exception $e ) {
+			// Remove coupon and show error.
+			$cart->remove_coupon( $coupon_code );
+			wc_add_notice( sprintf( __( 'Unable to apply coupon "%s": %s', 'woocommerce-square' ), $coupon_code, $e->getMessage() ), 'error' );
+		}
 	}
 
 	/**
