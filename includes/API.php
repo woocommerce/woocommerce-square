@@ -1071,6 +1071,11 @@ class API extends Base {
 	/**
 	 * Performs a remote request with the Square API class.
 	 *
+	 * Note: This method handles both standard SDK methods and special cases like calculateOrder.
+	 * The calculateOrder endpoint is an Alpha API that is not yet available in the Square PHP SDK,
+	 * so we handle it as a special case using direct HTTP requests to maintain consistency with
+	 * the plugin's request/response pattern.
+	 *
 	 * @since 2.0.0
 	 *
 	 * @param Object $square_api the square API class instance
@@ -1079,7 +1084,165 @@ class API extends Base {
 	 * @throws \Exception
 	 */
 	protected function do_square_request( $square_api, $method, $args ) {
+		// Handle calculateOrder as a special case since it's not in the Square SDK
+		// This allows us to use the standard request/response pattern while still supporting
+		// the Alpha API endpoint that isn't available in the SDK yet
+		if ( 'calculateOrder' === $method ) {
+			// Get the request object to access stored data (square_order, proposed_discount_codes, etc.)
+			$request = $this->get_request();
 
+			// Get Square API credentials
+			if ( ! function_exists( 'wc_square' ) ) {
+				throw new \Exception( 'WooCommerce Square plugin is not available.' );
+			}
+
+			$settings_handler = wc_square()->get_settings_handler();
+			if ( ! $settings_handler ) {
+				throw new \Exception( 'Square settings handler is not available.' );
+			}
+
+			$bearer_token = $settings_handler->get_access_token();
+			$is_sandbox   = $settings_handler->is_sandbox();
+
+			if ( empty( $bearer_token ) ) {
+				throw new \Exception( 'Square access token is not configured.' );
+			}
+
+			// Build API URL - CalculateOrder endpoint
+			$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/orders/calculate';
+
+			// Get Square order and proposed discount codes from request object
+			$square_order            = $request->square_order;
+			$proposed_discount_codes = $request->proposed_discount_codes;
+			$return_raw_response     = $request->return_raw_response;
+
+			// Convert Square Order object to array for JSON encoding
+			// The Square SDK Order object implements JsonSerializable
+			$order_data = $square_order->jsonSerialize();
+
+			// Build request body
+			$request_body = array(
+				'order' => $order_data,
+			);
+
+			// Add proposed discount codes if provided
+			// These are the discount code IDs that Square will use to calculate the order
+			if ( ! empty( $proposed_discount_codes ) ) {
+				$proposed_discount_codes_array = array();
+				foreach ( $proposed_discount_codes as $discount_code_id ) {
+					if ( ! empty( $discount_code_id ) ) {
+						$proposed_discount_codes_array[] = array(
+							'id' => $discount_code_id,
+						);
+					}
+				}
+
+				if ( ! empty( $proposed_discount_codes_array ) ) {
+					$request_body['proposed_discount_codes'] = $proposed_discount_codes_array;
+				}
+			}
+
+			// Make direct HTTP request to Square API
+			// We use wp_remote_post instead of the SDK since calculateOrder isn't in the SDK
+			$response = wp_remote_post(
+				$api_url,
+				array(
+					'headers' => array(
+						'Authorization'  => 'Bearer ' . $bearer_token,
+						'Content-Type'   => 'application/json',
+						'Square-Version' => '2025-01-23',
+					),
+					'body'    => wp_json_encode( $request_body ),
+					'timeout' => 30,
+				)
+			);
+
+			// Handle HTTP errors
+			if ( is_wp_error( $response ) ) {
+				throw new \Exception( 'Square API request failed: ' . $response->get_error_message() );
+			}
+
+			$response_code = wp_remote_retrieve_response_code( $response );
+			$response_body = wp_remote_retrieve_body( $response );
+
+			// Handle API errors (non-200 status codes)
+			if ( 200 !== $response_code ) {
+				$error_data = json_decode( $response_body, true );
+				$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
+					? $error_data['errors'][0]['detail']
+					: wp_remote_retrieve_response_message( $response );
+
+				throw new \Exception( 'Square API error: ' . $error_message );
+			}
+
+			$data = json_decode( $response_body, true );
+
+			if ( empty( $data['order'] ) ) {
+				throw new \Exception( 'Square API did not return order data.' );
+			}
+
+			// Store raw response data in request object for later access
+			// This is needed when return_raw_response is true, as the raw JSON contains
+			// per-line-item discount details that aren't easily accessible from the Order object
+			$request->raw_calculate_order_response = $data['order'];
+
+			// Update the original Square Order object with calculated values from the response
+			// This preserves all line items, taxes, etc. from the original order
+			// and only updates the calculated totals (total_money, net_amounts, version)
+			$calculated_order_data = $data['order'];
+
+			// Update total_money from response (this is the key calculated value)
+			if ( isset( $calculated_order_data['total_money'] ) ) {
+				$total_money = new \Square\Models\Money();
+				if ( isset( $calculated_order_data['total_money']['amount'] ) ) {
+					$total_money->setAmount( $calculated_order_data['total_money']['amount'] );
+				}
+				if ( isset( $calculated_order_data['total_money']['currency'] ) ) {
+					$total_money->setCurrency( $calculated_order_data['total_money']['currency'] );
+				} else {
+					// Fallback to original order currency
+					$total_money->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : 'USD' );
+				}
+				$square_order->setTotalMoney( $total_money );
+			}
+
+			// Update version from response if provided
+			if ( isset( $calculated_order_data['version'] ) ) {
+				$square_order->setVersion( $calculated_order_data['version'] );
+			}
+
+			// Update net_amounts if provided in response
+			if ( isset( $calculated_order_data['net_amounts'] ) && isset( $calculated_order_data['net_amounts']['total_money'] ) ) {
+				$net_amounts = new \Square\Models\OrderMoneyAmounts();
+				$net_total   = new \Square\Models\Money();
+				if ( isset( $calculated_order_data['net_amounts']['total_money']['amount'] ) ) {
+					$net_total->setAmount( $calculated_order_data['net_amounts']['total_money']['amount'] );
+				}
+				if ( isset( $calculated_order_data['net_amounts']['total_money']['currency'] ) ) {
+					$net_total->setCurrency( $calculated_order_data['net_amounts']['total_money']['currency'] );
+				} else {
+					$net_total->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : 'USD' );
+				}
+				$net_amounts->setTotalMoney( $net_total );
+				$square_order->setNetAmounts( $net_amounts );
+			}
+
+			// Set response data for the response handler
+			// The response handler expects raw_response_body to contain the result
+			$this->raw_response_body = $square_order;
+			$this->response_code     = 200;
+
+			// Return a mock response object to satisfy the response handling flow
+			// The actual response data is already set in raw_response_body above
+			$mock_response = new \stdClass();
+			$mock_response->result     = $square_order;
+			$mock_response->statusCode = 200;
+			$mock_response->isSuccess  = true;
+
+			return $mock_response;
+		}
+
+		// Standard SDK method handling for all other API methods
 		if ( ! is_callable( array( $square_api, $method ) ) ) {
 			throw new \Exception( 'Invalid API method' );
 		}
