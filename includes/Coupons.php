@@ -311,6 +311,21 @@ class Coupons {
 	}
 
 	/**
+	 * Handle coupon removal - clear Square discount session data.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code that was removed.
+	 */
+	public static function handle_coupon_removed( $coupon_code ) {
+		// Clear all Square-related session data for this coupon.
+		WC()->session->__unset( '_square_discount_code_id_' . $coupon_code );
+		WC()->session->__unset( '_square_discount_amount_' . $coupon_code );
+		WC()->session->__unset( '_square_discount_per_item_' . $coupon_code );
+		WC()->session->__unset( '_square_discount_pending_recalc_' . $coupon_code );
+	}
+
+	/**
 	 * Calculate Square discount from cart using CalculateOrder API.
 	 *
 	 * @since x.x.x
