@@ -104,7 +104,7 @@ class Coupons {
 			return $is_valid;
 		}
 
-		$coupon_code = $coupon->get_code();
+		$coupon_code     = $coupon->get_code();
 		$applied_coupons = $cart->get_applied_coupons();
 
 		// Check if this is a Square discount code.
@@ -167,14 +167,62 @@ class Coupons {
 			return $coupon;
 		}
 
-		$bearer_token = wc_square()->get_settings_handler()->get_access_token();
-		$is_sandbox   = wc_square()->get_settings_handler()->is_sandbox();
-		$api_url      = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
+		$data = self::search_discount_codes_via_api( $coupon_data );
+
+		// Do not pre-flight the coupon if there was an error or no codes found.
+		if ( null === $data || empty( $data['discount_codes'] ) ) {
+			return $coupon;
+		}
+
+		foreach ( $data['discount_codes'] as $code ) {
+			$valid_from   = strtotime( $code['valid_from'] );
+			$expires_at   = strtotime( $code['expires_at'] );
+			$current_time = current_time( 'timestamp' );
+
+			if ( $valid_from > $current_time && $expires_at < $current_time ) {
+				continue;
+			}
+
+			$code_data = $code;
+			break;
+		}
+
+		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
+
+		return $wc_coupon;
+	}
+
+	/**
+	 * Search for discount codes via Square API.
+	 *
+	 * @param string $coupon_code The coupon code to search for.
+	 * @param int    $timeout     Request timeout in seconds. Default 30.
+	 * @return array|null Response data with 'discount_codes' key, or null on error.
+	 */
+	private static function search_discount_codes_via_api( $coupon_code, $timeout = 30 ) {
+		// Get credentials from settings handler.
+		if ( ! function_exists( 'wc_square' ) ) {
+			return null;
+		}
+
+		$settings_handler = wc_square()->get_settings_handler();
+		if ( ! $settings_handler ) {
+			return null;
+		}
+
+		$bearer_token = $settings_handler->get_access_token();
+		$is_sandbox   = $settings_handler->is_sandbox();
+
+		if ( empty( $bearer_token ) ) {
+			return null;
+		}
+
+		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
 
 		$query = array(
 			'query' => array(
 				'filter' => array(
-					'code' => $coupon_data,
+					'code' => $coupon_code,
 				),
 			),
 		);
@@ -188,32 +236,22 @@ class Coupons {
 					'Square-Version' => '2025-01-23',
 				),
 				'body'    => wp_json_encode( $query ),
+				'timeout' => $timeout,
 			)
 		);
 
-		// Do not pre-flight the coupon if there was an error or non-200 response.
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			return $coupon;
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				$error_message = is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_message( $response );
+				error_log( sprintf( 'Square: Error searching for discount code %s: %s', $coupon_code, $error_message ) );
+			}
+			return null;
 		}
 
 		$body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $body, true );
 
-		if ( empty( $data['discount_codes'] ) ) {
-			// No codes found.
-			return $coupon;
-		}
-
-		foreach ( $data['discount_codes'] as $code ) {
-			if ( strtoupper( $code['code'] ) === strtoupper( $coupon_data ) ) {
-				$code_data = $code;
-				break;
-			}
-		}
-
-		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
-
-		return $wc_coupon;
+		return $data;
 	}
 
 	/**
@@ -369,48 +407,9 @@ class Coupons {
 			return $transient_data;
 		}
 
-		$bearer_token = $settings_handler->get_access_token();
-		$is_sandbox   = $settings_handler->is_sandbox();
+		$data = self::search_discount_codes_via_api( $coupon_code );
 
-		if ( empty( $bearer_token ) ) {
-			return null;
-		}
-
-		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
-
-		$query = array(
-			'query' => array(
-				'filter' => array(
-					'code' => $coupon_code,
-				),
-			),
-		);
-
-		$response = wp_remote_post(
-			$api_url,
-			array(
-				'headers' => array(
-					'Authorization'  => 'Bearer ' . $bearer_token,
-					'Content-Type'   => 'application/json',
-					'Square-Version' => '2025-01-23',
-				),
-				'body'    => wp_json_encode( $query ),
-				'timeout' => 30,
-			)
-		);
-
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				$error_message = is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_message( $response );
-				error_log( sprintf( 'Square: Error searching for discount code %s: %s', $coupon_code, $error_message ) );
-			}
-			return null;
-		}
-
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-
-		if ( empty( $data['discount_codes'] ) ) {
+		if ( null === $data || empty( $data['discount_codes'] ) ) {
 			return null;
 		}
 
@@ -418,6 +417,17 @@ class Coupons {
 		foreach ( $data['discount_codes'] as $code ) {
 			if ( isset( $code['code'] ) && strtoupper( $code['code'] ) === strtoupper( $coupon_code ) ) {
 				$discount_code_id = isset( $code['id'] ) ? $code['id'] : null;
+
+				// Check if the discount code is expired.
+				if ( isset( $code['valid_from'] ) && isset( $code['expires_at'] ) ) {
+					$valid_from = strtotime( $code['valid_from'] );
+					$expires_at = strtotime( $code['expires_at'] );
+					$current_time = current_time( 'timestamp' );
+
+					if ( $valid_from > $current_time && $expires_at < $current_time ) {
+						continue;
+					}
+				}
 
 				// Cache the discount code ID.
 				set_transient( $transient_key, $discount_code_id, HOUR_IN_SECONDS * 1 );
@@ -512,12 +522,6 @@ class Coupons {
 				$product             = $cart_item['data'];
 				$square_variation_id = $product->get_meta( Product::SQUARE_VARIATION_ID_META_KEY );
 				$product_name        = $product->get_name();
-
-				// Skip if square variation id is not set or the product is not set for square sync.
-				if ( empty( $square_variation_id ) || ! $product ) {
-					continue;
-				}
-
 				// Create mapping keys: catalog object ID (preferred) or product name.
 				$cart_items_by_key[ $cart_item_key ] = array(
 					'catalog_object_id' => $square_variation_id,
