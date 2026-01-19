@@ -37,34 +37,38 @@ class Orders extends API\Request {
 	/**
 	 * Square order object for calculateOrder request.
 	 * Used to store the order object when calculating discounts.
+	 * Made public to allow access from API.php::do_square_request().
 	 *
 	 * @var \Square\Models\Order
 	 */
-	protected $square_order;
+	public $square_order;
 
 	/**
 	 * Proposed discount codes for calculateOrder request.
 	 * Array of discount code IDs to propose for calculation.
+	 * Made public to allow access from API.php::do_square_request().
 	 *
 	 * @var array
 	 */
-	protected $proposed_discount_codes = array();
+	public $proposed_discount_codes = array();
 
 	/**
 	 * Whether to return raw response data for calculateOrder.
 	 * When true, the raw JSON response will be available in addition to the parsed order object.
+	 * Made public to allow access from API.php::do_square_request().
 	 *
 	 * @var bool
 	 */
-	protected $return_raw_response = false;
+	public $return_raw_response = false;
 
 	/**
 	 * WooCommerce order object.
 	 * Stored for reference during calculateOrder request.
+	 * Made public to allow access from API.php::do_square_request().
 	 *
-	 * @var \WC_Order
+	 * @var \WC_Order|null
 	 */
-	protected $wc_order;
+	public $wc_order;
 
 	/**
 	 * Raw response data from calculateOrder API call.
