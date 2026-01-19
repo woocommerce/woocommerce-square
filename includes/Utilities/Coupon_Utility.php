@@ -279,6 +279,11 @@ class Coupon_Utility {
 
 		$sq_product_ids = self::$product_set_object->getProductSetData()->getProductIdsAny();
 
+		// Confirm an array.
+		if ( ! is_array( $sq_product_ids ) ) {
+			return array();
+		}
+
 		// Remove dupes and sort for cache key consistency.
 		$sq_product_ids = array_unique( $sq_product_ids );
 		sort( $sq_product_ids );
