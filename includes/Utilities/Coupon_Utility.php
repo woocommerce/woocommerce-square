@@ -184,8 +184,14 @@ class Coupon_Utility {
 	 * @param int $pricing_rule_version The Square pricing rule version.
 	 */
 	protected static function request_pricing_rule_objects( $pricing_rule_id, $pricing_rule_version ) {
+		// Ensure credentials are available.
+		$credentials = self::get_square_api_credentials();
+		if ( null === $credentials ) {
+			return false;
+		}
+
 		// Retrieve the pricing rule object.
-		$request  = new API( self::$bearer_token, self::$is_sandbox );
+		$request  = new API( $credentials['access_token'], $credentials['is_sandbox'] );
 		$response = $request->retrieve_catalog_object( $pricing_rule_id, true, $pricing_rule_version );
 
 		if ( ! $response->get_data() instanceof \Square\Models\RetrieveCatalogObjectResponse ) {
