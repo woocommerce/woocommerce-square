@@ -1114,7 +1114,6 @@ class API extends Base {
 			// Get Square order and proposed discount codes from request object.
 			$square_order            = $request->square_order;
 			$proposed_discount_codes = $request->proposed_discount_codes;
-			$return_raw_response     = $request->return_raw_response;
 
 			// Convert Square Order object to array for JSON encoding.
 			// The Square SDK Order object implements JsonSerializable.
