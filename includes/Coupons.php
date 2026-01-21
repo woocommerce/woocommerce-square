@@ -69,14 +69,23 @@ class Coupons {
 	 * Initialize Coupons class.
 	 */
 	public static function init() {
-		// Hooks for handling coupon application and removal.
+		// Check if the coupon is a Square discount code and calculate the discount from the cart.
+		// Store the discount data in the cart session for later use.
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
+
+		// Clear the discount data from the cart session when the coupon is removed.
 		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
-		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_ids_in_order' ), 10, 2 );
+
+		// Store the discount code data in the order meta data.
+		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_data_in_order' ), 10, 1 );
+
+		// Handle cart item quantity update.
 		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
 
 		// Hooks for handling coupon data and discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
+
+		// Override the discount amount with the Square calculated discount amount.
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 
 		// Prevent non-Square coupons from being used with Square coupons.
@@ -399,14 +408,14 @@ class Coupons {
 	}
 
 	/**
-	 * Store Square discount code IDs when order is created from cart.
+	 * Store Square discount code data when order is created from cart.
 	 *
 	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order The order object being created.
 	 * @param array     $data  Posted checkout data.
 	 */
-	public static function store_square_discount_code_ids_in_order( $order, $data ) {
+	public static function store_square_discount_code_data_in_order( $order ) {
 		// Only proceed if WooCommerce Square is active.
 		if ( ! function_exists( 'wc_square' ) ) {
 			return;
@@ -425,7 +434,7 @@ class Coupons {
 
 		// For now, we'll store the first coupon's Square discount code ID.
 		// If multiple coupons are supported, we can extend this later.
-		$coupon_code = $applied_coupons[0];
+		$coupon_code = isset( $applied_coupons[0] ) ? $applied_coupons[0] : null;
 		if ( empty( $coupon_code ) ) {
 			return;
 		}
@@ -440,11 +449,15 @@ class Coupons {
 
 		if ( ! empty( $square_discount_code_id ) ) {
 			$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
-			// Not calling save() here as the order hasn't been saved yet, it will be saved by WooCommerce after this hook,
 			$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
 			if ( ! empty( $square_discount_amount ) ) {
 				$order->update_meta_data( '_square_discount_amount', $square_discount_amount );
 			}
+			$square_discount_per_item = WC()->session->get( '_square_discount_per_item_' . $coupon_code );
+			if ( ! empty( $square_discount_per_item ) ) {
+				$order->update_meta_data( '_square_discount_per_item', $square_discount_per_item );
+			}
+			// Not calling save() here as the order hasn't been saved yet, it will be saved by WooCommerce after this hook.
 		}
 	}
 
@@ -708,9 +721,7 @@ class Coupons {
 
 			// Calculate amounts.
 			$line_subtotal     = (float) $cart_item['line_subtotal'];
-			$line_total        = (float) $cart_item['line_total'];
 			$line_subtotal_tax = (float) $cart_item['line_subtotal_tax'];
-			$line_tax          = (float) $cart_item['line_tax'];
 
 			// Base price per unit (before any discounts).
 			$subtotal_per_unit = $line_subtotal;
