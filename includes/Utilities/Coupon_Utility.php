@@ -140,10 +140,18 @@ class Coupon_Utility {
 	 * @return array|false The mapped WooCommerce coupon data. False if mapping fails.
 	 */
 	public static function map_square_discount_code_to_woocommerce_coupon( $square_discount_code ) {
-		$wc_coupon = array();
-
+		// Create cache key based on pricing rule ID and version.
 		$pricing_rule_id      = $square_discount_code['pricing_rule_id'];
 		$pricing_rule_version = $square_discount_code['pricing_rule_version'];
+		$cache_key            = 'square_coupon_mapping_' . md5( $pricing_rule_id . '_' . $pricing_rule_version );
+
+		// Check cache first.
+		$cached = get_transient( $cache_key );
+		if ( false !== $cached && is_array( $cached ) ) {
+			// Update code in case it's different (though it should be the same for same pricing rule).
+			$cached['code'] = $square_discount_code['code'];
+			return $cached;
+		}
 
 		// Configure the API for use.
 		// get_square_api_credentials() will cache credentials in static properties.
@@ -171,6 +179,9 @@ class Coupon_Utility {
 			'amount'        => 0,
 			'product_ids'   => self::map_product_ids(),
 		);
+
+		// Cache the result for 1 hour (pricing rules don't change frequently).
+		set_transient( $cache_key, $wc_coupon, HOUR_IN_SECONDS );
 
 		return $wc_coupon;
 	}
