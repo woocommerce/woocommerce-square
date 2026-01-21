@@ -80,6 +80,55 @@ class Coupon_Utility {
 	protected static $product_set_object;
 
 	/**
+	 * Get Square API credentials for direct HTTP requests.
+	 * Used for endpoints not available in the Square SDK (e.g., discount codes search).
+	 * Credentials are cached in static properties to avoid redundant fetches during a request.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return array|null Array with 'access_token', 'is_sandbox', and 'base_url', or null on error.
+	 */
+	public static function get_square_api_credentials() {
+		// Return cached credentials if already set (credentials don't change during a request).
+		if ( ! empty( self::$bearer_token ) ) {
+			$base_url = 'https://connect.squareup' . ( self::$is_sandbox ? 'sandbox' : '' ) . '.com/v2';
+			return array(
+				'access_token' => self::$bearer_token,
+				'is_sandbox'   => self::$is_sandbox,
+				'base_url'     => $base_url,
+			);
+		}
+
+		if ( ! function_exists( 'wc_square' ) ) {
+			return null;
+		}
+
+		$settings_handler = wc_square()->get_settings_handler();
+		if ( ! $settings_handler ) {
+			return null;
+		}
+
+		$bearer_token = $settings_handler->get_access_token();
+		$is_sandbox   = $settings_handler->is_sandbox();
+
+		if ( empty( $bearer_token ) ) {
+			return null;
+		}
+
+		// Cache credentials in static properties for subsequent calls.
+		self::$bearer_token = $bearer_token;
+		self::$is_sandbox   = $is_sandbox;
+
+		$base_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2';
+
+		return array(
+			'access_token' => $bearer_token,
+			'is_sandbox'   => $is_sandbox,
+			'base_url'     => $base_url,
+		);
+	}
+
+	/**
 	 * Map a Square Discount Code to a WooCommerce Coupon array.
 	 *
 	 * This allows for the creation of manual WC_Coupon object mapped from the
@@ -97,9 +146,15 @@ class Coupon_Utility {
 		$pricing_rule_version = $square_discount_code['pricing_rule_version'];
 
 		// Configure the API for use.
-		self::$bearer_token = wc_square()->get_settings_handler()->get_access_token();
-		self::$is_sandbox   = wc_square()->get_settings_handler()->is_sandbox();
-		self::$api_url      = 'https://connect.squareup' . ( self::$is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
+		// get_square_api_credentials() will cache credentials in static properties.
+		$credentials = self::get_square_api_credentials();
+		if ( null === $credentials ) {
+			return false;
+		}
+
+		// Credentials are already cached in static properties by get_square_api_credentials().
+		// Set API URL for this specific use case.
+		self::$api_url = $credentials['base_url'] . '/discount-codes/search';
 
 		// Retrieve the pricing rule object.
 		$pricing_rule_objects = self::request_pricing_rule_objects( $pricing_rule_id, $pricing_rule_version );
