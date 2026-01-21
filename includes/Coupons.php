@@ -79,21 +79,22 @@ class Coupons {
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 
-		// Prevent multiple coupon codes when Square coupon is used.
-		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_multiple_coupon_codes' ), 10, 3 );
+		// Prevent non-Square coupons from being used with Square coupons.
+		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 3 );
 	}
 
 	/**
-	 * Prevent multiple coupon codes when Square coupon is used.
+	 * Prevent non-Square coupons from being used with Square coupons.
 	 *
 	 * @since x.x.x
 	 *
 	 * @param bool      $is_valid Whether the coupon is valid.
 	 * @param \WC_Coupon $coupon  Coupon object.
 	 * @param \WC_Discounts $discounts Discounts object.
+	 *
 	 * @return bool|WP_Error True if valid, false or WP_Error if invalid.
 	 */
-	public static function prevent_multiple_coupon_codes( $is_valid, $coupon, $discounts ) {
+	public static function prevent_non_square_coupons_with_square_coupons( $is_valid, $coupon, $discounts ) {
 		// If coupon is already invalid, don't override.
 		if ( ! $is_valid ) {
 			return $is_valid;
@@ -317,7 +318,7 @@ class Coupons {
 	 */
 	public static function set_cache_discount_code( $discount_code, $code_details ) {
 		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
-		
+
 		// Cache for 1 hour. Store false if not found to distinguish from "not cached yet".
 		$cache_value = null === $code_details ? false : $code_details;
 		set_transient( $transient_key, $cache_value, HOUR_IN_SECONDS * 1 );
@@ -332,7 +333,7 @@ class Coupons {
 	public static function get_cache_discount_code( $discount_code ) {
 		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
 		$cached        = get_transient( $transient_key );
-		
+
 		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
 		return false === $cached ? false : ( $cached ? $cached : null );
 	}
@@ -345,7 +346,7 @@ class Coupons {
 	public static function clear_cache_discount_code( $discount_code ) {
 		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
 		delete_transient( $transient_key );
-		
+
 		// Also clear the old ID-only cache for backward compatibility.
 		$old_transient_key = 'square_discount_code_id_' . $discount_code;
 		delete_transient( $old_transient_key );
@@ -489,7 +490,7 @@ class Coupons {
 		WC()->session->__unset( '_square_discount_amount_' . $coupon_code );
 		WC()->session->__unset( '_square_discount_per_item_' . $coupon_code );
 		WC()->session->__unset( '_square_discount_pending_recalc_' . $coupon_code );
-		
+
 		// Clear cached discount code data.
 		self::clear_cache_discount_code( $coupon_code );
 	}
