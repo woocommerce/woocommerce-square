@@ -227,24 +227,13 @@ class Coupons {
 	 * @return array|null Response data with 'discount_codes' key, or null on error.
 	 */
 	private static function search_discount_codes_via_api( $coupon_code, $timeout = 30 ) {
-		// Get credentials from settings handler.
-		if ( ! function_exists( 'wc_square' ) ) {
+		// Get API credentials using Coupon_Utility helper method.
+		$credentials = Coupon_Utility::get_square_api_credentials();
+		if ( null === $credentials ) {
 			return null;
 		}
 
-		$settings_handler = wc_square()->get_settings_handler();
-		if ( ! $settings_handler ) {
-			return null;
-		}
-
-		$bearer_token = $settings_handler->get_access_token();
-		$is_sandbox   = $settings_handler->is_sandbox();
-
-		if ( empty( $bearer_token ) ) {
-			return null;
-		}
-
-		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/search';
+		$api_url = $credentials['base_url'] . '/discount-codes/search';
 
 		$query = array(
 			'query' => array(
@@ -258,7 +247,7 @@ class Coupons {
 			$api_url,
 			array(
 				'headers' => array(
-					'Authorization'  => 'Bearer ' . $bearer_token,
+					'Authorization'  => 'Bearer ' . $credentials['access_token'],
 					'Content-Type'   => 'application/json',
 					'Square-Version' => '2025-01-23',
 				),
@@ -268,9 +257,9 @@ class Coupons {
 		);
 
 		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			if ( function_exists( 'wc_square' ) ) {
 				$error_message = is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_message( $response );
-				error_log( sprintf( 'Square: Error searching for discount code %s: %s', $coupon_code, $error_message ) );
+				wc_square()->log( sprintf( 'Error searching for discount code %s: %s', $coupon_code, $error_message ), 'square-coupons' );
 			}
 			return null;
 		}
@@ -291,9 +280,9 @@ class Coupons {
 	public static function get_discount_code( $discount_code ) {
 		// First check cache.
 		$cached = self::get_cache_discount_code( $discount_code );
-		if ( null !== $cached ) {
-			// Return cached data (could be array with code details or false for "not found").
-			return false === $cached ? null : $cached;
+		if ( $cached ) {
+			// Return cached data.
+			return $cached;
 		}
 
 		// Not in cache, fetch from API.
@@ -342,7 +331,7 @@ class Coupons {
 	 */
 	public static function get_cache_discount_code( $discount_code ) {
 		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
-		$cached = get_transient( $transient_key );
+		$cached        = get_transient( $transient_key );
 		
 		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
 		return false === $cached ? false : ( $cached ? $cached : null );
@@ -941,8 +930,8 @@ class Coupons {
 				} catch ( \Exception $e ) {
 					// If recalculation fails, log the error but don't remove the coupon during cart operations.
 					// The coupon will be validated later during checkout.
-					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-						error_log( sprintf( 'Square: Error recalculating discount after cart change for coupon %s: %s', $coupon_code, $e->getMessage() ) );
+					if ( function_exists( 'wc_square' ) ) {
+						wc_square()->log( sprintf( 'Error recalculating discount after cart change for coupon %s: %s', $coupon_code, $e->getMessage() ), 'square-coupons' );
 					}
 				} finally {
 					$recalculating = false;
