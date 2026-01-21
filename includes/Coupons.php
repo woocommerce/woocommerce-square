@@ -69,8 +69,7 @@ class Coupons {
 	 * Initialize Coupons class.
 	 */
 	public static function init() {
-		// Check if the coupon is a Square discount code and calculate the discount from the cart.
-		// Store the discount data in the cart session for later use.
+		// Detect Square coupon > calculate the discount from API > Store in the cart session for later use.
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
 
 		// Clear the discount data from the cart session when the coupon is removed.
@@ -79,17 +78,18 @@ class Coupons {
 		// Store the discount code data in the order meta data.
 		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_data_in_order' ), 10, 1 );
 
-		// Handle cart item quantity update.
-		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
-
-		// Hooks for handling coupon data and discount amount.
+		// Fetch Square discount full data (pricing rule, version, code) > Convert to a WooCommerce Coupon array.
+		// Keeping discount amount to 0 as we will override it with the Square calculated discount amount.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
 
-		// Override the discount amount with the Square calculated discount amount.
+		// Override the discount amount (which is set to 0 by default) with the Square calculated discount amount.
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 
 		// Prevent non-Square coupons from being used with Square coupons.
 		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 3 );
+
+		// Trigger recalculation if Square coupon is applied and the cart item quantity is updated.
+		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
 	}
 
 	/**
@@ -860,7 +860,7 @@ class Coupons {
 				// Check if we have a discount for this specific cart item.
 				if ( isset( $square_discount_per_item[ $cart_item_key ] ) && $square_discount_per_item[ $cart_item_key ] > 0 ) {
 					$item_line_discount = (float) $square_discount_per_item[ $cart_item_key ];
-					$quantity = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
+					$quantity           = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
 
 					// If $single is true, return discount per unit; if false, return discount for the line.
 					if ( $single ) {
