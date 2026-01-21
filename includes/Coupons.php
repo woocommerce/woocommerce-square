@@ -167,29 +167,56 @@ class Coupons {
 			return $coupon;
 		}
 
-		$data = self::search_discount_codes_via_api( $coupon_data );
-
-		// Do not pre-flight the coupon if there was an error or no codes found.
-		if ( null === $data || empty( $data['discount_codes'] ) ) {
+		// Use cached discount code lookup.
+		$code_data = self::get_discount_code( $coupon_data );
+		if ( null === $code_data ) {
 			return $coupon;
-		}
-
-		foreach ( $data['discount_codes'] as $code ) {
-			$valid_from   = strtotime( $code['valid_from'] );
-			$expires_at   = strtotime( $code['expires_at'] );
-			$current_time = current_time( 'timestamp' );
-
-			if ( $valid_from > $current_time && $expires_at < $current_time ) {
-				continue;
-			}
-
-			$code_data = $code;
-			break;
 		}
 
 		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
 
 		return $wc_coupon;
+	}
+
+	/**
+	 * Find and validate a matching discount code from API response.
+	 *
+	 * @param array  $discount_codes Array of discount codes from API response.
+	 * @param string $coupon_code    The coupon code to find and validate.
+	 * @return array|null The matching and valid discount code, or null if not found or invalid.
+	 */
+	private static function find_valid_discount_code( $discount_codes, $coupon_code ) {
+		if ( empty( $discount_codes ) || ! is_array( $discount_codes ) ) {
+			return null;
+		}
+
+		$current_time = current_time( 'timestamp' );
+
+		foreach ( $discount_codes as $code ) {
+			// Match by code (case-insensitive).
+			if ( ! isset( $code['code'] ) || strtoupper( $code['code'] ) !== strtoupper( $coupon_code ) ) {
+				continue;
+			}
+
+			// Validate expiration dates if present.
+			$valid_from = isset( $code['valid_from'] ) ? strtotime( $code['valid_from'] ) : null;
+			$expires_at = isset( $code['expires_at'] ) ? strtotime( $code['expires_at'] ) : null;
+
+			// Check if code is valid from date.
+			if ( $valid_from > $current_time ) {
+				continue;
+			}
+
+			// Check if code is expired.
+			if ( null !== $expires_at && $expires_at < $current_time ) {
+				continue;
+			}
+
+			// Found a valid matching code.
+			return $code;
+		}
+
+		return null;
 	}
 
 	/**
@@ -256,34 +283,84 @@ class Coupons {
 
 	/**
 	 * Retrieve discount code from the Square API.
+	 * Uses caching to avoid repeated API calls for the same code.
 	 *
 	 * @param string $discount_code The discount code to retrieve.
 	 * @return array|null Discount code details, or null if not found.
 	 */
-	public static function get_discount_code( $discount_code ) {}
+	public static function get_discount_code( $discount_code ) {
+		// First check cache.
+		$cached = self::get_cache_discount_code( $discount_code );
+		if ( null !== $cached ) {
+			// Return cached data (could be array with code details or false for "not found").
+			return false === $cached ? null : $cached;
+		}
+
+		// Not in cache, fetch from API.
+		$data = self::search_discount_codes_via_api( $discount_code );
+
+		if ( null === $data || empty( $data['discount_codes'] ) ) {
+			// Cache "not found" as false to avoid repeated API calls for invalid codes.
+			self::set_cache_discount_code( $discount_code, null );
+			return null;
+		}
+
+		// Find and validate the matching code.
+		$code = self::find_valid_discount_code( $data['discount_codes'], $discount_code );
+		if ( null === $code ) {
+			// Cache "not found" as false.
+			self::set_cache_discount_code( $discount_code, null );
+			return null;
+		}
+
+		// Cache the found code details.
+		self::set_cache_discount_code( $discount_code, $code );
+
+		return $code;
+	}
 
 	/**
 	 * Cache discount code details.
+	 * Uses WordPress transients to cache discount code data for 1 hour.
 	 *
 	 * @param string     $discount_code The discount code.
 	 * @param array|null $code_details  The discount code details to cache. Null if not found.
 	 */
-	public static function set_cache_discount_code( $discount_code, $code_details ) {}
+	public static function set_cache_discount_code( $discount_code, $code_details ) {
+		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		
+		// Cache for 1 hour. Store false if not found to distinguish from "not cached yet".
+		$cache_value = null === $code_details ? false : $code_details;
+		set_transient( $transient_key, $cache_value, HOUR_IN_SECONDS * 1 );
+	}
 
 	/**
 	 * Retrieve cached discount code details.
 	 *
 	 * @param string $discount_code The discount code.
-	 * @return array|null Cached discount code details, or null if not found (known unknown).
+	 * @return array|null|false Cached discount code details, false if cached as "not found", or null if not cached.
 	 */
-	public static function get_cache_discount_code( $discount_code ) {}
+	public static function get_cache_discount_code( $discount_code ) {
+		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		$cached = get_transient( $transient_key );
+		
+		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
+		return false === $cached ? false : ( $cached ? $cached : null );
+	}
 
 	/**
 	 * Clear cached discount code details.
 	 *
 	 * @param string $discount_code The discount code.
 	 */
-	public static function clear_cache_discount_code( $discount_code ) {}
+	public static function clear_cache_discount_code( $discount_code ) {
+		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		delete_transient( $transient_key );
+		
+		// Also clear the old ID-only cache for backward compatibility.
+		$old_transient_key = 'square_discount_code_id_' . $discount_code;
+		delete_transient( $old_transient_key );
+	}
 
 	/**
 	 * Handle coupon application - trigger Square discount calculation if conditions are met.
@@ -400,44 +477,14 @@ class Coupons {
 			return null;
 		}
 
-		// Return from transient if available.
-		$transient_key  = 'square_discount_code_id_' . $coupon_code;
-		$transient_data = get_transient( $transient_key );
-		if ( $transient_data ) {
-			return $transient_data;
-		}
-
-		$data = self::search_discount_codes_via_api( $coupon_code );
-
-		if ( null === $data || empty( $data['discount_codes'] ) ) {
+		// Use cached discount code lookup.
+		$code = self::get_discount_code( $coupon_code );
+		if ( null === $code ) {
 			return null;
 		}
 
-		// Find matching code.
-		foreach ( $data['discount_codes'] as $code ) {
-			if ( isset( $code['code'] ) && strtoupper( $code['code'] ) === strtoupper( $coupon_code ) ) {
-				$discount_code_id = isset( $code['id'] ) ? $code['id'] : null;
-
-				// Check if the discount code is expired.
-				if ( isset( $code['valid_from'] ) && isset( $code['expires_at'] ) ) {
-					$valid_from = strtotime( $code['valid_from'] );
-					$expires_at = strtotime( $code['expires_at'] );
-					$current_time = current_time( 'timestamp' );
-
-					if ( $valid_from > $current_time && $expires_at < $current_time ) {
-						continue;
-					}
-				}
-
-				// Cache the discount code ID.
-				set_transient( $transient_key, $discount_code_id, HOUR_IN_SECONDS * 1 );
-
-				// Return the discount code ID.
-				return $discount_code_id;
-			}
-		}
-
-		return null;
+		// Extract and return the discount code ID.
+		return isset( $code['id'] ) ? $code['id'] : null;
 	}
 
 	/**
@@ -453,6 +500,9 @@ class Coupons {
 		WC()->session->__unset( '_square_discount_amount_' . $coupon_code );
 		WC()->session->__unset( '_square_discount_per_item_' . $coupon_code );
 		WC()->session->__unset( '_square_discount_pending_recalc_' . $coupon_code );
+		
+		// Clear cached discount code data.
+		self::clear_cache_discount_code( $coupon_code );
 	}
 
 	/**
