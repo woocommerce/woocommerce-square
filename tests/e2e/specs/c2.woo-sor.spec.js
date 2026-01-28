@@ -31,7 +31,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 			page, {
 				name: 'iPhone Pro',
 				content: 'iPhone Pro content',
-				category: 'Mobiles',
+				category: 'Mobiles, Mobiles2',
 				regularPrice: '499',
 				sku: 'iphone',
 			},
@@ -78,15 +78,20 @@ test( 'iPhone Pro pushed to Square @sync', async ( { page } ) => {
 	expect(description).toEqual('iPhone Pro content');
 
 	let categoryName = '';
+	let categoriesNames = [];
 	if (category) {
 		const categories = await listCategories();
 		if (categories.objects) {
 			categoryName = categories.objects
 				.filter((cat) => cat.id === category)
 				.map((cat) => cat.category_data.name)[0];
+			categoriesNames = categories.objects
+				.map((cat) => cat.category_data.name);
 		}
 	}
 	expect(categoryName).toEqual('Mobiles');
+	expect(categoriesNames).toContain('Mobiles');
+	expect(categoriesNames).toContain('Mobiles2');
 
 	const inventory = await retrieveInventoryCount( variations[ 0 ].id );
 
