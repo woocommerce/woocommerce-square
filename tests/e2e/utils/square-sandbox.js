@@ -132,6 +132,8 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		category = catalogObject.categories[ 0 ]?.id;
 	}
 
+	const categories = catalogObject.item_data.categories.map( ( cat ) => cat?.id || '' ).filter( ( cat ) => cat !== '' ) || [];
+
 	const variations = catalogObject.item_data.variations.map(
 		( variation ) => {
 			return {
@@ -149,6 +151,7 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		catalogId,
 		name,
 		category,
+		categories,
 		description,
 		variations,
 	};

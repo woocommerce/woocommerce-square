@@ -31,7 +31,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 			page, {
 				name: 'iPhone Pro',
 				content: 'iPhone Pro content',
-				category: 'Mobiles, Mobiles2',
+				category: 'Mobiles, Phones',
 				regularPrice: '499',
 				sku: 'iphone',
 			},
@@ -70,6 +70,7 @@ test( 'iPhone Pro pushed to Square @sync', async ( { page } ) => {
 		variations,
 		description,
 		category,
+		categories: categoriesIds,
 	} = extractCatalogInfo( result.objects[0] );
 
 	expect( name ).toEqual( 'iPhone Pro' );
@@ -86,12 +87,13 @@ test( 'iPhone Pro pushed to Square @sync', async ( { page } ) => {
 				.filter((cat) => cat.id === category)
 				.map((cat) => cat.category_data.name)[0];
 			categoriesNames = categories.objects
+				.filter((cat) => categoriesIds.includes(cat.id))
 				.map((cat) => cat.category_data.name);
 		}
 	}
 	expect(categoryName).toEqual('Mobiles');
 	expect(categoriesNames).toContain('Mobiles');
-	expect(categoriesNames).toContain('Mobiles2');
+	expect(categoriesNames).toContain('Phones');
 
 	const inventory = await retrieveInventoryCount( variations[ 0 ].id );
 
