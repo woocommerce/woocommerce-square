@@ -431,11 +431,9 @@ class API extends \WooCommerce\Square\API {
 	 * This method follows the standard request/response pattern used throughout the plugin.
 	 * It uses API\Requests\Orders::set_calculate_order_data() to prepare the request,
 	 * and API.php::do_square_request() handles the actual API call as a special case
-	 * (since calculateOrder is not yet available in the Square PHP SDK).
-	 *
-	 * Note: CalculateOrder is an Alpha API endpoint that is not yet available in the Square PHP SDK.
-	 * The actual HTTP request is handled in API.php::do_square_request() to maintain consistency
-	 * with the plugin's request/response pattern while supporting this Alpha endpoint.
+	 * via direct HTTP. The SDK's CalculateOrderRequest only supports order and proposed_rewards
+	 * (loyalty); we need to send proposed_discount_codes (discount code IDs), so the request
+	 * is made in do_square_request() using wp_remote_post.
 	 *
 	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
 	 * @param \Square\Models\Order $square_order            Square order object to calculate.
@@ -457,7 +455,7 @@ class API extends \WooCommerce\Square\API {
 		$this->set_response_handler( \WooCommerce\Square\API\Response::class );
 
 		// Perform the request - this will call API.php::do_square_request() which
-		// handles calculateOrder as a special case using direct HTTP.
+		// handles calculateOrder via direct HTTP so we can send proposed_discount_codes.
 		$response = $this->perform_request( $request );
 
 		// Get the calculated order from the response.

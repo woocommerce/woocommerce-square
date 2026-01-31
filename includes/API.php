@@ -1072,9 +1072,9 @@ class API extends Base {
 	 * Performs a remote request with the Square API class.
 	 *
 	 * Note: This method handles both standard SDK methods and special cases like calculateOrder.
-	 * The calculateOrder endpoint is an Alpha API that is not yet available in the Square PHP SDK,
-	 * so we handle it as a special case using direct HTTP requests to maintain consistency with
-	 * the plugin's request/response pattern.
+	 * The Square PHP SDK's CalculateOrderRequest only supports order and proposed_rewards (loyalty).
+	 * We need to send proposed_discount_codes (discount code IDs), so we handle calculateOrder
+	 * as a special case using direct HTTP to maintain consistency with the plugin's request/response pattern.
 	 *
 	 * @since 2.0.0
 	 *
@@ -1084,9 +1084,8 @@ class API extends Base {
 	 * @throws \Exception
 	 */
 	protected function do_square_request( $square_api, $method, $args ) {
-		// Handle calculateOrder as a special case since it's not in the Square SDK.
-		// This allows us to use the standard request/response pattern while still supporting
-		// the Alpha API endpoint that isn't available in the SDK yet.
+		// Handle calculateOrder as a special case: we need to send proposed_discount_codes,
+		// which the SDK's CalculateOrderRequest does not support (it only has order and proposed_rewards).
 		if ( 'calculateOrder' === $method ) {
 			// Get the request object to access stored data (square_order, proposed_discount_codes, etc.).
 			$request = $this->get_request();
@@ -1141,8 +1140,8 @@ class API extends Base {
 				}
 			}
 
-			// Make direct HTTP request to Square API.
-			// We use wp_remote_post instead of the SDK since calculateOrder isn't in the SDK.
+			// Make direct HTTP request so we can send proposed_discount_codes; the SDK's
+			// CalculateOrderRequest only supports order and proposed_rewards.
 			$response = wp_remote_post(
 				$api_url,
 				array(

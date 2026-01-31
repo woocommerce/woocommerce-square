@@ -155,9 +155,9 @@ class Orders extends API\Request {
 	/**
 	 * Sets the data for calculating a Square order.
 	 *
-	 * Note: CalculateOrder is an Alpha API endpoint that is not yet available in the Square PHP SDK.
-	 * This method follows the same pattern as other order request methods (set_create_order_data, etc.)
-	 * but the actual API call is handled as a special case in API.php::do_square_request() using direct HTTP.
+	 * Note: The SDK's CalculateOrderRequest only supports order and proposed_rewards (loyalty).
+	 * We need to send proposed_discount_codes (discount code IDs), so the actual API call is
+	 * made in API.php::do_square_request() via direct HTTP, following the same request/response pattern.
 	 *
 	 * @since 2.0.0
 	 *
@@ -168,7 +168,7 @@ class Orders extends API\Request {
 	 */
 	public function set_calculate_order_data( $order, \Square\Models\Order $square_order, array $proposed_discount_codes = array(), $return_raw_response = false ) {
 		// Set the API method name - this will be intercepted in API.php::do_square_request()
-		// since calculateOrder is not available in the Square SDK
+		// so we can send proposed_discount_codes (the SDK's CalculateOrderRequest does not support them).
 		$this->square_api_method = 'calculateOrder';
 
 		// Store the order objects and parameters for use in the custom HTTP request handler
