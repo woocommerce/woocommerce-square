@@ -159,7 +159,7 @@ class Orders extends API\Request {
 	 * We need to send proposed_discount_codes (discount code IDs), so the actual API call is
 	 * made in API.php::do_square_request() via direct HTTP, following the same request/response pattern.
 	 *
-	 * @since 2.0.0
+	 * @since x.x.x
 	 *
 	 * @param \WC_Order|null      $order                   Optional. WooCommerce order object. Can be null when called from cart context.
 	 * @param \Square\Models\Order $square_order            Square order object to calculate.

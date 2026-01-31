@@ -67,6 +67,8 @@ class Coupons {
 
 	/**
 	 * Initialize Coupons class.
+	 *
+	 * @since x.x.x
 	 */
 	public static function init() {
 		// Detect Square coupon > calculate the discount from API > Store in the cart session for later use.
@@ -86,7 +88,7 @@ class Coupons {
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 
 		// Prevent non-Square coupons from being used with Square coupons.
-		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 3 );
+		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 2 );
 
 		// Trigger recalculation if Square coupon is applied and the cart item quantity is updated.
 		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
@@ -103,7 +105,7 @@ class Coupons {
 	 *
 	 * @return bool|WP_Error True if valid, false or WP_Error if invalid.
 	 */
-	public static function prevent_non_square_coupons_with_square_coupons( $is_valid, $coupon, $discounts ) {
+	public static function prevent_non_square_coupons_with_square_coupons( $is_valid, $coupon ) {
 		// If coupon is already invalid, don't override.
 		if ( ! $is_valid ) {
 			return $is_valid;
@@ -160,6 +162,8 @@ class Coupons {
 	/**
 	 * Preflight the construction of a WC_Coupon object.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param false|array $coupon      Coupon data. False indicates that the coupon has not yet
 	 *                                 been found/replaced via the preflight process.
 	 * @param mixed       $coupon_data Coupon data, object, ID or code as passed to the \WC_Coupon constructor.
@@ -194,6 +198,8 @@ class Coupons {
 	/**
 	 * Find and validate a matching discount code from API response.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param array  $discount_codes Array of discount codes from API response.
 	 * @param string $coupon_code    The coupon code to find and validate.
 	 * @return array|null The matching and valid discount code, or null if not found or invalid.
@@ -215,8 +221,8 @@ class Coupons {
 			$valid_from = isset( $code['valid_from'] ) ? strtotime( $code['valid_from'] ) : null;
 			$expires_at = isset( $code['expires_at'] ) ? strtotime( $code['expires_at'] ) : null;
 
-			// Check if code is valid from date.
-			if ( $valid_from > $current_time ) {
+			// Check if code is valid from date (skip if valid_from is set and in the future).
+			if ( null !== $valid_from && $valid_from > $current_time ) {
 				continue;
 			}
 
@@ -234,6 +240,8 @@ class Coupons {
 
 	/**
 	 * Search for discount codes via Square API.
+	 *
+	 * @since x.x.x
 	 *
 	 * @param string $coupon_code The coupon code to search for.
 	 * @param int    $timeout     Request timeout in seconds. Default 30.
@@ -287,6 +295,8 @@ class Coupons {
 	 * Retrieve discount code from the Square API.
 	 * Uses caching to avoid repeated API calls for the same code.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param string $discount_code The discount code to retrieve.
 	 * @return array|null Discount code details, or null if not found.
 	 */
@@ -325,6 +335,8 @@ class Coupons {
 	 * Cache discount code details.
 	 * Uses WordPress transients to cache discount code data for 1 hour.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param string     $discount_code The discount code.
 	 * @param array|null $code_details  The discount code details to cache. Null if not found.
 	 */
@@ -339,6 +351,8 @@ class Coupons {
 	/**
 	 * Retrieve cached discount code details.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param string $discount_code The discount code.
 	 * @return array|null|false Cached discount code details, false if cached as "not found", or null if not cached.
 	 */
@@ -352,6 +366,8 @@ class Coupons {
 
 	/**
 	 * Clear cached discount code details.
+	 *
+	 * @since x.x.x
 	 *
 	 * @param string $discount_code The discount code.
 	 */
@@ -416,7 +432,6 @@ class Coupons {
 	 * @since x.x.x
 	 *
 	 * @param \WC_Order $order The order object being created.
-	 * @param array     $data  Posted checkout data.
 	 */
 	public static function store_square_discount_code_data_in_order( $order ) {
 		// Only proceed if WooCommerce Square is active.
@@ -969,7 +984,6 @@ class Coupons {
 	 * @param string $cart_item_key Cart item key.
 	 * @param int    $quantity      New quantity.
 	 * @param int    $old_quantity  Old quantity.
-	 * @param \WC_Cart $cart        Cart object.
 	 */
 	public static function handle_cart_item_quantity_update( $cart_item_key, $quantity, $old_quantity ) {
 		// Only recalculate if quantity actually changed.

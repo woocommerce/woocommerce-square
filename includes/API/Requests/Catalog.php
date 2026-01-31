@@ -174,7 +174,7 @@ class Catalog extends Request {
 	 * @since 2.0.0
 	 *
 	 * @param string $object_id the Square catalog object ID to retrieve
-	 * @param bool whether or not to include related objects (such as categories)
+	 * @param bool   $include_related_objects Whether or not to include related objects (such as categories)
 	 * @param int|null $object_version The specific version of the object to retrieve. Optional - defaults to latest.
 	 *                                 If the specified version of the object does not exist, the Square API will
 	 *                                 return the latest version. If the version provided is not known to exist consumers
