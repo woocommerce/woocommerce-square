@@ -135,8 +135,9 @@ class Coupons {
 
 			// If trying to apply Square coupon but WooCommerce coupon exists.
 			if ( $is_square_coupon && ! $has_square_coupon ) {
-				$coupon->set_error_message( 
-					sprintf( 
+				/* translators: %s: coupon code */
+				$coupon->set_error_message(
+					sprintf(
 						__( 'Sorry, coupon "%s" cannot be used in combination with other coupons. Please remove the existing coupon and try again.', 'woocommerce-square' ),
 						esc_html( $coupon_code )
 					)
@@ -146,8 +147,9 @@ class Coupons {
 
 			// If trying to apply WooCommerce coupon but Square coupon exists.
 			if ( ! $is_square_coupon && $has_square_coupon ) {
-				$coupon->set_error_message( 
-					sprintf( 
+				/* translators: %s: coupon code */
+				$coupon->set_error_message(
+					sprintf(
 						__( 'Sorry, coupon "%s" cannot be used in combination with Square discount codes. Please remove the Square discount code and try again.', 'woocommerce-square' ),
 						esc_html( $coupon_code )
 					)
@@ -430,6 +432,7 @@ class Coupons {
 			}
 			// Clear our Square session data for this coupon in case removal didn't fire woocommerce_removed_coupon in this context.
 			self::handle_coupon_removed( $coupon_code );
+			/* translators: 1: coupon code, 2: error message */
 			wc_add_notice( sprintf( __( 'Unable to apply coupon "%s": %s', 'woocommerce-square' ), esc_html( $coupon_code ), esc_html( $e->getMessage() ) ), 'error' );
 		}
 	}
@@ -685,6 +688,7 @@ class Coupons {
 		// Reject coupon if it would make the order total zero (WooCommerce-Square cannot process zero-amount transactions).
 		$order_total_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
 		if ( $order_total_cents <= 0 ) {
+			/* translators: error message when discount would make order total zero */
 			throw new \Exception( __( 'This discount code cannot be used because it would make your order total zero. Square cannot process zero-amount transactions.', 'woocommerce-square' ) );
 		}
 
