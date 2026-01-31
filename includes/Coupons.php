@@ -79,7 +79,7 @@ class Coupons {
 		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_data_in_order' ), 10, 1 );
 
 		// Fetch Square discount full data (pricing rule, version, code) > Convert to a WooCommerce Coupon array.
-		// Keeping discount amount to 0 as we will override it with the Square calculated discount amount.
+		// Keeping discount amount and product_ids empty as we will override it with the Square's CalculateOrder response.
 		add_filter( 'woocommerce_get_shop_coupon_data', array( self::$instance, 'filter_woocommerce_get_shop_coupon_data' ), 10, 3 );
 
 		// Override the discount amount (which is set to 0 by default) with the Square calculated discount amount.
@@ -184,6 +184,9 @@ class Coupons {
 		}
 
 		$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
+		if ( false === $wc_coupon ) {
+			return $coupon;
+		}
 
 		return $wc_coupon;
 	}

@@ -173,11 +173,13 @@ class Coupon_Utility {
 		}
 
 		// Map the Square coupon format to the WC coupon format.
+		// product_ids is empty: eligibility is determined by Square (CalculateOrder);
+		// we override amounts per line later in Coupons::override_discount_amount_with_square().
 		$wc_coupon = array(
 			'code'          => $square_discount_code['code'],
 			'discount_type' => self::map_discount_type(),
 			'amount'        => 0,
-			'product_ids'   => self::map_product_ids(),
+			'product_ids'   => array(),
 		);
 
 		// Cache the result for 1 hour (pricing rules don't change frequently).
@@ -303,98 +305,5 @@ class Coupon_Utility {
 					)
 				);
 		}
-	}
-
-	/**
-	 * Maps the Square discount amount to the WooCommerce discount amount.
-	 *
-	 * For percentage discounts this value is unchanged as the numbers are represented
-	 * as a percentage in both systems.
-	 *
-	 * For fixed amounts, the value is stored in Square in the lowest currency amount
-	 * (ie, cents for USD) whereas WooCommerce stores the number in the base currency
-	 * amount (ie, dollars for USD).
-	 *
-	 * @return float Discount amount.
-	 */
-	protected static function map_discount_amount() {
-		if ( 'percent' === self::map_discount_type() ) {
-			return (float) self::$discount_object->getDiscountData()->getPercentage();
-		}
-
-		// Fixed amount, convert from Square format (raw cents) to WC format (float).
-		$sq_money = self::$discount_object->getDiscountData()->getAmountMoney();
-
-		return (float) Helper::number_format( Money_Utility::cents_to_float( $sq_money->getAmount() ) );
-	}
-
-	/**
-	 * Map the Square product IDs to WooCommerce product IDs.
-	 *
-	 * Takes the product IDs stored in the Square Product Set object and maps them
-	 * to WooCommerce product IDs via the `_square_item_id` and `_square_item_variation_id`
-	 * meta data fields.
-	 *
-	 * An empty array is used to indicate the discount applies to all products.
-	 *
-	 * @since x.x.x
-	 *
-	 * @return int[] The mapped WooCommerce product IDs.
-	 */
-	protected static function map_product_ids() {
-		global $wpdb;
-		$sq_is_all_products = self::$product_set_object->getProductSetData()->getAllProducts();
-
-		if ( $sq_is_all_products ) {
-			return array();
-		}
-
-		$sq_product_ids = self::$product_set_object->getProductSetData()->getProductIdsAny();
-
-		// Confirm an array.
-		if ( ! is_array( $sq_product_ids ) ) {
-			return array();
-		}
-
-		// Remove dupes and sort for cache key consistency.
-		$sq_product_ids = array_unique( $sq_product_ids );
-		sort( $sq_product_ids );
-
-		$cache_key   = 'woocommerce_square::sq_product_ids::' . md5( wp_json_encode( $sq_product_ids ) );
-		$cache_group = 'post-queries';
-		$cache_salt  = wp_cache_get_last_changed( 'posts' );
-
-		if ( is_wp_version_compatible( '6.9' ) ) {
-			$results = wp_cache_get_salted( $cache_key, $cache_group, $cache_salt );
-		} else {
-			$results = wp_cache_get( "{$cache_salt}::{$cache_key}", $cache_group );
-		}
-
-		if ( false === $results ) {
-			// Query the product IDs via the `_square_item_id` meta field.
-			$results = $wpdb->get_col(
-				$wpdb->prepare(
-					sprintf(
-						"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ( '_square_item_id', '_square_item_variation_id') AND meta_value IN (%s)",
-						implode( ',', array_fill( 0, count( $sq_product_ids ), '%s' ) )
-					),
-					$sq_product_ids
-				)
-			);
-
-			if ( is_wp_version_compatible( '6.9' ) ) {
-				wp_cache_set_salted( $cache_key, $results, $cache_group, DAY_IN_SECONDS, $cache_salt );
-			} else {
-				wp_cache_set( "{$cache_salt}::{$cache_key}", $results, $cache_group, DAY_IN_SECONDS );
-			}
-		}
-
-		if ( empty( $results ) ) {
-			return array();
-		}
-
-		// Prime post cache to avoid DB calls.
-		_prime_post_caches( $results );
-		return array_values( $results );
 	}
 }
