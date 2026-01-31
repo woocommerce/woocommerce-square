@@ -420,9 +420,17 @@ class Coupons {
 		try {
 			self::calculate_square_discount_from_cart( $coupon_code );
 		} catch ( \Exception $e ) {
-			// Remove coupon and show error.
-			$cart->remove_coupon( $coupon_code );
-			wc_add_notice( sprintf( __( 'Unable to apply coupon "%s": %s', 'woocommerce-square' ), $coupon_code, $e->getMessage() ), 'error' );
+			// Remove coupon (use exact code from cart so removal always matches) and show error.
+			$applied_coupons = $cart->get_applied_coupons();
+			foreach ( $applied_coupons as $applied_code ) {
+				if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
+					$cart->remove_coupon( $applied_code );
+					break;
+				}
+			}
+			// Clear our Square session data for this coupon in case removal didn't fire woocommerce_removed_coupon in this context.
+			self::handle_coupon_removed( $coupon_code );
+			wc_add_notice( sprintf( __( 'Unable to apply coupon "%s": %s', 'woocommerce-square' ), esc_html( $coupon_code ), esc_html( $e->getMessage() ) ), 'error' );
 		}
 	}
 
