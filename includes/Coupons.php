@@ -659,6 +659,12 @@ class Coupons {
 			}
 		}
 
+		// Reject coupon if it would make the order total zero (WooCommerce-Square cannot process zero-amount transactions).
+		$order_total_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
+		if ( $order_total_cents <= 0 ) {
+			throw new \Exception( __( 'This discount code cannot be used because it would make your order total zero. Square cannot process zero-amount transactions.', 'woocommerce-square' ) );
+		}
+
 		// Store per-item discounts and total in cart session.
 		WC()->session->set( '_square_discount_amount_' . $coupon_code, $total_discount_amount );
 		WC()->session->set( '_square_discount_per_item_' . $coupon_code, $line_item_discounts );
