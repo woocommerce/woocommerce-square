@@ -489,14 +489,14 @@ class Gateway extends Payment_Gateway_Direct {
 				// Create Redemption to link Square discount code to Square order.
 				// Note: CalculateOrder was already called when coupon was applied, so we only need to create the redemption here.
 				$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
-			
+
 				// Fallback: if not in order meta, check cart session (in case woocommerce_checkout_create_order didn't fire).
 				if ( empty( $square_discount_code_id ) && WC()->cart ) {
 					$applied_coupons = WC()->cart->get_applied_coupons();
 					if ( ! empty( $applied_coupons ) ) {
 						$coupon_code             = $applied_coupons[0];
 						$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
-					
+
 						// If found in session, store it in order meta for future use.
 						if ( ! empty( $square_discount_code_id ) ) {
 							$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
@@ -504,7 +504,7 @@ class Gateway extends Payment_Gateway_Direct {
 						}
 					}
 				}
-			
+
 				if ( ! empty( $square_discount_code_id ) && ! empty( $order->square_order_id ) ) {
 					try {
 						// REQUIRED: Create Redemption to link discount code to order.
