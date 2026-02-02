@@ -661,9 +661,9 @@ class Coupons {
 		// If we couldn't extract per-item discounts, fall back to total discount calculation.
 		if ( empty( $line_item_discounts ) ) {
 			// Calculate order total without discount for comparison.
-			$cart_subtotal = $cart->get_subtotal();
+			$cart_subtotal       = $cart->get_subtotal();
 			$cart_shipping_total = $cart->get_shipping_total();
-			$cart_fee_total = 0;
+			$cart_fee_total      = 0;
 			foreach ( $cart->get_fees() as $fee ) {
 				$cart_fee_total += (float) $fee->amount;
 			}
@@ -674,7 +674,7 @@ class Coupons {
 
 			// Get calculated total from Square (in cents).
 			$total_after_discount_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
-			$total_after_discount = Money_Utility::cents_to_float( $total_after_discount_cents );
+			$total_after_discount       = Money_Utility::cents_to_float( $total_after_discount_cents );
 
 			// Discount amount is the difference.
 			$total_discount_amount = $total_before_discount - $total_after_discount;
@@ -810,7 +810,7 @@ class Coupons {
 			foreach ( $packages as $package_index => $package ) {
 				if ( isset( $chosen_shipping_methods[ $package_index ] ) ) {
 					$shipping_method = $chosen_shipping_methods[ $package_index ];
-					$shipping_cost = 0;
+					$shipping_cost   = 0;
 
 					// Get shipping cost from package.
 					if ( isset( $package['rates'][ $shipping_method ] ) ) {
@@ -920,7 +920,7 @@ class Coupons {
 				$cart_subtotal = $cart->get_subtotal();
 				if ( $cart_subtotal > 0 ) {
 					$item_subtotal = isset( $cart_item['line_subtotal'] ) ? (float) $cart_item['line_subtotal'] : 0;
-					$proportion = $item_subtotal / $cart_subtotal;
+					$proportion    = $item_subtotal / $cart_subtotal;
 					$item_line_discount = $square_discount_amount * $proportion;
 
 					// If $single is true, return discount per unit; if false, return discount for the line.

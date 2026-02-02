@@ -1157,7 +1157,7 @@ class API extends Base {
 
 			// Handle HTTP errors.
 			if ( is_wp_error( $response ) ) {
-				throw new \Exception( 'Square API request failed: ' . $response->get_error_message() );
+				throw new \Exception( 'Square API request failed: ' . esc_html( $response->get_error_message() ) );
 			}
 
 			$response_code = wp_remote_retrieve_response_code( $response );
@@ -1165,12 +1165,12 @@ class API extends Base {
 
 			// Handle API errors (non-200 status codes).
 			if ( 200 !== $response_code ) {
-				$error_data = json_decode( $response_body, true );
+				$error_data    = json_decode( $response_body, true );
 				$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
 					? $error_data['errors'][0]['detail']
 					: wp_remote_retrieve_response_message( $response );
 
-				throw new \Exception( 'Square API error: ' . $error_message );
+				throw new \Exception( 'Square API error: ' . esc_html( $error_message ) );
 			}
 
 			$data = json_decode( $response_body, true );
@@ -1232,10 +1232,10 @@ class API extends Base {
 
 			// Return a mock response object to satisfy the response handling flow.
 			// The actual response data is already set in raw_response_body above.
-			$mock_response = new \stdClass();
+			$mock_response             = new \stdClass();
 			$mock_response->result     = $square_order;
-			$mock_response->statusCode = 200;
-			$mock_response->isSuccess  = true;
+			$mock_response->statusCode = 200; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$mock_response->isSuccess  = true; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 
 			return $mock_response;
 		}

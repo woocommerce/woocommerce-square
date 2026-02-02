@@ -528,7 +528,7 @@ class API extends \WooCommerce\Square\API {
 		}
 
 		// Build API URL.
-		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/' . urlencode( $discount_code_id ) . '/redemptions';
+		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/' . rawurlencode( $discount_code_id ) . '/redemptions';
 
 		// Generate idempotency key if not provided.
 		if ( empty( $idempotency_key ) ) {
@@ -538,7 +538,7 @@ class API extends \WooCommerce\Square\API {
 		// Build request body.
 		$request_body = array(
 			'idempotency_key' => $idempotency_key,
-			'redemption'       => array(
+			'redemption'      => array(
 				'order_id' => $order_id,
 			),
 		);
@@ -566,12 +566,19 @@ class API extends \WooCommerce\Square\API {
 		$response_body = wp_remote_retrieve_body( $response );
 
 		if ( 200 !== $response_code ) {
-			$error_data = json_decode( $response_body, true );
+			$error_data    = json_decode( $response_body, true );
 			$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
 				? $error_data['errors'][0]['detail']
 				: wp_remote_retrieve_response_message( $response );
 
-			return new \WP_Error( 'api_error', $error_message, array( 'status' => $response_code, 'response' => $error_data ) );
+			return new \WP_Error(
+				'api_error',
+				$error_message,
+				array(
+					'status'   => $response_code,
+					'response' => $error_data,
+				)
+			);
 		}
 
 		$data = json_decode( $response_body, true );
