@@ -211,7 +211,7 @@ class Coupons {
 			return null;
 		}
 
-		$current_time = current_time( 'timestamp' ); // phpcs:disable WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC
+		$current_time = current_time( 'timestamp' ); // phpcs:disable WordPress.DateTime.CurrentTimeTimestamp
 
 		foreach ( $discount_codes as $code ) {
 			// Match by code (case-insensitive).
