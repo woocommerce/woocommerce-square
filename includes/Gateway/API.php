@@ -438,8 +438,8 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
 	 * @param \Square\Models\Order $square_order            Square order object to calculate.
-	 * @param array                 $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
-	 * @param bool                  $return_raw_response     Optional. If true, returns array with both order and raw response data.
+	 * @param array                $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
+	 * @param bool                 $return_raw_response     Optional. If true, returns array with both order and raw response data.
 	 *
 	 * @return \Square\Models\Order|array Returns Order object, or array with 'order' and 'raw_response' if $return_raw_response is true.
 	 * @throws \Exception

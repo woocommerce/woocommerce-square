@@ -491,7 +491,7 @@ class Gateway extends Payment_Gateway_Direct {
 				// Square discount code ID is set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
 				$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
 
-				if ( ! empty( $square_discount_code_id ) && ! empty( $order->square_order_id ) ) {
+				if ( Coupons::is_square_discount_codes_enabled() && ! empty( $square_discount_code_id ) && ! empty( $order->square_order_id ) ) {
 					try {
 						// REQUIRED: Create Redemption to link discount code to order.
 						$redemption_result = $this->get_api()->create_redemption( $square_discount_code_id, $order->square_order_id );

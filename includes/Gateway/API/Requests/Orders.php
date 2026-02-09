@@ -161,10 +161,10 @@ class Orders extends API\Request {
 	 *
 	 * @since x.x.x
 	 *
-	 * @param \WC_Order|null      $order                   Optional. WooCommerce order object. Can be null when called from cart context.
+	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
 	 * @param \Square\Models\Order $square_order            Square order object to calculate.
 	 * @param array                $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
-	 * @param bool                 $return_raw_response    Optional. If true, the raw JSON response will be available.
+	 * @param bool                 $return_raw_response     Optional. If true, the raw JSON response will be available.
 	 */
 	public function set_calculate_order_data( $order, \Square\Models\Order $square_order, array $proposed_discount_codes = array(), $return_raw_response = false ) {
 		// Set the API method name - this will be intercepted in API.php::do_square_request()
