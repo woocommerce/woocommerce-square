@@ -90,8 +90,8 @@ class Coupons {
 		// Prevent non-Square coupons from being used with Square coupons.
 		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 2 );
 
-		// Trigger recalculation if Square coupon is applied and the cart item quantity is updated.
-		add_action( 'woocommerce_after_cart_item_quantity_update', array( self::$instance, 'handle_cart_item_quantity_update' ), 10, 3 );
+		// Trigger recalculation before WooCommerce calculates totals (covers add, remove, quantity update).
+		add_action( 'woocommerce_before_calculate_totals', array( self::$instance, 'handle_cart_contents_changed' ), 5 );
 	}
 
 	/**
@@ -786,8 +786,30 @@ class Coupons {
 			}
 
 			// Calculate amounts.
-			$line_subtotal     = (float) $cart_item['line_subtotal'];
-			$line_subtotal_tax = (float) $cart_item['line_subtotal_tax'];
+			$price_total        = (float) $product->get_price() * $quantity;
+			$line_subtotal      = $price_total;
+			$line_subtotal_tax  = 0.0;
+			$line_tax_data_total = array();
+
+			if ( wc_tax_enabled() && $product->is_taxable() ) {
+				$customer         = $cart->get_customer();
+				$is_vat_exempt    = $customer && $customer->get_is_vat_exempt();
+				$item_tax_rates   = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
+				$price_includes_tax = wc_prices_include_tax();
+
+				if ( ! $is_vat_exempt && ! empty( $item_tax_rates ) ) {
+					$subtotal_taxes = \WC_Tax::calc_tax( $price_total, $item_tax_rates, $price_includes_tax );
+					foreach ( $subtotal_taxes as $rate_id => $tax_amount ) {
+						$rounded_tax                     = wc_round_tax_total( $tax_amount );
+						$line_tax_data_total[ $rate_id ] = $rounded_tax;
+					}
+					$line_subtotal_tax = array_sum( $line_tax_data_total );
+
+					if ( $price_includes_tax ) {
+						$line_subtotal = $price_total - $line_subtotal_tax;
+					}
+				}
+			}
 
 			// Base price per unit (before any discounts).
 			$subtotal_per_unit = $line_subtotal;
@@ -812,15 +834,12 @@ class Coupons {
 				$line_item->setName( $product->get_name() );
 			}
 
-			// Apply taxes.
+			// Apply taxes (using computed rates for this product).
 			$applied_taxes = array();
-			if ( ! empty( $cart_item['line_tax_data'] ) && is_array( $cart_item['line_tax_data'] ) ) {
-				$tax_data = $cart_item['line_tax_data'];
-				if ( isset( $tax_data['total'] ) && is_array( $tax_data['total'] ) ) {
-					foreach ( $tax_data['total'] as $rate_id => $tax_amount ) {
-						if ( ! empty( $tax_amount ) && isset( $tax_rates[ $rate_id ] ) ) {
-							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $tax_rates[ $rate_id ]->getUid() );
-						}
+			if ( ! empty( $line_tax_data_total ) ) {
+				foreach ( $line_tax_data_total as $rate_id => $tax_amount ) {
+					if ( (float) $tax_amount > 0 && isset( $tax_rates[ $rate_id ] ) ) {
+						$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $tax_rates[ $rate_id ]->getUid() );
 					}
 				}
 			}
@@ -990,11 +1009,6 @@ class Coupons {
 			return;
 		}
 
-		// Only recalculate if we're not in the middle of adding items (check if doing_action).
-		if ( doing_action( 'woocommerce_add_to_cart' ) || doing_action( 'woocommerce_cart_item_removed' ) ) {
-			return;
-		}
-
 		// Check if any Square coupons are still applied and recalculate.
 		foreach ( $applied_coupons as $coupon_code ) {
 			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
@@ -1016,24 +1030,5 @@ class Coupons {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Handle cart item quantity update - trigger recalculation.
-	 *
-	 * @since x.x.x
-	 *
-	 * @param string $cart_item_key Cart item key.
-	 * @param int    $quantity      New quantity.
-	 * @param int    $old_quantity  Old quantity.
-	 */
-	public static function handle_cart_item_quantity_update( $cart_item_key, $quantity, $old_quantity ) {
-		// Only recalculate if quantity actually changed.
-		if ( $quantity === $old_quantity ) {
-			return;
-		}
-
-		// Trigger recalculation if Square coupons are applied.
-		self::handle_cart_contents_changed();
 	}
 }
