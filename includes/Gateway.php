@@ -1186,7 +1186,8 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
-	 * Filters to show only the Square gateway when cart contains a Gift card product.
+	 * Filters to show only the Square gateway when cart contains a Gift card product
+	 * or a Square discount code.
 	 *
 	 * @since 4.2.0
 	 *
@@ -1205,7 +1206,9 @@ class Gateway extends Payment_Gateway_Direct {
 			}
 		}
 
-		if ( ! Gift_Card::cart_contains_gift_card() ) {
+		$requires_square = Gift_Card::cart_contains_gift_card() || Coupons::cart_has_square_coupon();
+
+		if ( ! $requires_square ) {
 			return $gateways;
 		}
 
@@ -1221,7 +1224,8 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
-	 * If no payment gateways are available and cart contains gift card, then show error message.
+	 * If no payment gateways are available and cart contains gift card or Square discount code,
+	 * then show error message.
 	 *
 	 * @since 4.2.0
 	 *
@@ -1229,11 +1233,15 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return string
 	 */
 	public function filter_no_payment_gatways_message( $text ) {
-		if ( ! Gift_Card::cart_contains_gift_card() ) {
-			return $text;
+		if ( Gift_Card::cart_contains_gift_card() ) {
+			return esc_html__( 'Your cart contains a Square Gift Card product which can only be purchased using the Square payment gateway.', 'woocommerce-square' );
 		}
 
-		return esc_html__( 'Your cart contains a Square Gift Card product which can only be purchased using the Square payment gateway.', 'woocommerce-square' );
+		if ( Coupons::cart_has_square_coupon() ) {
+			return esc_html__( 'Square discount codes can only be used with the Square payment gateway. Please remove the Square discount code to use another payment method.', 'woocommerce-square' );
+		}
+
+		return $text;
 	}
 
 	/**

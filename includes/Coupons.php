@@ -538,6 +538,36 @@ class Coupons {
 	}
 
 	/**
+	 * Check if the cart has any Square discount code applied.
+	 *
+	 * Square discount codes can only be redeemed when paying with Square.
+	 * Used to restrict available payment gateways to Square when a Square coupon is applied.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool True if cart has an applied Square discount code.
+	 */
+	public static function cart_has_square_coupon() {
+		$cart = WC()->cart;
+		if ( ! $cart || $cart->is_empty() ) {
+			return false;
+		}
+
+		$applied_coupons = $cart->get_applied_coupons();
+		if ( empty( $applied_coupons ) ) {
+			return false;
+		}
+
+		foreach ( $applied_coupons as $coupon_code ) {
+			if ( ! empty( self::get_square_discount_code_id_by_code( $coupon_code ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Calculate Square discount from cart using CalculateOrder API.
 	 *
 	 * @since x.x.x
