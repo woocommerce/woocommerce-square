@@ -1070,6 +1070,18 @@ class API extends Base {
 	}
 
 	/**
+	 * Get currency from Square order with fallback to store currency.
+	 *
+	 * @param \Square\Models\Order $square_order Square order object.
+	 * @return string Currency code.
+	 */
+	private function get_square_order_currency_or_store_default( $square_order ) {
+		$total_money = $square_order->getTotalMoney();
+
+		return $total_money ? $total_money->getCurrency() : get_woocommerce_currency();
+	}
+
+	/**
 	 * Performs a remote request with the Square API class.
 	 *
 	 * Note: This method handles both standard SDK methods and special cases like calculateOrder.
@@ -1153,8 +1165,7 @@ class API extends Base {
 				if ( isset( $calculated_order_data['total_money']['currency'] ) ) {
 					$total_money->setCurrency( $calculated_order_data['total_money']['currency'] );
 				} else {
-					// Fallback to original order currency or store currency.
-					$total_money->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : get_woocommerce_currency() );
+					$total_money->setCurrency( $this->get_square_order_currency_or_store_default( $square_order ) );
 				}
 				$square_order->setTotalMoney( $total_money );
 			}
@@ -1174,8 +1185,7 @@ class API extends Base {
 				if ( isset( $calculated_order_data['net_amounts']['total_money']['currency'] ) ) {
 					$net_total->setCurrency( $calculated_order_data['net_amounts']['total_money']['currency'] );
 				} else {
-					// Fallback to original order currency or store currency.
-					$net_total->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : get_woocommerce_currency() );
+					$net_total->setCurrency( $this->get_square_order_currency_or_store_default( $square_order ) );
 				}
 				$net_amounts->setTotalMoney( $net_total );
 				$square_order->setNetAmounts( $net_amounts );

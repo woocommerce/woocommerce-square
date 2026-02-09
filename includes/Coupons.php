@@ -84,6 +84,13 @@ class Coupons {
 	 * @return bool True if Square discount codes should be processed, false to use only WooCommerce coupons.
 	 */
 	public static function is_square_discount_codes_enabled() {
+		/**
+		 * Filters whether Square discount codes should be processed.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $enable_square_discount_codes Whether Square discount codes should be processed. Default true.
+		 */
 		return apply_filters( 'woocommerce_square_enable_discount_codes', true );
 	}
 
@@ -158,14 +165,7 @@ class Coupons {
 
 		// Check if there are any applied coupons.
 		if ( ! empty( $applied_coupons ) ) {
-			// Check if any applied coupon is a Square coupon.
-			$has_square_coupon = false;
-			foreach ( $applied_coupons as $applied_code ) {
-				if ( ! empty( self::get_square_discount_code_id_by_code( $applied_code ) ) ) {
-					$has_square_coupon = true;
-					break;
-				}
-			}
+			$has_square_coupon = ! empty( self::get_applied_square_coupon_codes() );
 
 			// If trying to apply Square coupon but WooCommerce coupon exists.
 			if ( $is_square_coupon && ! $has_square_coupon ) {
@@ -255,7 +255,8 @@ class Coupons {
 		if ( null !== self::$last_square_validation_error ) {
 			$coupon_code = $coupon->get_code();
 			if ( wc_is_same_coupon( $coupon_code, self::$last_square_validation_error['code'] ) ) {
-				$message                      = self::$last_square_validation_error['message'];
+				$message = self::$last_square_validation_error['message'];
+
 				self::$last_square_validation_error = null;
 				return $message;
 			}
@@ -422,6 +423,18 @@ class Coupons {
 	}
 
 	/**
+	 * Get the transient key for caching discount code data.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $discount_code The discount code.
+	 * @return string Transient key.
+	 */
+	private static function get_discount_code_transient_key( $discount_code ) {
+		return 'square_discount_code_' . md5( strtolower( $discount_code ) );
+	}
+
+	/**
 	 * Cache discount code details.
 	 * Uses WordPress transients to cache discount code data for 1 hour.
 	 *
@@ -431,7 +444,7 @@ class Coupons {
 	 * @param array|null $code_details  The discount code details to cache. Null if not found.
 	 */
 	public static function set_cache_discount_code( $discount_code, $code_details ) {
-		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
 
 		// Cache for 1 hour. Store false if not found to distinguish from "not cached yet".
 		$cache_value = null === $code_details ? false : $code_details;
@@ -447,7 +460,7 @@ class Coupons {
 	 * @return array|null|false Cached discount code details, false if cached as "not found", or null if not cached.
 	 */
 	public static function get_cache_discount_code( $discount_code ) {
-		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
 		$cached        = get_transient( $transient_key );
 
 		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
@@ -462,7 +475,7 @@ class Coupons {
 	 * @param string $discount_code The discount code.
 	 */
 	public static function clear_cache_discount_code( $discount_code ) {
-		$transient_key = 'square_discount_code_' . md5( strtolower( $discount_code ) );
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
 		delete_transient( $transient_key );
 
 		// Also clear the old ID-only cache for backward compatibility.
@@ -653,6 +666,28 @@ class Coupons {
 	}
 
 	/**
+	 * Get applied coupon codes that are Square discount codes.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string[] Array of applied Square coupon codes.
+	 */
+	private static function get_applied_square_coupon_codes() {
+		$cart = WC()->cart;
+		if ( ! $cart || $cart->is_empty() ) {
+			return array();
+		}
+
+		$square_codes = array();
+		foreach ( $cart->get_applied_coupons() as $applied_code ) {
+			if ( ! empty( self::get_square_discount_code_id_by_code( $applied_code ) ) ) {
+				$square_codes[] = $applied_code;
+			}
+		}
+		return $square_codes;
+	}
+
+	/**
 	 * Check if the cart has any Square discount code applied.
 	 *
 	 * Square discount codes can only be redeemed when paying with Square.
@@ -667,23 +702,7 @@ class Coupons {
 			return false;
 		}
 
-		$cart = WC()->cart;
-		if ( ! $cart || $cart->is_empty() ) {
-			return false;
-		}
-
-		$applied_coupons = $cart->get_applied_coupons();
-		if ( empty( $applied_coupons ) ) {
-			return false;
-		}
-
-		foreach ( $applied_coupons as $coupon_code ) {
-			if ( ! empty( self::get_square_discount_code_id_by_code( $coupon_code ) ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return ! empty( self::get_applied_square_coupon_codes() );
 	}
 
 	/**
@@ -956,15 +975,15 @@ class Coupons {
 			}
 
 			// Calculate amounts.
-			$price_total        = (float) $product->get_price() * $quantity;
-			$line_subtotal      = $price_total;
-			$line_subtotal_tax  = 0.0;
+			$price_total         = (float) $product->get_price() * $quantity;
+			$line_subtotal       = $price_total;
+			$line_subtotal_tax   = 0.0;
 			$line_tax_data_total = array();
 
 			if ( wc_tax_enabled() && $product->is_taxable() ) {
-				$customer         = $cart->get_customer();
-				$is_vat_exempt    = $customer && $customer->get_is_vat_exempt();
-				$item_tax_rates   = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
+				$customer           = $cart->get_customer();
+				$is_vat_exempt      = $customer && $customer->get_is_vat_exempt();
+				$item_tax_rates     = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
 				$price_includes_tax = wc_prices_include_tax();
 
 				if ( ! $is_vat_exempt && ! empty( $item_tax_rates ) ) {
@@ -1084,22 +1103,7 @@ class Coupons {
 		$coupon_code = $coupon->get_code();
 
 		// Verify the coupon is actually applied to the cart before using session data.
-		$cart = WC()->cart;
-		if ( ! $cart ) {
-			return $discount;
-		}
-
-		$applied_coupons   = $cart->get_applied_coupons();
-		$is_coupon_applied = false;
-		foreach ( $applied_coupons as $applied_code ) {
-			if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
-				$is_coupon_applied = true;
-				break;
-			}
-		}
-
-		// If coupon is not applied, don't use Square discount data (might be stale).
-		if ( ! $is_coupon_applied ) {
+		if ( ! Coupon_Utility::is_coupon_in_applied_cart( $coupon_code ) ) {
 			return $discount;
 		}
 
@@ -1108,25 +1112,16 @@ class Coupons {
 
 		if ( null !== $square_discount_per_item && is_array( $square_discount_per_item ) ) {
 			// This is a Square discount code - use Square's calculated per-item amounts.
-			// Get the cart item key to look up the discount.
 			if ( $cart_item && is_array( $cart_item ) && isset( $cart_item['key'] ) ) {
 				$cart_item_key = $cart_item['key'];
 
-				// Check if we have a discount for this specific cart item.
 				if ( isset( $square_discount_per_item[ $cart_item_key ] ) && $square_discount_per_item[ $cart_item_key ] > 0 ) {
 					$item_line_discount = (float) $square_discount_per_item[ $cart_item_key ];
 					$quantity           = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
-
-					// If $single is true, return discount per unit; if false, return discount for the line.
-					if ( $single ) {
-						return $quantity > 0 ? $item_line_discount / $quantity : 0;
-					} else {
-						return $item_line_discount;
-					}
+					return $single ? ( $quantity > 0 ? $item_line_discount / $quantity : 0 ) : $item_line_discount;
 				}
 			}
 
-			// If no per-item discount found for this item, return 0 (item doesn't get discount).
 			return 0;
 		}
 
@@ -1135,25 +1130,17 @@ class Coupons {
 		if ( null !== $square_discount_amount && $square_discount_amount > 0 ) {
 			$cart = WC()->cart;
 			if ( $cart && $cart_item && is_array( $cart_item ) ) {
-				// Calculate proportion of this item to total cart subtotal.
 				$cart_subtotal = $cart->get_subtotal();
 				if ( $cart_subtotal > 0 ) {
 					$item_subtotal      = isset( $cart_item['line_subtotal'] ) ? (float) $cart_item['line_subtotal'] : 0;
 					$proportion         = $item_subtotal / $cart_subtotal;
 					$item_line_discount = $square_discount_amount * $proportion;
-
-					// If $single is true, return discount per unit; if false, return discount for the line.
-					if ( $single ) {
-						$quantity = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
-						return $quantity > 0 ? $item_line_discount / $quantity : 0;
-					} else {
-						return $item_line_discount;
-					}
+					$quantity           = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
+					return $single ? ( $quantity > 0 ? $item_line_discount / $quantity : 0 ) : $item_line_discount;
 				}
 			}
 		}
 
-		// Not a Square discount code, use WooCommerce's calculation.
 		return $discount;
 	}
 
@@ -1193,11 +1180,7 @@ class Coupons {
 				} catch ( \Exception $e ) {
 					// Recalculation failed (e.g. combined total would be zero). Remove ALL Square coupons
 					// to clear the invalid state - we cannot determine which single coupon to remove.
-					foreach ( $applied_coupons as $code ) {
-						if ( ! empty( self::get_square_discount_code_id_by_code( $code ) ) ) {
-							$square_coupons_to_remove[] = $code;
-						}
-					}
+					$square_coupons_to_remove = self::get_applied_square_coupon_codes();
 					if ( function_exists( 'wc_square' ) ) {
 						wc_square()->log( sprintf( 'Error recalculating discount after cart change for coupon %s: %s', $coupon_code, $e->getMessage() ), 'square-coupons' );
 					}

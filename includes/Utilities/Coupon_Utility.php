@@ -80,6 +80,27 @@ class Coupon_Utility {
 	protected static $product_set_object;
 
 	/**
+	 * Check if a coupon code is in the cart's applied coupons.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to check.
+	 * @return bool True if the coupon is applied to the cart.
+	 */
+	public static function is_coupon_in_applied_cart( $coupon_code ) {
+		$cart = WC()->cart;
+		if ( ! $cart ) {
+			return false;
+		}
+		foreach ( $cart->get_applied_coupons() as $applied_code ) {
+			if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Get Square API credentials for direct HTTP requests.
 	 * Used for endpoints not available in the Square SDK (e.g., discount codes search).
 	 * Credentials are cached in static properties to avoid redundant fetches during a request.
