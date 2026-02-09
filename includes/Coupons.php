@@ -49,6 +49,14 @@ class Coupons {
 	private static $instance = null;
 
 	/**
+	 * Stores the last Square discount validation error message for woocommerce_coupon_error filter.
+	 * Used when we reject a Square coupon in woocommerce_coupon_is_valid (e.g. no discount applies).
+	 *
+	 * @var array|null Array with 'code' and 'message' keys, or null.
+	 */
+	private static $last_square_validation_error = null;
+
+	/**
 	 * Gets the singleton instance.
 	 *
 	 * @since x.x.x
@@ -66,11 +74,29 @@ class Coupons {
 	}
 
 	/**
+	 * Check if Square discount codes are enabled.
+	 *
+	 * Use the woocommerce_square_enable_discount_codes filter to opt out of Square discount code
+	 * handling. When disabled, only WooCommerce coupons will be processed on cart/checkout.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool True if Square discount codes should be processed, false to use only WooCommerce coupons.
+	 */
+	public static function is_square_discount_codes_enabled() {
+		return apply_filters( 'woocommerce_square_enable_discount_codes', true );
+	}
+
+	/**
 	 * Initialize Coupons class.
 	 *
 	 * @since x.x.x
 	 */
 	public static function init() {
+		if ( ! self::is_square_discount_codes_enabled() ) {
+			return;
+		}
+
 		// Detect Square coupon > calculate the discount from API > Store in the cart session for later use.
 		add_action( 'woocommerce_applied_coupon', array( self::$instance, 'handle_coupon_applied' ), 10, 1 );
 
@@ -78,7 +104,10 @@ class Coupons {
 		add_action( 'woocommerce_removed_coupon', array( self::$instance, 'handle_coupon_removed' ), 10, 1 );
 
 		// Store the discount code data in the order meta data.
-		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'store_square_discount_code_data_in_order' ), 10, 1 );
+		add_action( 'woocommerce_checkout_create_order', array( self::$instance, 'populate_order_square_discount_meta' ), 10, 1 );
+
+		// Ensure Square discount meta is always set (backup in case create_order didn't run or metadata was missed).
+		add_action( 'woocommerce_checkout_update_order_meta', array( self::$instance, 'ensure_order_square_discount_meta' ), 10, 1 );
 
 		// Fetch Square discount full data (pricing rule, version, code) > Convert to a WooCommerce Coupon array.
 		// Keeping discount amount and product_ids empty as we will override it with the Square's CalculateOrder response.
@@ -87,8 +116,14 @@ class Coupons {
 		// Override the discount amount (which is set to 0 by default) with the Square calculated discount amount.
 		add_filter( 'woocommerce_coupon_get_discount_amount', array( self::$instance, 'override_discount_amount_with_square' ), 10, 5 );
 
+		// Validate Square coupon provides a discount BEFORE WooCommerce adds it (avoids success + error double message).
+		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'validate_square_coupon_has_discount' ), 5, 2 );
+
 		// Prevent non-Square coupons from being used with Square coupons.
 		add_filter( 'woocommerce_coupon_is_valid', array( self::$instance, 'prevent_non_square_coupons_with_square_coupons' ), 10, 2 );
+
+		// Show our custom error message when we reject a Square coupon in validate_square_coupon_has_discount.
+		add_filter( 'woocommerce_coupon_error', array( self::$instance, 'filter_square_coupon_validation_error_message' ), 10, 3 );
 
 		// Trigger recalculation before WooCommerce calculates totals (covers add, remove, quantity update).
 		add_action( 'woocommerce_before_calculate_totals', array( self::$instance, 'handle_cart_contents_changed' ), 5 );
@@ -99,9 +134,8 @@ class Coupons {
 	 *
 	 * @since x.x.x
 	 *
-	 * @param bool      $is_valid Whether the coupon is valid.
-	 * @param \WC_Coupon $coupon  Coupon object.
-	 * @param \WC_Discounts $discounts Discounts object.
+	 * @param bool       $is_valid Whether the coupon is valid.
+	 * @param \WC_Coupon $coupon   Coupon object.
 	 *
 	 * @return bool|WP_Error True if valid, false or WP_Error if invalid.
 	 */
@@ -138,7 +172,7 @@ class Coupons {
 				$coupon->set_error_message(
 					sprintf(
 						/* translators: %s: coupon code */
-						__( 'Sorry, coupon "%s" cannot be used in combination with other coupons. Please remove the existing coupon and try again.', 'woocommerce-square' ),
+						__( 'Sorry, the Square discount code "%s" cannot be used in combination with WooCommerce coupons. Please remove the WooCommerce coupon and try again.', 'woocommerce-square' ),
 						esc_html( $coupon_code )
 					)
 				);
@@ -150,7 +184,7 @@ class Coupons {
 				$coupon->set_error_message(
 					sprintf(
 						/* translators: %s: coupon code */
-						__( 'Sorry, coupon "%s" cannot be used in combination with Square discount codes. Please remove the Square discount code and try again.', 'woocommerce-square' ),
+						__( 'Sorry, the WooCommerce coupon "%s" cannot be used in combination with Square discount codes. Please remove the Square discount code and try again.', 'woocommerce-square' ),
 						esc_html( $coupon_code )
 					)
 				);
@@ -159,6 +193,83 @@ class Coupons {
 		}
 
 		return $is_valid;
+	}
+
+	/**
+	 * Validate Square coupon provides a discount before WooCommerce applies it.
+	 * Runs at priority 5 so we reject before the success message is shown.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param bool       $is_valid Whether the coupon is valid.
+	 * @param \WC_Coupon $coupon   Coupon object.
+	 *
+	 * @return bool True if valid, false if Square coupon provides no discount.
+	 */
+	public static function validate_square_coupon_has_discount( $is_valid, $coupon ) {
+		if ( ! $is_valid ) {
+			return $is_valid;
+		}
+
+		$coupon_code = $coupon->get_code();
+		if ( empty( self::get_square_discount_code_id_by_code( $coupon_code ) ) ) {
+			return $is_valid;
+		}
+
+		$cart = WC()->cart;
+		if ( ! $cart || $cart->is_empty() ) {
+			return $is_valid;
+		}
+
+		try {
+			self::calculate_square_discount_from_cart( $coupon_code );
+		} catch ( \Exception $e ) {
+			self::$last_square_validation_error = array(
+				'code'    => $coupon_code,
+				'message' => $e->getMessage(),
+			);
+			return false;
+		}
+
+		return $is_valid;
+	}
+
+	/**
+	 * Replace the generic coupon error message with our Square-specific messages when we rejected.
+	 * Handles: (1) Square discount validation (no discount, zero total), (2) mixing Square and WooCommerce coupons.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $error_message The error message.
+	 * @param int    $error_code    The error code.
+	 * @param \WC_Coupon|null $coupon The coupon object.
+	 *
+	 * @return string The error message.
+	 */
+	public static function filter_square_coupon_validation_error_message( $error_message, $error_code, $coupon ) {
+		if ( ! $coupon ) {
+			return $error_message;
+		}
+
+		// Use custom message from Square validation (e.g. no discount, zero total).
+		if ( null !== self::$last_square_validation_error ) {
+			$coupon_code = $coupon->get_code();
+			if ( wc_is_same_coupon( $coupon_code, self::$last_square_validation_error['code'] ) ) {
+				$message                      = self::$last_square_validation_error['message'];
+				self::$last_square_validation_error = null;
+				return $message;
+			}
+		}
+
+		// Use custom message from prevent_non_square_coupons (e.g. cannot mix Square and WooCommerce coupons).
+		if ( \WC_Coupon::E_WC_COUPON_INVALID_FILTERED === $error_code ) {
+			$custom_message = $coupon->get_error_message();
+			if ( ! empty( $custom_message ) ) {
+				return $custom_message;
+			}
+		}
+
+		return $error_message;
 	}
 
 	/**
@@ -250,14 +361,6 @@ class Coupons {
 	 * @return array|null Response data with 'discount_codes' key, or null on error.
 	 */
 	private static function search_discount_codes_via_api( $coupon_code, $timeout = 30 ) {
-		// Get API credentials using Coupon_Utility helper method.
-		$credentials = Coupon_Utility::get_square_api_credentials();
-		if ( null === $credentials ) {
-			return null;
-		}
-
-		$api_url = $credentials['base_url'] . '/discount-codes/search';
-
 		$query = array(
 			'query' => array(
 				'filter' => array(
@@ -266,31 +369,16 @@ class Coupons {
 			),
 		);
 
-		$response = wp_remote_post(
-			$api_url,
-			array(
-				'headers' => array(
-					'Authorization'  => 'Bearer ' . $credentials['access_token'],
-					'Content-Type'   => 'application/json',
-					'Square-Version' => '2025-01-23',
-				),
-				'body'    => wp_json_encode( $query ),
-				'timeout' => $timeout,
-			)
-		);
+		$result = Coupon_Utility::square_api_post( 'discount-codes/search', $query, $timeout );
 
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		if ( is_wp_error( $result ) ) {
 			if ( function_exists( 'wc_square' ) ) {
-				$error_message = is_wp_error( $response ) ? $response->get_error_message() : wp_remote_retrieve_response_message( $response );
-				wc_square()->log( sprintf( 'Error searching for discount code %s: %s', $coupon_code, $error_message ), 'square-coupons' );
+				wc_square()->log( sprintf( 'Error searching for discount code %s: %s', $coupon_code, $result->get_error_message() ), 'square-coupons' );
 			}
 			return null;
 		}
 
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-
-		return $data;
+		return isset( $result['body'] ) ? $result['body'] : null;
 	}
 
 	/**
@@ -418,6 +506,12 @@ class Coupons {
 			}
 		}
 
+		// Skip API call if we already calculated in woocommerce_coupon_is_valid (avoids duplicate CalculateOrder).
+		$existing_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
+		if ( null !== $existing_amount && (float) $existing_amount > 0 ) {
+			return;
+		}
+
 		// Shipping is selected (or not required), calculate now.
 		try {
 			self::calculate_square_discount_from_cart( $coupon_code );
@@ -438,55 +532,76 @@ class Coupons {
 	}
 
 	/**
-	 * Store Square discount code data when order is created from cart.
+	 * Populate order with Square discount meta from cart session.
 	 *
 	 * @since x.x.x
 	 *
-	 * @param \WC_Order $order The order object being created.
+	 * @param \WC_Order $order The order object.
+	 * @return bool True if meta was set, false otherwise.
 	 */
-	public static function store_square_discount_code_data_in_order( $order ) {
-		// Only proceed if WooCommerce Square is active.
-		if ( ! function_exists( 'wc_square' ) ) {
-			return;
+	public static function populate_order_square_discount_meta( $order ) {
+		if ( ! $order instanceof \WC_Order || ! function_exists( 'wc_square' ) ) {
+			return false;
 		}
 
-		// Get applied coupons from cart.
 		$cart = WC()->cart;
-		if ( ! $cart ) {
-			return;
+		if ( ! $cart || ! WC()->session ) {
+			return false;
 		}
 
 		$applied_coupons = $cart->get_applied_coupons();
 		if ( empty( $applied_coupons ) ) {
-			return;
+			return false;
 		}
 
-		// For now, we'll store the first coupon's Square discount code ID.
-		// If multiple coupons are supported, we can extend this later.
 		$coupon_code = isset( $applied_coupons[0] ) ? $applied_coupons[0] : null;
 		if ( empty( $coupon_code ) ) {
-			return;
+			return false;
 		}
 
-		// Get Square discount code ID from cart session (already stored when coupon was applied).
 		$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
 
-		// Fallback: if not in session, try to get it from API.
 		if ( empty( $square_discount_code_id ) ) {
 			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
 		}
 
-		if ( ! empty( $square_discount_code_id ) ) {
-			$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
-			$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
-			if ( ! empty( $square_discount_amount ) ) {
-				$order->update_meta_data( '_square_discount_amount', $square_discount_amount );
-			}
-			$square_discount_per_item = WC()->session->get( '_square_discount_per_item_' . $coupon_code );
-			if ( ! empty( $square_discount_per_item ) ) {
-				$order->update_meta_data( '_square_discount_per_item', $square_discount_per_item );
-			}
-			// Not calling save() here as the order hasn't been saved yet, it will be saved by WooCommerce after this hook.
+		if ( empty( $square_discount_code_id ) ) {
+			return false;
+		}
+
+		$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
+		$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $coupon_code );
+		if ( ! empty( $square_discount_amount ) ) {
+			$order->update_meta_data( '_square_discount_amount', $square_discount_amount );
+		}
+		$square_discount_per_item = WC()->session->get( '_square_discount_per_item_' . $coupon_code );
+		if ( ! empty( $square_discount_per_item ) ) {
+			$order->update_meta_data( '_square_discount_per_item', $square_discount_per_item );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Ensure order has Square discount code meta (backup for edge cases).
+	 * Runs on woocommerce_checkout_update_order_meta so metadata is always available.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $order_id The order ID.
+	 */
+	public static function ensure_order_square_discount_meta( $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		if ( ! empty( $order->get_meta( '_square_discount_code_id' ) ) ) {
+			return;
+		}
+
+		if ( self::populate_order_square_discount_meta( $order ) ) {
+			$order->save_meta_data();
 		}
 	}
 
@@ -548,6 +663,10 @@ class Coupons {
 	 * @return bool True if cart has an applied Square discount code.
 	 */
 	public static function cart_has_square_coupon() {
+		if ( ! self::is_square_discount_codes_enabled() ) {
+			return false;
+		}
+
 		$cart = WC()->cart;
 		if ( ! $cart || $cart->is_empty() ) {
 			return false;
@@ -588,11 +707,33 @@ class Coupons {
 			throw new \Exception( 'Cart is empty.' );
 		}
 
-		// Get Square discount code ID.
+		// Get Square discount code ID for the coupon we're calculating.
 		$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
 		if ( empty( $square_discount_code_id ) ) {
 			throw new \Exception( 'Square discount code not found.' );
 		}
+
+		// Build array of ALL Square discount codes that should apply (existing + new).
+		// When validating, the new coupon isn't in applied_coupons yet, so we include it explicitly.
+		// This ensures we reject only the coupon that would make the combined total zero.
+		$proposed_discount_codes = array();
+		$applied_coupons         = $cart->get_applied_coupons();
+		$current_is_applied      = false;
+
+		foreach ( $applied_coupons as $applied_code ) {
+			$id = self::get_square_discount_code_id_by_code( $applied_code );
+			if ( ! empty( $id ) ) {
+				$proposed_discount_codes[ $id ] = true;
+				if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
+					$current_is_applied = true;
+				}
+			}
+		}
+
+		if ( ! $current_is_applied ) {
+			$proposed_discount_codes[ $square_discount_code_id ] = true;
+		}
+		$proposed_discount_codes = array_keys( $proposed_discount_codes );
 
 		// Get location ID.
 		$settings_handler = wc_square()->get_settings_handler();
@@ -617,9 +758,9 @@ class Coupons {
 			throw new \Exception( 'Square API is not available.' );
 		}
 
-		// Call CalculateOrder with discount code and get raw response for per-line-item discounts.
+		// Call CalculateOrder with ALL discount codes (existing + new) so we get the combined total.
 		// Note: We pass null for WC_Order since we're calculating from cart, not an existing order.
-		$calculate_result      = $api->calculate_order( null, $square_order, array( $square_discount_code_id ), true );
+		$calculate_result      = $api->calculate_order( null, $square_order, $proposed_discount_codes, true );
 		$calculated_order      = $calculate_result['order'];
 		$calculated_order_data = $calculate_result['raw_response'];
 
@@ -715,6 +856,12 @@ class Coupons {
 			}
 		}
 
+		// Reject coupon when it provides no discount (e.g. product-specific with no matching items, free delivery only).
+		if ( $total_discount_amount <= 0 ) {
+			/* translators: error message when discount code applies but gives no discount */
+			throw new \Exception( esc_html__( 'This discount code does not apply to your current cart. It may be for specific products or free delivery only—add qualifying items or check the code requirements.', 'woocommerce-square' ) );
+		}
+
 		// Reject coupon if it would make the order total zero (WooCommerce-Square cannot process zero-amount transactions).
 		$order_total_cents = $calculated_order->getTotalMoney() ? $calculated_order->getTotalMoney()->getAmount() : 0;
 		if ( $order_total_cents <= 0 ) {
@@ -722,10 +869,33 @@ class Coupons {
 			throw new \Exception( esc_html__( 'This discount code cannot be used because it would make your order total zero. Square cannot process zero-amount transactions.', 'woocommerce-square' ) );
 		}
 
-		// Store per-item discounts and total in cart session.
-		WC()->session->set( '_square_discount_amount_' . $coupon_code, $total_discount_amount );
-		WC()->session->set( '_square_discount_per_item_' . $coupon_code, $line_item_discounts );
-		WC()->session->set( '_square_discount_code_id_' . $coupon_code, $square_discount_code_id );
+		// Build list of coupon codes in this calculation (to avoid double-counting when multiple coupons applied).
+		$coupon_codes_in_calc = array();
+		foreach ( $applied_coupons as $applied_code ) {
+			$id = self::get_square_discount_code_id_by_code( $applied_code );
+			if ( ! empty( $id ) && in_array( $id, $proposed_discount_codes, true ) ) {
+				$coupon_codes_in_calc[] = $applied_code;
+			}
+		}
+		if ( ! $current_is_applied ) {
+			$coupon_codes_in_calc[] = $coupon_code;
+		}
+
+		$coupon_count = count( $coupon_codes_in_calc );
+		$share        = $coupon_count > 0 ? 1.0 / $coupon_count : 1.0;
+
+		// Store the full discount for single coupon; split evenly when multiple coupons.
+		foreach ( $coupon_codes_in_calc as $code ) {
+			$code_id = self::get_square_discount_code_id_by_code( $code );
+			WC()->session->set( '_square_discount_code_id_' . $code, $code_id );
+			WC()->session->set( '_square_discount_amount_' . $code, $total_discount_amount * $share );
+
+			$code_line_discounts = array();
+			foreach ( $line_item_discounts as $key => $amount ) {
+				$code_line_discounts[ $key ] = $amount * $share;
+			}
+			WC()->session->set( '_square_discount_per_item_' . $code, $code_line_discounts );
+		}
 
 		return $total_discount_amount;
 	}
@@ -1010,6 +1180,7 @@ class Coupons {
 		}
 
 		// Check if any Square coupons are still applied and recalculate.
+		$square_coupons_to_remove = array();
 		foreach ( $applied_coupons as $coupon_code ) {
 			$square_discount_code_id = self::get_square_discount_code_id_by_code( $coupon_code );
 
@@ -1020,15 +1191,30 @@ class Coupons {
 				try {
 					self::calculate_square_discount_from_cart( $coupon_code );
 				} catch ( \Exception $e ) {
-					// If recalculation fails, log the error but don't remove the coupon during cart operations.
-					// The coupon will be validated later during checkout.
+					// Recalculation failed (e.g. combined total would be zero). Remove ALL Square coupons
+					// to clear the invalid state - we cannot determine which single coupon to remove.
+					foreach ( $applied_coupons as $code ) {
+						if ( ! empty( self::get_square_discount_code_id_by_code( $code ) ) ) {
+							$square_coupons_to_remove[] = $code;
+						}
+					}
 					if ( function_exists( 'wc_square' ) ) {
 						wc_square()->log( sprintf( 'Error recalculating discount after cart change for coupon %s: %s', $coupon_code, $e->getMessage() ), 'square-coupons' );
 					}
+					break;
 				} finally {
 					$recalculating = false;
 				}
 			}
+		}
+
+		// Remove invalid Square coupons and show error.
+		if ( ! empty( $square_coupons_to_remove ) ) {
+			foreach ( $square_coupons_to_remove as $code ) {
+				$cart->remove_coupon( $code );
+				self::handle_coupon_removed( $code );
+			}
+			wc_add_notice( __( 'One or more discount codes could not be applied because they would make your order total zero. Square cannot process zero-amount transactions.', 'woocommerce-square' ), 'error' );
 		}
 	}
 }

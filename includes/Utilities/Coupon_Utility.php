@@ -129,6 +129,69 @@ class Coupon_Utility {
 	}
 
 	/**
+	 * Make a POST request to the Square API.
+	 * Wrapper for direct HTTP calls to avoid duplicating credential and request logic.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $path    API path relative to base URL (e.g. 'orders/calculate' or 'discount-codes/search').
+	 * @param array  $body    Request body as array (will be JSON-encoded).
+	 * @param int    $timeout Request timeout in seconds. Default 30.
+	 * @return array|WP_Error Decoded response body and response code on success, WP_Error on failure.
+	 */
+	public static function square_api_post( $path, $body, $timeout = 30 ) {
+		$credentials = self::get_square_api_credentials();
+		if ( null === $credentials ) {
+			return new \WP_Error( 'missing_credentials', __( 'Square API credentials are not configured.', 'woocommerce-square' ) );
+		}
+
+		$api_url = $credentials['base_url'] . '/' . ltrim( $path, '/' );
+
+		$response = wp_remote_post(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization'  => 'Bearer ' . $credentials['access_token'],
+					'Content-Type'   => 'application/json',
+					'Square-Version' => '2025-01-23',
+				),
+				'body'    => wp_json_encode( $body ),
+				'timeout' => $timeout,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+
+		if ( 200 !== $response_code ) {
+			$error_data    = json_decode( $response_body, true );
+			$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
+				? $error_data['errors'][0]['detail']
+				: wp_remote_retrieve_response_message( $response );
+
+			return new \WP_Error(
+				'api_error',
+				$error_message,
+				array(
+					'status'   => $response_code,
+					'response' => $error_data,
+				)
+			);
+		}
+
+		$data = json_decode( $response_body, true );
+
+		return array(
+			'body'          => $data,
+			'response_code' => $response_code,
+		);
+	}
+
+	/**
 	 * Map a Square Discount Code to a WooCommerce Coupon array.
 	 *
 	 * This allows for the creation of manual WC_Coupon object mapped from the

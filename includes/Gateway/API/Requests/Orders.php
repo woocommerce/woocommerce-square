@@ -440,23 +440,8 @@ class Orders extends API\Request {
 		$api_line_items = array();
 		$tax_type       = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
 
-		// Check for Square discount code ID - first from order meta, then from cart session as fallback.
+		// Square discount code ID is set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
 		$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
-
-		// Fallback: if not in order meta, check cart session (in case woocommerce_checkout_create_order didn't fire).
-		if ( empty( $square_discount_code_id ) && WC()->cart ) {
-			$applied_coupons = WC()->cart->get_applied_coupons();
-			if ( ! empty( $applied_coupons ) ) {
-				$coupon_code             = $applied_coupons[0];
-				$square_discount_code_id = WC()->session->get( '_square_discount_code_id_' . $coupon_code );
-
-				// If found in session, store it in order meta for future use.
-				if ( ! empty( $square_discount_code_id ) ) {
-					$order->update_meta_data( '_square_discount_code_id', $square_discount_code_id );
-					$order->save_meta_data();
-				}
-			}
-		}
 
 		/** @var \WC_Order_Item_Product $item */
 		foreach ( $line_items as $item ) {
@@ -473,7 +458,7 @@ class Orders extends API\Request {
 			$total_amount    = (float) $item->get_total();
 			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
 
-			// Inlcude the tax in subtotal when prices are inclusive of taxes.
+			// Include the tax in subtotal when prices are inclusive of taxes.
 			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
 				$subtotal_amount += $total_tax;
 			}

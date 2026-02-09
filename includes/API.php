@@ -23,9 +23,10 @@
 
 namespace WooCommerce\Square;
 
-use WooCommerce\Square\Framework\Api\Base;
 use WooCommerce\Square\API\Requests;
 use WooCommerce\Square\API\Responses;
+use WooCommerce\Square\Framework\Api\Base;
+use WooCommerce\Square\Utilities\Coupon_Utility;
 use Square\Models\CatalogObject;
 use Square\Models\ListCatalogResponse;
 use Square\SquareClient;
@@ -1090,26 +1091,6 @@ class API extends Base {
 			// Get the request object to access stored data (square_order, proposed_discount_codes, etc.).
 			$request = $this->get_request();
 
-			// Get Square API credentials
-			if ( ! function_exists( 'wc_square' ) ) {
-				throw new \Exception( 'WooCommerce Square plugin is not available.' );
-			}
-
-			$settings_handler = wc_square()->get_settings_handler();
-			if ( ! $settings_handler ) {
-				throw new \Exception( 'Square settings handler is not available.' );
-			}
-
-			$bearer_token = $settings_handler->get_access_token();
-			$is_sandbox   = $settings_handler->is_sandbox();
-
-			if ( empty( $bearer_token ) ) {
-				throw new \Exception( 'Square access token is not configured.' );
-			}
-
-			// Build API URL - CalculateOrder endpoint.
-			$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/orders/calculate';
-
 			// Get Square order and proposed discount codes from request object.
 			$square_order            = $request->square_order;
 			$proposed_discount_codes = $request->proposed_discount_codes;
@@ -1140,40 +1121,14 @@ class API extends Base {
 				}
 			}
 
-			// Make direct HTTP request so we can send proposed_discount_codes; the SDK's
-			// CalculateOrderRequest only supports order and proposed_rewards.
-			$response = wp_remote_post(
-				$api_url,
-				array(
-					'headers' => array(
-						'Authorization'  => 'Bearer ' . $bearer_token,
-						'Content-Type'   => 'application/json',
-						'Square-Version' => '2025-01-23',
-					),
-					'body'    => wp_json_encode( $request_body ),
-					'timeout' => 30,
-				)
-			);
+			// Make direct HTTP request via wrapper (SDK's CalculateOrderRequest does not support proposed_discount_codes).
+			$result = Coupon_Utility::square_api_post( 'orders/calculate', $request_body );
 
-			// Handle HTTP errors.
-			if ( is_wp_error( $response ) ) {
-				throw new \Exception( 'Square API request failed: ' . esc_html( $response->get_error_message() ) );
+			if ( is_wp_error( $result ) ) {
+				throw new \Exception( 'Square API error: ' . esc_html( $result->get_error_message() ) );
 			}
 
-			$response_code = wp_remote_retrieve_response_code( $response );
-			$response_body = wp_remote_retrieve_body( $response );
-
-			// Handle API errors (non-200 status codes).
-			if ( 200 !== $response_code ) {
-				$error_data    = json_decode( $response_body, true );
-				$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
-					? $error_data['errors'][0]['detail']
-					: wp_remote_retrieve_response_message( $response );
-
-				throw new \Exception( 'Square API error: ' . esc_html( $error_message ) );
-			}
-
-			$data = json_decode( $response_body, true );
+			$data = isset( $result['body'] ) ? $result['body'] : array();
 
 			if ( empty( $data['order'] ) ) {
 				throw new \Exception( 'Square API did not return order data.' );
@@ -1198,8 +1153,8 @@ class API extends Base {
 				if ( isset( $calculated_order_data['total_money']['currency'] ) ) {
 					$total_money->setCurrency( $calculated_order_data['total_money']['currency'] );
 				} else {
-					// Fallback to original order currency.
-					$total_money->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : 'USD' );
+					// Fallback to original order currency or store currency.
+					$total_money->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : get_woocommerce_currency() );
 				}
 				$square_order->setTotalMoney( $total_money );
 			}
@@ -1219,7 +1174,8 @@ class API extends Base {
 				if ( isset( $calculated_order_data['net_amounts']['total_money']['currency'] ) ) {
 					$net_total->setCurrency( $calculated_order_data['net_amounts']['total_money']['currency'] );
 				} else {
-					$net_total->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : 'USD' );
+					// Fallback to original order currency or store currency.
+					$net_total->setCurrency( $square_order->getTotalMoney() ? $square_order->getTotalMoney()->getCurrency() : get_woocommerce_currency() );
 				}
 				$net_amounts->setTotalMoney( $net_total );
 				$square_order->setNetAmounts( $net_amounts );

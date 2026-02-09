@@ -26,6 +26,7 @@ namespace WooCommerce\Square\Gateway;
 defined( 'ABSPATH' ) || exit;
 
 use Square\Models\Order;
+use WooCommerce\Square\Utilities\Coupon_Utility;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -510,32 +511,10 @@ class API extends \WooCommerce\Square\API {
 			return new \WP_Error( 'missing_parameters', 'discount_code_id and order_id are required.' );
 		}
 
-		// Get Square API credentials.
-		if ( ! function_exists( 'wc_square' ) ) {
-			return new \WP_Error( 'plugin_not_available', 'WooCommerce Square plugin is not available.' );
-		}
-
-		$settings_handler = wc_square()->get_settings_handler();
-		if ( ! $settings_handler ) {
-			return new \WP_Error( 'settings_not_available', 'Square settings handler is not available.' );
-		}
-
-		$bearer_token = $settings_handler->get_access_token();
-		$is_sandbox   = $settings_handler->is_sandbox();
-
-		if ( empty( $bearer_token ) ) {
-			return new \WP_Error( 'missing_token', 'Square access token is not configured.' );
-		}
-
-		// Build API URL.
-		$api_url = 'https://connect.squareup' . ( $is_sandbox ? 'sandbox' : '' ) . '.com/v2/discount-codes/' . rawurlencode( $discount_code_id ) . '/redemptions';
-
-		// Generate idempotency key if not provided.
 		if ( empty( $idempotency_key ) ) {
 			$idempotency_key = wc_square()->get_idempotency_key( 'redemption_' . $discount_code_id . '_' . $order_id );
 		}
 
-		// Build request body.
 		$request_body = array(
 			'idempotency_key' => $idempotency_key,
 			'redemption'      => array(
@@ -543,45 +522,14 @@ class API extends \WooCommerce\Square\API {
 			),
 		);
 
-		// Make HTTP request.
-		$response = wp_remote_post(
-			$api_url,
-			array(
-				'headers' => array(
-					'Authorization'  => 'Bearer ' . $bearer_token,
-					'Content-Type'   => 'application/json',
-					'Square-Version' => '2025-01-23',
-				),
-				'body'    => wp_json_encode( $request_body ),
-				'timeout' => 30,
-			)
-		);
+		$path   = 'discount-codes/' . rawurlencode( $discount_code_id ) . '/redemptions';
+		$result = Coupon_Utility::square_api_post( $path, $request_body );
 
-		// Handle errors.
-		if ( is_wp_error( $response ) ) {
-			return $response;
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
 
-		$response_code = wp_remote_retrieve_response_code( $response );
-		$response_body = wp_remote_retrieve_body( $response );
-
-		if ( 200 !== $response_code ) {
-			$error_data    = json_decode( $response_body, true );
-			$error_message = isset( $error_data['errors'] ) && is_array( $error_data['errors'] ) && ! empty( $error_data['errors'][0]['detail'] )
-				? $error_data['errors'][0]['detail']
-				: wp_remote_retrieve_response_message( $response );
-
-			return new \WP_Error(
-				'api_error',
-				$error_message,
-				array(
-					'status'   => $response_code,
-					'response' => $error_data,
-				)
-			);
-		}
-
-		$data = json_decode( $response_body, true );
+		$data = isset( $result['body'] ) ? $result['body'] : array();
 
 		return isset( $data['redemption'] ) ? $data['redemption'] : $data;
 	}
