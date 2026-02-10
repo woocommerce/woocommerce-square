@@ -1954,9 +1954,15 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @return boolean
 	 */
 	protected function verify_order_total( $order ) {
-		$order_total         = (float) $order->get_total();
-		$gift_card_total     = $order->payment->partial_total->gift_card;
-		$other_gateway_total = $order->payment->partial_total->other_gateway;
+		// Get the decimal precision and factor.
+		$decimals = wc_get_price_decimals();
+		$factor   = pow( 10, $decimals );
+
+		// Convert the order total, gift card total, and other gateway total to integers using the factor.
+		// This will avoid the issue of float precision errors.
+		$order_total         = (int) round( (float) $order->get_total() * $factor );
+		$gift_card_total     = (int) round( (float) $order->payment->partial_total->gift_card * $factor );
+		$other_gateway_total = (int) round( (float) $order->payment->partial_total->other_gateway * $factor );
 
 		return $order_total === $gift_card_total + $other_gateway_total;
 	}
