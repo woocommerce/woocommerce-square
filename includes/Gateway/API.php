@@ -556,22 +556,29 @@ class API extends \WooCommerce\Square\API {
 
 	/**
 	 * Adjusts an existing Square order by amount.
+	 * When Square redemption is used, positive adjustments use a service charge (not a line item) so the amount is not eligible for coupon discount.
+	 * When no Square coupon is used, positive adjustments use a line item (original plugin behavior).
 	 *
 	 * @since 2.0.4
 	 *
-	 * @param string $location_id location ID
-	 * @param \WC_Order $order
-	 * @param int $version Current 'version' value of Square order
-	 * @param int $amount Amount of adjustment in smallest unit
-	 * @return Order
+	 * @param string                    $location_id          Square location ID.
+	 * @param \WC_Order                 $order                WooCommerce order.
+	 * @param int                       $version              Current 'version' value of Square order.
+	 * @param int                       $amount               Adjustment in smallest unit (cents). Positive = add, negative = discount.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption used (use service charge); null = use line item.
+	 * @return \Square\Models\Order
 	 * @throws \Exception
 	 */
-	public function adjust_order( $location_id, \WC_Order $order, $version, $amount ) {
+	public function adjust_order( $location_id, \WC_Order $order, $version, $amount, $square_coupon_in_use = null ) {
 
 		$request = new API\Requests\Orders( $this->client );
 
 		if ( $amount > 0 ) {
-			$request->add_line_item_order_data( $location_id, $order, $version, $amount );
+			if ( $square_coupon_in_use !== null ) {
+				$request->add_service_charge_order_data( $location_id, $order, $version, $amount, $square_coupon_in_use );
+			} else {
+				$request->add_line_item_order_data( $location_id, $order, $version, $amount );
+			}
 		} else {
 			$request->add_discount_order_data( $location_id, $order, $version, -1 * $amount );
 		}

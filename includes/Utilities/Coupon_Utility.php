@@ -273,6 +273,39 @@ class Coupon_Utility {
 	}
 
 	/**
+	 * Get the Square CatalogDiscount object ID for a pricing rule (used to match order.discounts in API responses).
+	 * Results are cached by pricing_rule_id and version to avoid repeated API calls.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $pricing_rule_id      The Square pricing rule ID.
+	 * @param int    $pricing_rule_version The Square pricing rule version.
+	 * @return string|null The discount catalog object ID, or null if not found.
+	 */
+	public static function get_discount_catalog_id_for_pricing_rule( $pricing_rule_id, $pricing_rule_version ) {
+		if ( empty( $pricing_rule_id ) ) {
+			return null;
+		}
+		$cache_key = 'square_discount_catalog_id_' . md5( $pricing_rule_id . '_' . (int) $pricing_rule_version );
+		$cached    = get_transient( $cache_key );
+		if ( false !== $cached && is_string( $cached ) ) {
+			return $cached;
+		}
+		if ( ! self::request_pricing_rule_objects( $pricing_rule_id, $pricing_rule_version ) ) {
+			return null;
+		}
+		$discount_id = null;
+		if ( self::$discount_object instanceof Models\CatalogObject ) {
+			$discount_id = self::$discount_object->getId();
+		}
+		if ( $discount_id ) {
+			set_transient( $cache_key, $discount_id, HOUR_IN_SECONDS );
+		}
+
+		return $discount_id;
+	}
+
+	/**
 	 * Request the pricing rule and related objects from Square.
 	 *
 	 * @since x.x.x

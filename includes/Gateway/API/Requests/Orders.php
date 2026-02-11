@@ -201,7 +201,7 @@ class Orders extends API\Request {
 		$taxes          = $this->get_order_taxes( $order );
 		$all_line_items = $this->get_api_line_items(
 			$order,
-			array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ), $this->get_shipping_line_items( $order ) ),
+			array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ) ),
 			$taxes
 		);
 
@@ -242,6 +242,11 @@ class Orders extends API\Request {
 		}
 
 		$order_model->setTaxes( array_values( $taxes ) );
+
+		$service_charges = $this->get_order_service_charges_for_shipping( $order, $taxes );
+		if ( ! empty( $service_charges ) ) {
+			$order_model->setServiceCharges( $service_charges );
+		}
 
 		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) );
 		$this->square_request->setOrder( $order_model );
@@ -427,6 +432,60 @@ class Orders extends API\Request {
 
 
 	/**
+	 * Gets Square order service charge objects for the order's shipping methods.
+	 * Sends shipping as order-level service charges per Square's recommendation (not as line items).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order                        $order WooCommerce order object.
+	 * @param \Square\Models\OrderLineItemTax[] $taxes Order taxes keyed by rate_id (for taxable service charges).
+	 * @return \Square\Models\OrderServiceCharge[]
+	 */
+	protected function get_order_service_charges_for_shipping( \WC_Order $order, array $taxes ) {
+		$service_charges = array();
+
+		foreach ( $order->get_shipping_methods() as $item ) {
+			if ( ! $item instanceof \WC_Order_Item_Shipping ) {
+				continue;
+			}
+
+			$total = (float) $item->get_total();
+			if ( $total <= 0 ) {
+				continue;
+			}
+
+			$charge = new \Square\Models\OrderServiceCharge();
+			$charge->setUid( wc_square()->get_idempotency_key( 'shipping-' . $item->get_id(), false ) );
+			$charge->setName( $item->get_name() ?: __( 'Shipping', 'woocommerce-square' ) );
+			$charge->setAmountMoney( Money_Utility::amount_to_money( $total, $order->get_currency() ) );
+			$charge->setCalculationPhase( 'SUBTOTAL_PHASE' );
+
+			$total_tax = (float) $item->get_total_tax();
+			$charge->setTaxable( $total_tax > 0 );
+
+			if ( $total_tax > 0 && ! empty( $taxes ) ) {
+				$applied_taxes = array();
+				$get_taxes     = $item->get_taxes();
+				if ( isset( $get_taxes['total'] ) && is_array( $get_taxes['total'] ) ) {
+					foreach ( array_keys( $get_taxes['total'] ) as $tax_id ) {
+						if ( ! empty( $tax_id ) && isset( $taxes[ $tax_id ] ) && $taxes[ $tax_id ] instanceof \Square\Models\OrderLineItemTax ) {
+							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $taxes[ $tax_id ]->getUid() );
+						}
+					}
+				}
+				if ( ! empty( $applied_taxes ) ) {
+					$charge->setAppliedTaxes( $applied_taxes );
+				}
+			}
+
+			$service_charges[] = $charge;
+		}
+
+		return $service_charges;
+	}
+
+
+	/**
 	 * Gets Square API line item objects.
 	 *
 	 * @since 2.2.6
@@ -440,8 +499,9 @@ class Orders extends API\Request {
 		$api_line_items = array();
 		$tax_type       = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
 
-		// Square discount code ID is set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
-		$square_discount_code_id = $order->get_meta( '_square_discount_code_id' );
+		// Square discount code IDs are set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
+		$square_discount_code_ids = \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order );
+		$has_square_discount      = ! empty( $square_discount_code_ids );
 
 		/** @var \WC_Order_Item_Product $item */
 		foreach ( $line_items as $item ) {
@@ -484,9 +544,9 @@ class Orders extends API\Request {
 			if ( $item instanceof \WC_Order_Item_Product ) {
 				$discount = (float) $item->get_subtotal() - (float) $item->get_total();
 
-				// Only add discount line items if Square discount code is NOT present.
-				// If Square discount code is present, the discount will be applied via CreateRedemption.
-				if ( $discount > 0 && empty( $square_discount_code_id ) ) {
+				// Only add discount line items if no Square discount code is present.
+				// If Square discount code(s) are present, the discount will be applied via CreateRedemption.
+				if ( $discount > 0 && ! $has_square_discount ) {
 					$discount_uid = wc_square()->get_idempotency_key( '', false );
 
 					$line_item->setAppliedDiscounts(
@@ -684,6 +744,55 @@ class Orders extends API\Request {
 		$order_line_item_discount->setScope( 'ORDER' );
 
 		$order_model->setDiscounts( array( $order_line_item_discount ) );
+
+		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) . $version );
+		$this->square_request->setOrder( $order_model );
+
+		$this->square_api_args = array(
+			$order->square_order_id,
+			$this->square_request,
+		);
+	}
+
+	/**
+	 * Sets the data for updating an order with a service charge adjustment.
+	 * Used for positive adjustments so the amount is not eligible for coupon discount (unlike a line item).
+	 *
+	 * @since 5.0.0
+	 *
+	 * @param string                    $location_id           Square location ID.
+	 * @param \WC_Order                 $order                 WooCommerce order.
+	 * @param int                       $version               Current version of the Square order.
+	 * @param int                       $amount                Adjustment amount in smallest currency unit (cents).
+	 * @param \Square\Models\Order|null $existing_square_order Current Square order (to preserve existing service charges e.g. shipping).
+	 */
+	public function add_service_charge_order_data( $location_id, \WC_Order $order, $version, $amount, $existing_square_order = null ) {
+		$this->square_api_method = 'updateOrder';
+		$this->square_request    = new \Square\Models\UpdateOrderRequest();
+
+		$order_model = new \Square\Models\Order( $location_id );
+		$order_model->setVersion( $version );
+
+		$existing_charges = array();
+		if ( $existing_square_order && method_exists( $existing_square_order, 'getServiceCharges' ) ) {
+			$existing = $existing_square_order->getServiceCharges();
+			if ( is_array( $existing ) ) {
+				$existing_charges = $existing;
+			}
+		}
+
+		$money = new \Square\Models\Money();
+		$money->setAmount( (int) $amount );
+		$money->setCurrency( $order->get_currency() );
+
+		$adjustment_charge = new \Square\Models\OrderServiceCharge();
+		$adjustment_charge->setUid( wc_square()->get_idempotency_key( 'adjustment-' . $version, false ) );
+		$adjustment_charge->setName( __( 'Adjustment', 'woocommerce-square' ) );
+		$adjustment_charge->setAmountMoney( $money );
+		$adjustment_charge->setCalculationPhase( 'TOTAL_PHASE' );
+		$adjustment_charge->setTaxable( false );
+
+		$order_model->setServiceCharges( array_merge( $existing_charges, array( $adjustment_charge ) ) );
 
 		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) . $version );
 		$this->square_request->setOrder( $order_model );
