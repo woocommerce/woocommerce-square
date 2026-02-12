@@ -700,7 +700,7 @@ class Coupons {
 			return;
 		}
 		$square_discount_code_ids = array();
-		$first_id                  = null;
+		$first_id                 = null;
 		foreach ( $coupon_items as $coupon_item ) {
 			$coupon_code = $coupon_item->get_code();
 			if ( empty( $coupon_code ) ) {
@@ -964,7 +964,7 @@ class Coupons {
 		$applied_coupons = $cart->get_applied_coupons();
 		foreach ( $coupon_codes_in_calc as $code ) {
 			$stored_amount = WC()->session->get( '_square_discount_amount_' . $code );
-			if ( $stored_amount === null || (float) $stored_amount <= 0 ) {
+			if ( null === $stored_amount || (float) $stored_amount <= 0 ) {
 				if ( wc_is_same_coupon( $code, $coupon_code ) ) {
 					self::handle_coupon_removed( $code );
 					/* translators: error when discount code applies to nothing in cart */
@@ -1021,7 +1021,7 @@ class Coupons {
 		}
 
 		if ( empty( $order_discounts ) && 1 === $coupon_count ) {
-			$only_code = $coupon_codes_in_calc[0];
+			$only_code                         = $coupon_codes_in_calc[0];
 			$per_coupon_amount[ $only_code ]   = $total_discount_amount;
 			$per_coupon_per_item[ $only_code ] = $line_item_discounts;
 		}
@@ -1078,7 +1078,7 @@ class Coupons {
 	private static function get_cart_items_by_key( $cart ) {
 		$map = array();
 		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
-			$product = $cart_item['data'];
+			$product               = $cart_item['data'];
 			$map[ $cart_item_key ] = array(
 				'catalog_object_id' => $product->get_meta( Product::SQUARE_VARIATION_ID_META_KEY ),
 				'name'              => $product->get_name(),
@@ -1158,8 +1158,8 @@ class Coupons {
 				}
 			} else {
 				// Fallback: build tax rates from WC_Tax so order has tax definitions when cart totals aren't ready.
-				$customer       = $cart->get_customer();
-				$seen_rate_ids  = array();
+				$customer      = $cart->get_customer();
+				$seen_rate_ids = array();
 				foreach ( $cart->get_cart() as $cart_item ) {
 					$product = $cart_item['data'];
 					if ( ! $product || ! $product->is_taxable() ) {

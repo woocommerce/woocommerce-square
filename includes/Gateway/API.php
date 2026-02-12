@@ -574,7 +574,7 @@ class API extends \WooCommerce\Square\API {
 		$request = new API\Requests\Orders( $this->client );
 
 		if ( $amount > 0 ) {
-			if ( $square_coupon_in_use !== null ) {
+			if ( null !== $square_coupon_in_use ) {
 				$request->add_service_charge_order_data( $location_id, $order, $version, $amount, $square_coupon_in_use );
 			} else {
 				$request->add_line_item_order_data( $location_id, $order, $version, $amount );

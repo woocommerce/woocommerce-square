@@ -198,12 +198,14 @@ class Orders extends API\Request {
 			$order_model = $this->set_fulfillment_data( $order, $order_model );
 		}
 
-		$taxes          = $this->get_order_taxes( $order );
-		$all_line_items = $this->get_api_line_items(
-			$order,
-			array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ) ),
-			$taxes
-		);
+		$taxes = $this->get_order_taxes( $order );
+		// When Square coupon/redemption is used, send shipping as service charge (not line item) to avoid discount applying to shipping. Otherwise keep original behavior (shipping as line items).
+		$square_coupon_in_use = ! empty( \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order ) );
+		$line_item_sources    = array_merge( $this->get_product_line_items( $order ), $this->get_fee_line_items( $order ) );
+		if ( ! $square_coupon_in_use ) {
+			$line_item_sources = array_merge( $line_item_sources, $this->get_shipping_line_items( $order ) );
+		}
+		$all_line_items = $this->get_api_line_items( $order, $line_item_sources, $taxes );
 
 		$square_order_line_items = array_values(
 			array_filter(
@@ -243,9 +245,12 @@ class Orders extends API\Request {
 
 		$order_model->setTaxes( array_values( $taxes ) );
 
-		$service_charges = $this->get_order_service_charges_for_shipping( $order, $taxes );
-		if ( ! empty( $service_charges ) ) {
-			$order_model->setServiceCharges( $service_charges );
+		// Only send shipping as service charges when Square coupon is used; otherwise shipping is already in line items.
+		if ( $square_coupon_in_use ) {
+			$service_charges = $this->get_order_service_charges_for_shipping( $order, $taxes );
+			if ( ! empty( $service_charges ) ) {
+				$order_model->setServiceCharges( $service_charges );
+			}
 		}
 
 		$this->square_request->setIdempotencyKey( wc_square()->get_idempotency_key( $order->unique_transaction_ref ) );
@@ -456,7 +461,7 @@ class Orders extends API\Request {
 
 			$charge = new \Square\Models\OrderServiceCharge();
 			$charge->setUid( wc_square()->get_idempotency_key( 'shipping-' . $item->get_id(), false ) );
-			$charge->setName( $item->get_name() ?: __( 'Shipping', 'woocommerce-square' ) );
+			$charge->setName( $item->get_name() ? $item->get_name() : __( 'Shipping', 'woocommerce-square' ) );
 			$charge->setAmountMoney( Money_Utility::amount_to_money( $total, $order->get_currency() ) );
 			$charge->setCalculationPhase( 'SUBTOTAL_PHASE' );
 
