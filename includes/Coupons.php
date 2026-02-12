@@ -167,24 +167,12 @@ class Coupons {
 		if ( ! empty( $applied_coupons ) ) {
 			$has_square_coupon = ! empty( self::get_applied_square_coupon_codes() );
 
-			// If trying to apply Square coupon but WooCommerce coupon exists.
-			if ( $is_square_coupon && ! $has_square_coupon ) {
+			// Cannot mix Square and WooCommerce coupons (one type already applied, other type being added).
+			if ( ( $is_square_coupon && ! $has_square_coupon ) || ( ! $is_square_coupon && $has_square_coupon ) ) {
 				$coupon->set_error_message(
 					sprintf(
 						/* translators: %s: coupon code */
-						__( 'Sorry, the Square discount code "%s" cannot be used in combination with WooCommerce coupons. Please remove the WooCommerce coupon and try again.', 'woocommerce-square' ),
-						esc_html( $coupon_code )
-					)
-				);
-				return false;
-			}
-
-			// If trying to apply WooCommerce coupon but Square coupon exists.
-			if ( ! $is_square_coupon && $has_square_coupon ) {
-				$coupon->set_error_message(
-					sprintf(
-						/* translators: %s: coupon code */
-						__( 'Sorry, the WooCommerce coupon "%s" cannot be used in combination with Square discount codes. Please remove the Square discount code and try again.', 'woocommerce-square' ),
+						__( 'Sorry, the discount code "%s" cannot be used with another coupon. Please remove the other coupon and try again.', 'woocommerce-square' ),
 						esc_html( $coupon_code )
 					)
 				);
@@ -436,7 +424,7 @@ class Coupons {
 
 	/**
 	 * Cache discount code details.
-	 * Uses WordPress transients to cache discount code data for 1 hour.
+	 * Uses WordPress transients to cache discount code data for 15 minutes.
 	 *
 	 * @since x.x.x
 	 *
@@ -446,9 +434,9 @@ class Coupons {
 	public static function set_cache_discount_code( $discount_code, $code_details ) {
 		$transient_key = self::get_discount_code_transient_key( $discount_code );
 
-		// Cache for 1 hour. Store false if not found to distinguish from "not cached yet".
+		// Cache for 15 minutes. Store false if not found to distinguish from "not cached yet".
 		$cache_value = null === $code_details ? false : $code_details;
-		set_transient( $transient_key, $cache_value, HOUR_IN_SECONDS * 1 );
+		set_transient( $transient_key, $cache_value, 15 * MINUTE_IN_SECONDS );
 	}
 
 	/**
