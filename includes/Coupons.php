@@ -434,7 +434,7 @@ class Coupons {
 	public static function set_cache_discount_code( $discount_code, $code_details ) {
 		$transient_key = self::get_discount_code_transient_key( $discount_code );
 
-		// Cache for 15 minutes. Store false if not found to distinguish from "not cached yet".
+		// Cache for 1 hour. Store false if not found to distinguish from "not cached yet".
 		$cache_value = null === $code_details ? false : $code_details;
 		set_transient( $transient_key, $cache_value, 15 * MINUTE_IN_SECONDS );
 	}
@@ -546,8 +546,6 @@ class Coupons {
 		}
 
 		$square_discount_code_ids = array();
-		$first_code               = null;
-		$first_id                 = null;
 
 		// Prefer cart/session so we have amounts; works for shortcode checkout.
 		$cart = WC()->cart;
@@ -563,10 +561,6 @@ class Coupons {
 						continue;
 					}
 					$square_discount_code_ids[] = $square_discount_code_id;
-					if ( null === $first_code ) {
-						$first_code = $coupon_code;
-						$first_id   = $square_discount_code_id;
-					}
 				}
 			}
 		}
@@ -585,10 +579,6 @@ class Coupons {
 						continue;
 					}
 					$square_discount_code_ids[] = $square_discount_code_id;
-					if ( null === $first_code ) {
-						$first_code = $coupon_code;
-						$first_id   = $square_discount_code_id;
-					}
 				}
 			}
 		}
@@ -598,18 +588,6 @@ class Coupons {
 		}
 
 		$order->update_meta_data( '_square_discount_code_ids', $square_discount_code_ids );
-		$order->update_meta_data( '_square_discount_code_id', $first_id );
-
-		if ( null !== $first_code ) {
-			$square_discount_amount = WC()->session->get( '_square_discount_amount_' . $first_code );
-			if ( ! empty( $square_discount_amount ) ) {
-				$order->update_meta_data( '_square_discount_amount', $square_discount_amount );
-			}
-			$square_discount_per_item = WC()->session->get( '_square_discount_per_item_' . $first_code );
-			if ( ! empty( $square_discount_per_item ) ) {
-				$order->update_meta_data( '_square_discount_per_item', $square_discount_per_item );
-			}
-		}
 
 		return true;
 	}
@@ -688,7 +666,6 @@ class Coupons {
 			return;
 		}
 		$square_discount_code_ids = array();
-		$first_id                 = null;
 		foreach ( $coupon_items as $coupon_item ) {
 			$coupon_code = $coupon_item->get_code();
 			if ( empty( $coupon_code ) ) {
@@ -699,21 +676,16 @@ class Coupons {
 				continue;
 			}
 			$square_discount_code_ids[] = $square_discount_code_id;
-			if ( null === $first_id ) {
-				$first_id = $square_discount_code_id;
-			}
 		}
 		if ( empty( $square_discount_code_ids ) ) {
 			return;
 		}
 		$order->update_meta_data( '_square_discount_code_ids', $square_discount_code_ids );
-		$order->update_meta_data( '_square_discount_code_id', $first_id );
 		$order->save_meta_data();
 	}
 
 	/**
 	 * Get all Square discount code IDs stored on an order (for creating redemptions).
-	 * Supports both legacy single meta and new array meta.
 	 *
 	 * @since x.x.x
 	 *
@@ -727,10 +699,6 @@ class Coupons {
 		$ids = $order->get_meta( '_square_discount_code_ids' );
 		if ( is_array( $ids ) && ! empty( $ids ) ) {
 			return array_values( array_filter( $ids, 'is_string' ) );
-		}
-		$singular = $order->get_meta( '_square_discount_code_id' );
-		if ( ! empty( $singular ) && is_string( $singular ) ) {
-			return array( $singular );
 		}
 		return array();
 	}

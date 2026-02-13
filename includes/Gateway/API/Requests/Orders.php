@@ -473,9 +473,21 @@ class Orders extends API\Request {
 				$get_taxes     = $item->get_taxes();
 				if ( isset( $get_taxes['total'] ) && is_array( $get_taxes['total'] ) ) {
 					foreach ( array_keys( $get_taxes['total'] ) as $tax_id ) {
-						if ( ! empty( $tax_id ) && isset( $taxes[ $tax_id ] ) && $taxes[ $tax_id ] instanceof \Square\Models\OrderLineItemTax ) {
-							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $taxes[ $tax_id ]->getUid() );
+						if ( $tax_id === '' || $tax_id === null ) {
+							continue;
 						}
+						// Match rate_id as int or string (Woo may store either).
+						$tax_obj = isset( $taxes[ $tax_id ] ) ? $taxes[ $tax_id ] : ( isset( $taxes[ (string) $tax_id ] ) ? $taxes[ (string) $tax_id ] : ( isset( $taxes[ (int) $tax_id ] ) ? $taxes[ (int) $tax_id ] : null ) );
+						if ( $tax_obj instanceof \Square\Models\OrderLineItemTax ) {
+							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $tax_obj->getUid() );
+						}
+					}
+				}
+				// If shipping has tax but no per-rate breakdown, apply first order tax so Square applies tax.
+				if ( empty( $applied_taxes ) && $total_tax > 0 ) {
+					$first_tax = reset( $taxes );
+					if ( $first_tax instanceof \Square\Models\OrderLineItemTax ) {
+						$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $first_tax->getUid() );
 					}
 				}
 				if ( ! empty( $applied_taxes ) ) {
@@ -502,7 +514,8 @@ class Orders extends API\Request {
 	 */
 	protected function get_api_line_items( \WC_Order $order, $line_items, $taxes ) {
 		$api_line_items = array();
-		$tax_type       = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
+		// Always use ADDITIVE with ex-tax base so Square applies tax once and totals match WooCommerce.
+		$tax_type = API::TAX_TYPE_ADDITIVE;
 
 		// Square discount code IDs are set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
 		$square_discount_code_ids = \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order );
@@ -521,12 +534,8 @@ class Orders extends API\Request {
 
 			$total_tax       = (float) $item->get_total_tax();
 			$total_amount    = (float) $item->get_total();
+			// Use ex-tax base: product line uses get_subtotal(); discounts applied via redemptions or line-item discounts below.
 			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
-
-			// Include the tax in subtotal when prices are inclusive of taxes.
-			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
-				$subtotal_amount += $total_tax;
-			}
 
 			// Subtotal per quantity.
 			if ( $quantity > 0 ) {
@@ -585,11 +594,15 @@ class Orders extends API\Request {
 						continue;
 					}
 
-					$item_uid            = $item->get_id();
-					$tax_uid             = $taxes[ $key ]->getUid();
-					$prev_percentage     = $taxes[ $key ]->getPercentage();
-					$adjusted_percentage = (float) $tax_amount * 100 / $total_amount;
-					$adjusted_percentage = number_format( (float) $adjusted_percentage, 2, '.', '' );
+					$item_uid        = $item->get_id();
+					$tax_uid         = $taxes[ $key ]->getUid();
+					$prev_percentage = $taxes[ $key ]->getPercentage();
+					if ( $total_amount > 0 ) {
+						$adjusted_percentage = (float) $tax_amount * 100 / $total_amount;
+						$adjusted_percentage = number_format( (float) $adjusted_percentage, 2, '.', '' );
+					} else {
+						$adjusted_percentage = $prev_percentage;
+					}
 
 					if ( $prev_percentage !== $adjusted_percentage ) {
 						// Create a new tax.
@@ -631,7 +644,8 @@ class Orders extends API\Request {
 	 */
 	protected function get_order_taxes( \WC_Order $order ) {
 		$taxes    = array();
-		$tax_type = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
+		// Align with get_api_line_items: always ADDITIVE so order-level tax and line item tax match.
+		$tax_type = API::TAX_TYPE_ADDITIVE;
 
 		foreach ( $order->get_taxes() as $tax ) {
 			$tax_item = new \Square\Models\OrderLineItemTax();
