@@ -91,7 +91,7 @@ class Coupon_Utility {
 	 */
 	public static function is_square_discount_codes_enabled() {
 		$square_settings = get_option( 'wc_square_settings', array() );
-		$from_setting    = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || $square_settings['enable_square_discount_codes'] === 'yes';
+		$from_setting    = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || 'yes' === $square_settings['enable_square_discount_codes'];
 
 		/**
 		 * Filters whether Square discount codes should be processed.

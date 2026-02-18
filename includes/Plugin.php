@@ -435,7 +435,7 @@ class Plugin extends Payment_Gateway_Plugin {
 
 			// Notice when Square discount codes are enabled but token lacks required Discount Codes scopes.
 			$square_settings        = get_option( 'wc_square_settings', array() );
-			$discount_codes_enabled = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || ( isset( $square_settings['enable_square_discount_codes'] ) && $square_settings['enable_square_discount_codes'] === 'yes' );
+			$discount_codes_enabled = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || ( isset( $square_settings['enable_square_discount_codes'] ) && 'yes' === $square_settings['enable_square_discount_codes'] );
 			if ( $discount_codes_enabled && ! Utilities\Token_Scope_Utility::merchant_has_discount_codes_scope() ) {
 				$message = sprintf(
 					/* translators: Placeholders: %1$s - opening <a> tag with Square settings URL, %2$s - closing </a> tag */
@@ -448,7 +448,7 @@ class Plugin extends Payment_Gateway_Plugin {
 					'square-discount-codes-scope-missing',
 					array(
 						'notice_class' => 'notice-warning',
-						'dismissible' => true,
+						'dismissible'  => true,
 					)
 				);
 			}

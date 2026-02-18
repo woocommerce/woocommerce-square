@@ -222,7 +222,7 @@ class Coupons {
 			return $is_valid;
 		}
 
-		$coupon_code = $coupon->get_code();
+		$coupon_code             = $coupon->get_code();
 		$square_discount_code_id = Coupon_Utility::get_square_discount_code_id_by_code( $coupon_code );
 		if ( empty( $square_discount_code_id ) ) {
 			return $is_valid;
@@ -800,7 +800,7 @@ class Coupons {
 			$amount   = $per_coupon_amount[ $code ] ?? 0;
 			$per_item = $per_coupon_per_item[ $code ] ?? array();
 			$is_fixed = isset( $code_to_discount_type[ $code ] ) && in_array( $code_to_discount_type[ $code ], array( 'fixed_cart', 'fixed_product' ), true );
-			if ( $is_fixed && $inclusive_multiplier !== 1.0 ) {
+			if ( $is_fixed && 1.0 !== $inclusive_multiplier ) {
 				$amount = (float) $amount * $inclusive_multiplier;
 				foreach ( $per_item as $key => $val ) {
 					$per_item[ $key ] = (float) $val * $inclusive_multiplier;
@@ -823,8 +823,8 @@ class Coupons {
 	 * @return array<int, \Square\Models\OrderLineItemTax> Map of WC rate_id => OrderLineItemTax.
 	 */
 	private static function build_square_tax_rates_from_cart( $cart, $tax_type ) {
-		$tax_rates   = array();
-		$customer    = $cart->get_customer();
+		$tax_rates = array();
+		$customer  = $cart->get_customer();
 		$seen_rate_ids = array();
 		foreach ( $cart->get_cart() as $cart_item ) {
 			$product = $cart_item['data'];
@@ -837,10 +837,10 @@ class Coupons {
 					continue;
 				}
 				$seen_rate_ids[ $rate_id ] = true;
-				$tax_rate_row    = \WC_Tax::_get_tax_rate( $rate_id );
-				$rate_percentage = ( $tax_rate_row && isset( $tax_rate_row['tax_rate'] ) ) ? (float) $tax_rate_row['tax_rate'] : 0;
-				$label           = ( $tax_rate_row && isset( $tax_rate_row['tax_rate_name'] ) ) ? $tax_rate_row['tax_rate_name'] : __( 'Tax', 'woocommerce-square' );
-				$tax_item        = new \Square\Models\OrderLineItemTax();
+				$tax_rate_row              = \WC_Tax::_get_tax_rate( $rate_id );
+				$rate_percentage           = ( $tax_rate_row && isset( $tax_rate_row['tax_rate'] ) ) ? (float) $tax_rate_row['tax_rate'] : 0;
+				$label                     = ( $tax_rate_row && isset( $tax_rate_row['tax_rate_name'] ) ) ? $tax_rate_row['tax_rate_name'] : __( 'Tax', 'woocommerce-square' );
+				$tax_item                  = new \Square\Models\OrderLineItemTax();
 				$tax_item->setUid( uniqid() );
 				$tax_item->setName( $label );
 				$tax_item->setType( $tax_type );
@@ -1010,7 +1010,7 @@ class Coupons {
 		if ( ! empty( $packages ) && ! empty( $chosen_shipping_methods ) ) {
 			foreach ( $packages as $package_key => $package ) {
 				$chosen_id = isset( $chosen_shipping_methods[ $package_key ] ) ? $chosen_shipping_methods[ $package_key ] : null;
-				if ( $chosen_id === null || empty( $package['rates'][ $chosen_id ] ) ) {
+				if ( null === $chosen_id || empty( $package['rates'][ $chosen_id ] ) ) {
 					continue;
 				}
 
@@ -1038,7 +1038,7 @@ class Coupons {
 					$applied_taxes = array();
 					if ( is_array( $rate_taxes ) ) {
 						foreach ( array_keys( $rate_taxes ) as $tax_id ) {
-							if ( $tax_id === '' || $tax_id === null ) {
+							if ( empty( $tax_id ) ) {
 								continue;
 							}
 							$tax_obj = isset( $tax_rates[ $tax_id ] ) ? $tax_rates[ $tax_id ] : ( isset( $tax_rates[ (string) $tax_id ] ) ? $tax_rates[ (string) $tax_id ] : ( isset( $tax_rates[ (int) $tax_id ] ) ? $tax_rates[ (int) $tax_id ] : null ) );

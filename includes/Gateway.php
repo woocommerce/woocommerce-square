@@ -533,7 +533,6 @@ class Gateway extends Payment_Gateway_Direct {
 					}
 					if ( ! empty( $redemption_ids ) ) {
 						$order->update_meta_data( '_square_redemption_ids', $redemption_ids );
-						$order->update_meta_data( '_square_redemption_id', $redemption_ids[0] );
 						$order->save();
 					}
 				}
@@ -562,7 +561,7 @@ class Gateway extends Payment_Gateway_Direct {
 					}
 				}
 
-				// Payment total is whatever Square has (after redemptions if any).
+				// Reset the payment total to the total calculated by Square to prevent errors.
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
 
 			} catch ( \Exception $exception ) {
