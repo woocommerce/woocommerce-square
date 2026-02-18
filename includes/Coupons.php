@@ -823,8 +823,8 @@ class Coupons {
 	 * @return array<int, \Square\Models\OrderLineItemTax> Map of WC rate_id => OrderLineItemTax.
 	 */
 	private static function build_square_tax_rates_from_cart( $cart, $tax_type ) {
-		$tax_rates = array();
-		$customer  = $cart->get_customer();
+		$tax_rates     = array();
+		$customer      = $cart->get_customer();
 		$seen_rate_ids = array();
 		foreach ( $cart->get_cart() as $cart_item ) {
 			$product = $cart_item['data'];
