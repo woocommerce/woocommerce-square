@@ -302,6 +302,10 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @return bool
 	 */
 	public function is_available() {
+		// Hide Cash App when a Square coupon is applied. This can be enabled with future enhancements.
+		if ( \WooCommerce\Square\Coupons::cart_has_square_coupon() ) {
+			return false;
+		}
 
 		return parent::is_available() && $this->get_plugin()->get_settings_handler()->is_connected() && $this->get_plugin()->get_settings_handler()->get_location_id();
 	}

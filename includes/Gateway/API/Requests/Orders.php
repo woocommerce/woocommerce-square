@@ -473,7 +473,7 @@ class Orders extends API\Request {
 				$get_taxes     = $item->get_taxes();
 				if ( isset( $get_taxes['total'] ) && is_array( $get_taxes['total'] ) ) {
 					foreach ( array_keys( $get_taxes['total'] ) as $tax_id ) {
-						if ( $tax_id === '' || $tax_id === null ) {
+						if ( empty( $tax_id ) ) {
 							continue;
 						}
 						// Match rate_id as int or string (Woo may store either).
@@ -532,8 +532,8 @@ class Orders extends API\Request {
 				$line_item->setItemType( 'GIFT_CARD' );
 			}
 
-			$total_tax       = (float) $item->get_total_tax();
-			$total_amount    = (float) $item->get_total();
+			$total_amount = (float) $item->get_total();
+
 			// Use ex-tax base: product line uses get_subtotal(); discounts applied via redemptions or line-item discounts below.
 			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
 
@@ -643,7 +643,8 @@ class Orders extends API\Request {
 	 * @return \Square\Models\OrderLineItemTax[]
 	 */
 	protected function get_order_taxes( \WC_Order $order ) {
-		$taxes    = array();
+		$taxes = array();
+
 		// Align with get_api_line_items: always ADDITIVE so order-level tax and line item tax match.
 		$tax_type = API::TAX_TYPE_ADDITIVE;
 

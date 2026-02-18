@@ -37,6 +37,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
+use WooCommerce\Square\Utilities\Coupon_Utility;
 use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
@@ -493,7 +494,7 @@ class Gateway extends Payment_Gateway_Direct {
 				// Note: CalculateOrder was already called when coupons were applied; we create one redemption per code.
 				$square_discount_code_ids = Coupons::get_order_square_discount_code_ids( $order );
 
-				if ( Coupons::is_square_discount_codes_enabled() && ! empty( $square_discount_code_ids ) && ! empty( $order->square_order_id ) ) {
+				if ( Coupon_Utility::is_square_discount_codes_enabled() && ! empty( $square_discount_code_ids ) && ! empty( $order->square_order_id ) ) {
 					$redemption_ids = array();
 					foreach ( $square_discount_code_ids as $square_discount_code_id ) {
 						try {

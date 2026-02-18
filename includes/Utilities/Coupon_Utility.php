@@ -26,6 +26,7 @@ namespace WooCommerce\Square\Utilities;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\API;
+use WooCommerce\Square\Handlers\Product;
 use Square\Models;
 use Square\Models\CatalogObjectType;
 use Square\Models\CatalogDiscountType;
@@ -36,13 +37,6 @@ use Square\Models\CatalogDiscountType;
  * @since x.x.x
  */
 class Coupon_Utility {
-
-	/**
-	 * The Square API URL.
-	 *
-	 * @var string
-	 */
-	protected static $api_url = '';
 
 	/**
 	 * The Square API bearer token.
@@ -80,6 +74,58 @@ class Coupon_Utility {
 	protected static $product_set_object;
 
 	/**
+	 * Remove a coupon from the cart by code (finds the applied code that matches and removes it).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to remove (matched with wc_is_same_coupon).
+	 * @return bool True if the coupon was found and removed, false otherwise.
+	 */
+	/**
+	 * Check if Square discount codes are enabled (setting + filter).
+	 * Scope is not checked here; use Token_Scope_Utility in admin for merchant notices only.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool True if Square discount codes should be processed.
+	 */
+	public static function is_square_discount_codes_enabled() {
+		$square_settings = get_option( 'wc_square_settings', array() );
+		$from_setting    = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || $square_settings['enable_square_discount_codes'] === 'yes';
+
+		/**
+		 * Filters whether Square discount codes should be processed.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $enable_square_discount_codes Whether Square discount codes should be processed. Default follows Square settings.
+		 */
+		return (bool) apply_filters( 'woocommerce_square_enable_discount_codes', $from_setting );
+	}
+
+	/**
+	 * Remove a coupon from the cart by code (finds the applied code that matches and removes it).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to remove (matched with wc_is_same_coupon).
+	 * @return bool True if the coupon was found and removed, false otherwise.
+	 */
+	public static function remove_coupon_from_cart( $coupon_code ) {
+		$cart = WC()->cart;
+		if ( ! $cart ) {
+			return false;
+		}
+		foreach ( $cart->get_applied_coupons() as $applied_code ) {
+			if ( wc_is_same_coupon( $applied_code, $coupon_code ) ) {
+				$cart->remove_coupon( $applied_code );
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Check if a coupon code is in the cart's applied coupons.
 	 *
 	 * @since x.x.x
@@ -98,6 +144,225 @@ class Coupon_Utility {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Build a map of cart item key => catalog_object_id and name for matching Square line items to cart.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Cart $cart WooCommerce cart.
+	 * @return array<string, array{catalog_object_id: string, name: string}> Cart key => lookup data.
+	 */
+	public static function get_cart_items_by_key( $cart ) {
+		$map = array();
+		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+			$product               = $cart_item['data'];
+			$map[ $cart_item_key ] = array(
+				'catalog_object_id' => $product->get_meta( Product::SQUARE_VARIATION_ID_META_KEY ),
+				'name'              => $product->get_name(),
+			);
+		}
+		return $map;
+	}
+
+	/**
+	 * Find the WooCommerce cart item key that corresponds to a Square order line item.
+	 * Matches by catalog object ID first, then by product name.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $square_line_item  Line item from Square API response.
+	 * @param array $cart_items_by_key Map from get_cart_items_by_key().
+	 * @return string|null Cart item key or null if no match.
+	 */
+	public static function match_square_line_to_cart_key( $square_line_item, $cart_items_by_key ) {
+		if ( ! empty( $square_line_item['catalog_object_id'] ) ) {
+			foreach ( $cart_items_by_key as $cart_key => $info ) {
+				if ( $info['catalog_object_id'] === $square_line_item['catalog_object_id'] ) {
+					return $cart_key;
+				}
+			}
+		}
+
+		if ( ! empty( $square_line_item['name'] ) ) {
+			foreach ( $cart_items_by_key as $cart_key => $info ) {
+				if ( $info['name'] === $square_line_item['name'] ) {
+					return $cart_key;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the transient key for caching discount code data.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $discount_code The discount code.
+	 * @return string Transient key.
+	 */
+	public static function get_discount_code_transient_key( $discount_code ) {
+		return 'square_discount_code_' . md5( strtolower( $discount_code ) );
+	}
+
+	/**
+	 * Cache discount code details.
+	 * Uses WordPress transients to cache discount code data for 15 minutes.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string     $discount_code The discount code.
+	 * @param array|null $code_details  The discount code details to cache. Null if not found.
+	 */
+	public static function set_cache_discount_code( $discount_code, $code_details ) {
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
+
+		// Cache for 15 minutes. Store false if not found to distinguish from "not cached yet".
+		$cache_value = null === $code_details ? false : $code_details;
+		set_transient( $transient_key, $cache_value, 15 * MINUTE_IN_SECONDS );
+	}
+
+	/**
+	 * Retrieve cached discount code details.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $discount_code The discount code.
+	 * @return array|null|false Cached discount code details, false if cached as "not found", or null if not cached.
+	 */
+	public static function get_cache_discount_code( $discount_code ) {
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
+		$cached        = get_transient( $transient_key );
+
+		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
+		return false === $cached ? false : ( $cached ? $cached : null );
+	}
+
+	/**
+	 * Clear cached discount code details.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $discount_code The discount code.
+	 */
+	public static function clear_cache_discount_code( $discount_code ) {
+		$transient_key = self::get_discount_code_transient_key( $discount_code );
+		delete_transient( $transient_key );
+	}
+
+	/**
+	 * Retrieve discount code from the Square API.
+	 * Uses caching to avoid repeated API calls for the same code.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $discount_code The discount code to retrieve.
+	 * @return array|null Discount code details, or null if not found.
+	 */
+	public static function get_discount_code( $discount_code ) {
+		$cached = self::get_cache_discount_code( $discount_code );
+		if ( $cached ) {
+			return $cached;
+		}
+
+		$data = self::search_discount_codes_via_api( $discount_code );
+
+		if ( null === $data || empty( $data['discount_codes'] ) ) {
+			self::set_cache_discount_code( $discount_code, null );
+			return null;
+		}
+
+		$code = self::find_valid_discount_code( $data['discount_codes'], $discount_code );
+		if ( null === $code ) {
+			self::set_cache_discount_code( $discount_code, null );
+			return null;
+		}
+
+		self::set_cache_discount_code( $discount_code, $code );
+		return $code;
+	}
+
+	/**
+	 * Get Square discount code ID by coupon code.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to search for.
+	 * @return string|null The discount code ID or null if not found.
+	 */
+	public static function get_square_discount_code_id_by_code( $coupon_code ) {
+		$code = self::get_discount_code( $coupon_code );
+		return ( $code && isset( $code['id'] ) ) ? $code['id'] : null;
+	}
+
+	/**
+	 * Find and validate a matching discount code from API response.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array  $discount_codes Array of discount codes from API response.
+	 * @param string $coupon_code    The coupon code to find and validate.
+	 * @return array|null The matching and valid discount code, or null if not found or invalid.
+	 */
+	private static function find_valid_discount_code( $discount_codes, $coupon_code ) {
+		if ( empty( $discount_codes ) || ! is_array( $discount_codes ) ) {
+			return null;
+		}
+
+		$current_time = current_time( 'timestamp' ); // phpcs:disable WordPress.DateTime.CurrentTimeTimestamp
+
+		foreach ( $discount_codes as $code ) {
+			if ( ! isset( $code['code'] ) || strtoupper( $code['code'] ) !== strtoupper( $coupon_code ) ) {
+				continue;
+			}
+
+			$valid_from = isset( $code['valid_from'] ) ? strtotime( $code['valid_from'] ) : null;
+			$expires_at = isset( $code['expires_at'] ) ? strtotime( $code['expires_at'] ) : null;
+
+			if ( null !== $valid_from && $valid_from > $current_time ) {
+				continue;
+			}
+			if ( null !== $expires_at && $expires_at < $current_time ) {
+				continue;
+			}
+
+			return $code;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Search for discount codes via Square API.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $coupon_code The coupon code to search for.
+	 * @param int    $timeout     Request timeout in seconds. Default 30.
+	 * @return array|null Response data with 'discount_codes' key, or null on error.
+	 */
+	private static function search_discount_codes_via_api( $coupon_code, $timeout = 30 ) {
+		$query = array(
+			'query' => array(
+				'filter' => array(
+					'code' => $coupon_code,
+				),
+			),
+		);
+
+		$result = self::square_api_post( 'discount-codes/search', $query, $timeout );
+
+		if ( is_wp_error( $result ) ) {
+			if ( function_exists( 'wc_square' ) ) {
+				wc_square()->log( sprintf( 'Error searching for discount code %s: %s', $coupon_code, $result->get_error_message() ), 'square-coupons' );
+			}
+			return null;
+		}
+
+		return isset( $result['body'] ) ? $result['body'] : null;
 	}
 
 	/**
@@ -244,10 +509,6 @@ class Coupon_Utility {
 			return false;
 		}
 
-		// Credentials are already cached in static properties by get_square_api_credentials().
-		// Set API URL for this specific use case.
-		self::$api_url = $credentials['base_url'] . '/discount-codes/search';
-
 		// Retrieve the pricing rule object.
 		$pricing_rule_objects = self::request_pricing_rule_objects( $pricing_rule_id, $pricing_rule_version );
 
@@ -258,7 +519,7 @@ class Coupon_Utility {
 
 		// Map the Square coupon format to the WC coupon format.
 		// product_ids is empty: eligibility is determined by Square (CalculateOrder);
-		// we override amounts per line later in Coupons::override_discount_amount_with_square().
+		// amount is 0: we override amounts per line later in Coupons::override_discount_amount_with_square().
 		$wc_coupon = array(
 			'code'          => $square_discount_code['code'],
 			'discount_type' => self::map_discount_type(),

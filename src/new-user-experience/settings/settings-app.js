@@ -14,6 +14,7 @@ import {
 	SectionTitle,
 	SectionDescription,
 	InputWrapper,
+	SquareCheckboxControl,
 	SquareSettingsSaveButton,
 	Loader,
 } from '../components';
@@ -42,6 +43,7 @@ export const SettingsApp = () => {
 		disconnection_url = '',
 		access_tokens = [],
 		locations = [],
+		enable_square_discount_codes = 'yes',
 	} = settings;
 
 	const _location_id =
@@ -225,6 +227,48 @@ export const SettingsApp = () => {
 
 			{ is_connected && (
 				<ConfigureSync indent={ 2 } isDirty={ isFormDirty } />
+			) }
+
+			{ is_connected && (
+				<Section>
+					<SectionTitle
+						title={ __(
+							'Square Discount Codes',
+							'woocommerce-square'
+						) }
+					/>
+					<SectionDescription>
+						{ __(
+							'Allow customers to apply Square Discount Codes. When disabled, only WooCommerce coupons are processed.',
+							'woocommerce-square'
+						) }
+					</SectionDescription>
+					<div className="woo-square-wizard__fields">
+						<InputWrapper
+							label={ __(
+								'Enable Square Discount Codes',
+								'woocommerce-square'
+							) }
+						>
+							<SquareCheckboxControl
+								checked={
+									enable_square_discount_codes === 'yes'
+								}
+								onChange={ ( enabled ) =>
+									setSquareSettingData( {
+										enable_square_discount_codes: enabled
+											? 'yes'
+											: 'no',
+									} )
+								}
+								label={ __(
+									'Process Square Discount Codes at checkout',
+									'woocommerce-square'
+								) }
+							/>
+						</InputWrapper>
+					</div>
+				</Section>
 			) }
 
 			<AdvancedSettings />
