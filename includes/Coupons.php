@@ -772,7 +772,7 @@ class Coupons {
 		// Use a weighted average tax rate by cart item subtotal so mixed-rate carts (e.g. standard + reduced) are handled.
 		$inclusive_multiplier = 1.0;
 		if ( wc_prices_include_tax() && wc_tax_enabled() ) {
-			$customer    = $cart->get_customer();
+			$customer     = $cart->get_customer();
 			$weighted_sum = 0.0;
 			$total_sub    = 0.0;
 			foreach ( $cart->get_cart() as $cart_item ) {
@@ -1202,7 +1202,7 @@ class Coupons {
 		static $last_recalc_cart_hash = null;
 		$coupons_sorted               = $applied_coupons;
 		sort( $coupons_sorted );
-		$cart_state_parts             = array( implode( ',', $coupons_sorted ) );
+		$cart_state_parts = array( implode( ',', $coupons_sorted ) );
 		foreach ( $cart->get_cart() as $key => $item ) {
 			$cart_state_parts[] = $key . ':' . ( isset( $item['quantity'] ) ? $item['quantity'] : 0 );
 		}
