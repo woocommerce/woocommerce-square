@@ -190,7 +190,8 @@ class Coupons {
 		if ( ! empty( $applied_coupons ) ) {
 			$has_square_coupon = ! empty( self::get_applied_square_coupon_codes() );
 
-			// Cannot mix Square and WooCommerce coupons (one type already applied, other type being added).
+			// Cannot mix Square and WooCommerce coupons: reject when adding one type while the other is already applied.
+			// Multiple Square coupons (or multiple WC coupons) are allowed; only cross-type mixing is blocked.
 			if ( ( $is_square_coupon && ! $has_square_coupon ) || ( ! $is_square_coupon && $has_square_coupon ) ) {
 				$coupon->set_error_message(
 					sprintf(
@@ -768,17 +769,47 @@ class Coupons {
 
 		// When prices are inclusive of tax, WooCommerce expects discount amounts to be inclusive.
 		// Square returns fixed discounts without tax; add tax for fixed types only.
+		// Use a weighted average tax rate by cart item subtotal so mixed-rate carts (e.g. standard + reduced) are handled.
 		$inclusive_multiplier = 1.0;
 		if ( wc_prices_include_tax() && wc_tax_enabled() ) {
-			$rates = \WC_Tax::get_rates( '', $cart->get_customer() );
-			if ( empty( $rates ) ) {
-				$rates = \WC_Tax::get_base_tax_rates( '' );
+			$customer    = $cart->get_customer();
+			$weighted_sum = 0.0;
+			$total_sub    = 0.0;
+			foreach ( $cart->get_cart() as $cart_item ) {
+				$product = isset( $cart_item['data'] ) ? $cart_item['data'] : null;
+				if ( ! $product || ! $product->is_taxable() ) {
+					continue;
+				}
+				$item_rates = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
+				if ( empty( $item_rates ) ) {
+					$item_rates = \WC_Tax::get_base_tax_rates( $product->get_tax_class() );
+				}
+				$item_pct = 0.0;
+				foreach ( $item_rates as $rate ) {
+					$item_pct += isset( $rate['rate'] ) ? (float) $rate['rate'] : 0;
+				}
+				$qty           = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
+				$subtotal      = (float) $product->get_price() * $qty;
+				$weighted_sum += $item_pct * $subtotal;
+				$total_sub    += $subtotal;
 			}
-			if ( ! empty( $rates ) ) {
-				$first   = reset( $rates );
-				$tax_pct = isset( $first['rate'] ) ? (float) $first['rate'] : 0;
-				if ( $tax_pct > 0 ) {
-					$inclusive_multiplier = 1.0 + ( $tax_pct / 100.0 );
+			if ( $total_sub > 0 && $weighted_sum >= 0 ) {
+				$avg_tax_pct = $weighted_sum / $total_sub;
+				if ( $avg_tax_pct > 0 ) {
+					$inclusive_multiplier = 1.0 + ( $avg_tax_pct / 100.0 );
+				}
+			} else {
+				// Fallback when cart has no taxable subtotal (e.g. all exempt): use first available rate.
+				$rates = \WC_Tax::get_rates( '', $customer );
+				if ( empty( $rates ) ) {
+					$rates = \WC_Tax::get_base_tax_rates( '' );
+				}
+				if ( ! empty( $rates ) ) {
+					$first   = reset( $rates );
+					$tax_pct = isset( $first['rate'] ) ? (float) $first['rate'] : 0;
+					if ( $tax_pct > 0 ) {
+						$inclusive_multiplier = 1.0 + ( $tax_pct / 100.0 );
+					}
 				}
 			}
 		}
@@ -800,6 +831,9 @@ class Coupons {
 			$amount   = $per_coupon_amount[ $code ] ?? 0;
 			$per_item = $per_coupon_per_item[ $code ] ?? array();
 			$is_fixed = isset( $code_to_discount_type[ $code ] ) && in_array( $code_to_discount_type[ $code ], array( 'fixed_cart', 'fixed_product' ), true );
+
+			// For fixed-amount coupons, Square returns discount in ex-tax terms. When the store uses "prices include tax",
+			// WooCommerce expects coupon amounts to be inclusive so cart totals and displayed discount match. Scale by tax.
 			if ( $is_fixed && 1.0 !== $inclusive_multiplier ) {
 				$amount = (float) $amount * $inclusive_multiplier;
 				foreach ( $per_item as $key => $val ) {
@@ -1142,6 +1176,8 @@ class Coupons {
 
 	/**
 	 * Handle cart contents changed - recalculate Square discounts if applied.
+	 * Uses request coalescing: in a single request, we only call the Square API once per distinct cart state
+	 * (e.g. when woocommerce_before_calculate_totals fires multiple times with the same cart, we skip redundant calls).
 	 *
 	 * @since x.x.x
 	 */
@@ -1162,6 +1198,19 @@ class Coupons {
 			return;
 		}
 
+		// Coalescing: skip recalc if we already ran it this request for the same cart state.
+		static $last_recalc_cart_hash = null;
+		$coupons_sorted               = $applied_coupons;
+		sort( $coupons_sorted );
+		$cart_state_parts             = array( implode( ',', $coupons_sorted ) );
+		foreach ( $cart->get_cart() as $key => $item ) {
+			$cart_state_parts[] = $key . ':' . ( isset( $item['quantity'] ) ? $item['quantity'] : 0 );
+		}
+		$cart_hash = md5( implode( '|', $cart_state_parts ) );
+		if ( $last_recalc_cart_hash === $cart_hash ) {
+			return;
+		}
+
 		// Check if any Square coupons are still applied and recalculate.
 		$square_coupons_to_remove = array();
 		foreach ( $applied_coupons as $coupon_code ) {
@@ -1173,6 +1222,7 @@ class Coupons {
 
 				try {
 					self::calculate_square_discount_from_cart( $coupon_code, $square_discount_code_id );
+					$last_recalc_cart_hash = $cart_hash;
 				} catch ( \Exception $e ) {
 					// Recalculation failed (e.g. combined total would be zero). Remove ALL Square coupons
 					// to clear the invalid state - we cannot determine which single coupon to remove.

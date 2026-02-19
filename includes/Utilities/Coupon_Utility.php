@@ -74,14 +74,6 @@ class Coupon_Utility {
 	protected static $product_set_object;
 
 	/**
-	 * Remove a coupon from the cart by code (finds the applied code that matches and removes it).
-	 *
-	 * @since x.x.x
-	 *
-	 * @param string $coupon_code The coupon code to remove (matched with wc_is_same_coupon).
-	 * @return bool True if the coupon was found and removed, false otherwise.
-	 */
-	/**
 	 * Check if Square discount codes are enabled (setting + filter).
 	 * Scope is not checked here; use Token_Scope_Utility in admin for merchant notices only.
 	 *
@@ -209,6 +201,14 @@ class Coupon_Utility {
 	}
 
 	/**
+	 * Sentinel key in transient value when the discount code was looked up and not found.
+	 * get_transient() returns false when the key is missing, so we store an array to distinguish "not found" from "not cached".
+	 *
+	 * @var string
+	 */
+	const CACHE_SENTINEL_NOT_FOUND = '__not_found';
+
+	/**
 	 * Cache discount code details.
 	 * Uses WordPress transients to cache discount code data for 15 minutes.
 	 *
@@ -220,8 +220,8 @@ class Coupon_Utility {
 	public static function set_cache_discount_code( $discount_code, $code_details ) {
 		$transient_key = self::get_discount_code_transient_key( $discount_code );
 
-		// Cache for 15 minutes. Store false if not found to distinguish from "not cached yet".
-		$cache_value = null === $code_details ? false : $code_details;
+		// Cache for 15 minutes. Store a sentinel array when not found so we can tell "not found" from "transient missing".
+		$cache_value = null === $code_details ? array( self::CACHE_SENTINEL_NOT_FOUND => true ) : $code_details;
 		set_transient( $transient_key, $cache_value, 15 * MINUTE_IN_SECONDS );
 	}
 
@@ -237,8 +237,17 @@ class Coupon_Utility {
 		$transient_key = self::get_discount_code_transient_key( $discount_code );
 		$cached        = get_transient( $transient_key );
 
-		// Return false if explicitly cached as "not found", null if not cached, or the cached array.
-		return false === $cached ? false : ( $cached ? $cached : null );
+		// Transient missing (expired or never set) → not cached.
+		if ( false === $cached ) {
+			return null;
+		}
+
+		// Explicitly cached as "not found" (sentinel array).
+		if ( is_array( $cached ) && isset( $cached[ self::CACHE_SENTINEL_NOT_FOUND ] ) ) {
+			return false;
+		}
+
+		return $cached;
 	}
 
 	/**
@@ -264,8 +273,13 @@ class Coupon_Utility {
 	 */
 	public static function get_discount_code( $discount_code ) {
 		$cached = self::get_cache_discount_code( $discount_code );
-		if ( $cached ) {
+		if ( is_array( $cached ) ) {
 			return $cached;
+		}
+
+		if ( false === $cached ) {
+			// Cached as "not found"; avoid redundant API call.
+			return null;
 		}
 
 		$data = self::search_discount_codes_via_api( $discount_code );
@@ -571,8 +585,10 @@ class Coupon_Utility {
 	 *
 	 * @since x.x.x
 	 *
-	 * @param string $pricing_rule_id The Square pricing rule ID.
-	 * @param int $pricing_rule_version The Square pricing rule version.
+	 * @param string $pricing_rule_id      The Square pricing rule ID.
+	 * @param int    $pricing_rule_version The Square pricing rule version.
+	 *
+	 * @return bool True on success, false on failure.
 	 */
 	protected static function request_pricing_rule_objects( $pricing_rule_id, $pricing_rule_version ) {
 		// Ensure credentials are available.

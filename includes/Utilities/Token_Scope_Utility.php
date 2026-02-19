@@ -38,7 +38,7 @@ class Token_Scope_Utility {
 	const TRANSIENT_PREFIX = 'wc_square_token_scopes_';
 
 	/**
-	 * Cache duration for token scopes in seconds (1 hour).
+	 * Cache duration for token scopes in seconds (24 hours).
 	 *
 	 * @var int
 	 */
@@ -76,6 +76,7 @@ class Token_Scope_Utility {
 			return $cached['scopes'];
 		}
 
+		// Direct HTTP call: the Square PHP SDK does not expose the OAuth2 token status endpoint (RetrieveTokenStatus).
 		$base = $is_sandbox ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com';
 		$url  = $base . '/oauth2/token/status';
 

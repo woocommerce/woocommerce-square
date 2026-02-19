@@ -500,13 +500,8 @@ class Gateway extends Payment_Gateway_Direct {
 						try {
 							$redemption_result = $this->get_api()->create_redemption( $square_discount_code_id, $order->square_order_id );
 
-							if ( ! is_wp_error( $redemption_result ) && ! empty( $redemption_result['id'] ) ) {
-								$redemption_ids[] = $redemption_result['id'];
-								if ( $this->debug_log() ) {
-									$this->get_plugin()->log( sprintf( 'Square: Created redemption %s for discount code %s on order #%s', $redemption_result['id'], $square_discount_code_id, $order->get_id() ), $this->get_id() );
-								}
-							} else {
-								$error_message = is_wp_error( $redemption_result ) ? $redemption_result->get_error_message() : __( 'Unknown error', 'woocommerce-square' );
+							if ( is_wp_error( $redemption_result ) ) {
+								$error_message = $redemption_result->get_error_message();
 								if ( $this->debug_log() ) {
 									$this->get_plugin()->log( sprintf( 'Square: Failed to create redemption for discount code %1$s on order #%2$s: %3$s', $square_discount_code_id, $order->get_id(), $error_message ), $this->get_id() );
 								}
@@ -518,17 +513,26 @@ class Gateway extends Payment_Gateway_Direct {
 									)
 								);
 							}
+
+							if ( empty( $redemption_result['id'] ) ) {
+								if ( $this->debug_log() ) {
+									$this->get_plugin()->log( sprintf( 'Square: Create redemption returned no id for discount code %1$s on order #%2$s', $square_discount_code_id, $order->get_id() ), $this->get_id() );
+								}
+								throw new \Exception(
+									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' )
+								);
+							}
+
+							$redemption_ids[] = $redemption_result['id'];
+							if ( $this->debug_log() ) {
+								$this->get_plugin()->log( sprintf( 'Square: Created redemption %s for discount code %s on order #%s', $redemption_result['id'], $square_discount_code_id, $order->get_id() ), $this->get_id() );
+							}
 						} catch ( \Exception $redemption_exception ) {
 							if ( $this->debug_log() ) {
 								$this->get_plugin()->log( sprintf( 'Square: Error creating redemption for discount code %1$s on order #%2$s: %3$s', $square_discount_code_id, $order->get_id(), $redemption_exception->getMessage() ), $this->get_id() );
 							}
-							throw new \Exception(
-								sprintf(
-									/* translators: %s: exception message */
-									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method. Error: %s', 'woocommerce-square' ),
-									$redemption_exception->getMessage()
-								)
-							);
+							// Re-throw so outer catch can handle.
+							throw $redemption_exception;
 						}
 					}
 					if ( ! empty( $redemption_ids ) ) {

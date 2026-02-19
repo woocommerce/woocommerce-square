@@ -517,7 +517,7 @@ class Orders extends API\Request {
 		// Always use ADDITIVE with ex-tax base so Square applies tax once and totals match WooCommerce.
 		$tax_type = API::TAX_TYPE_ADDITIVE;
 
-		// Square discount code IDs are set via woocommerce_checkout_create_order and woocommerce_checkout_update_order_meta.
+		// When Square discount code is used, discount is applied via CreateRedemption; do not add WC discount line items.
 		$square_discount_code_ids = \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order );
 		$has_square_discount      = ! empty( $square_discount_code_ids );
 
