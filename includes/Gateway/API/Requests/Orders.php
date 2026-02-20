@@ -548,8 +548,8 @@ class Orders extends API\Request {
 			$total_amount    = (float) $item->get_total();
 			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
 
-			// Include the tax in subtotal when prices are inclusive of taxes and no Square discount is in use.
-			if ( ! $has_square_discount && API::TAX_TYPE_INCLUSIVE === $tax_type ) {
+			// Include the tax in subtotal when prices are inclusive of taxes.
+			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
 				$subtotal_amount += $total_tax;
 			}
 
