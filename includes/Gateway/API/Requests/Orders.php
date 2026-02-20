@@ -514,12 +514,24 @@ class Orders extends API\Request {
 	 */
 	protected function get_api_line_items( \WC_Order $order, $line_items, $taxes ) {
 		$api_line_items = array();
-		// Always use ADDITIVE with ex-tax base so Square applies tax once and totals match WooCommerce.
-		$tax_type = API::TAX_TYPE_ADDITIVE;
+		$tax_type       = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
 
-		// When Square discount code is used, discount is applied via CreateRedemption; do not add WC discount line items.
 		$square_discount_code_ids = \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order );
 		$has_square_discount      = ! empty( $square_discount_code_ids );
+
+		/**
+		 * When any Square discount coupon is in use, always force the
+		 * ADDITIVE tax type, regardless of WooCommerce's tax display settings.
+		 *
+		 * This is necessary because we observe calculation mismatches when
+		 * prices are inclusive of tax (i.e. displayed as tax-included) and
+		 * Square coupons are used. Forcing prices as ADDITIVE tax type
+		 * ensures Square's calculation aligns perfectly with WooCommerce's
+		 * total, preventing rounding and total discrepancies.
+		 */
+		if ( $has_square_discount ) {
+			$tax_type = API::TAX_TYPE_ADDITIVE;
+		}
 
 		/** @var \WC_Order_Item_Product $item */
 		foreach ( $line_items as $item ) {
@@ -532,10 +544,14 @@ class Orders extends API\Request {
 				$line_item->setItemType( 'GIFT_CARD' );
 			}
 
-			$total_amount = (float) $item->get_total();
-
-			// Use ex-tax base: product line uses get_subtotal(); discounts applied via redemptions or line-item discounts below.
+			$total_tax       = (float) $item->get_total_tax();
+			$total_amount    = (float) $item->get_total();
 			$subtotal_amount = $is_product ? (float) $item->get_subtotal() : $total_amount;
+
+			// Include the tax in subtotal when prices are inclusive of taxes and no Square discount is in use.
+			if ( ! $has_square_discount && API::TAX_TYPE_INCLUSIVE === $tax_type ) {
+				$subtotal_amount += $total_tax;
+			}
 
 			// Subtotal per quantity.
 			if ( $quantity > 0 ) {
@@ -643,10 +659,24 @@ class Orders extends API\Request {
 	 * @return \Square\Models\OrderLineItemTax[]
 	 */
 	protected function get_order_taxes( \WC_Order $order ) {
-		$taxes = array();
+		$taxes    = array();
+		$tax_type = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
 
-		// Align with get_api_line_items: always ADDITIVE so order-level tax and line item tax match.
-		$tax_type = API::TAX_TYPE_ADDITIVE;
+		$has_square_discount = ! empty( \WooCommerce\Square\Coupons::get_order_square_discount_code_ids( $order ) );
+
+		/**
+		 * When any Square discount coupon is in use, always force the
+		 * ADDITIVE tax type, regardless of WooCommerce's tax display settings.
+		 *
+		 * This is necessary because we observe calculation mismatches when
+		 * prices are inclusive of tax (i.e. displayed as tax-included) and
+		 * Square coupons are used. Forcing prices as ADDITIVE tax type
+		 * ensures Square's calculation aligns perfectly with WooCommerce's
+		 * total, preventing rounding and total discrepancies.
+		 */
+		if ( $has_square_discount ) {
+			$tax_type = API::TAX_TYPE_ADDITIVE;
+		}
 
 		foreach ( $order->get_taxes() as $tax ) {
 			$tax_item = new \Square\Models\OrderLineItemTax();

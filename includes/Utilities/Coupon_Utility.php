@@ -326,7 +326,7 @@ class Coupon_Utility {
 			return null;
 		}
 
-		$current_time = current_time( 'timestamp' ); // phpcs:disable WordPress.DateTime.CurrentTimeTimestamp
+		$current_time = time();
 
 		foreach ( $discount_codes as $code ) {
 			if ( ! isset( $code['code'] ) || strtoupper( $code['code'] ) !== strtoupper( $coupon_code ) ) {

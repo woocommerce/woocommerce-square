@@ -574,6 +574,10 @@ class API extends \WooCommerce\Square\API {
 		$request = new API\Requests\Orders( $this->client );
 
 		if ( $amount > 0 ) {
+			/**
+			 * When Square redemption is used, pass current order so adjustment is a service charge (not discounted again); otherwise line item.
+			 * This is to avoid discount applying to the adjustment again.
+			 */
 			if ( null !== $square_coupon_in_use ) {
 				$request->add_service_charge_order_data( $location_id, $order, $version, $amount, $square_coupon_in_use );
 			} else {

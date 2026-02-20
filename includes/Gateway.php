@@ -548,6 +548,7 @@ class Gateway extends Payment_Gateway_Direct {
 
 				// Adjust order by delta so Square total matches WooCommerce displayed total (charge what the customer saw).
 				// When Square redemption is used, pass current order so adjustment is a service charge (not discounted again); otherwise line item.
+				// This is to avoid discount applying to the adjustment again.
 				$square_coupon_in_use = ! empty( $square_discount_code_ids ) ? $response : null;
 				$wc_total             = Money_Utility::amount_to_cents( $order->get_total() );
 				$square_total         = $response->getTotalMoney()->getAmount();
