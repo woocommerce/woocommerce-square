@@ -318,7 +318,7 @@ class Product_Import extends Stepped_Job {
 
 				if ( $product && $product instanceof \WC_Product ) {
 					$inventory_data        = $catalog_objects_hash[ $catalog_object->getId() ] ?? array();
-					$is_tracking_inventory = $inventory_data['track_inventory'] ?? true;
+					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
 
 					/* If catalog object is tracked and has a quantity > 0 set in Square. */
@@ -482,7 +482,7 @@ class Product_Import extends Stepped_Job {
 			$this->save_product_meta( $product_id, $data );
 
 			// save the image, if included
-			Product::update_image_from_square( $product_id, $data['image_id'], true );
+			Product::update_image_from_square( $product_id, $data['image_id'], false );
 
 			// save/update variations
 			if ( isset( $data['type'], $data['variations'] ) && 'variable' === $data['type'] && is_array( $data['variations'] ) ) {

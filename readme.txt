@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.7
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.1.2
+Stable tag: 5.2.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,22 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.2.0 - 2026-01-15 =
+* Add - A notice for the inventory sync in bulk edit screen.
+* Add - Helper text and notices to clarify the difference between "Sync Now" and "Import all Products from Square".
+* Fix - Ensure that the order is not marked as 'On Hold' when saving the card fails after a successful payment.
+* Fix - Prevent fatal errors occurring on incompatible environments.
+* Fix - Ensure default titles are displayed for payment methods if not set by the merchant.
+* Fix - Prevent images being updated from square when the "Enable to override Product images from Square" setting is turned off.
+* Fix - Improve sync settings language for better clarity.
+* Fix - CSV-imported products from Square with inventory tracking disabled are now correctly imported as "In Stock" instead of "Out of Stock" with stock management enabled.
+* Fix - Resolve fatal errors that may occur after a server migration.
+* Dev - Update `apimatic/unirest-php` package to 4.0.7.
+* Dev - Bump WooCommerce minimum supported version to 10.2.
+* Dev - Bump WordPress minimum supported version to 6.7.
+* Dev - Error logging when gift card application fails due to missing session token or Square API errors.
+* Dev - Remove application of E2E status labels from GitHub actions.
 
 = 5.1.2 - 2025-12-10 =
 * Security - Resolve CVE-2025-13457.

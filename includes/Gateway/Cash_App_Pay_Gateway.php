@@ -246,6 +246,19 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		return esc_html__( 'Cash App Pay', 'woocommerce-square' );
 	}
 
+	/**
+	 * Get the default payment method title, which is configurable within the
+	 * admin and displayed on checkout
+	 *
+	 * @since 5.2.0
+	 * @return string payment method title to show on checkout
+	 */
+	public function get_title() {
+		if ( $this->title ) {
+			return $this->title;
+		}
+		return $this->get_default_title();
+	}
 
 	/**
 	 * Get the default payment method description, which is configurable
