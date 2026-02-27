@@ -778,27 +778,15 @@ class Coupons {
 			}
 		}
 
-		$code_to_discount_type = array();
-		foreach ( $coupon_codes_in_calc as $code ) {
-			$code_data = Coupon_Utility::get_discount_code( $code );
-			if ( ! empty( $code_data ) ) {
-				$wc_coupon = Coupon_Utility::map_square_discount_code_to_woocommerce_coupon( $code_data );
-				if ( is_array( $wc_coupon ) && isset( $wc_coupon['discount_type'] ) ) {
-					$code_to_discount_type[ $code ] = $wc_coupon['discount_type'];
-				}
-			}
-		}
-
 		foreach ( $coupon_codes_in_calc as $code ) {
 			WC()->session->set( '_square_discount_code_id_' . $code, Coupon_Utility::get_square_discount_code_id_by_code( $code ) );
 
 			$amount   = $per_coupon_amount[ $code ] ?? 0;
 			$per_item = $per_coupon_per_item[ $code ] ?? array();
-			$is_fixed = isset( $code_to_discount_type[ $code ] ) && in_array( $code_to_discount_type[ $code ], array( 'fixed_cart', 'fixed_product' ), true );
 
-			// For fixed-amount coupons, Square returns discount in ex-tax terms. When the store uses "prices include tax",
-			// WooCommerce expects coupon amounts to be inclusive so cart totals and displayed discount match. Scale by tax.
-			if ( $is_fixed && 1.0 !== $inclusive_multiplier ) {
+			// Square returns discounts in ex-tax terms (we send ex-tax base). When the store uses "prices include tax",
+			// WooCommerce expects coupon amounts to be inclusive. Scale all coupon types by the cart's incl/ex ratio.
+			if ( 1.0 !== $inclusive_multiplier ) {
 				$amount = (float) $amount * $inclusive_multiplier;
 				foreach ( $per_item as $key => $val ) {
 					$per_item[ $key ] = (float) $val * $inclusive_multiplier;
@@ -867,15 +855,14 @@ class Coupons {
 		$currency    = get_woocommerce_currency();
 		$order_model = new \Square\Models\Order( $location_id );
 
-		// Build line items from cart.
+		// Build line items from cart. Always use ADDITIVE tax and ex-tax base so Square applies discount to ex-tax amounts; we scale for WC display via inclusive_multiplier.
 		$line_items = array();
-		// Determine the tax type to use for the order.
-		$tax_type = wc_prices_include_tax() ? API::TAX_TYPE_INCLUSIVE : API::TAX_TYPE_ADDITIVE;
+		$tax_type   = API::TAX_TYPE_ADDITIVE;
 
 		// Build tax rates for the order (from cart items so we have definitions even when cart totals aren't ready).
 		$tax_rates = wc_tax_enabled() ? self::build_square_tax_rates_from_cart( $cart, $tax_type ) : array();
 
-		// Convert cart items to Square line items.
+		// Convert cart items to Square line items (base price = ex-tax only).
 		foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
 			$product  = $cart_item['data'];
 			$quantity = (float) $cart_item['quantity'];
@@ -887,46 +874,40 @@ class Coupons {
 				$line_item->setItemType( 'GIFT_CARD' );
 			}
 
-			// Calculate amounts.
-			$price_total         = (float) $product->get_price() * $quantity;
-			$line_subtotal       = $price_total;
-			$line_subtotal_tax   = 0.0;
+			// Use cart line subtotal (ex tax) when available (core-calculated); else compute ex-tax from product price.
+			$line_subtotal       = null;
 			$line_tax_data_total = array();
-
-			if ( wc_tax_enabled() && $product->is_taxable() ) {
-				$customer           = $cart->get_customer();
-				$is_vat_exempt      = $customer && $customer->get_is_vat_exempt();
-				$item_tax_rates     = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
-				$price_includes_tax = wc_prices_include_tax();
-
-				if ( ! $is_vat_exempt && ! empty( $item_tax_rates ) ) {
-					$subtotal_taxes = \WC_Tax::calc_tax( $price_total, $item_tax_rates, $price_includes_tax );
-					foreach ( $subtotal_taxes as $rate_id => $tax_amount ) {
-						$rounded_tax                     = wc_round_tax_total( $tax_amount );
-						$line_tax_data_total[ $rate_id ] = $rounded_tax;
-					}
-					$line_subtotal_tax = array_sum( $line_tax_data_total );
-
-					if ( $price_includes_tax ) {
-						$line_subtotal = $price_total - $line_subtotal_tax;
+			if ( isset( $cart_item['line_subtotal'] ) && is_numeric( $cart_item['line_subtotal'] ) ) {
+				$line_subtotal = (float) $cart_item['line_subtotal'];
+				if ( isset( $cart_item['line_tax_data']['subtotal'] ) && is_array( $cart_item['line_tax_data']['subtotal'] ) ) {
+					foreach ( $cart_item['line_tax_data']['subtotal'] as $rate_id => $tax_amount ) {
+						$line_tax_data_total[ $rate_id ] = (float) $tax_amount;
 					}
 				}
 			}
 
-			// Base price per unit (before any discounts).
-			$subtotal_per_unit = $line_subtotal;
-
-			// If using inclusive tax type, add the line's subtotal tax back to the subtotal per unit.
-			// This ensures that when prices include tax, the Square line item gets the correct (with-tax) price.
-			if ( API::TAX_TYPE_INCLUSIVE === $tax_type ) {
-				$subtotal_per_unit += $line_subtotal_tax;
+			if ( null === $line_subtotal ) {
+				$price_total   = (float) $product->get_price() * $quantity;
+				$line_subtotal = $price_total;
+				if ( wc_tax_enabled() && $product->is_taxable() ) {
+					$customer           = $cart->get_customer();
+					$is_vat_exempt      = $customer && $customer->get_is_vat_exempt();
+					$item_tax_rates     = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
+					$price_includes_tax = wc_prices_include_tax();
+					if ( ! $is_vat_exempt && ! empty( $item_tax_rates ) ) {
+						$subtotal_taxes = \WC_Tax::calc_tax( $price_total, $item_tax_rates, $price_includes_tax );
+						foreach ( $subtotal_taxes as $rate_id => $tax_amount ) {
+							$line_tax_data_total[ $rate_id ] = wc_round_tax_total( $tax_amount );
+						}
+						if ( $price_includes_tax ) {
+							$line_subtotal = $price_total - array_sum( $line_tax_data_total );
+						}
+					}
+				}
 			}
 
-			if ( $quantity > 0 ) {
-				$subtotal_per_unit = $subtotal_per_unit / $quantity;
-			} else {
-				$subtotal_per_unit = 0;
-			}
+			// Base price per unit: always ex-tax (ADDITIVE).
+			$subtotal_per_unit = $quantity > 0 ? $line_subtotal / $quantity : 0;
 
 			$line_item->setQuantity( (string) $quantity );
 			$line_item->setBasePriceMoney( Money_Utility::amount_to_money( $subtotal_per_unit, $currency ) );

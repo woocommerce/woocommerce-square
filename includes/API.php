@@ -1140,10 +1140,11 @@ class API extends Base {
 				$error_message = $result->get_error_message();
 				$error_code    = $result->get_error_code();
 				$this->get_plugin()->log(
-					sprintf( 'Square CalculateOrder API error [%s]: %s', $error_code ?: 'unknown', $error_message ),
+					/* translators: %1$s: error code, %2$s: error message */
+					sprintf( __( 'Square CalculateOrder API error [%1$s]: %2$s', 'woocommerce-square' ), $error_code ?: 'unknown', $error_message ),
 					'square-coupons'
 				);
-				throw new \Exception( __( 'We couldn\'t apply the discount. Please try again later.', 'woocommerce-square' ) );
+				throw new \Exception( esc_html__( 'We couldn\'t apply the discount. Please try again later.', 'woocommerce-square' ) );
 			}
 
 			$data = isset( $result['body'] ) ? $result['body'] : array();
