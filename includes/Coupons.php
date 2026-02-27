@@ -768,49 +768,13 @@ class Coupons {
 		}
 
 		// When prices are inclusive of tax, WooCommerce expects discount amounts to be inclusive.
-		// Square returns fixed discounts without tax; add tax for fixed types only.
-		// Use a weighted average tax rate by cart item subtotal so mixed-rate carts (e.g. standard + reduced) are handled.
+		// Square returns fixed discounts without tax; scale using the cart's own subtotal/subtotal_tax (core-calculated, compound-aware).
 		$inclusive_multiplier = 1.0;
 		if ( wc_prices_include_tax() && wc_tax_enabled() ) {
-			$customer     = $cart->get_customer();
-			$weighted_sum = 0.0;
-			$total_sub    = 0.0;
-			foreach ( $cart->get_cart() as $cart_item ) {
-				$product = isset( $cart_item['data'] ) ? $cart_item['data'] : null;
-				if ( ! $product || ! $product->is_taxable() ) {
-					continue;
-				}
-				$item_rates = \WC_Tax::get_rates( $product->get_tax_class(), $customer );
-				if ( empty( $item_rates ) ) {
-					$item_rates = \WC_Tax::get_base_tax_rates( $product->get_tax_class() );
-				}
-				$item_pct = 0.0;
-				foreach ( $item_rates as $rate ) {
-					$item_pct += isset( $rate['rate'] ) ? (float) $rate['rate'] : 0;
-				}
-				$qty           = isset( $cart_item['quantity'] ) ? (float) $cart_item['quantity'] : 1;
-				$subtotal      = (float) $product->get_price() * $qty;
-				$weighted_sum += $item_pct * $subtotal;
-				$total_sub    += $subtotal;
-			}
-			if ( $total_sub > 0 && $weighted_sum >= 0 ) {
-				$avg_tax_pct = $weighted_sum / $total_sub;
-				if ( $avg_tax_pct > 0 ) {
-					$inclusive_multiplier = 1.0 + ( $avg_tax_pct / 100.0 );
-				}
-			} else {
-				// Fallback when cart has no taxable subtotal (e.g. all exempt): use first available rate.
-				$rates = \WC_Tax::get_rates( '', $customer );
-				if ( empty( $rates ) ) {
-					$rates = \WC_Tax::get_base_tax_rates( '' );
-				}
-				if ( ! empty( $rates ) ) {
-					$first   = reset( $rates );
-					$tax_pct = isset( $first['rate'] ) ? (float) $first['rate'] : 0;
-					if ( $tax_pct > 0 ) {
-						$inclusive_multiplier = 1.0 + ( $tax_pct / 100.0 );
-					}
-				}
+			$cart_subtotal     = (float) $cart->get_subtotal();
+			$cart_subtotal_tax = (float) $cart->get_subtotal_tax();
+			if ( $cart_subtotal > 0 ) {
+				$inclusive_multiplier = ( $cart_subtotal + $cart_subtotal_tax ) / $cart_subtotal;
 			}
 		}
 

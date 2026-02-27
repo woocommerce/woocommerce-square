@@ -1137,7 +1137,13 @@ class API extends Base {
 			$result = Coupon_Utility::square_api_post( 'orders/calculate', $request_body );
 
 			if ( is_wp_error( $result ) ) {
-				throw new \Exception( 'Square API error: ' . esc_html( $result->get_error_message() ) );
+				$error_message = $result->get_error_message();
+				$error_code    = $result->get_error_code();
+				$this->get_plugin()->log(
+					sprintf( 'Square CalculateOrder API error [%s]: %s', $error_code ?: 'unknown', $error_message ),
+					'square-coupons'
+				);
+				throw new \Exception( __( 'We couldn\'t apply the discount. Please try again later.', 'woocommerce-square' ) );
 			}
 
 			$data = isset( $result['body'] ) ? $result['body'] : array();
