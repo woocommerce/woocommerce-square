@@ -247,13 +247,19 @@ class Products {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$selected = isset( $_GET['product_type'] ) && 'synced-with-square' === $_GET['product_type'] ? 'selected=\"selected\"' : '';
 
-		wc_enqueue_js(
-			"
-			jQuery( document ).ready( function( $ ) {
-				$( 'select#dropdown_product_type' ) . append( '<option value=\"synced-with-square\" ' + '" . $selected . "' + '>' + '" . $label . "' + '</option>' );
+		ob_start();
+		?>
+		( function( $ ) {
+			$( function() {
+				$( 'select#dropdown_product_type' ).append( '<option value="synced-with-square" <?php echo esc_js( $selected ); ?>><?php echo esc_js( $label ); ?></option>' );
 			} );
-			"
-		);
+		} )( jQuery );
+		<?php
+		$javascript = ob_get_clean();
+		$handle     = 'wc-square-products-sync-filter';
+		wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
+		wp_enqueue_script( $handle );
+		wp_add_inline_script( $handle, $javascript );
 	}
 
 
