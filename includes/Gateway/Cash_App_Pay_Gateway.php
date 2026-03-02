@@ -1281,7 +1281,17 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		 */
 		$args = apply_filters( 'wc_' . $this->get_id() . '_payment_js_args', $args, $this );
 
-		wc_enqueue_js( sprintf( 'window.wc_%s_payment_handler = new WC_Square_Cash_App_Pay_Handler( %s );', esc_js( $this->get_id() ), wp_json_encode( $args ) ) );
+		ob_start();
+		?>
+		( function() {
+			window.wc_<?php echo esc_js( $this->get_id() ); ?>_payment_handler = new WC_Square_Cash_App_Pay_Handler( <?php echo wp_json_encode( $args ); ?> );
+		} )();
+		<?php
+		$javascript = ob_get_clean();
+		$handle     = 'wc-square-cash-app-pay-inline';
+		wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
+		wp_enqueue_script( $handle );
+		wp_add_inline_script( $handle, $javascript );
 	}
 
 	/**
