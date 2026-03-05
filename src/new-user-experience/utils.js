@@ -187,6 +187,9 @@ export const getSquareSettings = async () => {
 		enable_customer_decline_messages:
 			settings.enable_customer_decline_messages ||
 			SQUARE_SETTINGS_DEFAULT_STATE.enable_customer_decline_messages,
+		enable_square_discount_codes:
+			settings.enable_square_discount_codes ||
+			SQUARE_SETTINGS_DEFAULT_STATE.enable_square_discount_codes,
 		debug_mode:
 			settings.debug_mode || SQUARE_SETTINGS_DEFAULT_STATE.debug_mode,
 		debug_logging_enabled:
