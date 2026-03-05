@@ -73,11 +73,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 == Changelog ==
 
 = 5.3.0 - 2026-03-05 =
-* Add - [Phase 1] Add Square Discount Codes (Coupons) Support.
+* Add - Initial support for Square Discount Codes (Coupons).
 * Fix - Set the "Synced with Square" taxonomy to private.
 * Fix - Ensure that there is no `DivisionByZeroError` fatal error in Square when the total amount is zero and the tax amount is non-zero.
 * Fix - Partial-Total Verification when Gift Card is used.
-* Fix - Improved data access restrictions on payment method page
+* Fix - Improved data access restrictions on payment method page.
 * Dev - Bump WooCommerce "tested up to" version 10.5.
 * Dev - Bump WooCommerce minimum supported version to 10.3.
 
