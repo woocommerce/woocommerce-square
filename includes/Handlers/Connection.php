@@ -518,6 +518,8 @@ class Connection {
 			'GIFTCARDS_WRITE',
 			'PAYMENTS_WRITE',
 			'ORDERS_WRITE',
+			'DISCOUNT_CODES_READ',
+			'DISCOUNT_CODES_WRITE',
 		);
 
 		/**

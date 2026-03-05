@@ -547,6 +547,8 @@ class Settings extends \WC_Settings_API {
 		}
 
 		update_option( 'wc_square_access_tokens', $access_tokens );
+
+		Utilities\Token_Scope_Utility::clear_scope_cache( $environment );
 	}
 
 
@@ -568,6 +570,7 @@ class Settings extends \WC_Settings_API {
 	public function clear_access_tokens() {
 
 		delete_option( 'wc_square_access_tokens' );
+		Utilities\Token_Scope_Utility::clear_scope_cache( null );
 	}
 
 
