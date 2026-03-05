@@ -34,7 +34,7 @@ use Square\Models\CatalogDiscountType;
 /**
  * Map a Square Coupon/Discount to a WooCommerce Coupon.
  *
- * @since x.x.x
+ * @since 5.3.0
  */
 class Coupon_Utility {
 
@@ -77,7 +77,7 @@ class Coupon_Utility {
 	 * Check if Square discount codes are enabled (setting + filter).
 	 * Scope is not checked here; use Token_Scope_Utility in admin for merchant notices only.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return bool True if Square discount codes should be processed.
 	 */
@@ -88,7 +88,7 @@ class Coupon_Utility {
 		/**
 		 * Filters whether Square discount codes should be processed.
 		 *
-		 * @since x.x.x
+		 * @since 5.3.0
 		 *
 		 * @param bool $enable_square_discount_codes Whether Square discount codes should be processed. Default follows Square settings.
 		 */
@@ -98,7 +98,7 @@ class Coupon_Utility {
 	/**
 	 * Remove a coupon from the cart by code (finds the applied code that matches and removes it).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code to remove (matched with wc_is_same_coupon).
 	 * @return bool True if the coupon was found and removed, false otherwise.
@@ -120,7 +120,7 @@ class Coupon_Utility {
 	/**
 	 * Check if a coupon code is in the cart's applied coupons.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code to check.
 	 * @return bool True if the coupon is applied to the cart.
@@ -141,7 +141,7 @@ class Coupon_Utility {
 	/**
 	 * Build a map of cart item key => catalog_object_id and name for matching Square line items to cart.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Cart $cart WooCommerce cart.
 	 * @return array<string, array{catalog_object_id: string, name: string}> Cart key => lookup data.
@@ -162,7 +162,7 @@ class Coupon_Utility {
 	 * Find the WooCommerce cart item key that corresponds to a Square order line item.
 	 * Matches by catalog object ID first, then by product name.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param array $square_line_item  Line item from Square API response.
 	 * @param array $cart_items_by_key Map from get_cart_items_by_key().
@@ -191,7 +191,7 @@ class Coupon_Utility {
 	/**
 	 * Get the transient key for caching discount code data.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $discount_code The discount code.
 	 * @return string Transient key.
@@ -212,7 +212,7 @@ class Coupon_Utility {
 	 * Cache discount code details.
 	 * Uses WordPress transients to cache discount code data for 15 minutes.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string     $discount_code The discount code.
 	 * @param array|null $code_details  The discount code details to cache. Null if not found.
@@ -228,7 +228,7 @@ class Coupon_Utility {
 	/**
 	 * Retrieve cached discount code details.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $discount_code The discount code.
 	 * @return array|null|false Cached discount code details, false if cached as "not found", or null if not cached.
@@ -253,7 +253,7 @@ class Coupon_Utility {
 	/**
 	 * Clear cached discount code details.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $discount_code The discount code.
 	 */
@@ -266,7 +266,7 @@ class Coupon_Utility {
 	 * Retrieve discount code from the Square API.
 	 * Uses caching to avoid repeated API calls for the same code.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $discount_code The discount code to retrieve.
 	 * @return array|null Discount code details, or null if not found.
@@ -302,7 +302,7 @@ class Coupon_Utility {
 	/**
 	 * Get Square discount code ID by coupon code.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code to search for.
 	 * @return string|null The discount code ID or null if not found.
@@ -315,7 +315,7 @@ class Coupon_Utility {
 	/**
 	 * Find and validate a matching discount code from API response.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param array  $discount_codes Array of discount codes from API response.
 	 * @param string $coupon_code    The coupon code to find and validate.
@@ -352,7 +352,7 @@ class Coupon_Utility {
 	/**
 	 * Search for discount codes via Square API.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code to search for.
 	 * @param int    $timeout     Request timeout in seconds. Default 30.
@@ -384,7 +384,7 @@ class Coupon_Utility {
 	 * Used for endpoints not available in the Square SDK (e.g., discount codes search).
 	 * Credentials are cached in static properties to avoid redundant fetches during a request.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return array|null Array with 'access_token', 'is_sandbox', and 'base_url', or null on error.
 	 */
@@ -432,7 +432,7 @@ class Coupon_Utility {
 	 * Make a POST request to the Square API.
 	 * Wrapper for direct HTTP calls to avoid duplicating credential and request logic.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $path    API path relative to base URL (e.g. 'orders/calculate' or 'discount-codes/search').
 	 * @param array  $body    Request body as array (will be JSON-encoded).
@@ -497,7 +497,7 @@ class Coupon_Utility {
 	 * This allows for the creation of manual WC_Coupon object mapped from the
 	 * Square Discount code data provides.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param array $square_discount_code The Square discount code array.
 	 * @return array|false The mapped WooCommerce coupon data. False if mapping fails.
@@ -551,7 +551,7 @@ class Coupon_Utility {
 	 * Get the Square CatalogDiscount object ID for a pricing rule (used to match order.discounts in API responses).
 	 * Results are cached by pricing_rule_id and version to avoid repeated API calls.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $pricing_rule_id      The Square pricing rule ID.
 	 * @param int    $pricing_rule_version The Square pricing rule version.
@@ -583,7 +583,7 @@ class Coupon_Utility {
 	/**
 	 * Request the pricing rule and related objects from Square.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $pricing_rule_id      The Square pricing rule ID.
 	 * @param int    $pricing_rule_version The Square pricing rule version.
@@ -648,7 +648,7 @@ class Coupon_Utility {
 	/**
 	 * Filter related objects by type.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param Models\CatalogObject[] $related_objects The related objects.
 	 * @param string $type The desired object type.
@@ -673,7 +673,7 @@ class Coupon_Utility {
 	/**
 	 * Map the Square discount type to the WooCommerce coupon discount type.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return string The mapped discount type.
 	 * @throws \Exception If the discount type is unsupported.

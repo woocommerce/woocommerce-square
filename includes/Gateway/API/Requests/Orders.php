@@ -159,7 +159,7 @@ class Orders extends API\Request {
 	 * We need to send proposed_discount_codes (discount code IDs), so the actual API call is
 	 * made in API.php::do_square_request() via direct HTTP, following the same request/response pattern.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
 	 * @param \Square\Models\Order $square_order            Square order object to calculate.
@@ -440,7 +440,7 @@ class Orders extends API\Request {
 	 * Gets Square order service charge objects for the order's shipping methods.
 	 * Sends shipping as order-level service charges per Square's recommendation (not as line items).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Order                        $order WooCommerce order object.
 	 * @param \Square\Models\OrderLineItemTax[] $taxes Order taxes keyed by rate_id (for taxable service charges).

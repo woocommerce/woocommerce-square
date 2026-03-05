@@ -59,7 +59,7 @@ class Coupons {
 	/**
 	 * Gets the singleton instance.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return Coupons The singleton instance.
 	 */
@@ -76,7 +76,7 @@ class Coupons {
 	/**
 	 * Initialize Coupons class.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 */
 	public static function init() {
 		if ( ! Coupon_Utility::is_square_discount_codes_enabled() ) {
@@ -119,7 +119,7 @@ class Coupons {
 	/**
 	 * Handle coupon application - trigger Square discount calculation if conditions are met.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code that was applied.
 	 */
@@ -162,7 +162,7 @@ class Coupons {
 	/**
 	 * Prevent non-Square coupons from being used with Square coupons.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param bool       $is_valid Whether the coupon is valid.
 	 * @param \WC_Coupon $coupon   Coupon object.
@@ -211,7 +211,7 @@ class Coupons {
 	 * Validate Square coupon provides a discount before WooCommerce applies it.
 	 * Runs at priority 5 so we reject before the success message is shown.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param bool       $is_valid Whether the coupon is valid.
 	 * @param \WC_Coupon $coupon   Coupon object.
@@ -251,7 +251,7 @@ class Coupons {
 	 * Replace the generic coupon error message with our Square-specific messages when we rejected.
 	 * Handles: (1) Square discount validation (no discount, zero total), (2) mixing Square and WooCommerce coupons.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $error_message The error message.
 	 * @param int    $error_code    The error code.
@@ -289,7 +289,7 @@ class Coupons {
 	/**
 	 * Preflight the construction of a WC_Coupon object.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param false|array $coupon      Coupon data. False indicates that the coupon has not yet
 	 *                                 been found/replaced via the preflight process.
@@ -325,7 +325,7 @@ class Coupons {
 	/**
 	 * Populate order with Square discount meta from cart session.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Order $order The order object.
 	 * @return bool True if meta was set, false otherwise.
@@ -386,7 +386,7 @@ class Coupons {
 	 * Ensure order has Square discount code meta (backup for edge cases).
 	 * Runs on woocommerce_checkout_update_order_meta so metadata is always available.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param int $order_id The order ID.
 	 */
@@ -411,7 +411,7 @@ class Coupons {
 	 * Call this from the payment gateway when meta may be missing (e.g. block checkout). If the order
 	 * has coupon items and they are Square codes, populates _square_discount_code_ids and saves.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Order $order The order object.
 	 */
@@ -448,7 +448,7 @@ class Coupons {
 	/**
 	 * Get all Square discount code IDs stored on an order (for creating redemptions).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Order $order The order object.
 	 * @return string[] Array of Square discount code IDs (empty if none).
@@ -467,7 +467,7 @@ class Coupons {
 	/**
 	 * Handle coupon removal - clear Square discount session data.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code that was removed.
 	 */
@@ -484,7 +484,7 @@ class Coupons {
 	/**
 	 * Get applied coupon codes that are Square discount codes.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return string[] Array of applied Square coupon codes.
 	 */
@@ -509,7 +509,7 @@ class Coupons {
 	 * Square discount codes can only be redeemed when paying with Square.
 	 * Used to restrict available payment gateways to Square when a Square coupon is applied.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @return bool True if cart has an applied Square discount code.
 	 */
@@ -524,7 +524,7 @@ class Coupons {
 	/**
 	 * Calculate Square discount from cart using CalculateOrder API.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $coupon_code The coupon code to calculate discount for.
 	 * @param string $square_discount_code_id The Square discount code ID to calculate discount for.
@@ -692,7 +692,7 @@ class Coupons {
 	 * vs 10% off). Coupons with no matching order.discount (e.g. product-specific with no qualifying item) stay at 0.
 	 * When Square returns no order.discounts and there is exactly one coupon, that coupon gets the full total.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param array    $calculated_order_data  Raw CalculateOrder response (order.discounts, line_items).
 	 * @param float    $total_discount_amount  Combined discount total (from line items or order total).
@@ -802,7 +802,7 @@ class Coupons {
 	 * Build Square line-item tax rate objects from the cart (for use in Square Order).
 	 * Uses cart items and WC_Tax so tax definitions exist even when cart totals are not yet calculated.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Cart $cart     WooCommerce cart.
 	 * @param string   $tax_type One of API::TAX_TYPE_INCLUSIVE or API::TAX_TYPE_ADDITIVE.
@@ -841,7 +841,7 @@ class Coupons {
 	/**
 	 * Build Square Order object from cart data (for calculation only, no order creation).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $location_id Square location ID.
 	 * @return \Square\Models\Order Square Order object ready for CalculateOrder.
@@ -969,7 +969,7 @@ class Coupons {
 	 * Build Square order service charges for cart shipping (mirrors Orders::get_order_service_charges_for_shipping).
 	 * Shipping is sent as service charges, not line items, so CalculateOrder matches CreateOrder.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param \WC_Cart                        $cart       Cart object.
 	 * @param \Square\Models\OrderLineItemTax[] $tax_rates Tax objects keyed by rate_id.
@@ -1066,7 +1066,7 @@ class Coupons {
 	/**
 	 * Override WooCommerce discount calculation with Square's calculated amount.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param float      $discount      Discount amount.
 	 * @param float      $discounting_amount Amount the coupon is being applied to.
@@ -1124,7 +1124,7 @@ class Coupons {
 	 * Uses request coalescing: in a single request, we only call the Square API once per distinct cart state
 	 * (e.g. when woocommerce_before_calculate_totals fires multiple times with the same cart, we skip redundant calls).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 */
 	public static function handle_cart_contents_changed() {
 		// Prevent infinite loops - check if we're already recalculating.

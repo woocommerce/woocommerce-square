@@ -499,7 +499,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Creates a Redemption to link a Square discount code to a Square order.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string $discount_code_id The Square discount code ID.
 	 * @param string $order_id          The Square order ID.
