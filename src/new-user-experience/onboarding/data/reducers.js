@@ -118,6 +118,7 @@ export const SQUARE_SETTINGS_DEFAULT_STATE = {
 	connection_url_sandbox: '',
 	locations: [],
 	enable_customer_decline_messages: 'no',
+	enable_square_discount_codes: 'yes',
 	debug_mode: 'off',
 	debug_logging_enabled: 'no',
 	enable_order_fulfillment_sync: 'no',

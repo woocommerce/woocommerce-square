@@ -71,6 +71,9 @@ class Plugin extends Payment_Gateway_Plugin {
 	/** @var Handlers\Connection connection handler instance  */
 	private $connection_handler;
 
+	/** @var Coupons coupons handler instance */
+	private $coupons_handler;
+
 	/** @var Admin admin handler instance */
 	private $admin_handler;
 
@@ -269,6 +272,7 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		$this->settings_handler = new Settings( $this );
 		$this->products_handler = new Products( $this );
+		$this->coupons_handler  = Coupons::instance();
 
 		if ( ! $this->admin_handler && is_admin() ) {
 			$this->admin_handler = new Admin( $this );
@@ -425,6 +429,26 @@ class Plugin extends Payment_Gateway_Plugin {
 					'enable-wc-sync',
 					array(
 						'notice_class' => 'notice-warning',
+					)
+				);
+			}
+
+			// Notice when Square discount codes are enabled but token lacks required Discount Codes scopes.
+			$square_settings        = get_option( 'wc_square_settings', array() );
+			$discount_codes_enabled = ! array_key_exists( 'enable_square_discount_codes', $square_settings ) || ( isset( $square_settings['enable_square_discount_codes'] ) && 'yes' === $square_settings['enable_square_discount_codes'] );
+			if ( $discount_codes_enabled && ! Utilities\Token_Scope_Utility::merchant_has_discount_codes_scope() ) {
+				$message = sprintf(
+					/* translators: Placeholders: %1$s - opening <a> tag with Square settings URL, %2$s - closing </a> tag */
+					__( 'Square discount codes are enabled, but your connection does not have the required permissions. To use this feature, please %1$sdisconnect and reconnect your Square connection%2$s in the settings so the required discount codes scopes can be allocated.', 'woocommerce-square' ),
+					'<a href="' . esc_url( $this->get_settings_url() ) . '">',
+					'</a>'
+				);
+				$this->get_admin_notice_handler()->add_admin_notice(
+					$message,
+					'square-discount-codes-scope-missing',
+					array(
+						'notice_class' => 'notice-warning',
+						'dismissible'  => true,
 					)
 				);
 			}
