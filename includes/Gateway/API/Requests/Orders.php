@@ -610,14 +610,17 @@ class Orders extends API\Request {
 						continue;
 					}
 
-					$item_uid        = $item->get_id();
-					$tax_uid         = $taxes[ $key ]->getUid();
-					$prev_percentage = $taxes[ $key ]->getPercentage();
-					if ( $total_amount > 0 ) {
+					$item_uid            = $item->get_id();
+					$tax_uid             = $taxes[ $key ]->getUid();
+					$prev_percentage     = $taxes[ $key ]->getPercentage();
+					$adjusted_percentage = $prev_percentage;
+					/*
+					 * $total_amount could be 0 for some cases, eg: Retail Delivery Fee via Avalara AvaTax for Minnesota (MN) and Colorado (CO).
+					 * @see https://linear.app/a8c/issue/SQUARE-232/divisionbyzeroerror-in-square-gateway-with-zero-amount-fee-tax
+					 */
+					if ( ! empty( $total_amount ) ) {
 						$adjusted_percentage = (float) $tax_amount * 100 / $total_amount;
 						$adjusted_percentage = number_format( (float) $adjusted_percentage, 2, '.', '' );
-					} else {
-						$adjusted_percentage = $prev_percentage;
 					}
 
 					if ( $prev_percentage !== $adjusted_percentage ) {
