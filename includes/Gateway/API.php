@@ -26,6 +26,7 @@ namespace WooCommerce\Square\Gateway;
 defined( 'ABSPATH' ) || exit;
 
 use Square\Models\Order;
+use WooCommerce\Square\Utilities\Coupon_Utility;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -428,21 +429,53 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Calculates a Square order without creating one.
 	 *
-	 * @param \WC_Order            $order        Woo order object.
-	 * @param \Square\Models\Order $square_order Square order object.
+	 * This method follows the standard request/response pattern used throughout the plugin.
+	 * It uses API\Requests\Orders::set_calculate_order_data() to prepare the request,
+	 * and API.php::do_square_request() handles the actual API call as a special case
+	 * via direct HTTP. The SDK's CalculateOrderRequest only supports order and proposed_rewards
+	 * (loyalty); we need to send proposed_discount_codes (discount code IDs), so the request
+	 * is made in do_square_request() using wp_remote_post.
 	 *
-	 * @return \Square\Models\Order
+	 * @param \WC_Order|null       $order                   Optional. WooCommerce order object. Can be null when called from cart context.
+	 * @param \Square\Models\Order $square_order            Square order object to calculate.
+	 * @param array                $proposed_discount_codes Optional. Array of discount code IDs to propose for calculation.
+	 * @param bool                 $return_raw_response     Optional. If true, returns array with both order and raw response data.
+	 *
+	 * @return \Square\Models\Order|array Returns Order object, or array with 'order' and 'raw_response' if $return_raw_response is true.
+	 * @throws \Exception
 	 */
-	public function calculate_order( \WC_Order $order, \Square\Models\Order $square_order ) {
+	public function calculate_order( $order, \Square\Models\Order $square_order, array $proposed_discount_codes = array(), $return_raw_response = false ) {
+		// Create a new Orders request object following the standard pattern.
 		$request = new API\Requests\Orders( $this->client );
 
-		$request->set_calculate_order_data( $order, $square_order );
+		// Set the request data - this stores the order, discount codes, and flags.
+		// The actual API call will be handled in API.php::do_square_request().
+		$request->set_calculate_order_data( $order, $square_order, $proposed_discount_codes, $return_raw_response );
 
+		// Set the response handler to use the standard API Response class.
 		$this->set_response_handler( \WooCommerce\Square\API\Response::class );
 
+		// Perform the request - this will call API.php::do_square_request() which
+		// handles calculateOrder via direct HTTP so we can send proposed_discount_codes.
 		$response = $this->perform_request( $request );
 
-		return $response->get_data()->getOrder();
+		// Get the calculated order from the response.
+		$calculated_order = $response->get_data();
+
+		// If raw response was requested, return both the parsed order and raw JSON data.
+		// The raw response contains per-line-item discount details that aren't easily
+		// accessible from the Order object, which is needed for accurate discount display.
+		if ( $return_raw_response ) {
+			// Get raw response from request object (populated by do_square_request)
+			$raw_response = $request->raw_calculate_order_response;
+			return array(
+				'order'        => $calculated_order,
+				'raw_response' => $raw_response,
+			);
+		}
+
+		// Return the calculated order object.
+		return $calculated_order;
 	}
 
 	/**
@@ -461,6 +494,44 @@ class API extends \WooCommerce\Square\API {
 		$response = $this->perform_request( $request );
 
 		return $response->get_data()->getOrder();
+	}
+
+	/**
+	 * Creates a Redemption to link a Square discount code to a Square order.
+	 *
+	 * @since 5.3.0
+	 *
+	 * @param string $discount_code_id The Square discount code ID.
+	 * @param string $order_id          The Square order ID.
+	 * @param string $idempotency_key   Optional. Idempotency key for the request.
+	 * @return array|WP_Error Redemption object data or WP_Error on failure.
+	 */
+	public function create_redemption( $discount_code_id, $order_id, $idempotency_key = null ) {
+		if ( empty( $discount_code_id ) || empty( $order_id ) ) {
+			return new \WP_Error( 'missing_parameters', 'discount_code_id and order_id are required.' );
+		}
+
+		if ( empty( $idempotency_key ) ) {
+			$idempotency_key = wc_square()->get_idempotency_key( 'redemption_' . $discount_code_id . '_' . $order_id );
+		}
+
+		$request_body = array(
+			'idempotency_key' => $idempotency_key,
+			'redemption'      => array(
+				'order_id' => $order_id,
+			),
+		);
+
+		$path   = 'discount-codes/' . rawurlencode( $discount_code_id ) . '/redemptions';
+		$result = Coupon_Utility::square_api_post( $path, $request_body );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$data = isset( $result['body'] ) ? $result['body'] : array();
+
+		return isset( $data['redemption'] ) ? $data['redemption'] : $data;
 	}
 
 	/**
@@ -485,22 +556,33 @@ class API extends \WooCommerce\Square\API {
 
 	/**
 	 * Adjusts an existing Square order by amount.
+	 * When Square redemption is used, positive adjustments use a service charge (not a line item) so the amount is not eligible for coupon discount.
+	 * When no Square coupon is used, positive adjustments use a line item (original plugin behavior).
 	 *
 	 * @since 2.0.4
 	 *
-	 * @param string $location_id location ID
-	 * @param \WC_Order $order
-	 * @param int $version Current 'version' value of Square order
-	 * @param int $amount Amount of adjustment in smallest unit
-	 * @return Order
+	 * @param string                    $location_id          Square location ID.
+	 * @param \WC_Order                 $order                WooCommerce order.
+	 * @param int                       $version              Current 'version' value of Square order.
+	 * @param int                       $amount               Adjustment in smallest unit (cents). Positive = add, negative = discount.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption used (use service charge); null = use line item.
+	 * @return \Square\Models\Order
 	 * @throws \Exception
 	 */
-	public function adjust_order( $location_id, \WC_Order $order, $version, $amount ) {
+	public function adjust_order( $location_id, \WC_Order $order, $version, $amount, $square_coupon_in_use = null ) {
 
 		$request = new API\Requests\Orders( $this->client );
 
 		if ( $amount > 0 ) {
-			$request->add_line_item_order_data( $location_id, $order, $version, $amount );
+			/**
+			 * When Square redemption is used, pass current order so adjustment is a service charge (not discounted again); otherwise line item.
+			 * This is to avoid discount applying to the adjustment again.
+			 */
+			if ( null !== $square_coupon_in_use ) {
+				$request->add_service_charge_order_data( $location_id, $order, $version, $amount, $square_coupon_in_use );
+			} else {
+				$request->add_line_item_order_data( $location_id, $order, $version, $amount );
+			}
 		} else {
 			$request->add_discount_order_data( $location_id, $order, $version, -1 * $amount );
 		}

@@ -1947,18 +1947,24 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Returns true if the order total equals to the sum of partial totals.
-	 * False otherwise.
+	 * Returns true if the order total equals the sum of partial totals (gift card + other gateway).
+	 * Uses integer comparison in smallest currency unit to avoid float precision errors.
 	 *
 	 * @param \WC_Order $order WooCommerce order object.
-	 * @return boolean
+	 * @return bool True if order total matches sum of partial totals (within 1 unit tolerance).
 	 */
 	protected function verify_order_total( $order ) {
-		$order_total         = (float) $order->get_total();
-		$gift_card_total     = $order->payment->partial_total->gift_card;
-		$other_gateway_total = $order->payment->partial_total->other_gateway;
+		// Cap decimals to avoid factor overflow (e.g. 10^100 causes int/float overflow).
+		$decimals = min( wc_get_price_decimals(), 10 );
+		$factor   = pow( 10, $decimals );
 
-		return $order_total === $gift_card_total + $other_gateway_total;
+		$order_total         = (int) round( (float) $order->get_total() * $factor );
+		$gift_card_total     = (int) round( (float) $order->payment->partial_total->gift_card * $factor );
+		$other_gateway_total = (int) round( (float) $order->payment->partial_total->other_gateway * $factor );
+		$sum                 = $gift_card_total + $other_gateway_total;
+
+		// Allow 1 unit in smallest currency unit for float/rounding edge cases.
+		return abs( $order_total - $sum ) <= 1;
 	}
 
 	/**

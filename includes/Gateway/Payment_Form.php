@@ -76,13 +76,18 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		$billing_data        = array();
 		$billing_data_source = null;
 
-		if ( is_checkout_pay_page() ) {
+		// Checkout pay page: use order billing when user may pay for it. Else use session customer (e.g. add-payment-method); never use order there (order-pay can be forged).
+		if ( ! is_add_payment_method_page() && is_checkout_pay_page() ) {
+			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
-			if ( $order = wc_get_order( $this->get_gateway()->get_checkout_pay_page_order_id() ) ) {
-				$billing_data_source = $order;
+			if ( $order_id ) {
+				$order = wc_get_order( $order_id );
+
+				if ( $order && current_user_can( 'pay_for_order', $order_id ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+					$billing_data_source = $order;
+				}
 			}
 		} elseif ( WC()->customer && ! is_checkout() ) {
-
 			$billing_data_source = WC()->customer;
 		}
 

@@ -57,6 +57,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'is_connected',
 			'locations',
 			'enable_customer_decline_messages',
+			'enable_square_discount_codes',
 			'debug_mode',
 			'debug_logging_enabled',
 			'enable_order_fulfillment_sync',
@@ -146,6 +147,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
+					'enable_square_discount_codes'     => array(
+						'description'       => __( 'Enable Square discount codes. When disabled, only WooCommerce coupons are processed.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
 					'enable_order_fulfillment_sync'    => array(
 						'description'       => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders.', 'woocommerce-square' ),
 						'type'              => 'string',
@@ -168,6 +174,11 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 
 		$square_settings   = get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 		$filtered_settings = array_intersect_key( $square_settings, array_flip( $this->allowed_params ) );
+
+		// Default Discount Codes setting to enabled for existing installs that don't have the key yet.
+		if ( ! array_key_exists( 'enable_square_discount_codes', $filtered_settings ) ) {
+			$filtered_settings['enable_square_discount_codes'] = 'yes';
+		}
 
 		// Generate disconnection URL.
 		$action = 'wc_square_disconnect';
