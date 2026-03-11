@@ -1206,7 +1206,7 @@ class Product {
 			}
 
 			$objects = $data->getObjects();
-			if ( empty( $objects ) || ! $objects[0] instanceof \Square\Models\CatalogObject ) {
+			if ( ! is_array( $objects ) || empty( $objects ) || ! $objects[0] instanceof \Square\Models\CatalogObject ) {
 				return null;
 			}
 
@@ -1215,7 +1215,7 @@ class Product {
 				self::set_square_item_variation_id( $product_id, $variation_id );
 			}
 
-			return $variation_id ?: null;
+			return $variation_id ? $variation_id : null;
 		} catch ( \Exception $e ) {
 			wc_square()->log( 'SKU lookup for Square variation failed: ' . $e->getMessage(), array( 'sku' => $sku ) );
 			return null;
