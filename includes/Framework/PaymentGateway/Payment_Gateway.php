@@ -1423,10 +1423,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			} )( jQuery );
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-gateway-admin-csc';
-			wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-csc', $javascript );
 		}
 
 		// if transaction types are supported, show/hide the "charge virtual-only" setting
@@ -1453,10 +1450,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			} )( jQuery );
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-gateway-admin-transaction-type';
-			wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-transaction-type', $javascript );
 		}
 
 		// if there's more than one environment include the environment settings switcher code
@@ -1490,10 +1484,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			} )( jQuery );
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-gateway-admin-environment';
-			wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-environment', $javascript );
 		}
 
 		if ( ! empty( $this->shared_settings ) ) {
@@ -1522,10 +1513,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			} )( jQuery );
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-gateway-admin-inherit-settings';
-			wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-inherit-settings', $javascript );
 		}
 
 	}

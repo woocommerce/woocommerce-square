@@ -358,15 +358,12 @@ class Digital_Wallet {
 
 			ob_start();
 			?>
-			( function() {
-				window.wc_square_digital_wallet_handler = new WC_Square_Digital_Wallet_Handler( <?php echo wp_json_encode( $args ); ?> );
-			} )();
+				jQuery(function($) { 
+					window.wc_square_digital_wallet_handler = new WC_Square_Digital_Wallet_Handler( <?php echo wp_json_encode( $args ); ?> );
+				} );
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-digital-wallet-inline';
-			wp_register_script( $handle, '', array( 'jquery', 'wc-square-digital-wallet' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-digital-wallet-inline', $javascript, [ 'jquery', 'wc-square-digital-wallet' ] );
 		} catch ( \Exception $e ) {
 			wp_dequeue_style( 'wc-square-digital-wallet' );
 			wp_dequeue_script( 'wc-square-digital-wallet' );

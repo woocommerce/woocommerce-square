@@ -212,15 +212,12 @@ class Payment_Gateway_Apple_Pay_Frontend {
 
 		ob_start();
 		?>
-		( function() {
+		jQuery(function($) {
 			window.sv_wc_apple_pay_handler = new Square_Apple_Pay_Product_Handler(<?php echo wp_json_encode( $args ); ?>);
-		} )();
+		});
 		<?php
 		$javascript = ob_get_clean();
-		$handle     = 'wc-square-apple-pay-product-inline';
-		wp_register_script( $handle, '', array( 'jquery', 'wc-square-apple-pay' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-apple-pay-product-inline', $javascript, [ 'jquery', 'wc-square-apple-pay' ] );
 
 		add_action( 'woocommerce_before_add_to_cart_button', array( $this, 'render_button' ) );
 	}
@@ -259,15 +256,12 @@ class Payment_Gateway_Apple_Pay_Frontend {
 
 		ob_start();
 		?>
-		( function() {
+		jQuery(function($) {
 			window.sv_wc_apple_pay_handler = new Square_Apple_Pay_Cart_Handler(<?php echo wp_json_encode( $args ); ?>);
-		} )();
+		});
 		<?php
 		$javascript = ob_get_clean();
-		$handle     = 'wc-square-apple-pay-cart-inline';
-		wp_register_script( $handle, '', array( 'jquery', 'wc-square-apple-pay' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-apple-pay-cart-inline', $javascript, [ 'jquery', 'wc-square-apple-pay' ] );
 
 		add_action( 'woocommerce_proceed_to_checkout', array( $this, 'render_button' ) );
 	}
@@ -293,15 +287,12 @@ class Payment_Gateway_Apple_Pay_Frontend {
 
 		ob_start();
 		?>
-		( function() {
+		jQuery(function($) {
 			window.sv_wc_apple_pay_handler = new Square_Apple_Pay_Checkout_Handler(<?php echo wp_json_encode( $args ); ?>);
-		} )();
+		});
 		<?php
 		$javascript = ob_get_clean();
-		$handle     = 'wc-square-apple-pay-checkout-inline';
-		wp_register_script( $handle, '', array( 'jquery', 'wc-square-apple-pay' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-apple-pay-checkout-inline', $javascript, [ 'jquery', 'wc-square-apple-pay' ] );
 
 		if ( $this->get_plugin()->is_plugin_active( 'woocommerce-checkout-add-ons.php' ) ) {
 			add_action( 'woocommerce_review_order_before_payment', array( $this, 'render_button' ) );

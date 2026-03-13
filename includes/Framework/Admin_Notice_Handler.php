@@ -307,10 +307,7 @@ class Admin_Notice_Handler {
 		} )( jQuery );
 		<?php
 		$javascript = ob_get_clean();
-		$handle     = 'wc-square-admin-notice-inline';
-		wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-admin-notice-inline', $javascript );
 	}
 
 

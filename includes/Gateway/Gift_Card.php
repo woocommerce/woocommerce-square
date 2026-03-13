@@ -398,15 +398,12 @@ class Gift_Card extends Payment_Gateway {
 
 			ob_start();
 			?>
-			( function() {
+			jQuery(function($) {
 				window.wc_square_gift_card_handler = new WC_Square_Gift_Card_Handler( <?php echo wp_json_encode( $args ); ?> );
-			} )();
+			});
 			<?php
 			$javascript = ob_get_clean();
-			$handle     = 'wc-square-gift-card-inline';
-			wp_register_script( $handle, '', array( 'jquery', 'wc-square-gift-card' ), WC_SQUARE_PLUGIN_VERSION, true );
-			wp_enqueue_script( $handle );
-			wp_add_inline_script( $handle, $javascript );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gift-card-inline', $javascript, [ 'jquery', 'wc-square-gift-card' ] );
 		}
 
 		if ( is_checkout() || is_product() || has_block( 'woocommerce/single-product' ) ) {

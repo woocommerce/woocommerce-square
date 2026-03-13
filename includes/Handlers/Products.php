@@ -256,10 +256,7 @@ class Products {
 		} )( jQuery );
 		<?php
 		$javascript = ob_get_clean();
-		$handle     = 'wc-square-products-sync-filter';
-		wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-products-sync-filter', $javascript );
 	}
 
 

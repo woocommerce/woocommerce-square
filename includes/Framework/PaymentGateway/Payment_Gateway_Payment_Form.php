@@ -868,14 +868,12 @@ class Payment_Gateway_Payment_Form {
 
 		ob_start();
 		?>
-		( function() {
+		jQuery(function($) {
 			window.wc_<?php echo esc_js( $this->get_gateway()->get_id() ); ?>_payment_form_handler = new WC_Square_Payment_Form_Handler( <?php echo wp_json_encode( $args ); ?> );
-		} )();
+		});
 		<?php
 		$javascript = ob_get_clean();
 		$handle     = 'wc-square-' . str_replace( '_', '-', $this->get_gateway()->get_id() ) . '-payment-form-inline';
-		wp_register_script( $handle, '', array( 'jquery' ), WC_SQUARE_PLUGIN_VERSION, true );
-		wp_enqueue_script( $handle );
-		wp_add_inline_script( $handle, $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( $handle, $javascript, [ 'jquery', 'wc-square' ] );
 	}
 }
