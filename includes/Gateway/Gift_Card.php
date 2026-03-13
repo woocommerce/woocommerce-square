@@ -403,7 +403,7 @@ class Gift_Card extends Payment_Gateway {
 			});
 			<?php
 			$javascript = ob_get_clean();
-			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gift-card-inline', $javascript, [ 'jquery', 'wc-square-gift-card' ] );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gift-card-inline', $javascript, array( 'jquery', 'wc-square-gift-card' ) );
 		}
 
 		if ( is_checkout() || is_product() || has_block( 'woocommerce/single-product' ) ) {

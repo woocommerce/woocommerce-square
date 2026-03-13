@@ -363,7 +363,7 @@ class Digital_Wallet {
 				} );
 			<?php
 			$javascript = ob_get_clean();
-			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-digital-wallet-inline', $javascript, [ 'jquery', 'wc-square-digital-wallet' ] );
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-digital-wallet-inline', $javascript, array( 'jquery', 'wc-square-digital-wallet' ) );
 		} catch ( \Exception $e ) {
 			wp_dequeue_style( 'wc-square-digital-wallet' );
 			wp_dequeue_script( 'wc-square-digital-wallet' );

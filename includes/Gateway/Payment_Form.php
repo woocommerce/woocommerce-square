@@ -312,7 +312,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		<?php
 		$javascript = ob_get_clean();
 		$handle     = 'wc-square-' . str_replace( '_', '-', $this->get_gateway()->get_id() ) . '-payment-form-inline';
-		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( $handle, $javascript, [ 'jquery', 'wc-square' ] );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( $handle, $javascript, array( 'jquery', 'wc-square' ) );
 	}
 
 

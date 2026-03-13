@@ -1292,7 +1292,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		});
 		<?php
 		$javascript = ob_get_clean();
-		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-cash-app-pay-inline', $javascript, [ 'jquery', 'wc-square-cash-app-pay' ] );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-cash-app-pay-inline', $javascript, array( 'jquery', 'wc-square-cash-app-pay' ) );
 	}
 
 	/**
