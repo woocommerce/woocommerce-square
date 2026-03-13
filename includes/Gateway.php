@@ -37,6 +37,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
+use WooCommerce\Square\Utilities\Coupon_Utility;
 use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
@@ -479,6 +480,9 @@ class Gateway extends Payment_Gateway_Direct {
 		if ( empty( $order->square_order_id ) ) {
 
 			try {
+				// Last-chance: set Square discount code IDs from order coupons if missing (e.g. block checkout).
+				Coupons::ensure_order_square_discount_code_ids_before_payment( $order );
+
 				$location_id = $this->get_plugin()->get_settings_handler()->get_location_id();
 				$response    = $this->get_api()->create_order( $location_id, $order );
 
@@ -486,33 +490,93 @@ class Gateway extends Payment_Gateway_Direct {
 
 				$order->square_order_id = $response->getId();
 
-				// adjust order by difference between WooCommerce and Square order totals
-				$wc_total     = Money_Utility::amount_to_cents( $order->get_total() );
-				$square_total = $response->getTotalMoney()->getAmount();
-				$delta_total  = $wc_total - $square_total;
+				// Create Redemption for each Square discount code on the order.
+				// Note: CalculateOrder was already called when coupons were applied; we create one redemption per code.
+				$square_discount_code_ids = Coupons::get_order_square_discount_code_ids( $order );
+
+				if ( Coupon_Utility::is_square_discount_codes_enabled() && ! empty( $square_discount_code_ids ) && ! empty( $order->square_order_id ) ) {
+					$redemption_ids = array();
+					foreach ( $square_discount_code_ids as $square_discount_code_id ) {
+						try {
+							$redemption_result = $this->get_api()->create_redemption( $square_discount_code_id, $order->square_order_id );
+
+							if ( is_wp_error( $redemption_result ) ) {
+								$error_message = $redemption_result->get_error_message();
+								if ( $this->debug_log() ) {
+									$this->get_plugin()->log( sprintf( 'Square: Failed to create redemption for discount code %1$s on order #%2$s: %3$s', $square_discount_code_id, $order->get_id(), $error_message ), $this->get_id() );
+								}
+								throw new \Exception(
+									sprintf(
+										/* translators: %s: error message from Square */
+										__( 'The coupon could not be applied (e.g. redemption limit reached or code expired). Please remove it and try again, or use a different payment method. Error: %s', 'woocommerce-square' ),
+										$error_message
+									)
+								);
+							}
+
+							if ( empty( $redemption_result['id'] ) ) {
+								if ( $this->debug_log() ) {
+									$this->get_plugin()->log( sprintf( 'Square: Create redemption returned no id for discount code %1$s on order #%2$s', $square_discount_code_id, $order->get_id() ), $this->get_id() );
+								}
+								throw new \Exception(
+									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' )
+								);
+							}
+
+							$redemption_ids[] = $redemption_result['id'];
+							if ( $this->debug_log() ) {
+								$this->get_plugin()->log( sprintf( 'Square: Created redemption %s for discount code %s on order #%s', $redemption_result['id'], $square_discount_code_id, $order->get_id() ), $this->get_id() );
+							}
+						} catch ( \Exception $redemption_exception ) {
+							if ( $this->debug_log() ) {
+								$this->get_plugin()->log( sprintf( 'Square: Error creating redemption for discount code %1$s on order #%2$s: %3$s', $square_discount_code_id, $order->get_id(), $redemption_exception->getMessage() ), $this->get_id() );
+							}
+							// Re-throw so outer catch can handle.
+							throw $redemption_exception;
+						}
+					}
+					if ( ! empty( $redemption_ids ) ) {
+						$order->update_meta_data( '_square_redemption_ids', $redemption_ids );
+						$order->save();
+					}
+				}
+
+				// After redemptions, Square's order total changed. Retrieve current order so payment_total uses post-redemption total.
+				if ( ! empty( $square_discount_code_ids ) ) {
+					$response = $this->get_api()->retrieve_order( $order->square_order_id );
+				}
+
+				// Adjust order by delta so Square total matches WooCommerce displayed total (charge what the customer saw).
+				// When Square redemption is used, pass current order so adjustment is a service charge (not discounted again); otherwise line item.
+				// This is to avoid discount applying to the adjustment again.
+				$square_coupon_in_use = ! empty( $square_discount_code_ids ) ? $response : null;
+				$wc_total             = Money_Utility::amount_to_cents( $order->get_total() );
+				$square_total         = $response->getTotalMoney()->getAmount();
+				$delta_total          = $wc_total - $square_total;
 
 				if ( abs( $delta_total ) > 0 ) {
-					$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total );
+					$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total, $square_coupon_in_use );
 
 					// since a downward adjustment causes (downward) tax recomputation, perform an additional (untaxed) upward adjustment if necessary
 					$square_total = $response->getTotalMoney()->getAmount();
 					$delta_total  = $wc_total - $square_total;
 
 					if ( $delta_total > 0 ) {
-						$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total );
+						$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total, $square_coupon_in_use );
 					}
 				}
 
-				// reset the payment total to the total calculated by Square to prevent errors
+				// Reset the payment total to the total calculated by Square to prevent errors.
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
 
 			} catch ( \Exception $exception ) {
 				$is_error = true;
 
-				// log the error, but continue with payment
 				if ( $this->debug_log() ) {
 					$this->get_plugin()->log( $exception->getMessage(), $this->get_id() );
 				}
+				// Re-throw so the transaction fails and the customer sees the error (e.g. redemption failure).
+				throw $exception;
 			}
 		}
 
@@ -1141,7 +1205,8 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
-	 * Filters to show only the Square gateway when cart contains a Gift card product.
+	 * Filters to show only the Square gateway when cart contains a Gift card product
+	 * or a Square discount code.
 	 *
 	 * @since 4.2.0
 	 *
@@ -1160,7 +1225,9 @@ class Gateway extends Payment_Gateway_Direct {
 			}
 		}
 
-		if ( ! Gift_Card::cart_contains_gift_card() ) {
+		$requires_square = Gift_Card::cart_contains_gift_card() || Coupons::cart_has_square_coupon();
+
+		if ( ! $requires_square ) {
 			return $gateways;
 		}
 
@@ -1176,7 +1243,8 @@ class Gateway extends Payment_Gateway_Direct {
 	}
 
 	/**
-	 * If no payment gateways are available and cart contains gift card, then show error message.
+	 * If no payment gateways are available and cart contains gift card or Square discount code,
+	 * then show error message.
 	 *
 	 * @since 4.2.0
 	 *
@@ -1184,11 +1252,15 @@ class Gateway extends Payment_Gateway_Direct {
 	 * @return string
 	 */
 	public function filter_no_payment_gatways_message( $text ) {
-		if ( ! Gift_Card::cart_contains_gift_card() ) {
-			return $text;
+		if ( Gift_Card::cart_contains_gift_card() ) {
+			return esc_html__( 'Your cart contains a Square Gift Card product which can only be purchased using the Square payment gateway.', 'woocommerce-square' );
 		}
 
-		return esc_html__( 'Your cart contains a Square Gift Card product which can only be purchased using the Square payment gateway.', 'woocommerce-square' );
+		if ( Coupons::cart_has_square_coupon() ) {
+			return esc_html__( 'Square discount codes can only be used with the Square payment gateway. Please remove the Square discount code to use another payment method.', 'woocommerce-square' );
+		}
+
+		return $text;
 	}
 
 	/**
