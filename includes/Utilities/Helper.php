@@ -89,7 +89,7 @@ class Helper {
 	 * @param string      $script_handle  Script handle.
 	 * @param string      $javascript     Inline JavaScript code.
 	 * @param array       $dependencies   Optional. Script dependencies. Default array( 'jquery' ).
-	 * @param string|null $version        Optional. Script version. Default WC_Braintree::VERSION.
+	 * @param string|null $version        Optional. Script version. Default WC_SQUARE_PLUGIN_VERSION.
 	 * @param bool        $in_footer      Optional. Whether to enqueue in footer. Default true.
 	 */
 	public static function enqueue_inline_script( string $script_handle, string $javascript, array $dependencies = array( 'jquery' ), ?string $version = null, bool $in_footer = true ): void {
