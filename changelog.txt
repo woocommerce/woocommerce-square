@@ -1,5 +1,14 @@
 *** WooCommerce Square Changelog ***
 
+= 5.3.0 - 2026-03-05 =
+* Add - Initial support for Square Discount Codes (Coupons).
+* Fix - Set the "Synced with Square" taxonomy to private.
+* Fix - Ensure that there is no `DivisionByZeroError` fatal error in Square when the total amount is zero and the tax amount is non-zero.
+* Fix - Partial-Total Verification when Gift Card is used.
+* Fix - Improved data access restrictions on payment method page.
+* Dev - Bump WooCommerce "tested up to" version 10.5.
+* Dev - Bump WooCommerce minimum supported version to 10.3.
+
 = 5.2.0 - 2026-01-15 =
 * Add - A notice for the inventory sync in bulk edit screen.
 * Add - Helper text and notices to clarify the difference between "Sync Now" and "Import all Products from Square".
