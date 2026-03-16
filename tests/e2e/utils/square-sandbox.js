@@ -132,7 +132,10 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		category = catalogObject.categories[ 0 ]?.id;
 	}
 
-	const categories = catalogObject.item_data.categories.map( ( cat ) => cat?.id || '' ).filter( ( cat ) => cat !== '' ) || [];
+	const categories =
+		( catalogObject.item_data?.categories || [] )
+			.map( ( cat ) => cat?.id || '' )
+			.filter( ( cat ) => cat !== '' );
 
 	const variations = catalogObject.item_data.variations.map(
 		( variation ) => {

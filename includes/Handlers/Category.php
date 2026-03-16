@@ -271,7 +271,8 @@ class Category {
 	 * @return array
 	 */
 	public static function get_category_ids_from_catalog_item( $catalog_item ) {
-		$category_ids = array();
+		$category_ids         = array();
+		$missing_category_ids = array();
 
 		if ( empty( $catalog_item ) ) {
 			return $category_ids;
