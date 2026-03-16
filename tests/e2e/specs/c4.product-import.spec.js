@@ -79,8 +79,7 @@ test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	await expect( await page.locator( '.entry-summary .sku_wrapper' ) ).toHaveText( 'SKU: cap-regular' );
 	await expect( await page.getByText( 'This is a very good cap, no cap.' ) ).toBeVisible();
 	await expect( await page.getByText( '53 in stock' ) ).toBeVisible();
-	await expect( page.getByText( 'Hats' ) ).toBeVisible();
-	await expect( page.getByText( 'Hats2' ) ).toBeVisible();
+	await expect( await page.getByText( 'Categories: Hats, Hats2' ) ).toBeVisible();
 } );
 
 test('Sync Inventory stock from Square on the product edit screen - (SOR Square) @sync', async ({
