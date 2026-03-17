@@ -242,7 +242,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$response = wc_square()->get_api()->batch_retrieve_catalog_objects( $square_ids );
 
-				// swap the square ID into the array key for quick lookup
+				// Key by Square ID for lookup; handling duplicate mapping issue by storing all WC term IDs for each Square ID.
 				$mapped_category_audit = array();
 
 				foreach ( $mapped_categories as $mapped_category_id => $mapped_category ) {
@@ -261,7 +261,7 @@ class Manual_Synchronization extends Stepped_Job {
 						if ( isset( $mapped_category_audit[ $category->getId() ] ) ) {
 
 							$category_ids = $mapped_category_audit[ $category->getId() ];
-							foreach ( $category_ids as $category_id ) {
+							foreach ( (array) $category_ids as $category_id ) {
 								$map[ $category_id ]['square_version'] = $category->getVersion();
 							}
 							unset( $mapped_category_audit[ $category->getId() ] );
