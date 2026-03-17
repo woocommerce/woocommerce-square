@@ -432,18 +432,32 @@ class API extends \WooCommerce\Square\API {
 			return true;
 		}
 
-		// Request is from admin, WP-CLI, or cron (e.g. merchant deleting users, privacy erasure).
-		// On a non-production WordPress site we must not call Square, or we would disable
-		// live customer cards. Only call Square when the WordPress environment is production.
-		$is_staging = false;
-		if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
-			$is_staging = true;
-		}
-		if ( class_exists( 'WCS_Staging' ) && method_exists( 'WCS_Staging', 'is_duplicate_site' ) && \WCS_Staging::is_duplicate_site() ) {
-			$is_staging = true;
+		// Request is from admin, WP-CLI, or cron. On non-production do not call Square.
+		if ( $this->is_staging_or_non_production_site() ) {
+			return false;
 		}
 
-		return ! $is_staging;
+		return true;
+	}
+
+	/**
+	 * Whether the current WordPress environment is staging, local, development, or a WCS duplicate site.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool true if the site is non-production (staging/local/dev or WooCommerce Subscriptions duplicate)
+	 */
+	protected function is_staging_or_non_production_site() {
+
+		if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+			return true;
+		}
+
+		if ( class_exists( 'WCS_Staging' ) && method_exists( 'WCS_Staging', 'is_duplicate_site' ) && \WCS_Staging::is_duplicate_site() ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
