@@ -243,15 +243,19 @@ class Products {
 
 		$label = esc_html__( 'Synced with Square', 'woocommerce-square' );
 
-		// Nonce check not required, checked against known string, read-only action.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$selected = isset( $_GET['product_type'] ) && 'synced-with-square' === $_GET['product_type'] ? 'selected=\"selected\"' : '';
-
 		ob_start();
 		?>
 		( function( $ ) {
 			$( function() {
-				$( 'select#dropdown_product_type' ).append( '<option value="synced-with-square" <?php echo esc_js( $selected ); ?>><?php echo esc_js( $label ); ?></option>' );
+				$( 'select#dropdown_product_type' ).append(
+					$( '<option>', {
+						value: 'synced-with-square',
+						text: '<?php echo esc_js( $label ); ?>',
+						<?php // Nonce check not required, checked against known string, read-only action. ?>
+						<?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+						selected: <?php echo isset( $_GET['product_type'] ) && 'synced-with-square' === $_GET['product_type'] ? 'true' : 'false'; ?>
+					} )
+				);
 			} );
 		} )( jQuery );
 		<?php
