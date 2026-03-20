@@ -267,6 +267,8 @@ class Category {
 	/**
 	 * Get the WooCommerce category IDs from a catalog item.
 	 *
+	 * @since x.x.x
+	 *
 	 * @param \Square\Models\CatalogItem $catalog_item the catalog item object
 	 * @return array
 	 */
@@ -274,7 +276,7 @@ class Category {
 		$category_ids         = array();
 		$missing_category_ids = array();
 
-		if ( empty( $catalog_item ) ) {
+		if ( empty( $catalog_item ) || ! $catalog_item instanceof \Square\Models\CatalogItem ) {
 			return $category_ids;
 		}
 
