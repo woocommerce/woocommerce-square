@@ -72,6 +72,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
+= 5.3.1 - 2026-03-26 =
+* Fix - Improved reliability when customers change or remove an applied gift card at checkout.
+* Fix - Improved authorization handling for order-related requests in the payment flow.
+* Dev - Bump WooCommerce "tested up to" version 10.6.
+
 = 5.3.0 - 2026-03-05 =
 * Add - Initial support for Square Discount Codes (Coupons).
 * Fix - Set the "Synced with Square" taxonomy to private.
