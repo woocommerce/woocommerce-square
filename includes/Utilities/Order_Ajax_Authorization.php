@@ -15,14 +15,14 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Authorizes AJAX handlers that return order data during pay-for-order flows.
  *
- * @since x.x.x
+ * @since 5.3.1
  */
 final class Order_Ajax_Authorization {
 
 	/**
 	 * Generic error message for any failed pay-for-order authorization (avoid response differentiation).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.1
 	 *
 	 * @return string
 	 */
@@ -33,7 +33,7 @@ final class Order_Ajax_Authorization {
 	/**
 	 * Order key from AJAX POST, or from the pay-for-order URL query string on full page requests.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.1
 	 *
 	 * @return string
 	 */
@@ -52,7 +52,7 @@ final class Order_Ajax_Authorization {
 	/**
 	 * Order key for frontend scripts on the order-pay page.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.1
 	 *
 	 * @return string
 	 */
@@ -71,7 +71,7 @@ final class Order_Ajax_Authorization {
 	/**
 	 * Whether the current request may load the given order in pay-for-order AJAX context.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.1
 	 *
 	 * @param \WC_Order|false $order Order object or false.
 	 * @return bool
@@ -104,7 +104,7 @@ final class Order_Ajax_Authorization {
 	 * is active or `is_pay_for_order_page` is posted as true, returns the sanitized ID for the order being paid.
 	 * Used `is_authorized_for_pay_for_order()` to check if the order is authorized to be paid.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.1
 	 *
 	 * @param int $order_id Order ID from POST or query.
 	 * @return int
