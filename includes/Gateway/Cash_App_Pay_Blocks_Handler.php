@@ -23,6 +23,7 @@ defined( 'ABSPATH' ) || exit;
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 use WooCommerce\Square\Plugin;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 
 class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 
@@ -122,6 +123,7 @@ class Cash_App_Pay_Blocks_Handler extends AbstractPaymentMethodType {
 			'continuation_session_nonce' => wp_create_nonce( 'wc-cash-app-set-continuation-session' ),
 			'checkout_logging'           => $this->get_gateway()->debug_checkout(),
 			'order_id'                   => absint( get_query_var( 'order-pay' ) ),
+			'order_key'                  => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 			'gateway_id_dasherized'      => $this->get_gateway()->get_id_dasherized(),
 			'button_styles'              => $this->get_gateway()->get_button_styles(),
 			'is_continuation'            => $this->get_gateway()->is_cash_app_pay_continuation(),

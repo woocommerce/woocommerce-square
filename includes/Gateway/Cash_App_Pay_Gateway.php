@@ -31,6 +31,7 @@ use WooCommerce\Square\Gateway;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Handlers\Order;
 use WooCommerce\Square\WC_Order_Square;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 use WooCommerce\Square\Utilities\Performance_Logger;
 /**
  * The Cash App Pay payment gateway class.
@@ -683,7 +684,11 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$order_id              = isset( $_POST['order_id'] ) ? (int) sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : absint( get_query_var( 'order-pay' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		if ( is_wc_endpoint_url( 'order-pay' ) || $is_pay_for_order_page ) {
-			$order           = wc_get_order( $order_id );
+			$order = wc_get_order( $order_id );
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+				throw new \Exception( Order_Ajax_Authorization::get_invalid_order_message() ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- already escaped in get_invalid_order_message()
+			}
+
 			$payment_request = $this->build_payment_request(
 				$order->get_total(),
 				array(
@@ -822,6 +827,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 		$totals     = empty( $totals ) ? $this->get_cart_totals() : $totals;
 		$line_items = array();
 		$order_id   = isset( $_POST['order_id'] ) ? (int) sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : absint( get_query_var( 'order-pay' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$order_id   = Order_Ajax_Authorization::trusted_line_items_order_id( $order_id );
 
 		if ( $order_id ) {
 			$order    = wc_get_order( $order_id );
@@ -1269,6 +1275,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 			'logging_enabled'       => $this->debug_log(),
 			'is_pay_for_order_page' => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'order_id'              => absint( get_query_var( 'order-pay' ) ),
+			'order_key'             => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 			'button_styles'         => $this->get_button_styles(),
 			'reference_id'          => WC()->cart ? WC()->cart->get_cart_hash() : '',
 		);

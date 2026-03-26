@@ -30,6 +30,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.total_amount = args.payment_request.total?.amount;
 			this.isPayForOrderPage = args.is_pay_for_order_page;
 			this.orderId = args.order_id;
+			this.orderKey = args.order_key || '';
 			this.id_dasherized = args.gateway_id_dasherized;
 			this.cartForm = '.cart';
 			this.wallet = '#wc-square-digital-wallet';
@@ -442,6 +443,8 @@ jQuery( document ).ready( ( $ ) => {
 					security: this.args.payment_request_nonce,
 					is_pay_for_order_page: this.isPayForOrderPage,
 					order_id: this.orderId,
+					...( this.isPayForOrderPage &&
+						this.orderKey && { order_key: this.orderKey } ),
 				};
 
 				if ( this.args.context === 'product' ) {
@@ -473,6 +476,8 @@ jQuery( document ).ready( ( $ ) => {
 				security: this.args.recalculate_totals_nonce,
 				is_pay_for_order_page: this.isPayForOrderPage,
 				order_id: this.orderId,
+				...( this.isPayForOrderPage &&
+					this.orderKey && { order_key: this.orderKey } ),
 			};
 
 			// send ajax request get_shipping_options.
@@ -494,6 +499,8 @@ jQuery( document ).ready( ( $ ) => {
 				security: this.args.recalculate_totals_nonce,
 				is_pay_for_order_page: this.isPayForOrderPage,
 				order_id: this.orderId,
+				...( this.isPayForOrderPage &&
+					this.orderKey && { order_key: this.orderKey } ),
 			};
 
 			const response = await this.recalculate_totals( data );
