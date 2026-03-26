@@ -38,6 +38,7 @@ use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
 use WooCommerce\Square\Utilities\Coupon_Utility;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
@@ -1392,18 +1393,18 @@ class Gateway extends Payment_Gateway_Direct {
 	 */
 	public function get_order_amount() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_get_order_amount', 'security' );
-		$total_amount = '';
-		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( $_POST['is_pay_order'] );
+		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( wp_unslash( $_POST['is_pay_order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( $is_pay_order ) {
-			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$order    = wc_get_order( $order_id );
-			if ( $order ) {
-				$total_amount = $order->get_total();
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+				wp_send_json_error( Order_Ajax_Authorization::get_invalid_order_message() );
 			}
-		} else {
-			$total_amount = WC()->cart->total;
+
+			wp_send_json_success( $order->get_total() );
 		}
-		wp_send_json_success( $total_amount );
+
+		wp_send_json_success( WC()->cart->total );
 	}
 
 	/**
@@ -1425,12 +1426,12 @@ class Gateway extends Payment_Gateway_Direct {
 	public function should_charge_order() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_should_charge_order', 'security' );
 
-		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( $_POST['is_pay_order'] );
+		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( wp_unslash( $_POST['is_pay_order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( $is_pay_order ) {
-			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$order    = wc_get_order( $order_id );
-			if ( empty( $order ) ) {
-				wp_send_json_error( __( 'Order not found.', 'woocommerce-square' ) );
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+				wp_send_json_error( Order_Ajax_Authorization::get_invalid_order_message() );
 			}
 
 			$total_amount            = $order->get_total();
