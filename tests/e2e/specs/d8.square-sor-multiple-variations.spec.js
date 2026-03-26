@@ -104,25 +104,25 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 	await page.locator( 'li.variations_tab a' ).click();
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[0]"]' )
-	).toHaveValue( 'blue' );
+	).toHaveValue( 'red' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[0]"]' )
 	).toHaveValue( 'm' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[1]"]' )
-	).toHaveValue( 'blue' );
+	).toHaveValue( 'red' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[1]"]' )
 	).toHaveValue( 's' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[2]"]' )
-	).toHaveValue( 'red' );
+	).toHaveValue( 'blue' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[2]"]' )
 	).toHaveValue( 'm' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[3]"]' )
-	).toHaveValue( 'red' );
+	).toHaveValue( 'blue' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[3]"]' )
 	).toHaveValue( 's' );
@@ -153,7 +153,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 	await page.locator( 'li.variations_tab a' ).click();
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[0]"]' )
-	).toHaveValue( 'blue' );
+	).toHaveValue( 'red' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[0]"]' )
 	).toHaveValue( 'm' );
@@ -162,7 +162,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 	).toHaveValue( 'Cotton' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[1]"]' )
-	).toHaveValue( 'blue' );
+	).toHaveValue( 'red' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[1]"]' )
 	).toHaveValue( 's' );
@@ -171,7 +171,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 	).toHaveValue( 'Cotton' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[2]"]' )
-	).toHaveValue( 'red' );
+	).toHaveValue( 'blue' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[2]"]' )
 	).toHaveValue( 'm' );
@@ -180,7 +180,7 @@ test( '[Square SOR] Import multiple variations products from Square @sync', asyn
 	).toHaveValue( 'Cotton' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_color[3]"]' )
-	).toHaveValue( 'red' );
+	).toHaveValue( 'blue' );
 	await expect(
 		page.locator( 'select[name="attribute_pa_size[3]"]' )
 	).toHaveValue( 's' );
