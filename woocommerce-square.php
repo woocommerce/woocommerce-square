@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 5.3.0
+ * Version: 5.3.1
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.7
  * Tested up to: 6.9
@@ -23,13 +23,13 @@
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
  * WC requires at least: 10.3
- * WC tested up to: 10.5
+ * WC tested up to: 10.6
  */
 
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '5.3.0' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '5.3.1' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {

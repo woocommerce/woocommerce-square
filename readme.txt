@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.7
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.3.0
+Stable tag: 5.3.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,11 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.3.1 - 2026-03-26 =
+* Fix - Improved reliability when customers change or remove an applied gift card at checkout.
+* Fix - Improved authorization handling for order-related requests in the payment flow.
+* Dev - Bump WooCommerce "tested up to" version 10.6.
 
 = 5.3.0 - 2026-03-05 =
 * Add - Initial support for Square Discount Codes (Coupons).

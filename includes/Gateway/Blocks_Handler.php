@@ -27,6 +27,7 @@ use Automattic\WooCommerce\StoreApi\Payments\PaymentResult;
 use Automattic\WooCommerce\Blocks\Package;
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 
 class Blocks_Handler extends AbstractPaymentMethodType {
 
@@ -134,6 +135,7 @@ class Blocks_Handler extends AbstractPaymentMethodType {
 				'recalculate_totals_nonce'   => wp_create_nonce( 'wc-square-recalculate-totals' ),
 				'should_charge_order_nonce'  => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
 				'order_id'                   => absint( get_query_var( 'order-pay' ) ),
+				'order_key'                  => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 				'is_change_payment_method'   => $this->get_gateway()->is_change_payment_method_request(),
 			),
 			$this->digital_wallets_handler->get_localised_data()
