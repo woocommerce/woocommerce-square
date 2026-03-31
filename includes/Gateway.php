@@ -53,7 +53,7 @@ class Gateway extends Payment_Gateway_Direct {
 	/**
 	 * Error code used to indicate coupon/redemption failures that should fail checkout.
 	 *
-	 * @since 5.3.1
+	 * @since 5.3.2
 	 */
 	const COUPON_REDEMPTION_ERROR_CODE = 9001;
 
