@@ -22,6 +22,7 @@ namespace WooCommerce\Square\Gateway;
 defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Plugin;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 
 class Digital_Wallet {
 
@@ -155,6 +156,9 @@ class Digital_Wallet {
 				'apple_pay_type'           => $this->gateway->get_option( 'digital_wallets_button_type', 'buy' ),
 				'buy_with_gpay_text'       => __( 'Buy with GPay', 'woocommerce-square' ),
 				'opens_in_new_window_text' => __( 'opens in a new window', 'woocommerce-square' ),
+				'is_pay_for_order_page'    => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
+				'order_id'                 => absint( get_query_var( 'order-pay' ) ),
+				'order_key'                => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 			);
 		}
 
@@ -391,7 +395,12 @@ class Digital_Wallet {
 			case 'cart':
 			case 'checkout':
 				if ( is_wc_endpoint_url( 'order-pay' ) || $is_pay_for_order_page ) {
-					$order           = wc_get_order( $order_id );
+					$order = wc_get_order( $order_id );
+
+					if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+						throw new \Exception( Order_Ajax_Authorization::get_invalid_order_message() ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- already escaped in get_invalid_order_message()
+					}
+
 					$payment_request = $this->build_payment_request(
 						$order->get_total(),
 						array(
@@ -570,6 +579,7 @@ class Digital_Wallet {
 		$totals     = empty( $totals ) ? $this->get_cart_totals() : $totals;
 		$line_items = array();
 		$order_id   = isset( $_POST['order_id'] ) ? (int) sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : absint( get_query_var( 'order-pay' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$order_id   = Order_Ajax_Authorization::trusted_line_items_order_id( $order_id );
 
 		if ( $order_id ) {
 			$order    = wc_get_order( $order_id );
@@ -630,7 +640,6 @@ class Digital_Wallet {
 
 		return $line_items;
 	}
-
 
 	/**
 	 * Get the payment request object in an ajax request
@@ -837,6 +846,15 @@ class Digital_Wallet {
 		$is_pay_for_order_page = isset( $_POST['is_pay_for_order_page'] ) ? 'true' === sanitize_text_field( wp_unslash( $_POST['is_pay_for_order_page'] ) ) : is_wc_endpoint_url( 'order-pay' );
 		$order_id              = isset( $_POST['order_id'] ) ? (int) sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : absint( get_query_var( 'order-pay' ) );
 		$order_data            = array();
+
+		if ( $is_pay_for_order_page ) {
+			$auth_order = wc_get_order( $order_id );
+			// Pay-for-order AJAX calls to recalculate totals may be abused to leak order totals.
+			// Gate before shipping/total logic runs so this cannot leak unauthenticated totals.
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $auth_order ) ) {
+				wp_send_json_error( Order_Ajax_Authorization::get_invalid_order_message() );
+			}
+		}
 
 		if ( WC()->cart->needs_shipping() || $is_pay_for_order_page ) {
 			if ( ! empty( $_POST['shipping_contact'] ) ) {

@@ -27,6 +27,7 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Payment_Form;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 
 /**
  * The payment form handler.
@@ -76,13 +77,18 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		$billing_data        = array();
 		$billing_data_source = null;
 
-		if ( is_checkout_pay_page() ) {
+		// Checkout pay page: use order billing when user may pay for it. Else use session customer (e.g. add-payment-method); never use order there (order-pay can be forged).
+		if ( ! is_add_payment_method_page() && is_checkout_pay_page() ) {
+			$order_id = $this->get_gateway()->get_checkout_pay_page_order_id();
 
-			if ( $order = wc_get_order( $this->get_gateway()->get_checkout_pay_page_order_id() ) ) {
-				$billing_data_source = $order;
+			if ( $order_id ) {
+				$order = wc_get_order( $order_id );
+
+				if ( $order && current_user_can( 'pay_for_order', $order_id ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+					$billing_data_source = $order;
+				}
 			}
 		} elseif ( WC()->customer && ! is_checkout() ) {
-
 			$billing_data_source = WC()->customer;
 		}
 
@@ -230,6 +236,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 			'is_manual_order_payment'          => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'payment_token_nonce'              => wp_create_nonce( 'payment_token_nonce' ),
 			'order_id'                         => absint( get_query_var( 'order-pay' ) ),
+			'order_key'                        => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 			'ajax_get_order_amount_nonce'      => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_get_order_amount' ),
 			'ajax_should_charge_order_nonce'   => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
 			'is_change_payment_method_request' => $this->get_gateway()->is_change_payment_method_request(),

@@ -51,6 +51,7 @@ const getSquareServerData = () => {
 		shouldChargeOrderNonce: squareData.should_charge_order_nonce || '',
 		isChangePaymentMethod: squareData.is_change_payment_method || false,
 		orderId: squareData.order_id || '',
+		orderKey: squareData.order_key || '',
 		opensInNewWindowText: squareData.opens_in_new_window_text || '',
 		buyWithGpayText: squareData.buy_with_gpay_text || '',
 	};
@@ -155,6 +156,10 @@ const shouldChargeOrder = () => {
 			is_pay_for_order_page:
 				getSquareServerData().isPayForOrderPage || false,
 			order_id: getSquareServerData().orderId || 0,
+			...( getSquareServerData().isPayForOrderPage &&
+				getSquareServerData().orderKey && {
+					order_key: getSquareServerData().orderKey,
+				} ),
 		};
 
 		jQuery.post(

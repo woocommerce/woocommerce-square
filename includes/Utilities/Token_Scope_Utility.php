@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * Used to check merchant scopes before calling scope-gated APIs (e.g. discount codes).
  *
  * @see https://developer.squareup.com/reference/square/o-auth-api/retrieve-token-status
- * @since x.x.x
+ * @since 5.3.0
  */
 class Token_Scope_Utility {
 
@@ -48,7 +48,7 @@ class Token_Scope_Utility {
 	 * Retrieve token status from Square OAuth API and return the list of scopes.
 	 * Results are cached per environment to avoid repeated API calls.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string|null $access_token Access token (optional; uses plugin settings if null).
 	 * @param bool|null   $is_sandbox   Whether sandbox (optional; uses plugin settings if null).
@@ -115,7 +115,7 @@ class Token_Scope_Utility {
 	 * Whether the current merchant's token has both scopes required for discount code APIs.
 	 * Both DISCOUNT_CODES_READ and DISCOUNT_CODES_WRITE must be present.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string|null $access_token Access token (optional).
 	 * @param bool|null   $is_sandbox   Whether sandbox (optional).
@@ -141,7 +141,7 @@ class Token_Scope_Utility {
 	/**
 	 * Clear cached token scopes for an environment (e.g. after token update or disconnect).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.0
 	 *
 	 * @param string|null $environment 'production', 'sandbox', or null to clear both.
 	 */
