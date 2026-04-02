@@ -4,8 +4,8 @@
  * Requires Plugins: woocommerce
  * Version: 5.3.1
  * Plugin URI: https://woocommerce.com/products/square/
- * Requires at least: 6.7
- * Tested up to: 6.9
+ * Requires at least: 6.8
+ * Tested up to: 7.0
  * Requires PHP: 7.4
  * PHP tested up to: 8.4
  *
@@ -60,7 +60,7 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_PHP_VERSION = '7.4.0';
 
 	/** minimum WordPress version required by this plugin */
-	const MINIMUM_WP_VERSION = '6.7';
+	const MINIMUM_WP_VERSION = '6.8';
 
 	/** minimum WooCommerce version required by this plugin */
 	const MINIMUM_WC_VERSION = '10.3';
