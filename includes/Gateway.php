@@ -50,6 +50,13 @@ use WooCommerce\Square\Utilities\Performance_Logger;
  */
 class Gateway extends Payment_Gateway_Direct {
 
+	/**
+	 * Error code used to indicate coupon/redemption failures that should fail checkout.
+	 *
+	 * @since 5.3.2
+	 */
+	const COUPON_REDEMPTION_ERROR_CODE = 9001;
+
 
 	/** @var Gateway\API API base instance */
 	private $api;
@@ -511,7 +518,8 @@ class Gateway extends Payment_Gateway_Direct {
 										/* translators: %s: error message from Square */
 										__( 'The coupon could not be applied (e.g. redemption limit reached or code expired). Please remove it and try again, or use a different payment method. Error: %s', 'woocommerce-square' ),
 										$error_message
-									)
+									),
+									self::COUPON_REDEMPTION_ERROR_CODE
 								);
 							}
 
@@ -520,7 +528,8 @@ class Gateway extends Payment_Gateway_Direct {
 									$this->get_plugin()->log( sprintf( 'Square: Create redemption returned no id for discount code %1$s on order #%2$s', $square_discount_code_id, $order->get_id() ), $this->get_id() );
 								}
 								throw new \Exception(
-									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' )
+									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' ),
+									self::COUPON_REDEMPTION_ERROR_CODE
 								);
 							}
 
@@ -576,8 +585,12 @@ class Gateway extends Payment_Gateway_Direct {
 				if ( $this->debug_log() ) {
 					$this->get_plugin()->log( $exception->getMessage(), $this->get_id() );
 				}
-				// Re-throw so the transaction fails and the customer sees the error (e.g. redemption failure).
-				throw $exception;
+
+				// Only fail the transaction for coupon/redemption errors.
+				if ( self::COUPON_REDEMPTION_ERROR_CODE === $exception->getCode() ) {
+					// Re-throw so the transaction fails and the customer sees the error.
+					throw $exception;
+				}
 			}
 		}
 
