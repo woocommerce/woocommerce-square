@@ -4133,13 +4133,16 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 				if ( \Square\Models\TenderType::SQUARE_GIFT_CARD === $tender->getType() ) {
 					$this->update_order_meta( $order, 'gift_card_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'for an amount of %1$s on the gift card' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'for an amount of %1$s on the gift card', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				} elseif ( \Square\Models\TenderType::CARD === $tender->getType() ) {
 					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the credit card' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'and %1$s on the credit card', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				} elseif ( \Square\Models\TenderType::WALLET === $tender->getType() ) {
 					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the cash app pay' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'and %1$s on the cash app pay', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				}
 			}
 		}
