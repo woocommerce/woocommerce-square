@@ -360,7 +360,14 @@ class Digital_Wallet {
 				$this->get_localised_data()
 			);
 
-			wc_enqueue_js( sprintf( 'window.wc_square_digital_wallet_handler = new WC_Square_Digital_Wallet_Handler( %s );', wp_json_encode( $args ) ) );
+			ob_start();
+			?>
+				jQuery(function($) { 
+					window.wc_square_digital_wallet_handler = new WC_Square_Digital_Wallet_Handler( <?php echo wp_json_encode( $args ); ?> );
+				} );
+			<?php
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-digital-wallet-inline', $javascript, array( 'jquery', 'wc-square-digital-wallet' ) );
 		} catch ( \Exception $e ) {
 			wp_dequeue_style( 'wc-square-digital-wallet' );
 			wp_dequeue_script( 'wc-square-digital-wallet' );
