@@ -260,52 +260,54 @@ class Admin_Notice_Handler {
 
 		ob_start();
 		?>
+		( function( $ ) {
+			$( function() {
+				// Log dismissed notices
+				$( '.js-wc-plugin-framework-admin-notice' ).on( 'click.wp-dismiss-notice', '.notice-dismiss', function( e ) {
 
-		// Log dismissed notices
-		$( '.js-wc-plugin-framework-admin-notice' ).on( 'click.wp-dismiss-notice', '.notice-dismiss', function( e ) {
+					var $notice = $( this ).closest( '.js-wc-plugin-framework-admin-notice' );
 
-			var $notice = $( this ).closest( '.js-wc-plugin-framework-admin-notice' );
+					log_dismissed_notice(
+						$( $notice ).data( 'plugin-id' ),
+						$( $notice ).data( 'message-id' )
+					);
 
-			log_dismissed_notice(
-				$( $notice ).data( 'plugin-id' ),
-				$( $notice ).data( 'message-id' )
-			);
+				} );
 
-		} );
+				// Log and hide legacy notices
+				$( 'a.js-wc-plugin-framework-notice-dismiss' ).click( function( e ) {
 
-		// Log and hide legacy notices
-		$( 'a.js-wc-plugin-framework-notice-dismiss' ).click( function( e ) {
+					e.preventDefault();
 
-			e.preventDefault();
+					var $notice = $( this ).closest( '.js-wc-plugin-framework-admin-notice' );
 
-			var $notice = $( this ).closest( '.js-wc-plugin-framework-admin-notice' );
+					log_dismissed_notice(
+						$( $notice ).data( 'plugin-id' ),
+						$( $notice ).data( 'message-id' )
+					);
 
-			log_dismissed_notice(
-				$( $notice ).data( 'plugin-id' ),
-				$( $notice ).data( 'message-id' )
-			);
+					$( $notice ).fadeOut();
 
-			$( $notice ).fadeOut();
+				} );
 
-		} );
+				function log_dismissed_notice( pluginID, messageID ) {
 
-		function log_dismissed_notice( pluginID, messageID ) {
-
-			$.get(
-				'<?php echo esc_url( $ajax_url ); ?>',
-				{
-					action:    'wc_plugin_framework_' + pluginID + '_dismiss_notice',
-					messageid: messageID
+					$.get(
+						'<?php echo esc_url( $ajax_url ); ?>',
+						{
+							action:    'wc_plugin_framework_' + pluginID + '_dismiss_notice',
+							messageid: messageID
+						}
+					);
 				}
-			);
-		}
 
-		// move any delayed notices up into position .show();
-		$( '.js-wc-plugin-framework-admin-notice:hidden' ).insertAfter( '.js-wc-<?php echo esc_js( $plugin_slug ); ?>-admin-notice-placeholder' ).show();
+				// move any delayed notices up into position .show();
+				$( '.js-wc-plugin-framework-admin-notice:hidden' ).insertAfter( '.js-wc-<?php echo esc_js( $plugin_slug ); ?>-admin-notice-placeholder' ).show();
+			} );
+		} )( jQuery );
 		<?php
 		$javascript = ob_get_clean();
-
-		wc_enqueue_js( $javascript );
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-admin-notice-inline', $javascript );
 	}
 
 
