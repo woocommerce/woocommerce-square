@@ -1,5 +1,13 @@
 *** WooCommerce Square Changelog ***
 
+= 5.3.2 - 2026-04-06 =
+* Fix - Prevent stale Square catalog IDs from breaking checkout while still surfacing genuine coupon redemption failures as checkout errors.
+* Fix - Ensure that the order note wordings for partial payments are translatable.
+* Dev - Replace deprecated `wc_enqueue_js` with `wp_add_inline_script`.
+* Dev - Bump WordPress "Tested up to" to 7.0.
+* Dev - Bump WordPress minimum supported to 6.8.
+* Dev - Bump WooCommerce minimum supported version to 10.4.
+
 = 5.3.1 - 2026-03-26 =
 * Fix - Improved reliability when customers change or remove an applied gift card at checkout.
 * Fix - Improved authorization handling for order-related requests in the payment flow.
