@@ -381,7 +381,7 @@ class API extends \WooCommerce\Square\API {
 	 */
 	public function remove_tokenized_payment_method( $token, $customer_id ) {
 
-		if ( ! $this->should_disable_card_on_square() ) {
+		if ( ! $this->should_disable_card_on_square( $token, $customer_id ) ) {
 			if ( function_exists( 'wc_square' ) ) {
 				wc_square()->log(
 					__( 'Skipped disabling card on Square (staging/non-production site using production credentials).', 'woocommerce-square' ),
@@ -416,28 +416,40 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @since x.x.x
 	 *
+	 * @param string $token       the payment method token (Square card ID).
+	 * @param string $customer_id unique customer id.
+	 *
 	 * @return bool true to call the Square API and disable the card, false to skip the API call
 	 */
-	protected function should_disable_card_on_square() {
+	protected function should_disable_card_on_square( $token, $customer_id ) {
 
 		// Sandbox: only test data is affected; always allow the API call.
 		if ( $this->is_sandbox ) {
-			return true;
+			$should_disable = true;
+		} elseif (
+			// Frontend/customer request (e.g. customer deleting their card on My Account).
+			// We always allow the API call so the card is disabled on Square when the customer removes it.
+			! ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) || wp_doing_cron() )
+		) {
+			$should_disable = true;
+		} elseif ( $this->is_staging_or_non_production_site() ) {
+			// Request is from admin, WP-CLI, or cron. On non-production do not call Square.
+			$should_disable = false;
+		} else {
+			$should_disable = true;
 		}
 
-		// Frontend/customer request (e.g. customer deleting their card on My Account).
-		// We always allow the API call so the card is disabled on Square when the customer removes it.
-		$is_admin_request = is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) || wp_doing_cron();
-		if ( ! $is_admin_request ) {
-			return true;
-		}
-
-		// Request is from admin, WP-CLI, or cron. On non-production do not call Square.
-		if ( $this->is_staging_or_non_production_site() ) {
-			return false;
-		}
-
-		return true;
+		/**
+		 * Filters whether to call the Square API to disable the card when a saved payment method is removed.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool   $should_disable Whether to call Square (true) or skip and only remove the token locally (false).
+		 * @param string $token          Square card ID.
+		 * @param string $customer_id    Square customer id.
+		 * @param API    $api            Gateway API instance.
+		 */
+		return (bool) apply_filters( 'woocommerce_square_should_disable_card_on_square', $should_disable, $token, $customer_id, $this );
 	}
 
 	/**
