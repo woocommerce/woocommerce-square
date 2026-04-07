@@ -27,6 +27,7 @@ defined( 'ABSPATH' ) || exit;
 
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Helper;
 use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway_Payment_Form;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 
 /**
  * The payment form handler.
@@ -235,6 +236,7 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 			'is_manual_order_payment'          => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
 			'payment_token_nonce'              => wp_create_nonce( 'payment_token_nonce' ),
 			'order_id'                         => absint( get_query_var( 'order-pay' ) ),
+			'order_key'                        => Order_Ajax_Authorization::get_order_key_for_frontend_localization(),
 			'ajax_get_order_amount_nonce'      => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_get_order_amount' ),
 			'ajax_should_charge_order_nonce'   => wp_create_nonce( 'wc_' . $this->get_gateway()->get_id() . '_should_charge_order' ),
 			'is_change_payment_method_request' => $this->get_gateway()->is_change_payment_method_request(),
@@ -304,8 +306,15 @@ class Payment_Form extends Payment_Gateway_Payment_Form {
 		 * @param Payment_Form $this payment form instance
 		 */
 		$args = apply_filters( 'wc_' . $this->get_gateway()->get_id() . '_payment_form_js_args', $args, $this );
-
-		wc_enqueue_js( sprintf( 'window.wc_%s_payment_form_handler = new WC_Square_Payment_Form_Handler( %s );', esc_js( $this->get_gateway()->get_id() ), wp_json_encode( $args ) ) );
+		ob_start();
+		?>
+			jQuery(function($) { 
+				window.wc_<?php echo esc_js( $this->get_gateway()->get_id() ); ?>_payment_form_handler = new WC_Square_Payment_Form_Handler( <?php echo wp_json_encode( $args ); ?> );
+			});
+		<?php
+		$javascript = ob_get_clean();
+		$handle     = 'wc-square-' . str_replace( '_', '-', $this->get_gateway()->get_id() ) . '-payment-form-inline';
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( $handle, $javascript, array( 'jquery', 'wc-square' ) );
 	}
 
 

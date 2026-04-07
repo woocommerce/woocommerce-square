@@ -38,6 +38,7 @@ use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Gateway\API\Responses\Create_Payment;
 use WooCommerce\Square\Gateway\Gift_Card;
 use WooCommerce\Square\Utilities\Coupon_Utility;
+use WooCommerce\Square\Utilities\Order_Ajax_Authorization;
 use WooCommerce\Square\Utilities\Performance_Logger;
 
 /**
@@ -48,6 +49,13 @@ use WooCommerce\Square\Utilities\Performance_Logger;
  * @method Plugin get_plugin()
  */
 class Gateway extends Payment_Gateway_Direct {
+
+	/**
+	 * Error code used to indicate coupon/redemption failures that should fail checkout.
+	 *
+	 * @since 5.3.2
+	 */
+	const COUPON_REDEMPTION_ERROR_CODE = 9001;
 
 
 	/** @var Gateway\API API base instance */
@@ -510,7 +518,8 @@ class Gateway extends Payment_Gateway_Direct {
 										/* translators: %s: error message from Square */
 										__( 'The coupon could not be applied (e.g. redemption limit reached or code expired). Please remove it and try again, or use a different payment method. Error: %s', 'woocommerce-square' ),
 										$error_message
-									)
+									),
+									self::COUPON_REDEMPTION_ERROR_CODE
 								);
 							}
 
@@ -519,7 +528,8 @@ class Gateway extends Payment_Gateway_Direct {
 									$this->get_plugin()->log( sprintf( 'Square: Create redemption returned no id for discount code %1$s on order #%2$s', $square_discount_code_id, $order->get_id() ), $this->get_id() );
 								}
 								throw new \Exception(
-									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' )
+									__( 'The coupon could not be applied. Please remove it and try again, or use a different payment method.', 'woocommerce-square' ),
+									self::COUPON_REDEMPTION_ERROR_CODE
 								);
 							}
 
@@ -575,8 +585,12 @@ class Gateway extends Payment_Gateway_Direct {
 				if ( $this->debug_log() ) {
 					$this->get_plugin()->log( $exception->getMessage(), $this->get_id() );
 				}
-				// Re-throw so the transaction fails and the customer sees the error (e.g. redemption failure).
-				throw $exception;
+
+				// Only fail the transaction for coupon/redemption errors.
+				if ( self::COUPON_REDEMPTION_ERROR_CODE === $exception->getCode() ) {
+					// Re-throw so the transaction fails and the customer sees the error.
+					throw $exception;
+				}
 			}
 		}
 
@@ -1392,18 +1406,18 @@ class Gateway extends Payment_Gateway_Direct {
 	 */
 	public function get_order_amount() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_get_order_amount', 'security' );
-		$total_amount = '';
-		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( $_POST['is_pay_order'] );
+		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( wp_unslash( $_POST['is_pay_order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( $is_pay_order ) {
-			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$order    = wc_get_order( $order_id );
-			if ( $order ) {
-				$total_amount = $order->get_total();
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+				wp_send_json_error( Order_Ajax_Authorization::get_invalid_order_message() );
 			}
-		} else {
-			$total_amount = WC()->cart->total;
+
+			wp_send_json_success( $order->get_total() );
 		}
-		wp_send_json_success( $total_amount );
+
+		wp_send_json_success( WC()->cart->total );
 	}
 
 	/**
@@ -1425,12 +1439,12 @@ class Gateway extends Payment_Gateway_Direct {
 	public function should_charge_order() {
 		check_ajax_referer( 'wc_' . $this->get_id() . '_should_charge_order', 'security' );
 
-		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( $_POST['is_pay_order'] );
+		$is_pay_order = isset( $_POST['is_pay_order'] ) && 'true' === sanitize_key( wp_unslash( $_POST['is_pay_order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( $is_pay_order ) {
-			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+			$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$order    = wc_get_order( $order_id );
-			if ( empty( $order ) ) {
-				wp_send_json_error( __( 'Order not found.', 'woocommerce-square' ) );
+			if ( ! Order_Ajax_Authorization::is_authorized_for_pay_for_order( $order ) ) {
+				wp_send_json_error( Order_Ajax_Authorization::get_invalid_order_message() );
 			}
 
 			$total_amount            = $order->get_total();

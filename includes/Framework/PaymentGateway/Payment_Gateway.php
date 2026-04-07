@@ -1406,21 +1406,24 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// add inline javascript to show/hide any shared settings fields as needed
 			ob_start();
 			?>
-				$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_csc' ).change( function() {
+			( function( $ ) {
+				$( function() {
+					$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_csc' ).change( function() {
 
-					var enabled = $( this ).is( ':checked' );
+						var enabled = $( this ).is( ':checked' );
 
-					if ( enabled ) {
-						$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_token_csc' ).closest( 'tr' ).show();
-					} else {
-						$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_token_csc' ).closest( 'tr' ).hide();
-					}
+						if ( enabled ) {
+							$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_token_csc' ).closest( 'tr' ).show();
+						} else {
+							$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_token_csc' ).closest( 'tr' ).hide();
+						}
 
-				} ).change();
+					} ).change();
+				} );
+			} )( jQuery );
 			<?php
-
-			wc_enqueue_js( ob_get_clean() );
-
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-csc', $javascript );
 		}
 
 		// if transaction types are supported, show/hide the "charge virtual-only" setting
@@ -1429,21 +1432,25 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// add inline javascript
 			ob_start();
 			?>
-				$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_transaction_type' ).change( function() {
+			( function( $ ) {
+				$( function() {
+					$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_transaction_type' ).change( function() {
 
-					var transaction_type = $( this ).val();
-					var hidden_settings   = $( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_charge_virtual_orders, #woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_partial_capture, #woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_paid_capture' ).closest( 'tr' );
+						var transaction_type = $( this ).val();
+						var hidden_settings   = $( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_charge_virtual_orders, #woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_partial_capture, #woocommerce_<?php echo esc_js( $this->get_id() ); ?>_enable_paid_capture' ).closest( 'tr' );
 
-					if ( '<?php echo esc_js( self::TRANSACTION_TYPE_AUTHORIZATION ); ?>' === transaction_type ) {
-						$( hidden_settings ).show();
-					} else {
-						$( hidden_settings ).hide();
-					}
+						if ( '<?php echo esc_js( self::TRANSACTION_TYPE_AUTHORIZATION ); ?>' === transaction_type ) {
+							$( hidden_settings ).show();
+						} else {
+							$( hidden_settings ).hide();
+						}
 
-				} ).change();
+					} ).change();
+				} );
+			} )( jQuery );
 			<?php
-
-			wc_enqueue_js( ob_get_clean() );
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-transaction-type', $javascript );
 		}
 
 		// if there's more than one environment include the environment settings switcher code
@@ -1452,29 +1459,32 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// add inline javascript
 			ob_start();
 			?>
-				$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_environment' ).change( function() {
+			( function( $ ) {
+				$( function() {
+					$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_environment' ).change( function() {
 
-					// inherit settings from other gateway?
-					var inheritSettings = $( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_inherit_settings' ).is( ':checked' );
+						// inherit settings from other gateway?
+						var inheritSettings = $( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_inherit_settings' ).is( ':checked' );
 
-					var environment = $( this ).val();
+						var environment = $( this ).val();
 
-					// hide all environment-dependant fields
-					$( '.environment-field' ).closest( 'tr' ).hide();
+						// hide all environment-dependant fields
+						$( '.environment-field' ).closest( 'tr' ).hide();
 
-					// show the currently configured environment fields that are not also being hidden as any shared settings
-					var $environmentFields = $( '.' + environment + '-field' );
-					if ( inheritSettings ) {
-						$environmentFields = $environmentFields.not( '.shared-settings-field' );
-					}
+						// show the currently configured environment fields that are not also being hidden as any shared settings
+						var $environmentFields = $( '.' + environment + '-field' );
+						if ( inheritSettings ) {
+							$environmentFields = $environmentFields.not( '.shared-settings-field' );
+						}
 
-					$environmentFields.not( '.hidden' ).closest( 'tr' ).show();
+						$environmentFields.not( '.hidden' ).closest( 'tr' ).show();
 
-				} ).change();
+					} ).change();
+				} );
+			} )( jQuery );
 			<?php
-
-			wc_enqueue_js( ob_get_clean() );
-
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-environment', $javascript );
 		}
 
 		if ( ! empty( $this->shared_settings ) ) {
@@ -1482,25 +1492,28 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 			// add inline javascript to show/hide any shared settings fields as needed
 			ob_start();
 			?>
-				$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_inherit_settings' ).change( function() {
+			( function( $ ) {
+				$( function() {
+					$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_inherit_settings' ).change( function() {
 
-					var enabled = $( this ).is( ':checked' );
+						var enabled = $( this ).is( ':checked' );
 
-					if ( enabled ) {
-						$( '.shared-settings-field' ).closest( 'tr' ).hide();
-					} else {
-						// show the fields
-						$( '.shared-settings-field' ).closest( 'tr' ).show();
+						if ( enabled ) {
+							$( '.shared-settings-field' ).closest( 'tr' ).hide();
+						} else {
+							// show the fields
+							$( '.shared-settings-field' ).closest( 'tr' ).show();
 
-						// hide any that may not be available for the currently selected environment
-						$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_environment' ).change();
-					}
+							// hide any that may not be available for the currently selected environment
+							$( '#woocommerce_<?php echo esc_js( $this->get_id() ); ?>_environment' ).change();
+						}
 
-				} ).change();
+					} ).change();
+				} );
+			} )( jQuery );
 			<?php
-
-			wc_enqueue_js( ob_get_clean() );
-
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gateway-admin-inherit-settings', $javascript );
 		}
 
 	}
@@ -4120,13 +4133,16 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 
 				if ( \Square\Models\TenderType::SQUARE_GIFT_CARD === $tender->getType() ) {
 					$this->update_order_meta( $order, 'gift_card_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'for an amount of %1$s on the gift card' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'for an amount of %1$s on the gift card', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				} elseif ( \Square\Models\TenderType::CARD === $tender->getType() ) {
 					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the credit card' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'and %1$s on the credit card', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				} elseif ( \Square\Models\TenderType::WALLET === $tender->getType() ) {
 					$this->update_order_meta( $order, 'other_gateway_partial_total', $tender_amount );
-					$message .= ' ' . sprintf( wp_kses_post( 'and %1$s on the cash app pay' ), wc_price( $tender_amount ) );
+					/* translators: Placeholders: %1$s - amount */
+					$message .= ' ' . wp_kses_post( sprintf( __( 'and %1$s on the cash app pay', 'woocommerce-square' ), wc_price( $tender_amount ) ) );
 				}
 			}
 		}
