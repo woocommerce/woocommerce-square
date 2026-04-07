@@ -230,13 +230,6 @@ class Product {
 			$product->set_description( $product_description );
 		}
 
-		$category_ids = Category::get_category_ids_from_catalog_item( $catalog_item );
-
-		if ( ! empty( $category_ids ) ) {
-			$term_ids = array_unique( array_map( 'intval', $category_ids ) );
-			wp_set_object_terms( $product->get_id(), $term_ids, 'product_cat' );
-		}
-
 		if ( $catalog_id ) {
 			$product->update_meta_data( self::SQUARE_ID_META_KEY, $catalog_id );
 		}
