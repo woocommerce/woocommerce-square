@@ -50,6 +50,11 @@ export const getPaymentRequest = () => {
 			context: getSquareServerData().context,
 			security: getSquareServerData().paymentRequestNonce,
 			is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
+			order_id: getSquareServerData().orderId || 0,
+			...( getSquareServerData().isPayForOrderPage &&
+				getSquareServerData().orderKey && {
+					order_key: getSquareServerData().orderKey,
+				} ),
 		};
 
 		jQuery.post(
@@ -99,6 +104,11 @@ export const handleShippingOptionChanged = async ( shippingOption ) => {
 		shipping_option: shippingOption.id,
 		security: getSquareServerData().recalculateTotalNonce,
 		is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
+		order_id: getSquareServerData().orderId || 0,
+		...( getSquareServerData().isPayForOrderPage &&
+			getSquareServerData().orderKey && {
+				order_key: getSquareServerData().orderKey,
+			} ),
 	};
 
 	const response = await recalculateTotals( data );
@@ -117,6 +127,11 @@ export const handleShippingAddressChanged = async ( shippingContact ) => {
 		shipping_contact: shippingContact,
 		security: getSquareServerData().recalculateTotalNonce,
 		is_pay_for_order_page: getSquareServerData().isPayForOrderPage,
+		order_id: getSquareServerData().orderId || 0,
+		...( getSquareServerData().isPayForOrderPage &&
+			getSquareServerData().orderKey && {
+				order_key: getSquareServerData().orderKey,
+			} ),
 	};
 
 	const response = await recalculateTotals( data );

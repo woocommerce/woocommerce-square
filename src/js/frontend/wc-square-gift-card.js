@@ -23,6 +23,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.locationId           = args.locationId;
 			this.giftCard             = null;
 			this.applyGiftCardNonce   = args.applyGiftCardNonce;
+			this.removeGiftCardNonce  = args.removeGiftCardNonce;
 			this.removeGiftCardText   = args.removeGiftCardText;
 			this.applyDiffGiftCard    = args.applyDiffGiftCard;
 			this.splitPaymentQuestion = args.splitPaymentQuestion;
@@ -284,7 +285,7 @@ jQuery( document ).ready( ( $ ) => {
 			const formData = new FormData();
 
 			formData.append( 'action', 'wc_square_gift_card_remove' );
-			formData.append( 'security', this.applyGiftCardNonce );
+			formData.append( 'security', this.removeGiftCardNonce );
 
 			let response = await fetch(
 				woocommerce_params.ajax_url,

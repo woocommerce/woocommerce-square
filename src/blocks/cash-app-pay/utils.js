@@ -42,6 +42,7 @@ export const getSquareCashAppPayServerData = () => {
 		supports: squareData.supports || {},
 		isPayForOrderPage: squareData.is_pay_for_order_page || false,
 		orderId: squareData.order_id || '',
+		orderKey: squareData.order_key || '',
 		ajaxUrl: squareData.ajax_url || '',
 		paymentRequestNonce: squareData.payment_request_nonce || '',
 		continuationSessionNonce: squareData.continuation_session_nonce || '',
@@ -80,6 +81,10 @@ const getPaymentRequest = () => {
 			is_pay_for_order_page:
 				getSquareCashAppPayServerData().isPayForOrderPage || false,
 			order_id: getSquareCashAppPayServerData().orderId || 0,
+			...( getSquareCashAppPayServerData().isPayForOrderPage &&
+				getSquareCashAppPayServerData().orderKey && {
+					order_key: getSquareCashAppPayServerData().orderKey,
+				} ),
 		};
 
 		jQuery.post(

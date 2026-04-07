@@ -43,6 +43,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.payment_token_status = true;
 			this.billing_details_message_wrapper = $( '#square-pay-for-order-billing-details-wrapper' );
 			this.orderId = args.order_id;
+			this.orderKey = args.order_key || '';
 			this.ajax_get_order_amount_nonce = args.ajax_get_order_amount_nonce;
 			this.ajax_should_charge_order_nonce =
 				args.ajax_should_charge_order_nonce;
@@ -553,6 +554,8 @@ jQuery( document ).ready( ( $ ) => {
 					security: this.ajax_should_charge_order_nonce,
 					order_id: this.orderId,
 					is_pay_order: this.is_manual_order_payment,
+					...( this.is_manual_order_payment &&
+						this.orderKey && { order_key: this.orderKey } ),
 				};
 
 				$.ajax( {
@@ -589,6 +592,8 @@ jQuery( document ).ready( ( $ ) => {
 					security: this.ajax_get_order_amount_nonce,
 					order_id: this.orderId,
 					is_pay_order: this.is_manual_order_payment,
+					...( this.is_manual_order_payment &&
+						this.orderKey && { order_key: this.orderKey } ),
 				};
 
 				$.ajax({

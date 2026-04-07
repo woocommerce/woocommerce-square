@@ -23,6 +23,7 @@ jQuery( document ).ready( ( $ ) => {
 			this.payment_request = args.payment_request || {};
 			this.isPayForOrderPage = args.is_pay_for_order_page;
 			this.orderId = args.order_id;
+			this.orderKey = args.order_key || '';
 			this.id_dasherized = args.gateway_id_dasherized;
 			this.buttonStyles  = args.button_styles;
 			this.referenceId = this.reference_id;
@@ -242,6 +243,8 @@ jQuery( document ).ready( ( $ ) => {
 					is_pay_for_order_page: this.isPayForOrderPage,
 					order_id: this.orderId,
 					check_for_giftcard: !this.isPayForOrderPage,
+					...( this.isPayForOrderPage &&
+						this.orderKey && { order_key: this.orderKey } ),
 				};
 
 				// retrieve a payment request object.
