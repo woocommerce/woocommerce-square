@@ -745,6 +745,94 @@ class Manual_Synchronization extends Stepped_Job {
 			$this->set_attr( 'upsert_new_product_ids', array() );
 		}
 
+		// Before creating new Square items, check if products already exist in Square
+		// by SKU. This prevents duplicate catalog items when a previous sync timed out
+		// during search_matched_products and partially created items. See SQUARE-290.
+		$skipped_product_ids = array();
+
+		foreach ( $product_ids as $key => $product_id ) {
+			$product = wc_get_product( $product_id );
+
+			if ( ! $product ) {
+				continue;
+			}
+
+			$sku = $product->get_sku();
+
+			if ( empty( $sku ) ) {
+				continue;
+			}
+
+			try {
+				$response = wc_square()->get_api()->search_catalog_objects(
+					array(
+						'object_types' => array( 'ITEM' ),
+						'query'        => array(
+							'text_query' => array(
+								'keywords' => array( $sku ),
+							),
+						),
+						'limit'        => 10,
+					)
+				);
+
+				$existing_objects = $response->get_data() instanceof \Square\Models\SearchCatalogObjectsResponse
+					? ( $response->get_data()->getObjects() ?: array() )
+					: array();
+
+				// Check each returned item's variations for an exact SKU match.
+				foreach ( $existing_objects as $existing_object ) {
+					$variations = $existing_object->getItemData() ? $existing_object->getItemData()->getVariations() : null;
+
+					if ( ! is_array( $variations ) ) {
+						continue;
+					}
+
+					foreach ( $variations as $variation ) {
+						$variation_sku = $variation->getItemVariationData() ? $variation->getItemVariationData()->getSku() : '';
+
+						if ( $sku === $variation_sku ) {
+							// Found an existing Square item with the same SKU — link it
+							// instead of creating a duplicate.
+							wc_square()->log( sprintf(
+								'SQUARE-290 guard: Product #%d (SKU: %s) already exists in Square as %s. Linking instead of creating duplicate.',
+								$product_id,
+								$sku,
+								$existing_object->getId()
+							) );
+
+							Product::set_square_item_id( $product_id, $existing_object->getId() );
+							$skipped_product_ids[] = $product_id;
+
+							// Break out of both foreach loops for this product.
+							break 2;
+						}
+					}
+				}
+			} catch ( \Exception $e ) {
+				// If the lookup fails, proceed with the upsert — the worst case
+				// is a duplicate that can be cleaned up, not a crashed sync.
+				wc_square()->log( sprintf(
+					'SQUARE-290 guard: SKU lookup failed for product #%d (SKU: %s): %s. Proceeding with upsert.',
+					$product_id,
+					$sku,
+					$e->getMessage()
+				) );
+			}
+		}
+
+		// Remove products that were linked to existing Square items.
+		if ( ! empty( $skipped_product_ids ) ) {
+			$product_ids           = array_diff( $product_ids, $skipped_product_ids );
+			$processed_product_ids = array_merge( $skipped_product_ids, $processed_product_ids );
+			$this->set_attr( 'processed_product_ids', $processed_product_ids );
+		}
+
+		if ( empty( $product_ids ) ) {
+			$this->complete_step( 'upsert_new_products' );
+			return;
+		}
+
 		$catalog_objects = array();
 		foreach ( $product_ids as $product_id ) {
 			$catalog_item   = new \Square\Models\CatalogItem();
