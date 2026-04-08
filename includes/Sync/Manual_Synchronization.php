@@ -27,6 +27,8 @@ use Square\Models\BatchRetrieveInventoryCountsResponse;
 use Square\Models\BatchUpsertCatalogObjectsResponse;
 use Square\Models\BatchRetrieveCatalogObjectsResponse;
 use Square\Models\CatalogObject;
+use Square\Models\CatalogQuery;
+use Square\Models\CatalogQueryText;
 use Square\Models\SearchCatalogObjectsResponse;
 use Square\Models\CatalogInfoResponse;
 use Square\ApiHelper;
@@ -718,6 +720,194 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
+	 * Searches the Square catalog for an existing item that matches a WooCommerce product by SKU.
+	 *
+	 * Collects SKUs from both the parent product and its variations, then queries the Square
+	 * catalog using a text search. Results are verified with an exact SKU comparison against
+	 * variation-level data from the returned catalog objects.
+	 *
+	 * @since 4.9.0
+	 *
+	 * @param \WC_Product $product The WooCommerce product to search for.
+	 * @return CatalogObject|null The matching Square catalog object, or null if not found or ambiguous.
+	 */
+	protected function find_existing_square_item_by_sku( $product ) {
+		$skus = array();
+
+		// Collect parent SKU if set.
+		$parent_sku = $product->get_sku();
+		if ( ! empty( $parent_sku ) ) {
+			$skus[] = $parent_sku;
+		}
+
+		// Collect variation SKUs for variable products.
+		if ( $product->is_type( 'variable' ) ) {
+			foreach ( $product->get_children() as $child_id ) {
+				$variation = wc_get_product( $child_id );
+				if ( $variation ) {
+					$variation_sku = $variation->get_sku();
+					if ( ! empty( $variation_sku ) ) {
+						$skus[] = $variation_sku;
+					}
+				}
+			}
+		}
+
+		$skus = array_unique( $skus );
+
+		if ( empty( $skus ) ) {
+			return null;
+		}
+
+		// Search Square catalog using product SKUs as keywords. Text search is fuzzy
+		// (prefix-based across multiple fields), so we verify with exact matching below.
+		$query = new CatalogQuery();
+		$text_query = new CatalogQueryText( $skus );
+		$query->setTextQuery( $text_query );
+
+		try {
+			$response = wc_square()->get_api()->search_catalog_objects(
+				array(
+					'object_types' => array( 'ITEM' ),
+					'query'        => $query,
+				)
+			);
+
+			$search_response = $response->get_data();
+
+			if ( ! $search_response instanceof SearchCatalogObjectsResponse ) {
+				return null;
+			}
+
+			$catalog_objects = $search_response->getObjects();
+
+			if ( empty( $catalog_objects ) || ! is_array( $catalog_objects ) ) {
+				return null;
+			}
+
+			// Verify exact SKU matches against variation-level data.
+			$matched_items = array();
+
+			foreach ( $catalog_objects as $catalog_object ) {
+				if ( ! $catalog_object instanceof CatalogObject ) {
+					continue;
+				}
+
+				$item_data = $catalog_object->getItemData();
+				if ( ! $item_data || ! is_array( $item_data->getVariations() ) ) {
+					continue;
+				}
+
+				foreach ( $item_data->getVariations() as $catalog_variation ) {
+					$variation_data = $catalog_variation->getItemVariationData();
+					if ( ! $variation_data ) {
+						continue;
+					}
+
+					$remote_sku = $variation_data->getSku();
+					if ( ! empty( $remote_sku ) && in_array( $remote_sku, $skus, true ) ) {
+						$matched_items[] = $catalog_object;
+						break; // One matching variation is enough for this item.
+					}
+				}
+			}
+
+			if ( empty( $matched_items ) ) {
+				return null;
+			}
+
+			// Ambiguity check: multiple distinct Square items match the same SKU(s).
+			if ( count( $matched_items ) > 1 ) {
+				$matched_ids = array_map(
+					function ( $item ) {
+						return $item->getId();
+					},
+					$matched_items
+				);
+
+				wc_square()->log(
+					sprintf(
+						'SKU guard: ambiguous match for product #%d — %d Square items found (%s). Skipping auto-link to avoid data corruption.',
+						$product->get_id(),
+						count( $matched_items ),
+						implode( ', ', $matched_ids )
+					)
+				);
+
+				return null;
+			}
+
+			return $matched_items[0];
+
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'SKU guard: catalog lookup failed for product #%d — %s. Proceeding with upsert; duplicate may be created.',
+					$product->get_id(),
+					$exception->getMessage()
+				)
+			);
+
+			return null;
+		}
+	}
+
+
+	/**
+	 * Links a WooCommerce product to an existing Square catalog object by setting item and variation IDs.
+	 *
+	 * This follows the same metadata pattern used in square_sor_sync() to ensure consistent
+	 * state across both the item and variation levels.
+	 *
+	 * @since 4.9.0
+	 *
+	 * @param \WC_Product   $product        The WooCommerce product.
+	 * @param CatalogObject $catalog_object The existing Square catalog object.
+	 */
+	protected function link_product_to_square_item( $product, CatalogObject $catalog_object ) {
+		// In the WooCommerce SOR context, we only need to establish the ID mapping.
+		// Product data will be pushed to Square via the subsequent upsert and inventory
+		// push steps — no need to import data from the Square catalog object here.
+
+		// Set the item-level ID on the parent product.
+		Product::set_square_item_id( $product, $catalog_object->getId() );
+
+		$item_data = $catalog_object->getItemData();
+		if ( ! $item_data || ! is_array( $item_data->getVariations() ) ) {
+			return;
+		}
+
+		// Match and link variations by SKU, mirroring the pattern in square_sor_sync().
+		foreach ( $item_data->getVariations() as $catalog_variation ) {
+			$variation_data = $catalog_variation->getItemVariationData();
+			if ( ! $variation_data ) {
+				continue;
+			}
+
+			$remote_sku = $variation_data->getSku();
+
+			if ( empty( $remote_sku ) ) {
+				continue;
+			}
+
+			$local_product_id = wc_get_product_id_by_sku( $remote_sku );
+
+			if ( ! $local_product_id ) {
+				continue;
+			}
+
+			$local_product = wc_get_product( $local_product_id );
+
+			if ( ! $local_product ) {
+				continue;
+			}
+
+			Product::set_square_item_variation_id( $local_product, $catalog_variation->getId() );
+		}
+	}
+
+
+	/**
 	 * @throws \Exception
 	 */
 	protected function upsert_new_products() {
@@ -745,91 +935,59 @@ class Manual_Synchronization extends Stepped_Job {
 			$this->set_attr( 'upsert_new_product_ids', array() );
 		}
 
-		// Before creating new Square items, check if products already exist in Square
-		// by SKU. This prevents duplicate catalog items when a previous sync timed out
-		// during search_matched_products and partially created items. See SQUARE-290.
-		$skipped_product_ids = array();
+		// SKU guard: check for existing Square items before creating new ones.
+		// This prevents duplicates when a prior sync step (search_matched_products) partially
+		// completed and timed out after creating some Square items.
+		$linked_product_ids = array();
 
-		foreach ( $product_ids as $key => $product_id ) {
+		foreach ( $product_ids as $product_id ) {
 			$product = wc_get_product( $product_id );
 
 			if ( ! $product ) {
 				continue;
 			}
 
-			$sku = $product->get_sku();
+			$existing_item = $this->find_existing_square_item_by_sku( $product );
 
-			if ( empty( $sku ) ) {
-				continue;
-			}
+			if ( $existing_item ) {
+				$this->link_product_to_square_item( $product, $existing_item );
 
-			try {
-				$response = wc_square()->get_api()->search_catalog_objects(
-					array(
-						'object_types' => array( 'ITEM' ),
-						'query'        => array(
-							'text_query' => array(
-								'keywords' => array( $sku ),
-							),
-						),
-						'limit'        => 10,
+				wc_square()->log(
+					sprintf(
+						'SKU guard: linked product #%d to existing Square item %s instead of creating a duplicate.',
+						$product_id,
+						$existing_item->getId()
 					)
 				);
 
-				$existing_objects = $response->get_data() instanceof \Square\Models\SearchCatalogObjectsResponse
-					? ( $response->get_data()->getObjects() ?: array() )
-					: array();
-
-				// Check each returned item's variations for an exact SKU match.
-				foreach ( $existing_objects as $existing_object ) {
-					$variations = $existing_object->getItemData() ? $existing_object->getItemData()->getVariations() : null;
-
-					if ( ! is_array( $variations ) ) {
-						continue;
-					}
-
-					foreach ( $variations as $variation ) {
-						$variation_sku = $variation->getItemVariationData() ? $variation->getItemVariationData()->getSku() : '';
-
-						if ( $sku === $variation_sku ) {
-							// Found an existing Square item with the same SKU — link it
-							// instead of creating a duplicate.
-							wc_square()->log( sprintf(
-								'SQUARE-290 guard: Product #%d (SKU: %s) already exists in Square as %s. Linking instead of creating duplicate.',
-								$product_id,
-								$sku,
-								$existing_object->getId()
-							) );
-
-							Product::set_square_item_id( $product_id, $existing_object->getId() );
-							$skipped_product_ids[] = $product_id;
-
-							// Break out of both foreach loops for this product.
-							break 2;
-						}
-					}
-				}
-			} catch ( \Exception $e ) {
-				// If the lookup fails, proceed with the upsert — the worst case
-				// is a duplicate that can be cleaned up, not a crashed sync.
-				wc_square()->log( sprintf(
-					'SQUARE-290 guard: SKU lookup failed for product #%d (SKU: %s): %s. Proceeding with upsert.',
-					$product_id,
-					$sku,
-					$e->getMessage()
-				) );
+				$linked_product_ids[] = $product_id;
 			}
 		}
 
-		// Remove products that were linked to existing Square items.
-		if ( ! empty( $skipped_product_ids ) ) {
-			$product_ids           = array_diff( $product_ids, $skipped_product_ids );
-			$processed_product_ids = array_merge( $skipped_product_ids, $processed_product_ids );
+		// Remove linked products from the upsert batch — they already exist in Square.
+		if ( ! empty( $linked_product_ids ) ) {
+			$product_ids = array_values( array_diff( $product_ids, $linked_product_ids ) );
+
+			// Linked products count as processed and need inventory push.
+			$processed_product_ids      = array_merge( $linked_product_ids, $processed_product_ids );
+			$inventory_push_product_ids = array_merge( $linked_product_ids, $inventory_push_product_ids );
 			$this->set_attr( 'processed_product_ids', $processed_product_ids );
+			$this->set_attr( 'inventory_push_product_ids', $inventory_push_product_ids );
+
+			// Clear retry idempotency key if the batch changed — the key is bound to the
+			// original request body and would cause Square to reject a modified batch.
+			if ( ! empty( $retry_idempotency_key ) ) {
+				$this->set_attr( 'upsert_retry_idempotency_key', null );
+				$this->set_attr( 'upsert_retry_product_ids', array() );
+			}
 		}
 
+		// If all products were linked to existing items, no upsert needed.
 		if ( empty( $product_ids ) ) {
-			$this->complete_step( 'upsert_new_products' );
+			$upsert_new_product_ids = $this->get_attr( 'upsert_new_product_ids', array() );
+			if ( empty( $upsert_new_product_ids ) ) {
+				$this->complete_step( 'upsert_new_products' );
+			}
 			return;
 		}
 
