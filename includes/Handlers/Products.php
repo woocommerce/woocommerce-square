@@ -245,15 +245,18 @@ class Products {
 
 		// Nonce check not required, checked against known string, read-only action.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$selected = isset( $_GET['product_type'] ) && 'synced-with-square' === $_GET['product_type'] ? 'selected=\"selected\"' : '';
+		$selected = isset( $_GET['product_type'] ) && 'synced-with-square' === $_GET['product_type'] ? 'selected="selected"' : '';
 
-		wc_enqueue_js(
-			"
-			jQuery( document ).ready( function( $ ) {
-				$( 'select#dropdown_product_type' ) . append( '<option value=\"synced-with-square\" ' + '" . $selected . "' + '>' + '" . $label . "' + '</option>' );
-			} );
-			"
-		);
+		ob_start();
+		?>
+		jQuery( document ).ready( function( $ ) {
+			<?php // Not escaping as we know the value is not user-controlled and avoids issue with outputting `selected=""selected""` ?>
+			<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			$( 'select#dropdown_product_type' ).append( '<option value="synced-with-square" <?php echo $selected; ?>><?php echo esc_js( $label ); ?></option>' );
+		} );
+		<?php
+		$javascript = ob_get_clean();
+		\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-products-sync-filter', $javascript );
 	}
 
 

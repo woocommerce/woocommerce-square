@@ -382,6 +382,7 @@ class Gift_Card extends Payment_Gateway {
 				'generalError'        => __( 'An error occurred, please try again or try an alternate form of payment.', 'woocommerce-square' ),
 				'ajaxUrl'             => \WC_AJAX::get_endpoint( '%%endpoint%%' ),
 				'applyGiftCardNonce'  => wp_create_nonce( 'wc-square-apply-gift-card' ),
+				'removeGiftCardNonce' => wp_create_nonce( 'wc-square-remove-gift-card' ),
 				'logging_enabled'     => $this->debug_log(),
 				'orderId'             => absint( get_query_var( 'order-pay' ) ),
 			)
@@ -396,7 +397,14 @@ class Gift_Card extends Payment_Gateway {
 				true
 			);
 
-			wc_enqueue_js( sprintf( 'window.wc_square_gift_card_handler = new WC_Square_Gift_Card_Handler( %s );', wp_json_encode( $args ) ) );
+			ob_start();
+			?>
+			jQuery(function($) {
+				window.wc_square_gift_card_handler = new WC_Square_Gift_Card_Handler( <?php echo wp_json_encode( $args ); ?> );
+			});
+			<?php
+			$javascript = ob_get_clean();
+			\WooCommerce\Square\Utilities\Helper::enqueue_inline_script( 'wc-square-gift-card-inline', $javascript, array( 'jquery', 'wc-square-gift-card' ) );
 		}
 
 		if ( is_checkout() || is_product() || has_block( 'woocommerce/single-product' ) ) {
@@ -643,6 +651,7 @@ class Gift_Card extends Payment_Gateway {
 	 * @since 3.7.0
 	 */
 	public function remove_gift_card() {
+		check_ajax_referer( 'wc-square-remove-gift-card', 'security' );
 		WC()->session->set( 'woocommerce_square_gift_card_payment_token', null );
 
 		wp_send_json_success();
