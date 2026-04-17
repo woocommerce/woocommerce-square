@@ -1133,10 +1133,8 @@ class Manual_Synchronization extends Stepped_Job {
 
 						$child_square_id = Product::get_square_item_variation_id( $child_id, false );
 						if ( ! $child_square_id && $child->get_sku() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+							++$sku_lookups_this_step;
 							$child_square_id = Product::get_square_variation_id_by_sku( $child->get_sku(), $child_id, true );
-							if ( $child_square_id ) {
-								++$sku_lookups_this_step;
-							}
 						}
 						$inventory_change = Product::get_inventory_change_physical_count_type( $child );
 
@@ -1147,17 +1145,15 @@ class Manual_Synchronization extends Stepped_Job {
 				} else {
 					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost after timeout).
 					if ( ! $square_variation_id && $product->get_sku() && $product->get_manage_stock() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+						++$sku_lookups_this_step;
 						$square_variation_id = Product::get_square_variation_id_by_sku( $product->get_sku(), $product_id, true );
-						if ( $square_variation_id ) {
-							++$sku_lookups_this_step;
-						}
 					}
 
 					if ( $square_variation_id ) {
 
 						$inventory_change = Product::get_inventory_change_physical_count_type( $product );
 
-						if ( $inventory_change ) {
+						if ( $inventory_change && $product->get_manage_stock() ) {
 							$product_inventory_changes[] = $inventory_change;
 						}
 					}
