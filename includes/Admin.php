@@ -419,6 +419,12 @@ class Admin {
 		 * @param int $sync_interval     The sync interval in seconds.
 		 */
 		$threshold_seconds = apply_filters( 'wc_square_sync_status_notice_threshold_seconds', $threshold_seconds, $sync_interval );
+		$threshold_time    = time() - $threshold_seconds;
+
+		// Bail if the last synced at is after the threshold time.
+		if ( $last_synced_at > $threshold_time ) {
+			return;
+		}
 
 		// Get the synced products count.
 		$synced_products_count_key = 'wc_square_synced_products_count_' . $location_id;
@@ -433,13 +439,6 @@ class Admin {
 
 		// Bail if synced products count is 0.
 		if ( 0 === $synced_products_count ) {
-			return;
-		}
-
-		$threshold_time = time() - $threshold_seconds;
-
-		// Bail if the last synced at is after the threshold time.
-		if ( $last_synced_at > $threshold_time ) {
 			return;
 		}
 
