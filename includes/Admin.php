@@ -379,7 +379,7 @@ class Admin {
 	 * - The connection is established.
 	 * - The location is set.
 	 * - The product sync is enabled.
-	 * - The last synced at is set and is before the threshold time (default is 48 hours).
+	 * - The last synced at is set and is before the threshold time (default is 24 hours, 48 hours if the sync interval is 24 hours).
 	 * - The synced products count is greater than 0 (at least one product is synced with Square).
 	 *
 	 * @since x.x.x
@@ -406,16 +406,19 @@ class Admin {
 			return;
 		}
 
-		$threshold_seconds = 48 * HOUR_IN_SECONDS;
+		// The threshold time is 24 hours by default, 48 hours if the sync interval is 24 hours.
+		$sync_interval     = wc_square()->get_settings_handler()->get_sync_interval();
+		$threshold_seconds = $sync_interval >= 24 * HOUR_IN_SECONDS ? 48 * HOUR_IN_SECONDS : 24 * HOUR_IN_SECONDS;
 
 		/**
 		 * Filters the threshold time for the sync status notice.
 		 *
 		 * @since x.x.x
 		 *
-		 * @param int $threshold_seconds The threshold time in seconds. Default is 48 hours.
+		 * @param int $threshold_seconds The threshold time in seconds. Default is 24 hours.
+		 * @param int $sync_interval     The sync interval in seconds.
 		 */
-		$threshold_seconds = apply_filters( 'wc_square_sync_status_notice_threshold_seconds', $threshold_seconds );
+		$threshold_seconds = apply_filters( 'wc_square_sync_status_notice_threshold_seconds', $threshold_seconds, $sync_interval );
 
 		// Get the synced products count.
 		$synced_products_count_key = 'wc_square_synced_products_count_' . $location_id;
