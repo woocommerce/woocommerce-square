@@ -653,14 +653,18 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 
 			if ( $gateway->is_enabled() && $gateway->is_production_environment() && 'off' !== $debug_mode ) {
 
-				$is_gateway_settings = $this->is_payment_gateway_configuration_page( $gateway->get_id() );
+				// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce not required, read-only check.
+				$is_square_settings_tab = isset( $_GET['page'], $_GET['tab'] )
+					&& 'wc-settings' === $_GET['page']
+					&& $this->get_id() === $_GET['tab'];
+				// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 				$message = sprintf(
 					/* translators: Placeholders: %1$s - payment gateway name, %2$s - opening <a> tag, %3$s - closing </a> tag */
 					esc_html__( 'Heads up! %1$s is currently configured to log transaction data for debugging purposes. If you are not experiencing any problems with payment processing, we recommend %2$sturning off Debug Mode%3$s', 'woocommerce-square' ),
 					$gateway->get_method_title(),
-					! $is_gateway_settings ? '<a href="' . esc_url( $this->get_payment_gateway_configuration_url( $gateway->get_id() ) ) . '">' : '',
-					! $is_gateway_settings ? ' &raquo;</a>' : ''
+					! $is_square_settings_tab ? '<a href="' . esc_url( $this->get_settings_url() ) . '">' : '',
+					! $is_square_settings_tab ? ' &raquo;</a>' : ''
 				);
 
 				$this->get_admin_notice_handler()->add_admin_notice(
