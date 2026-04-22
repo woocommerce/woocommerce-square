@@ -1,12 +1,8 @@
 <?php
 /**
- * WooCommerce Square
+ * Square settings hub for the consolidated admin redesign (Payments > Square).
  *
- * Square settings hub under WooCommerce > Settings > Payments (checkout tab).
- *
- * @author    WooCommerce
- * @copyright Copyright: (c) 2026, Automattic, Inc.
- * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
+ * @package WooCommerce\Square\Admin
  */
 
 namespace WooCommerce\Square\Admin;
@@ -16,11 +12,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Registers the consolidated Square settings section on the Payments settings screen.
  *
- * @since 5.4.0
+ * @since x.x.x
  */
 final class Payments_Square_Hub {
 
-	/** Checkout section ID ( WooCommerce &rarr; Settings &rarr; Payments &rarr; Square ). */
+	/** Section ID for this hub (WooCommerce > Settings > Payments > Square). */
 	public const SECTION_ID = 'square';
 
 	/** Query argument for inner tab navigation. */
@@ -41,6 +37,7 @@ final class Payments_Square_Hub {
 	/**
 	 * Registers hooks.
 	 *
+	 * @since x.x.x
 	 * @return void
 	 */
 	public static function init() {
@@ -50,8 +47,9 @@ final class Payments_Square_Hub {
 	}
 
 	/**
-	 * Adds the Square section link to the Payments (checkout) settings sub-navigation.
+	 * Adds the Square section link to the Payments settings sub-navigation.
 	 *
+	 * @since x.x.x
 	 * @param array $sections Section ID => label.
 	 * @return array
 	 */
@@ -64,8 +62,9 @@ final class Payments_Square_Hub {
 	}
 
 	/**
-	 * Redirects legacy WooCommerce &rarr; Settings &rarr; Square (tab) URLs to the Payments hub.
+	 * Redirects legacy WooCommerce > Settings > Square (tab) URLs to the Payments hub.
 	 *
+	 * @since x.x.x
 	 * @return void
 	 */
 	public static function redirect_legacy_square_settings_tab() {
@@ -93,6 +92,7 @@ final class Payments_Square_Hub {
 	/**
 	 * Builds the admin URL for the Square hub.
 	 *
+	 * @since x.x.x
 	 * @param string $tab Inner tab slug (see TAB_* constants).
 	 * @return string
 	 */
@@ -113,6 +113,7 @@ final class Payments_Square_Hub {
 	/**
 	 * URL for the main WooCommerce Payments settings screen (breadcrumb parent).
 	 *
+	 * @since x.x.x
 	 * @return string
 	 */
 	public static function get_payments_screen_url() {
@@ -128,6 +129,7 @@ final class Payments_Square_Hub {
 	/**
 	 * Renders the hub shell (inner tabs + placeholder content).
 	 *
+	 * @since x.x.x
 	 * @return void
 	 */
 	public static function render_hub() {
