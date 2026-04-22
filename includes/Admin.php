@@ -254,6 +254,12 @@ class Admin {
 
 			$asset = include $asset_file;
 
+			// Ensure settings-embed loads first so window.wcReactSettings is available
+			// for our registerFieldTypeTransformer calls when the API ships in WC.
+			if ( ! in_array( 'wc-admin-settings-embed', $asset['dependencies'], true ) ) {
+				$asset['dependencies'][] = 'wc-admin-settings-embed';
+			}
+
 			wp_enqueue_script(
 				'woocommerce-square-settings-js',
 				WC_SQUARE_PLUGIN_URL . 'build/settings.js',

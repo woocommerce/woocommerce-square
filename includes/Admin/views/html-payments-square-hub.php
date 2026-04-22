@@ -26,6 +26,10 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 			<button type="button" class="button button-primary wc-square-settings-hub__save" id="wc-square-settings-hub__save-general">
 				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
 			</button>
+		<?php elseif ( Payments_Square_Hub::TAB_PAYMENT_METHODS === $current_tab ) : ?>
+			<button type="button" class="button button-primary wc-square-settings-hub__save" id="wc-square-settings-hub__save-payment-methods" disabled>
+				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
+			</button>
 		<?php else : ?>
 			<button type="button" class="button button-primary wc-square-settings-hub__save" disabled aria-disabled="true" title="<?php esc_attr_e( 'Saving will be available when settings are added to this screen.', 'woocommerce-square' ); ?>">
 				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
@@ -49,11 +53,15 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 	$panel_classes = 'wc-square-settings-hub__panel';
 	if ( Payments_Square_Hub::TAB_GENERAL === $current_tab ) {
 		$panel_classes .= ' wc-square-settings-hub__panel--general';
+	} elseif ( Payments_Square_Hub::TAB_PAYMENT_METHODS === $current_tab ) {
+		$panel_classes .= ' wc-square-settings-hub__panel--payment-methods';
 	}
 	?>
 	<div class="<?php echo esc_attr( $panel_classes ); ?>">
 		<?php if ( Payments_Square_Hub::TAB_GENERAL === $current_tab ) : ?>
 			<div id="woocommerce-square-settings__container-general"></div>
+		<?php elseif ( Payments_Square_Hub::TAB_PAYMENT_METHODS === $current_tab ) : ?>
+			<div id="woocommerce-square-settings__container-payment-methods"></div>
 		<?php else : ?>
 			<p class="description"><?php esc_html_e( 'Settings content for this tab will be added in a future release.', 'woocommerce-square' ); ?></p>
 		<?php endif; ?>

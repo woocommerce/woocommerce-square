@@ -15,6 +15,8 @@ import { GeneralSettingsApp } from './general-settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
 import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import { GiftCardsSettingsApp } from './gift-cards-gateway-settings-app';
+// Side-effect import: registers square_payment_method transformer on window.wcReactSettings.
+import './payment-method-field-types';
 import store from '../../new-user-experience/onboarding/data/store';
 
 register( store );
@@ -39,34 +41,41 @@ domReady( () => {
 
 	// Flag OFF: createRoot mounts for the Payments > Square hub (checkout-section path).
 
+	// Hub: General tab.
 	let container = document.getElementById(
 		'woocommerce-square-settings__container-general'
 	);
-
 	if ( container ) {
-		const root = createRoot( container );
-		root.render( <GeneralSettingsApp /> );
-	} else {
-		container = document.getElementById(
-			'woocommerce-square-payment-gateway-settings__container--square_credit_card'
-		);
-		if ( container ) {
-			const root = createRoot( container );
-			root.render( <PaymentGatewaySettingsApp /> );
-		}
-		container = document.getElementById(
-			'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay'
-		);
-		if ( container ) {
-			const root = createRoot( container );
-			root.render( <CashAppSettingsApp /> );
-		}
-		container = document.getElementById(
-			'woocommerce-square-payment-gateway-settings__container--gift_cards_pay'
-		);
-		if ( container ) {
-			const root = createRoot( container );
-			root.render( <GiftCardsSettingsApp /> );
-		}
+		createRoot( container ).render( <GeneralSettingsApp /> );
+		return;
+	}
+
+	// Hub: Payment Methods tab.
+	container = document.getElementById(
+		'woocommerce-square-settings__container-payment-methods'
+	);
+	if ( container ) {
+		createRoot( container ).render( <PaymentGatewaySettingsApp /> );
+		return;
+	}
+
+	// Legacy standalone gateway pages (pre-hub).
+	container = document.getElementById(
+		'woocommerce-square-payment-gateway-settings__container--square_credit_card'
+	);
+	if ( container ) {
+		createRoot( container ).render( <PaymentGatewaySettingsApp /> );
+	}
+	container = document.getElementById(
+		'woocommerce-square-payment-gateway-settings__container--square_cash_app_pay'
+	);
+	if ( container ) {
+		createRoot( container ).render( <CashAppSettingsApp /> );
+	}
+	container = document.getElementById(
+		'woocommerce-square-payment-gateway-settings__container--gift_cards_pay'
+	);
+	if ( container ) {
+		createRoot( container ).render( <GiftCardsSettingsApp /> );
 	}
 } );
