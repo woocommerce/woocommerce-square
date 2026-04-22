@@ -328,5 +328,11 @@ $wc-square-hub-muted: #646970;
 		.wc-square-general-settings__external-icon {
 			flex-shrink: 0;
 		}
+
+		input.required-error,
+		textarea.required-error {
+			border-color: #cc1818;
+			box-shadow: 0 0 0 1px #cc1818;
+		}
 	}
 }

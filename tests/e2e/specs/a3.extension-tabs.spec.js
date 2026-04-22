@@ -13,6 +13,14 @@ test( 'Check Square extension related tabs and settings should appear. @general'
 	await expect( page.getByRole( 'link', { name: 'General' } ) ).toBeVisible();
 	await expect( page.getByRole( 'link', { name: 'Payment methods' } ) ).toBeVisible();
 
+	// General tab is active by default — environment selection and connect button visible.
+	await expect(
+		page.getByRole( 'group', { name: 'Environment Selection' } )
+	).toBeVisible();
+	await expect(
+		page.getByTestId( 'connect-to-square-button' )
+	).toBeVisible();
+
 	await page.goto(
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
