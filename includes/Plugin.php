@@ -689,6 +689,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	/**
 	 * Whether the current screen is the Square hub (Settings > Payments > Square).
 	 *
+	 * @since x.x.x
 	 * @return bool
 	 */
 	public function is_square_payments_hub() {
@@ -895,6 +896,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	/**
 	 * Admin URL for the Square settings hub (inner tabs).
 	 *
+	 * @since x.x.x
 	 * @param string $tab Inner tab constant from Admin\Payments_Square_Hub (default General).
 	 * @return string
 	 */
