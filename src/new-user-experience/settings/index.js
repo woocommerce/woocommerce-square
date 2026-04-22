@@ -10,7 +10,7 @@ import { register } from '@wordpress/data';
  */
 import '../styles/index.scss';
 import '../styles/settings.scss';
-import { SettingsApp } from './settings-app';
+import { GeneralSettingsApp } from './general-settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
 import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import { GiftCardsSettingsApp } from './gift-cards-gateway-settings-app';
@@ -25,7 +25,7 @@ domReady( () => {
 
 	if ( container ) {
 		const root = createRoot( container );
-		root.render( <SettingsApp /> );
+		root.render( <GeneralSettingsApp /> );
 	} else {
 		container = document.getElementById(
 			'woocommerce-square-payment-gateway-settings__container--square_credit_card'
