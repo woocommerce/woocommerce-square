@@ -6,7 +6,10 @@ test( 'Enable/Disable Payment Gateway in WooCommerce Settings @general', async (
 	await page.goto(
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
-	await page.getByTestId( 'credit-card-gateway-toggle-field' ).uncheck();
+	await page
+		.getByTestId( 'credit-card-gateway-toggle-field' )
+		.getByRole( 'checkbox' )
+		.uncheck();
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout' );
@@ -31,7 +34,10 @@ test( 'Enable/Disable Payment Gateway in WooCommerce Settings @general', async (
 	await page.goto(
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'
 	);
-	await page.getByTestId( 'credit-card-gateway-toggle-field' ).check();
+	await page
+		.getByTestId( 'credit-card-gateway-toggle-field' )
+		.getByRole( 'checkbox' )
+		.check();
 	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout' );

@@ -1102,7 +1102,7 @@ class Settings extends \WC_Settings_API {
 	 * @return bool True if the current request is for the Square admin settings, otherwise false.
 	 */
 	public function is_admin_settings_screen() {
-		return isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && Plugin::PLUGIN_ID === $_GET['tab']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return $this->get_plugin()->is_plugin_settings();
 	}
 
 	/**

@@ -9,7 +9,15 @@ module.exports = {
 			( plugin ) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
 		),
-		new WooDependencyExtractionWebpackPlugin(),
+		new WooDependencyExtractionWebpackPlugin( {
+			// WordPress does not ship a registered script for this subpath; bundle it
+			// so `settings.asset.php` does not list a missing `wp-dataviews/wp` handle.
+			requestToExternal( request ) {
+				if ( request === '@wordpress/dataviews/wp' ) {
+					return false;
+				}
+			},
+		} ),
 		new CopyWebpackPlugin( {
 			patterns: [ { from: './src/images', to: 'images' } ],
 		} ),
@@ -35,6 +43,8 @@ module.exports = {
 		'assets/admin/wc-square-payment-gateway-token-editor':
 			'./src/js/admin/wc-square-payment-gateway-token-editor.js',
 		'assets/admin/wc-square-admin': './src/css/admin/wc-square-admin.scss',
+		'assets/admin/wc-square-payments-hub':
+			'./src/css/admin/wc-square-payments-hub.scss',
 
 		// frontend
 		'assets/frontend/wc-square': './src/js/frontend/wc-square.js',
