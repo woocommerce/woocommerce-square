@@ -139,7 +139,6 @@ final class Payments_Square_Hub {
 			return;
 		}
 
-		// Figma: primary Save is in the hub header; hide the default WC settings footer button until forms exist.
 		$GLOBALS['hide_save_button'] = true;
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab navigation only.
@@ -147,7 +146,6 @@ final class Payments_Square_Hub {
 			? sanitize_key( wp_unslash( $_GET[ self::TAB_QUERY_VAR ] ) )
 			: self::TAB_GENERAL;
 
-		// Labels match REDESIGN/FIGMA (--1.png, --2.png).
 		$tabs = array(
 			self::TAB_GENERAL               => __( 'General', 'woocommerce-square' ),
 			self::TAB_PAYMENT_METHODS       => __( 'Payment methods', 'woocommerce-square' ),
@@ -159,52 +157,14 @@ final class Payments_Square_Hub {
 			$current_tab = self::TAB_GENERAL;
 		}
 
-		echo '<div class="wc-square-settings-hub">';
+		$payments_screen_url = self::get_payments_screen_url();
 
-		echo '<div class="wc-square-settings-hub__header">';
-		echo '<p class="wc-square-settings-hub__breadcrumb">';
-		echo '<a href="' . esc_url( self::get_payments_screen_url() ) . '">' . esc_html__( 'Payments', 'woocommerce-square' ) . '</a>';
-		echo '<span class="wc-square-settings-hub__sep">/</span>';
-		echo '<span class="wc-square-settings-hub__current">' . esc_html__( 'Square settings', 'woocommerce-square' ) . '</span>';
-		echo '</p>';
-		if ( self::TAB_GENERAL === $current_tab ) {
-			// Figma (--1.png): primary Save in header, label "Save", wired by settings.js.
-			echo '<button type="button" class="button button-primary wc-square-settings-hub__save" id="wc-square-settings-hub__save-general">';
-			echo esc_html__( 'Save', 'woocommerce-square' );
-			echo '</button>';
-		} else {
-			echo '<button type="button" class="button button-primary wc-square-settings-hub__save" disabled aria-disabled="true" title="' . esc_attr__( 'Saving will be available when settings are added to this screen.', 'woocommerce-square' ) . '">';
-			echo esc_html__( 'Save', 'woocommerce-square' );
-			echo '</button>';
-		}
-		echo '</div>';
+		$all_tabs         = apply_filters( 'woocommerce_settings_tabs_array', array() );
+		$parent_tab_label = isset( $all_tabs['checkout'] ) ? $all_tabs['checkout'] : __( 'Payments', 'woocommerce' );
 
-		echo '<nav class="wc-square-settings-hub__tablist" aria-label="' . esc_attr__( 'Square settings sections', 'woocommerce-square' ) . '">';
-		foreach ( $tabs as $id => $label ) {
-			$url     = self::get_hub_url( $id );
-			$classes = 'wc-square-settings-hub__tab' . ( $current_tab === $id ? ' is-active' : '' );
-			echo '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $classes ) . '"';
-			if ( $current_tab === $id ) {
-				echo ' aria-current="page"';
-			}
-			echo '>';
-			echo esc_html( $label );
-			echo '</a>';
-		}
-		echo '</nav>';
+		$all_sections  = apply_filters( 'woocommerce_get_sections_checkout', array() );
+		$section_label = isset( $all_sections[ self::SECTION_ID ] ) ? $all_sections[ self::SECTION_ID ] : __( 'Square', 'woocommerce-square' );
 
-		$panel_classes = 'wc-square-settings-hub__panel';
-		if ( self::TAB_GENERAL === $current_tab ) {
-			$panel_classes .= ' wc-square-settings-hub__panel--general';
-		}
-		echo '<div class="' . esc_attr( $panel_classes ) . '">';
-		if ( self::TAB_GENERAL === $current_tab ) {
-			echo '<div id="woocommerce-square-settings__container-general"></div>';
-		} else {
-			echo '<p class="description">' . esc_html__( 'Settings content for this tab will be added in a future release.', 'woocommerce-square' ) . '</p>';
-		}
-		echo '</div>';
-
-		echo '</div>';
+		include __DIR__ . '/views/html-payments-square-hub.php';
 	}
 }
