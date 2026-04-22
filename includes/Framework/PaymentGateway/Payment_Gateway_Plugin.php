@@ -654,9 +654,7 @@ abstract class Payment_Gateway_Plugin extends Plugin {
 			if ( $gateway->is_enabled() && $gateway->is_production_environment() && 'off' !== $debug_mode ) {
 
 				// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Nonce not required, read-only check.
-				$is_square_settings_tab = isset( $_GET['page'], $_GET['tab'] )
-					&& 'wc-settings' === $_GET['page']
-					&& $this->get_id() === $_GET['tab'];
+				$is_square_settings_tab = $this->is_plugin_settings();
 				// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 				$message = sprintf(

@@ -395,7 +395,7 @@ class Plugin extends Payment_Gateway_Plugin {
 						'<strong>',
 						count( Product::get_products_synced_with_square() ),
 						'</strong>',
-						'<a href="' . esc_url( add_query_arg( 'section', 'update', $this->get_settings_url() ) ) . '">',
+						'<a href="' . esc_url( $this->get_square_hub_url( Admin\Payments_Square_Hub::TAB_SYNCHRONIZE ) ) . '">',
 						'</a>'
 					);
 
@@ -679,7 +679,24 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function is_plugin_settings() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce note required, read-only check.
-		return parent::is_plugin_settings() || ( isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && self::PLUGIN_ID === $_GET['tab'] );
+		if ( parent::is_plugin_settings() ) {
+			return true;
+		}
+
+		return $this->is_square_payments_hub();
+	}
+
+	/**
+	 * Whether the current screen is the Square hub (Settings > Payments > Square).
+	 *
+	 * @return bool
+	 */
+	public function is_square_payments_hub() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing.
+		return isset( $_GET['page'], $_GET['tab'], $_GET['section'] )
+			&& 'wc-settings' === $_GET['page']
+			&& 'checkout' === $_GET['tab']
+			&& Admin\Payments_Square_Hub::SECTION_ID === $_GET['section'];
 	}
 
 	/**
@@ -870,14 +887,22 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function get_settings_url( $gateway_id = null ) {
 
-		$params = array(
-			'page' => 'wc-settings',
-			'tab'  => self::PLUGIN_ID,
-		);
-
 		// All usage of this return value has been escaped late.
 		// nosemgrep audit.php.wp.security.xss.query-arg
-		return add_query_arg( $params, admin_url( 'admin.php' ) );
+		return Admin\Payments_Square_Hub::get_hub_url( Admin\Payments_Square_Hub::TAB_GENERAL );
+	}
+
+	/**
+	 * Admin URL for the Square settings hub (inner tabs).
+	 *
+	 * @param string $tab Inner tab constant from Admin\Payments_Square_Hub (default General).
+	 * @return string
+	 */
+	public function get_square_hub_url( $tab = null ) {
+		if ( null === $tab ) {
+			$tab = Admin\Payments_Square_Hub::TAB_GENERAL;
+		}
+		return Admin\Payments_Square_Hub::get_hub_url( $tab );
 	}
 
 	/**

@@ -3,15 +3,15 @@ import { test, expect } from '@playwright/test';
 test( 'Check Square extension related tabs and settings should appear. @general', async ( {
 	page,
 } ) => {
-	await page.goto( '/wp-admin/admin.php?page=wc-settings' );
-	const navTabs = await page.$$( '.nav-tab' );
-	const hasSquareTab = await Promise.all(
-		navTabs.map( async ( tab ) => {
-			const text = await tab.innerText();
-			return text.includes( 'Square' );
-		} )
+	// Square consolidated under WooCommerce > Settings > Payments > Square (no top-level Square tab).
+	await page.goto(
+		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square'
 	);
-	expect( hasSquareTab ).toContain( true );
+	await expect(
+		page.getByRole( 'navigation', { name: 'Square settings sections' } )
+	).toBeVisible();
+	await expect( page.getByRole( 'link', { name: 'General' } ) ).toBeVisible();
+	await expect( page.getByRole( 'link', { name: 'Payment methods' } ) ).toBeVisible();
 
 	await page.goto(
 		'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card'

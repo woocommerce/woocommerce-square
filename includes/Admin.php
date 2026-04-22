@@ -89,15 +89,8 @@ class Admin {
 	private function add_hooks() {
 
 		// add the settings page.
-		add_filter(
-			'woocommerce_get_settings_pages',
-			function ( $pages ) {
-
-				$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
-
-				return $pages;
-			}
-		);
+		// Legacy top-level WooCommerce > Settings > Square tab was removed (see Payments_Square_Hub).
+		Admin\Payments_Square_Hub::init();
 
 		// load admin scripts.
 		add_action(
@@ -167,6 +160,15 @@ class Admin {
 				)
 			);
 		} elseif ( $this->get_plugin()->is_plugin_settings() ) {
+			if ( $this->get_plugin()->is_square_payments_hub() ) {
+				wp_enqueue_style(
+					'wc-square-payments-hub',
+					$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payments-hub.css',
+					array(),
+					Plugin::VERSION
+				);
+			}
+
 			wp_enqueue_style(
 				'wc-square-admin',
 				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',

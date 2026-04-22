@@ -113,7 +113,7 @@ class WC_Square_Sync_Completed extends Emails\Base_Email {
 			if ( true === $html ) {
 				$square       = wc_square();
 				$settings_url = $square->get_settings_url();
-				$records_url  = add_query_arg( array( 'section' => 'update' ), $settings_url );
+				$records_url  = $square->get_square_hub_url( \WooCommerce\Square\Admin\Payments_Square_Hub::TAB_SYNCHRONIZE );
 
 				if ( $square->get_settings_handler()->is_debug_enabled() ) {
 					$action = sprintf(
