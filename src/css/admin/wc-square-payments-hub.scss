@@ -1,0 +1,332 @@
+/**
+ * Square settings hub — WooCommerce > Settings > Payments > Square
+ * Aligned with REDESIGN/FIGMA (breadcrumbs, secondary tabs, cards, Save).
+ */
+
+$wc-square-hub-bg: #f0f0f1;
+$wc-square-hub-border: #dcdcde;
+$wc-square-hub-blue: #2271b1;
+$wc-square-hub-text: #1d2327;
+$wc-square-hub-muted: #646970;
+
+.woocommerce_page_wc-settings .wc-square-settings-hub {
+	background: $wc-square-hub-bg;
+	border-radius: 2px;
+	margin: 16px 0 24px;
+	padding: 24px 24px 32px;
+}
+
+.wc-square-settings-hub__header {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 16px;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+
+.wc-square-settings-hub__breadcrumb {
+	color: $wc-square-hub-muted;
+	font-size: 13px;
+	line-height: 1.4;
+	margin: 0;
+}
+
+.wc-square-settings-hub__breadcrumb a {
+	color: $wc-square-hub-muted;
+	text-decoration: none;
+}
+
+.wc-square-settings-hub__breadcrumb a:hover,
+.wc-square-settings-hub__breadcrumb a:focus {
+	color: $wc-square-hub-blue;
+}
+
+.wc-square-settings-hub__sep {
+	margin: 0 6px;
+	user-select: none;
+}
+
+.wc-square-settings-hub__current {
+	color: $wc-square-hub-text;
+	font-weight: 600;
+}
+
+.wc-square-settings-hub__save.button-primary:disabled,
+.wc-square-settings-hub__save.button-primary[disabled] {
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+.wc-square-settings-hub__save--busy {
+	cursor: progress;
+	opacity: 0.85;
+	pointer-events: none;
+}
+
+/* Secondary tab row (Figma: underline on active, not main WC nav-tabs). */
+.wc-square-settings-hub__tablist {
+	border-bottom: 1px solid $wc-square-hub-border;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 8px;
+	margin: 0 0 24px;
+	padding: 0;
+}
+
+.wc-square-settings-hub__tab {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	color: $wc-square-hub-muted;
+	display: inline-block;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.5;
+	margin: 0 4px -1px 0;
+	padding: 10px 4px 12px;
+	position: relative;
+	text-decoration: none;
+}
+
+.wc-square-settings-hub__tab:hover,
+.wc-square-settings-hub__tab:focus {
+	color: $wc-square-hub-text;
+	outline: none;
+}
+
+.wc-square-settings-hub__tab.is-active {
+	color: $wc-square-hub-text;
+	font-weight: 600;
+}
+
+.wc-square-settings-hub__tab.is-active::after {
+	background: $wc-square-hub-blue;
+	border-radius: 2px 2px 0 0;
+	bottom: -1px;
+	content: "";
+	height: 2px;
+	left: 0;
+	position: absolute;
+	right: 0;
+}
+
+.wc-square-settings-hub__panel {
+	background: #fff;
+	border: 1px solid $wc-square-hub-border;
+	border-radius: 4px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	padding: 24px;
+}
+
+.wc-square-settings-hub__panel > .description {
+	font-size: 14px;
+	margin: 0;
+}
+
+/* General tab: gray canvas + stacked white cards (Figma). */
+.wc-square-settings-hub__panel--general {
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	padding: 0;
+}
+
+.wc-square-settings-hub__panel--general #woocommerce-square-settings__container-general {
+	margin: 0;
+	max-width: none;
+	min-height: 0;
+	padding: 0;
+}
+
+.wc-square-general-settings__card {
+	background: #fff;
+	border: 1px solid $wc-square-hub-border;
+	border-radius: 4px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	margin-bottom: 16px;
+	max-width: 660px;
+	padding: 24px;
+}
+
+.wc-square-general-settings__card:last-of-type {
+	margin-bottom: 0;
+}
+
+.wc-square-general-settings__divider {
+	border: none;
+	border-top: 1px solid $wc-square-hub-border;
+	margin: 20px 0;
+}
+
+.wc-square-general-connect__legend {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	line-height: 1.4;
+	margin: 0 0 12px;
+	padding: 0;
+	text-transform: uppercase;
+}
+
+.wc-square-general-connect__environment {
+	border: none;
+	margin: 0;
+	min-width: 0;
+	padding: 0;
+}
+
+.wc-square-general-connect__radios {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.wc-square-general-connect__radio-label {
+	align-items: flex-start;
+	cursor: pointer;
+	display: flex;
+	gap: 10px;
+	margin: 0;
+}
+
+.wc-square-general-connect__radio-input {
+	flex-shrink: 0;
+	margin: 4px 0 0;
+}
+
+.wc-square-general-connect__radio-body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-width: 100%;
+}
+
+.wc-square-general-connect__radio-title {
+	color: $wc-square-hub-text;
+	display: block;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.wc-square-general-connect__radio-hint {
+	color: $wc-square-hub-muted;
+	display: block;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1.45;
+}
+
+.wc-square-general-connect__actions {
+	margin-top: 0;
+}
+
+/* Modern settings column width (WOOPRD-1947 / design alignment). */
+.wc-square-general-dataform {
+	max-width: 660px;
+}
+
+.wc-square-general-settings__location-desc {
+	margin-bottom: 12px;
+	max-width: 660px;
+	color: $wc-square-hub-muted;
+	font-size: 14px;
+	line-height: 1.55;
+}
+
+/*
+ * Hub: undo legacy Square settings bundle rules (full-width buttons, SF Pro,
+ * centered 32px titles) so General matches wp-admin + DataForm top labels.
+ */
+.woocommerce_page_wc-settings .wc-square-settings-hub {
+	#woocommerce-square-settings__container-general {
+		color: $wc-square-hub-text;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+			Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+		font-size: 14px;
+		letter-spacing: normal;
+		margin: 0;
+
+		a:not(.button-primary) {
+			color: $wc-square-hub-blue;
+		}
+
+		p {
+			font-size: 14px;
+			line-height: 1.55;
+		}
+
+		.components-button:not(.codeamp-components-multi-select-control__remove-token) {
+			box-sizing: border-box;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-family: inherit;
+			font-size: 13px;
+			font-weight: 400;
+			line-height: 1.4;
+			min-height: 36px;
+			min-width: auto;
+			padding: 6px 12px;
+			text-align: center;
+			width: auto;
+		}
+
+		.components-button.button-primary {
+			min-height: 36px;
+			padding: 0 14px;
+		}
+	}
+
+	.wc-square-general-settings {
+		.woo-square-setting__section-title.heading_1 {
+			color: $wc-square-hub-text;
+			font-family: inherit;
+			font-size: 20px;
+			font-weight: 600;
+			line-height: 1.3;
+			margin: 0 0 8px;
+			text-align: left;
+		}
+
+		.woo-square-setting__section-description {
+			color: $wc-square-hub-muted;
+			font-size: 14px;
+			line-height: 1.55;
+			margin: 0 0 20px;
+			max-width: 660px;
+		}
+
+		.wc-square-general-settings__field-help {
+			color: $wc-square-hub-muted;
+			display: block;
+			font-size: 13px;
+			font-weight: 400;
+			line-height: 1.45;
+			margin-top: 4px;
+
+			a {
+				color: $wc-square-hub-blue;
+			}
+		}
+
+		.wc-square-general-settings__doc-link {
+			align-items: center;
+			display: inline-flex;
+			gap: 4px;
+			text-decoration: none;
+		}
+
+		.wc-square-general-settings__doc-link:hover,
+		.wc-square-general-settings__doc-link:focus {
+			text-decoration: underline;
+		}
+
+		.wc-square-general-settings__external-icon {
+			flex-shrink: 0;
+		}
+	}
+}
