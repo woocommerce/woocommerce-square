@@ -114,23 +114,25 @@ export const CreditCardSetup = ( { origin = '' } ) => {
 				</SectionDescription>
 
 				<div className="woo-square-wizard__fields">
-					<InputWrapper
-						label={ __( 'Enable / Disable', 'woocommerce-square' ) }
-					>
-						<SquareCheckboxControl
-							data-testid="credit-card-gateway-toggle-field"
-							label={ __(
-								'Enable this payment method.',
-								'woocommerce-square'
-							) }
-							checked={ enabled === 'yes' }
-							onChange={ ( value ) =>
-								setCreditCardData( {
-									enabled: value ? 'yes' : 'no',
-								} )
-							}
-						/>
-					</InputWrapper>
+					{ origin !== 'settings' && (
+						<InputWrapper
+							label={ __( 'Enable / Disable', 'woocommerce-square' ) }
+						>
+							<SquareCheckboxControl
+								data-testid="credit-card-gateway-toggle-field"
+								label={ __(
+									'Enable this payment method.',
+									'woocommerce-square'
+								) }
+								checked={ enabled === 'yes' }
+								onChange={ ( value ) =>
+									setCreditCardData( {
+										enabled: value ? 'yes' : 'no',
+									} )
+								}
+							/>
+						</InputWrapper>
+					) }
 
 					<InputWrapper label={ __( 'Title', 'woocommerce-square' ) }>
 						<TextControl
