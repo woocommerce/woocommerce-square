@@ -51,10 +51,12 @@ domReady( () => {
 	}
 
 	// Hub: Payment Methods tab.
+	// When Core's modern settings API is available, it owns this tab via the
+	// registered square_payment_method transformer — skip our mount to avoid duplication.
 	container = document.getElementById(
 		'woocommerce-square-settings__container-payment-methods'
 	);
-	if ( container ) {
+	if ( container && ! window.wcReactSettings?.registerFieldTypeTransformer ) {
 		createRoot( container ).render( <PaymentGatewaySettingsApp /> );
 		return;
 	}
