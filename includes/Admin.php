@@ -415,7 +415,7 @@ class Admin {
 		 *
 		 * @since x.x.x
 		 *
-		 * @param int $threshold_seconds The threshold time in seconds. Default is 24 hours.
+		 * @param int $threshold_seconds The threshold time in seconds. Default is 24 hours, or 48 hours when the sync interval is 24 hours.
 		 * @param int $sync_interval     The sync interval in seconds.
 		 */
 		$threshold_seconds = apply_filters( 'wc_square_sync_status_notice_threshold_seconds', $threshold_seconds, $sync_interval );
@@ -438,7 +438,7 @@ class Admin {
 		}
 
 		// Bail if synced products count is 0.
-		if ( 0 === $synced_products_count ) {
+		if ( 0 === (int) $synced_products_count ) {
 			return;
 		}
 
