@@ -93,6 +93,7 @@ export const DigitalWalletsCard = ( { settings, setDigitalWalletData } ) => {
 				</span>
 				<ToggleControl
 					__nextHasNoMarginBottom
+					hideLabelFromVision
 					label={ __( 'Enable Digital Wallets', 'woocommerce-square' ) }
 					checked={ isDWEnabled }
 					onChange={ handleWalletToggle }
@@ -182,23 +183,32 @@ export const CashAppCustomizePanel = ( { settings, onChange } ) => {
  * Used as the Edit component for the 'square_payment_method' field type.
  *
  * @param {Object}        props
- * @param {Object}        props.value      Full gateway settings array (from get_option).
- * @param {Function}      props.onChange   Called with updated settings object.
- * @param {string}        props.label      Card title (gateway name).
- * @param {React.Element} [props.children] Optional customize panel content.
+ * @param {Object}        props.value        Full gateway settings array (from get_option).
+ * @param {Function}      props.onChange     Called with updated settings object.
+ * @param {string}        props.label        Card title (gateway name).
+ * @param {string}        [props.description] Optional description shown below the title.
+ * @param {React.Element} [props.children]   Optional customize panel content.
  */
-export const PaymentMethodCard = ( { value = {}, onChange, label, children } ) => {
+export const PaymentMethodCard = ( { value = {}, onChange, label, description, children } ) => {
 	const isEnabled = value.enabled === 'yes';
 
 	return (
 		<div className="square-payment-method-card">
 			<div className="square-payment-method-card__header">
-				<span className="square-payment-method-card__title">
-					{ label }
-				</span>
+				<div className="square-payment-method-card__text">
+					<span className="square-payment-method-card__title">
+						{ label }
+					</span>
+					{ description && (
+						<span className="square-payment-method-card__description">
+							{ description }
+						</span>
+					) }
+				</div>
 				<ToggleControl
 					__nextHasNoMarginBottom
-					label={ __( 'Enable', 'woocommerce-square' ) }
+					hideLabelFromVision
+					label={ label }
 					checked={ isEnabled }
 					onChange={ ( checked ) =>
 						onChange( { ...value, enabled: checked ? 'yes' : 'no' } )
