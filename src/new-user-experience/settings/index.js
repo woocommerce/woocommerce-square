@@ -15,7 +15,6 @@ import { GeneralSettingsApp } from './general-settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
 import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import { GiftCardsSettingsApp } from './gift-cards-gateway-settings-app';
-// Side-effect import: registers square_payment_method transformer on window.wcReactSettings.
 import './payment-method-field-types';
 import store from '../../new-user-experience/onboarding/data/store';
 
@@ -51,12 +50,10 @@ domReady( () => {
 	}
 
 	// Hub: Payment Methods tab.
-	// When Core's modern settings API is available, it owns this tab via the
-	// registered square_payment_method transformer — skip our mount to avoid duplication.
 	container = document.getElementById(
 		'woocommerce-square-settings__container-payment-methods'
 	);
-	if ( container && ! window.wcReactSettings?.registerFieldTypeTransformer ) {
+	if ( container ) {
 		createRoot( container ).render( <PaymentGatewaySettingsApp /> );
 		return;
 	}

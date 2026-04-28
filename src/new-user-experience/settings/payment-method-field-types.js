@@ -1,13 +1,7 @@
 /**
- * Payment method custom field types for wcReactSettings.registerFieldTypeTransformer.
+ * Payment method React components for the Payment Methods hub tab.
  *
- * Each exported component is BOTH:
- *  1. Registered as a transformer on window.wcReactSettings (activates when WC ships the API).
- *  2. Exported for direct use in the hub's DataForm-based React apps today.
- *
- * Field type: 'square_payment_method'
- *   id    → WP option key (e.g. 'woocommerce_square_credit_card_settings')
- *   value → full gateway settings array returned by get_option( id )
+ * Exported for use in PaymentGatewaySettingsApp (hub's createRoot mount).
  */
 
 import { __ } from '@wordpress/i18n';
@@ -221,24 +215,3 @@ export const PaymentMethodCard = ( { value = {}, onChange, label, description, c
 	);
 };
 
-// ---------------------------------------------------------------------------
-// registerFieldTypeTransformer (activates when WC ships window.wcReactSettings)
-// ---------------------------------------------------------------------------
-
-window.wcReactSettings?.registerFieldTypeTransformer(
-	'square_payment_method',
-	( _setting, baseField ) => ( {
-		...baseField,
-		type: 'text',
-		Edit: ( { data, field, onChange } ) => {
-			const value = field.getValue ? field.getValue( { item: data } ) : ( data[ field.id ] ?? {} );
-			return (
-				<PaymentMethodCard
-					value={ value }
-					label={ _setting.title ?? field.id }
-					onChange={ ( next ) => onChange( { [ field.id ]: next } ) }
-				/>
-			);
-		},
-	} )
-);

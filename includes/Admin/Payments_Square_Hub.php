@@ -46,102 +46,6 @@ final class Payments_Square_Hub {
 		add_action( 'admin_init', array( __CLASS__, 'redirect_legacy_square_settings_tab' ) );
 		add_action( 'admin_init', array( __CLASS__, 'redirect_standalone_gateway_sections' ) );
 		add_filter( 'woocommerce_get_sections_checkout', array( __CLASS__, 'remove_standalone_gateway_sections' ), 99 );
-
-		// registerFieldTypeTransformer — PHP side: field declarations + type registration.
-		add_filter( 'woocommerce_get_settings_checkout', array( __CLASS__, 'add_payment_method_fields' ), 10, 2 );
-		add_filter( 'woocommerce_react_settings_supported_types', array( __CLASS__, 'add_supported_field_types' ) );
-		add_filter( 'woocommerce_react_settings_type_map', array( __CLASS__, 'add_field_type_map' ) );
-		add_action( 'woocommerce_admin_field_square_payment_method', array( __CLASS__, 'render_payment_method_fallback' ) );
-	}
-
-	/**
-	 * Declares payment method fields for the WC React Settings pipeline.
-	 *
-	 * Each field's id is the gateway WP option key so `get_option( $id )` returns
-	 * the full settings array, which the JS transformer receives as `baseField.value`.
-	 *
-	 * @param array  $settings   Current settings for the checkout tab.
-	 * @param string $section_id Active section.
-	 * @return array
-	 */
-	public static function add_payment_method_fields( $settings, $section_id ) {
-		if ( self::SECTION_ID !== $section_id ) {
-			return $settings;
-		}
-
-		$settings[] = array(
-			'type'    => 'square_payment_method',
-			'id'      => 'woocommerce_square_credit_card_settings',
-			'title'   => __( 'Credit Card', 'woocommerce-square' ),
-			'default' => array(),
-		);
-		$settings[] = array(
-			'type'    => 'square_payment_method',
-			'id'      => 'woocommerce_square_cash_app_pay_settings',
-			'title'   => __( 'Cash App Pay', 'woocommerce-square' ),
-			'default' => array(),
-		);
-		$settings[] = array(
-			'type'    => 'square_payment_method',
-			'id'      => 'woocommerce_square_gift_cards_pay_settings',
-			'title'   => __( 'Gift Cards', 'woocommerce-square' ),
-			'default' => array(),
-		);
-
-		return $settings;
-	}
-
-	/**
-	 * Whitelists the square_payment_method type in WC React Settings.
-	 *
-	 * @param array $types Supported field types.
-	 * @return array
-	 */
-	public static function add_supported_field_types( $types ) {
-		$types[] = 'square_payment_method';
-		return $types;
-	}
-
-	/**
-	 * Maps the square_payment_method type to itself for WC's type resolver.
-	 *
-	 * @param array $map Type map.
-	 * @return array
-	 */
-	public static function add_field_type_map( $map ) {
-		$map['square_payment_method'] = 'square_payment_method';
-		return $map;
-	}
-
-	/**
-	 * PHP fallback renderer for square_payment_method fields on WC versions that
-	 * do not yet expose window.wcReactSettings.
-	 *
-	 * @param array $value Field definition with populated value.
-	 * @return void
-	 */
-	public static function render_payment_method_fallback( $value ) {
-		$settings = is_array( $value['value'] ) ? $value['value'] : array();
-		$enabled  = isset( $settings['enabled'] ) && 'yes' === $settings['enabled'];
-		$title    = isset( $value['title'] ) ? esc_html( $value['title'] ) : '';
-		?>
-		<tr valign="top">
-			<th scope="row" class="titledesc">
-				<?php echo $title; // Already escaped above. ?>
-			</th>
-			<td class="forminp">
-				<label>
-					<input
-						type="checkbox"
-						name="<?php echo esc_attr( $value['id'] ); ?>[enabled]"
-						value="yes"
-						<?php checked( $enabled ); ?>
-					/>
-					<?php esc_html_e( 'Enable', 'woocommerce-square' ); ?>
-				</label>
-			</td>
-		</tr>
-		<?php
 	}
 
 	/**
@@ -208,7 +112,7 @@ final class Payments_Square_Hub {
 	 * @return void
 	 */
 	public static function redirect_standalone_gateway_sections() {
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 			return;
 		}
 
