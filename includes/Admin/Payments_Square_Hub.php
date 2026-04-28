@@ -68,7 +68,7 @@ final class Payments_Square_Hub {
 	 * @return void
 	 */
 	public static function redirect_legacy_square_settings_tab() {
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 			return;
 		}
 
@@ -159,9 +159,11 @@ final class Payments_Square_Hub {
 
 		$payments_screen_url = self::get_payments_screen_url();
 
+		/** This filter is documented in woocommerce/includes/admin/class-wc-admin-settings.php */
 		$all_tabs         = apply_filters( 'woocommerce_settings_tabs_array', array() );
-		$parent_tab_label = isset( $all_tabs['checkout'] ) ? $all_tabs['checkout'] : __( 'Payments', 'woocommerce' );
+		$parent_tab_label = isset( $all_tabs['checkout'] ) ? $all_tabs['checkout'] : __( 'Payments', 'woocommerce-square' );
 
+		/** This filter is documented in woocommerce/includes/admin/class-wc-admin-settings.php */
 		$all_sections  = apply_filters( 'woocommerce_get_sections_checkout', array() );
 		$section_label = isset( $all_sections[ self::SECTION_ID ] ) ? $all_sections[ self::SECTION_ID ] : __( 'Square', 'woocommerce-square' );
 
