@@ -61,7 +61,25 @@ class Square_Modern_Settings_Page extends \WC_Settings_Page {
 	public function get_settings( $section = '' ) {
 		switch ( $section ) {
 			case 'payment-methods':
-				return array(); // Ticket 3 scope.
+				return array(
+					array(
+						'type'  => 'title',
+						'id'    => 'square_payment_methods_title',
+						'title' => '',
+					),
+					array(
+						'id'        => 'square_payment_methods_ui',
+						'type'      => 'text',
+						'title'     => '',
+						'component' => 'square/payment-methods',
+						'is_option' => false,
+						'value'     => '',
+					),
+					array(
+						'type' => 'sectionend',
+						'id'   => 'square_payment_methods_title',
+					),
+				);
 
 			case 'payments-transactions':
 				return array(); // Ticket 4 scope.

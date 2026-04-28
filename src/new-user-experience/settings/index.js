@@ -27,6 +27,7 @@ registerSettingsExtension( {
 	scope: { page: 'square' },
 	components: {
 		'square/general': GeneralSettingsApp,
+		'square/payment-methods': PaymentGatewaySettingsApp,
 	},
 } );
 
