@@ -88,9 +88,23 @@ class Admin {
 	 */
 	private function add_hooks() {
 
-		// add the settings page.
-		// Legacy top-level WooCommerce > Settings > Square tab was removed (see Payments_Square_Hub).
-		Admin\Payments_Square_Hub::init();
+		// Flag ON: register Square as its own top-level WC settings tab so the SDK can
+		// discover it via WCAdminAssets::get_current_modern_settings_page().
+		// Flag OFF: keep the existing Payments > Square hub (checkout-section path).
+		if (
+			class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) &&
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::feature_is_enabled( 'modern-settings' )
+		) {
+			add_filter(
+				'woocommerce_get_settings_pages',
+				static function ( $pages ) {
+					$pages[] = new Admin\Square_Modern_Settings_Page();
+					return $pages;
+				}
+			);
+		} else {
+			Admin\Payments_Square_Hub::init();
+		}
 
 		// load admin scripts.
 		add_action(

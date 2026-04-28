@@ -16,6 +16,16 @@ module.exports = {
 				if ( request === '@wordpress/dataviews/wp' ) {
 					return false;
 				}
+				// Pre-release SDK — not yet in the extraction plugin's package list.
+				// Maps to window.wc.modernSettingsSdk (set by the wc-modern-settings-sdk script).
+				if ( request === '@woocommerce/modern-settings-sdk' ) {
+					return [ 'wc', 'modernSettingsSdk' ];
+				}
+			},
+			requestToHandle( request ) {
+				if ( request === '@woocommerce/modern-settings-sdk' ) {
+					return 'wc-modern-settings-sdk';
+				}
 			},
 		} ),
 		new CopyWebpackPlugin( {
