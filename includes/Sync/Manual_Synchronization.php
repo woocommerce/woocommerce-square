@@ -23,7 +23,6 @@
 
 namespace WooCommerce\Square\Sync;
 
-use Automattic\WooCommerce\Enums\ProductType;
 use Square\Models\BatchRetrieveInventoryCountsResponse;
 use Square\Models\BatchUpsertCatalogObjectsResponse;
 use Square\Models\BatchRetrieveCatalogObjectsResponse;
@@ -763,7 +762,16 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// Set query has limit of 250 items.
 		foreach ( array_chunk( $product_skus, 250 ) as $batched_skus ) {
-			$existing_catalog_objects = array_merge( $existing_catalog_objects, $this->find_existing_square_items_by_skus( $batched_skus ) );
+			foreach ( $this->find_existing_square_items_by_skus( $batched_skus ) as $existing_catalog_object ) {
+				if ( ! $existing_catalog_object instanceof CatalogObject ) {
+					continue;
+				}
+				$remote_catalog_object_id = $existing_catalog_object->getId();
+				if ( empty( $remote_catalog_object_id ) ) {
+					continue;
+				}
+				$existing_catalog_objects[ $remote_catalog_object_id ] = $existing_catalog_object;
+			}
 		}
 
 		// If no existing catalog objects found, return.
@@ -803,7 +811,7 @@ class Manual_Synchronization extends Stepped_Job {
 						)
 					);
 
-					$product_id = $local_product->is_type( ProductType::VARIATION ) ? $local_product->get_parent_id() : $local_product->get_id();
+					$product_id = $local_product->is_type( 'variation' ) ? $local_product->get_parent_id() : $local_product->get_id();
 				}
 
 				// Update the parent product if it exists.
@@ -819,9 +827,9 @@ class Manual_Synchronization extends Stepped_Job {
 							)
 						);
 					}
-				}
 
-				$linked_product_ids[] = $product_id;
+					$linked_product_ids[] = $product_id;
+				}
 			}
 		}
 
@@ -834,7 +842,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * @since x.x.x
 	 *
 	 * @param array $product_skus The SKUs of the WooCommerce products to find.
-	 * @return array The IDs of the existing Square items.
+	 * @return CatalogObject[] The existing Square ITEM catalog objects.
 	 */
 	protected function find_existing_square_items_by_skus( $product_skus ) {
 		$existing_items = array();
@@ -938,6 +946,10 @@ class Manual_Synchronization extends Stepped_Job {
 
 			// If all products were linked to existing items, no upsert needed, return early.
 			if ( empty( $product_ids ) ) {
+				$upsert_new_product_ids = $this->get_attr( 'upsert_new_product_ids', array() );
+				if ( empty( $upsert_new_product_ids ) ) {
+					$this->complete_step( 'upsert_new_products' );
+				}
 				return;
 			}
 		}
