@@ -82,7 +82,25 @@ class Square_Modern_Settings_Page extends \WC_Settings_Page {
 				);
 
 			case 'payments-transactions':
-				return array(); // Ticket 4 scope.
+				return array(
+					array(
+						'type'  => 'title',
+						'id'    => 'square_payments_transactions_title',
+						'title' => '',
+					),
+					array(
+						'id'        => 'square_payments_transactions_ui',
+						'type'      => 'text',
+						'title'     => '',
+						'component' => 'square/payments-transactions',
+						'is_option' => false,
+						'value'     => '',
+					),
+					array(
+						'type' => 'sectionend',
+						'id'   => 'square_payments_transactions_title',
+					),
+				);
 
 			case 'synchronize':
 				return array(); // Ticket 5 scope.

@@ -30,6 +30,10 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 			<button type="button" class="button button-primary wc-square-settings-hub__save" id="wc-square-settings-hub__save-payment-methods" disabled>
 				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
 			</button>
+		<?php elseif ( Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS === $current_tab ) : ?>
+			<button type="button" class="button button-primary wc-square-settings-hub__save" id="wc-square-settings-hub__save-payments-transactions" disabled>
+				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
+			</button>
 		<?php else : ?>
 			<button type="button" class="button button-primary wc-square-settings-hub__save" disabled aria-disabled="true" title="<?php esc_attr_e( 'Saving will be available when settings are added to this screen.', 'woocommerce-square' ); ?>">
 				<?php esc_html_e( 'Save', 'woocommerce-square' ); ?>
@@ -38,12 +42,12 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 	</div>
 
 	<nav class="wc-square-settings-hub__tablist" aria-label="<?php esc_attr_e( 'Square settings sections', 'woocommerce-square' ); ?>">
-		<?php foreach ( $tabs as $id => $label ) : ?>
+		<?php foreach ( $tabs as $tab_id => $label ) : ?>
 			<?php
-			$url     = Payments_Square_Hub::get_hub_url( $id );
-			$classes = 'wc-square-settings-hub__tab' . ( $current_tab === $id ? ' is-active' : '' );
+			$url     = Payments_Square_Hub::get_hub_url( $tab_id );
+			$classes = 'wc-square-settings-hub__tab' . ( $current_tab === $tab_id ? ' is-active' : '' );
 			?>
-			<a href="<?php echo esc_url( $url ); ?>" class="<?php echo esc_attr( $classes ); ?>"<?php echo $current_tab === $id ? ' aria-current="page"' : ''; ?>>
+			<a href="<?php echo esc_url( $url ); ?>" class="<?php echo esc_attr( $classes ); ?>"<?php echo $current_tab === $tab_id ? ' aria-current="page"' : ''; ?>>
 				<?php echo esc_html( $label ); ?>
 			</a>
 		<?php endforeach; ?>
@@ -55,6 +59,8 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 		$panel_classes .= ' wc-square-settings-hub__panel--general';
 	} elseif ( Payments_Square_Hub::TAB_PAYMENT_METHODS === $current_tab ) {
 		$panel_classes .= ' wc-square-settings-hub__panel--payment-methods';
+	} elseif ( Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS === $current_tab ) {
+		$panel_classes .= ' wc-square-settings-hub__panel--payments-transactions';
 	}
 	?>
 	<div class="<?php echo esc_attr( $panel_classes ); ?>">
@@ -62,6 +68,8 @@ use WooCommerce\Square\Admin\Payments_Square_Hub;
 			<div id="woocommerce-square-settings__container-general"></div>
 		<?php elseif ( Payments_Square_Hub::TAB_PAYMENT_METHODS === $current_tab ) : ?>
 			<div id="woocommerce-square-settings__container-payment-methods"></div>
+		<?php elseif ( Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS === $current_tab ) : ?>
+			<div id="woocommerce-square-settings__container-payments-transactions"></div>
 		<?php else : ?>
 			<p class="description"><?php esc_html_e( 'Settings content for this tab will be added in a future release.', 'woocommerce-square' ); ?></p>
 		<?php endif; ?>

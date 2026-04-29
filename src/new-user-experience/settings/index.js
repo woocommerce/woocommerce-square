@@ -13,6 +13,7 @@ import '../styles/index.scss';
 import '../styles/settings.scss';
 import { GeneralSettingsApp } from './general-settings-app';
 import { PaymentGatewaySettingsApp } from './payment-gateway-settings-app';
+import { PaymentsTransactionsApp } from './payments-transactions-app';
 import { CashAppSettingsApp } from './cash-app-gateway-settings-app';
 import { GiftCardsSettingsApp } from './gift-cards-gateway-settings-app';
 import './payment-method-field-types';
@@ -28,6 +29,7 @@ registerSettingsExtension( {
 	components: {
 		'square/general': GeneralSettingsApp,
 		'square/payment-methods': PaymentGatewaySettingsApp,
+		'square/payments-transactions': PaymentsTransactionsApp,
 	},
 } );
 
@@ -56,6 +58,15 @@ domReady( () => {
 	);
 	if ( container ) {
 		createRoot( container ).render( <PaymentGatewaySettingsApp /> );
+		return;
+	}
+
+	// Hub: Payments & Transactions tab.
+	container = document.getElementById(
+		'woocommerce-square-settings__container-payments-transactions'
+	);
+	if ( container ) {
+		createRoot( container ).render( <PaymentsTransactionsApp /> );
 		return;
 	}
 

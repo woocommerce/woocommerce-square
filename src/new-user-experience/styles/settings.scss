@@ -125,6 +125,72 @@
     }
 }
 
+// Payments & Transactions tab
+#woocommerce-square-settings__container-payments-transactions {
+    .wc-square-payments-transactions {
+        max-width: 660px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .wc-square-payments-transactions__section {
+        background: #fff;
+        border: 1px solid #dcdcde;
+        border-radius: 4px;
+    }
+
+    .wc-square-payments-transactions__section-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #dcdcde;
+    }
+
+    .wc-square-payments-transactions__section-title {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1d2327;
+        margin: 0 0 6px;
+    }
+
+    .wc-square-payments-transactions__section-description {
+        display: block;
+        font-size: 13px;
+        color: #646970;
+        margin: 0;
+    }
+
+    .wc-square-payments-transactions__fields {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .wc-square-payments-transactions__field {
+        .components-base-control {
+            margin-bottom: 0;
+        }
+
+        &--indent {
+            padding-left: 24px;
+        }
+    }
+
+    .wc-square-payments-transactions__subheading {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1d2327;
+        margin: 0 0 8px;
+    }
+
+    .wc-square-payments-transactions__help {
+        font-size: 12px;
+        color: #646970;
+        margin: 6px 0 0;
+    }
+}
+
 .woocommerce {
     .woo-square-setting__section-title {
         .wc-admin-breadcrumb {
