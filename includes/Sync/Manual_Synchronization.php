@@ -640,7 +640,13 @@ class Manual_Synchronization extends Stepped_Job {
 
 					foreach ( $catalog_object->getItemData()->getVariations() as $catalog_variation ) {
 
-						$product_id = wc_get_product_id_by_sku( $catalog_variation->getItemVariationData()->getSku() );
+						$sku = $catalog_variation->getItemVariationData()->getSku();
+
+						if ( empty( $sku ) ) {
+							continue;
+						}
+
+						$product_id = wc_get_product_id_by_sku( $sku );
 
 						$product = wc_get_product( $product_id );
 
@@ -1292,11 +1298,21 @@ class Manual_Synchronization extends Stepped_Job {
 				$missing_variations        = array();
 				$woo_product_variations    = $maybe_parent_product->get_children();
 				$square_product_variations = $object->getItemData()->getVariations();
-				$square_variation_ids      = array_map(
-					function ( $square_product_variation ) {
-						return wc_get_product_id_by_sku( $square_product_variation->getItemVariationData()->getSku() );
-					},
-					$square_product_variations
+				$square_variation_ids      = array_values(
+					array_filter(
+						array_map(
+							function ( $square_product_variation ) {
+								$sku = $square_product_variation->getItemVariationData()->getSku();
+
+								if ( empty( $sku ) ) {
+									return null;
+								}
+
+								return wc_get_product_id_by_sku( $sku );
+							},
+							$square_product_variations
+						)
+					)
 				);
 
 				foreach ( $woo_product_variations as $woo_product_variation_id ) {
@@ -1314,7 +1330,13 @@ class Manual_Synchronization extends Stepped_Job {
 
 			foreach ( $object->getItemData()->getVariations() as $variation ) {
 
-				$found_product_id = wc_get_product_id_by_sku( $variation->getItemVariationData()->getSku() );
+				$sku = $variation->getItemVariationData()->getSku();
+
+				if ( empty( $sku ) ) {
+					continue;
+				}
+
+				$found_product_id = wc_get_product_id_by_sku( $sku );
 
 				// bail if this product has already been processed
 				if ( in_array( $found_product_id, $processed_product_ids, false ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.FoundNonStrictFalse
