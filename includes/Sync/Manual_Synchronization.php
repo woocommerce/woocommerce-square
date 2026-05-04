@@ -761,6 +761,7 @@ class Manual_Synchronization extends Stepped_Job {
 		}
 
 		// Set query has limit of 250 items.
+		$sku_to_object_id_map = array();
 		foreach ( array_chunk( $product_skus, 250 ) as $batched_skus ) {
 			foreach ( $this->find_existing_square_items_by_skus( $batched_skus ) as $existing_catalog_object ) {
 				if ( ! $existing_catalog_object instanceof CatalogObject ) {
@@ -771,6 +772,37 @@ class Manual_Synchronization extends Stepped_Job {
 					continue;
 				}
 				$existing_catalog_objects[ $remote_catalog_object_id ] = $existing_catalog_object;
+
+				// Check for Multiple Square items with the same SKU.
+				$item_data = $existing_catalog_object->getItemData();
+				if ( $item_data && is_array( $item_data->getVariations() ) ) {
+					foreach ( $item_data->getVariations() as $variation ) {
+						if ( ! $variation->getItemVariationData()->getSku() ) {
+							continue;
+						}
+
+						$sku = $variation->getItemVariationData()->getSku();
+						if ( isset( $sku_to_object_id_map[ $sku ] ) && ! empty( $sku_to_object_id_map[ $sku ] ) ) {
+							unset( $existing_catalog_objects[ $sku_to_object_id_map[ $sku ] ] );
+							unset( $existing_catalog_objects[ $remote_catalog_object_id ] );
+							Records::set_record(
+								array(
+									'type'    => 'alert',
+									'message' => sprintf(
+										/* translators: %1$s - SKU, %2$s - Square Item 1, %3$s - Square Item 2. */
+										__( 'Multiple Square items share the same SKU: %1$s. Square Item IDs: %2$s, %3$s', 'woocommerce-square' ),
+										$sku,
+										$sku_to_object_id_map[ $sku ],
+										$remote_catalog_object_id
+									),
+								)
+							);
+							continue;
+						}
+
+						$sku_to_object_id_map[ $sku ] = $remote_catalog_object_id;
+					}
+				}
 			}
 		}
 
