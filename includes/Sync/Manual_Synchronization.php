@@ -781,10 +781,6 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// Link products to existing catalog objects.
 		foreach ( $existing_catalog_objects as $remote_catalog_item ) {
-			if ( ! $remote_catalog_item instanceof CatalogObject ) {
-				continue;
-			}
-
 			if ( is_array( $remote_catalog_item->getItemData()->getVariations() ) ) {
 				$product_id = null;
 				foreach ( $remote_catalog_item->getItemData()->getVariations() as $catalog_item_variation ) {
@@ -892,6 +888,7 @@ class Manual_Synchronization extends Stepped_Job {
 			);
 		}
 
+		// Return empty array to indicate no existing items found, even if an exception was thrown, log failure and continue.
 		return array();
 	}
 
@@ -929,6 +926,10 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// Remove linked products from the upsert batch — they already exist in Square.
 		if ( ! empty( $linked_product_ids ) ) {
+			// Log the number of products linked to existing Square items.
+			wc_square()->log( '[SKU Guard] Linked ' . count( $linked_product_ids ) . ' products to existing Square items - skipping upsert for these products.' );
+
+			// Remove linked products from the upsert batch.
 			$product_ids = array_values( array_diff( $product_ids, $linked_product_ids ) );
 
 			// Linked products count as processed and need inventory push.
