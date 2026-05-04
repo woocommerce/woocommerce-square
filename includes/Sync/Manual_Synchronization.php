@@ -781,11 +781,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// Link products to existing catalog objects.
 		foreach ( $existing_catalog_objects as $remote_catalog_item ) {
-			if ( is_array( $remote_catalog_item->getItemData()->getVariations() ) ) {
+			$item_data = $remote_catalog_item->getItemData();
+			if ( $item_data && is_array( $item_data->getVariations() ) ) {
 				$product_id = null;
 				foreach ( $remote_catalog_item->getItemData()->getVariations() as $catalog_item_variation ) {
 					$variation_data = $catalog_item_variation->getItemVariationData();
-					if ( ! $variation_data || ! $variation_data->getSku() || empty( $variation_data->getSku() ) ) {
+					if ( ! $variation_data || empty( $variation_data->getSku() ) ) {
 						continue;
 					}
 
@@ -872,7 +873,7 @@ class Manual_Synchronization extends Stepped_Job {
 				if (
 					$object instanceof CatalogObject
 					&& $object->getType() === CatalogObjectType::ITEM
-					&& $object->getIsDeleted() === false
+					&& ! $object->getIsDeleted()
 				) {
 					$existing_items[] = $object;
 				}
