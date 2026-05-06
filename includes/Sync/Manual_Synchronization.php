@@ -777,11 +777,12 @@ class Manual_Synchronization extends Stepped_Job {
 				$item_data = $existing_catalog_object->getItemData();
 				if ( $item_data && is_array( $item_data->getVariations() ) ) {
 					foreach ( $item_data->getVariations() as $variation ) {
-						if ( ! $variation->getItemVariationData()->getSku() ) {
+						$variation_data = $variation->getItemVariationData();
+						if ( ! $variation_data || empty( $variation_data->getSku() ) ) {
 							continue;
 						}
 
-						$sku = $variation->getItemVariationData()->getSku();
+						$sku = $variation_data->getSku();
 						if ( isset( $sku_to_object_id_map[ $sku ] ) && ! empty( $sku_to_object_id_map[ $sku ] ) ) {
 							unset( $existing_catalog_objects[ $sku_to_object_id_map[ $sku ] ] );
 							unset( $existing_catalog_objects[ $remote_catalog_object_id ] );
