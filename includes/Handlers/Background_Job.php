@@ -216,8 +216,8 @@ class Background_Job extends Background_Job_Handler {
 
 		Records::set_record(
 			array(
-				'type'    => 'alert',
-				'message' => 'Sync failed. Please try again',
+				'type'    => 'failed',
+				'message' => __( 'Sync failed. Please try again', 'woocommerce-square' ),
 			)
 		);
 
