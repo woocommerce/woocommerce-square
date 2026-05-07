@@ -414,7 +414,7 @@ class API extends \WooCommerce\Square\API {
 	 * - Admin/CLI/cron on production site: call Square.
 	 * - Admin/CLI/cron on non-production site (staging/local/dev or WCS duplicate): do not call Square.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @param string $token       the payment method token (Square card ID).
 	 * @param string $customer_id unique customer id.
@@ -442,7 +442,7 @@ class API extends \WooCommerce\Square\API {
 		/**
 		 * Filters whether to call the Square API to disable the card when a saved payment method is removed.
 		 *
-		 * @since x.x.x
+		 * @since 5.3.3
 		 *
 		 * @param bool   $should_disable Whether to call Square (true) or skip and only remove the token locally (false).
 		 * @param string $token          Square card ID.
@@ -455,7 +455,7 @@ class API extends \WooCommerce\Square\API {
 	/**
 	 * Whether the current WordPress environment is staging, local, development, or a WCS duplicate site.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @return bool true if the site is non-production (staging/local/dev or WooCommerce Subscriptions duplicate)
 	 */

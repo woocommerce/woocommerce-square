@@ -731,7 +731,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Links products to existing Square items by SKUs.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @param array $product_ids The IDs of the WooCommerce products to link.
 	 * @return array The IDs of the linked products.
@@ -878,7 +878,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Finds existing Square items by SKUs.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @param array $product_skus The SKUs of the WooCommerce products to find.
 	 * @return CatalogObject[] The existing Square ITEM catalog objects.
