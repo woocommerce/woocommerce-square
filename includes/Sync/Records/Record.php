@@ -206,6 +206,7 @@ class Record {
 			'notice'   => __( 'Notice', 'woocommerce-square' ),
 			'alert'    => __( 'Alert', 'woocommerce-square' ),
 			'resolved' => __( 'Resolved', 'woocommerce-square' ),
+			'failed'   => __( 'Failed', 'woocommerce-square' ),
 		);
 	}
 
