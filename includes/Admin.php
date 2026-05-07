@@ -382,7 +382,7 @@ class Admin {
 	 * - The last synced at is set and is before the threshold time (default is 24 hours, 48 hours if the sync interval is 24 hours).
 	 * - The synced products count is greater than 0 (at least one product is synced with Square).
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @return void
 	 */
@@ -413,7 +413,7 @@ class Admin {
 		/**
 		 * Filters the threshold time for the sync status notice.
 		 *
-		 * @since x.x.x
+		 * @since 5.3.3
 		 *
 		 * @param int $threshold_seconds The threshold time in seconds. Default is 24 hours, or 48 hours when the sync interval is 24 hours.
 		 * @param int $sync_interval     The sync interval in seconds.
