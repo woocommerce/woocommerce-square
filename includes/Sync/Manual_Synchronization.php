@@ -49,6 +49,9 @@ class Manual_Synchronization extends Stepped_Job {
 	/** @var int the limit for how many inventory changes can be made in a single request */
 	const BATCH_CHANGE_INVENTORY_LIMIT = 100;
 
+	/** @var int max SKU-based lookups per push_inventory step to avoid rate limits */
+	const MAX_SKU_LOOKUPS_PER_PUSH_STEP = 20;
+
 	/** @var int the limit for how many inventory counts can be requested per batch
 	 * Square paginates responses in page size of 100.
 	 * Consider some items can have more than one object returned with different states. */
@@ -1112,6 +1115,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$product_ids            = $this->get_attr( 'inventory_push_product_ids', array() );
 		$count                  = $this->get_attr( 'push_inventory_count', 0 );
+		$sku_lookups_this_step  = 0;
 		$inventory_changes      = array();
 		$inventory_change_count = 0;
 
@@ -1128,21 +1132,36 @@ class Manual_Synchronization extends Stepped_Job {
 
 					foreach ( $product->get_children() as $child_id ) {
 
-						$child            = wc_get_product( $child_id );
+						$child = wc_get_product( $child_id );
+						if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+							continue;
+						}
+
+						$child_square_id = Product::get_square_item_variation_id( $child_id, false );
+						if ( ! $child_square_id && $child->get_sku() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+							++$sku_lookups_this_step;
+							$child_square_id = Product::get_square_variation_id_by_sku( $child->get_sku(), $child_id, true );
+						}
 						$inventory_change = Product::get_inventory_change_physical_count_type( $child );
 
-						if ( $child instanceof \WC_Product && $child->get_manage_stock() && $inventory_change ) {
-
+						if ( $inventory_change ) {
 							$product_inventory_changes[] = $inventory_change;
 						}
 					}
-				} elseif ( $square_variation_id ) {
+				} else {
+					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost after timeout).
+					if ( ! $square_variation_id && $product->get_sku() && $product->get_manage_stock() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+						++$sku_lookups_this_step;
+						$square_variation_id = Product::get_square_variation_id_by_sku( $product->get_sku(), $product_id, true );
+					}
 
-					$inventory_change = Product::get_inventory_change_physical_count_type( $product );
+					if ( $square_variation_id ) {
 
-					if ( $inventory_change && $product->get_manage_stock() ) {
+						$inventory_change = Product::get_inventory_change_physical_count_type( $product );
 
-						$product_inventory_changes[] = $inventory_change;
+						if ( $inventory_change && $product->get_manage_stock() ) {
+							$product_inventory_changes[] = $inventory_change;
+						}
 					}
 				}
 
