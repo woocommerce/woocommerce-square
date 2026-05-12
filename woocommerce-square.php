@@ -22,8 +22,8 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 10.5
- * WC tested up to: 10.7
+ * WC requires at least: 10.6
+ * WC tested up to: 10.8
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -63,7 +63,7 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_WP_VERSION = '6.8';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '10.5';
+	const MINIMUM_WC_VERSION = '10.6';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
