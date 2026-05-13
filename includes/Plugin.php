@@ -998,11 +998,6 @@ class Plugin extends Payment_Gateway_Plugin {
 			return;
 		}
 
-		// Remove all OLD scheduled actions to cleanup DB.
-		// TODO: Remove this in next release.
-		global $wpdb;
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = 'wc_square_init_payment_token_migration'" );
-
 		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration_v2' ) ) {
 			as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => 1 ) );
 		}
