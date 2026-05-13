@@ -99,23 +99,11 @@ final class Order_Ajax_Authorization {
 			return true;
 		}
 
-		// Respect the WordPress capability system. Temporarily expose the already-validated order
-		// key via $_GET['key'] so that user_has_cap filters (e.g. the BusinessBloomer
-		// pay-for-order-without-login pattern) can grant pay_for_order in AJAX context where
-		// $_GET['key'] is absent from the request URL.
-		$key_injected = false;
-		if ( ! isset( $_GET['key'] ) && $order_key ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$_GET['key']  = $order_key; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$key_injected = true;
-		}
-
-		$can_pay = current_user_can( 'pay_for_order', $order->get_id() );
-
-		if ( $key_injected ) {
-			unset( $_GET['key'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		}
-
-		return $can_pay;
+		// Respect the WordPress capability system. Allows site-level user_has_cap filters
+		// to grant pay_for_order (e.g. a snippet that authorises guests via the order key).
+		// Note: AJAX requests do not include $_GET['key']; filters that verify the order key
+		// should read it from $_POST['order_key'] instead, which is always present here.
+		return current_user_can( 'pay_for_order', $order->get_id() );
 	}
 
 	/**
