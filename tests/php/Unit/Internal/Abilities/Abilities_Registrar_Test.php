@@ -9,7 +9,7 @@ namespace WooCommerce\Square\Tests\Unit\Internal\Abilities;
 
 use WP_UnitTestCase;
 use WooCommerce\Square\Internal\Abilities\Abilities_Registrar;
-// `use ... \Domain;` is intentionally omitted at Phase I — Domain classes land in subsequent commits.
+use WooCommerce\Square\Internal\Abilities\Domain;
 
 /**
  * Phase I scaffolding tests — six cases covering both the feature-flag
@@ -81,7 +81,7 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 		$classes = Abilities_Registrar::append_classes( array() );
 
 		$expected = array(
-			// Filled per-ability as Domain classes land in Phases II–IV.
+			Domain\GetSyncStatus::class,
 		);
 
 		foreach ( $expected as $class ) {

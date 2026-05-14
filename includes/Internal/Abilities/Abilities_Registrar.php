@@ -54,7 +54,7 @@ class Abilities_Registrar {
 	 * @var array<int, class-string>
 	 */
 	private const ABILITY_CLASSES = array(
-		// Filled in subsequent phases — one Domain\<Name>::class per ability.
+		Domain\GetSyncStatus::class,
 	);
 
 	/**
