@@ -95,7 +95,18 @@ class GetLocations extends AbstractSquareAbility implements AbilityDefinition {
 			);
 		}
 
-		// Pass false for $force — let the transient cache do its job.
+		// verify-ignore: readonly -- Settings::get_locations() has two
+		// side-effects on cold cache: (1) it hydrates a transient
+		// (wc_square_locations_<ver>, TTL 1 hour) which is a cache-population
+		// write; (2) if the merchant's stored location_id is no longer
+		// present in the connected Square account's locations list, the
+		// method self-heals by calling clear_location_id(). Both side
+		// effects are infrequent (cache miss only) and benefit the
+		// merchant, but the second is a real settings mutation. Tracked
+		// as a Phase 2 follow-up: bypass Settings::get_locations() and
+		// either read the transient directly or call the API client
+		// without the self-heal step, so the readonly claim becomes
+		// load-bearing rather than approximate.
 		$locations = $settings->get_locations( false );
 
 		if ( ! is_array( $locations ) ) {
