@@ -121,9 +121,9 @@ class GetProductSyncState extends AbstractSquareAbility implements AbilityDefini
 		// the product has not yet been pushed to Square. Sync state is held
 		// on the parent for variations; Product::get_square_item_id resolves
 		// the post-meta directly via the WC_Product ID passed in.
-		$id_lookup_target  = $is_variation && $parent_product_id ? $parent_product_id : $product;
-		$square_item_id    = Product::get_square_item_id( $id_lookup_target, false );
-		$is_synced         = Product::is_synced_with_square( $product );
+		$id_lookup_target = $is_variation && $parent_product_id ? $parent_product_id : $product;
+		$square_item_id   = Product::get_square_item_id( $id_lookup_target, false );
+		$is_synced        = Product::is_synced_with_square( $product );
 
 		return array(
 			'product_id'        => $product_id,

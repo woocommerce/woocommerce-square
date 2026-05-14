@@ -106,16 +106,16 @@ class GetSyncStatus extends AbstractSquareAbility implements AbilityDefinition {
 			);
 		}
 
-		$job             = $sync_handler->get_job_in_progress();
-		$current_job_id  = ( is_object( $job ) && isset( $job->id ) ) ? (string) $job->id : null;
+		$job            = $sync_handler->get_job_in_progress();
+		$current_job_id = ( is_object( $job ) && isset( $job->id ) ) ? (string) $job->id : null;
 
 		return array(
-			'is_in_progress'             => (bool) $sync_handler->is_sync_in_progress(),
-			'is_sync_enabled'            => (bool) $sync_handler->is_sync_enabled(),
-			'current_job_id'             => $current_job_id,
-			'last_synced_at'             => $sync_handler->get_last_synced_at(),
-			'inventory_last_synced_at'   => $sync_handler->get_inventory_last_synced_at(),
-			'next_sync_at'               => $sync_handler->get_next_sync_at(),
+			'is_in_progress'           => (bool) $sync_handler->is_sync_in_progress(),
+			'is_sync_enabled'          => (bool) $sync_handler->is_sync_enabled(),
+			'current_job_id'           => $current_job_id,
+			'last_synced_at'           => $sync_handler->get_last_synced_at(),
+			'inventory_last_synced_at' => $sync_handler->get_inventory_last_synced_at(),
+			'next_sync_at'             => $sync_handler->get_next_sync_at(),
 		);
 	}
 }
