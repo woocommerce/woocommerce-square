@@ -1,8 +1,8 @@
 ---
-Last updated: 2026-05-14 18:05
+Last updated: 2026-05-14 20:55
 ---
 
-# Square for WooCommerce Abilities Verification — Static Mode
+# Square for WooCommerce Abilities Verification — Static + Partial Runtime
 
 ## Status: WARN
 
@@ -114,18 +114,94 @@ underscore / action-second / field-last rule from
 callback bodies — the schema-validator path produces that code on its own
 for REST-bridged invocations.
 
-## Runtime mode — not run in this session
+## Runtime mode — partial (WC 10.9 not yet available on the wp-env channel)
 
-Runtime-mode verification requires wp-env up with WooCommerce 10.9+
-installed so the `AbilitiesLoader` exists. wp-env startup was initiated
-alongside this static run; runtime enumeration via
-`wp_get_abilities()`, ability execution against curated inputs,
-permission roundtrip via real subscriber + admin users, and the
-twin-invocation idempotency heuristic are tracked as the next step.
+wp-env was brought up successfully with WP 6.9.4 + WC 10.8.0-beta.2 — WC
+10.9's `AbilitiesLoader` is not yet shipped on the `latest` plugin channel.
+That means the full ability-execution path (`wp_get_ability($name)` returning a
+populated `WP_Ability`, `check_permissions()` running against real users,
+twin-invocation idempotency) cannot be exercised in this session. What CAN
+be verified is the **silent-bail path** — the load-bearing safety property
+on WC < 10.9 — and it passes cleanly.
 
-Pre-merge gate: a reviewer should reproduce the runtime mode on a wp-env
-running WC ≥ 10.9 + WP ≥ 6.9 and paste the runtime artifact here before
-flipping this PR from draft to ready-for-review.
+Probe script: `tests/php/runtime-probe.php` (committed alongside this
+artifact for reproducibility). Run via:
+
+```
+npx wp-env run cli -- wp eval-file wp-content/plugins/woocommerce-square/tests/php/runtime-probe.php
+```
+
+Output recorded in this session:
+
+```
+WP version: 6.9.4
+WC version: 10.8.0-beta.2
+AbilitiesLoader (WC 10.9+ required): no
+Square Abilities_Registrar autoloads: yes
+AbstractSquareAbility autoloads: yes
+wp_register_ability function: yes
+wp_get_ability function: yes
+Feature flag default value: false
+Loader filter wired (expect no with feature flag default off): no
+
+--- forcing the feature flag on ---
+After flag-on init(): loader filter wired (expect no on WC<10.9, yes on WC>=10.9): no
+  -> CONFIRMED silent-bail path. Registrar correctly short-circuits before
+     adding the filter when AbilitiesLoader is absent (WC<10.9).
+
+--- can_manage_woocommerce_square() roundtrip ---
+  anon user: false (OK)
+  subscriber: false (OK)
+  admin: true (OK)
+
+--- append_classes() — Domain class strings only (no autoload) ---
+  count: 7
+   - WooCommerce\Square\Internal\Abilities\Domain\GetSyncStatus
+   - WooCommerce\Square\Internal\Abilities\Domain\GetSyncRecords
+   - WooCommerce\Square\Internal\Abilities\Domain\GetConnectionStatus
+   - WooCommerce\Square\Internal\Abilities\Domain\GetLocations
+   - WooCommerce\Square\Internal\Abilities\Domain\GetProductSyncState
+   - WooCommerce\Square\Internal\Abilities\Domain\GetCreditCardPaymentSettings
+   - WooCommerce\Square\Internal\Abilities\Domain\GetCashAppPaymentSettings
+
+--- wp_get_ability check (expect null on WC<10.9, since registrar bails) ---
+  woocommerce-square/get-sync-status: null
+  woocommerce-square/get-sync-records: null
+  woocommerce-square/get-connection-status: null
+  woocommerce-square/get-locations: null
+  woocommerce-square/get-product-sync-state: null
+  woocommerce-square/get-credit-card-payment-settings: null
+  woocommerce-square/get-cash-app-payment-settings: null
+```
+
+What this confirms:
+
+- **Lazy-autoload property holds.** The probe only references Domain
+  classes via their FQN string in `ABILITY_CLASSES` — calling
+  `class_exists()` or `method_exists()` on those FQNs would force
+  autoload and fatal on the missing `AbilityDefinition` interface. The
+  registrar's `append_classes()` returns the FQN strings without
+  triggering autoload, which is the exact safety contract documented
+  in `wc-1009-dependency.md`.
+- **Silent-bail path works.** With the feature flag forced on and the
+  loader absent, `init()` short-circuits before adding the
+  `woocommerce_ability_definition_classes` filter. No errors, no
+  notices, no fatals. The plugin coexists with WC 10.8 without
+  side-effects.
+- **Capability roundtrip works.** Anonymous user denied, subscriber
+  denied, administrator allowed. Matches the `manage_woocommerce` gate
+  used by the plugin's existing REST controllers.
+- **`AbstractSquareAbility` autoloads safely.** It does not import
+  `AbilityDefinition`, only references it in subclass type
+  declarations — so loading the abstract base alone never fatals.
+
+Pre-merge gate: a reviewer running a fresh wp-env on WC 10.9 (when the
+stable or dev tag is available) should re-run `runtime-probe.php` and
+expect the loader to be **present**, the filter to wire, and each
+ability to enumerate via `wp_get_ability($name)`. The
+runtime-probe.php script is kept under `tests/php/` so the same
+artifact can be regenerated against a future WC 10.9 environment
+without re-deriving the probe shape.
 
 ## Notes for reviewers
 
