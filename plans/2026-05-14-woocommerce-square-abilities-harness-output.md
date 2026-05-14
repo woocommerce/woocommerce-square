@@ -203,6 +203,45 @@ runtime-probe.php script is kept under `tests/php/` so the same
 artifact can be regenerated against a future WC 10.9 environment
 without re-deriving the probe shape.
 
+## Token cost (Phase V.5)
+
+`wp-abilities-measure` is not installed in this environment; the cost is
+manually estimated by serializing the per-ability MCP `tools/list` shape
+(`name`, `description`, `inputSchema`, `annotations`) and applying the
+`chars / 4` rule.
+
+Probe script: `tests/php/measure-token-cost.php`. Run via:
+
+```
+npx wp-env run cli -- wp eval-file wp-content/plugins/woocommerce-square/tests/php/measure-token-cost.php
+```
+
+Result:
+
+| Ability | chars | est. tokens |
+|---|---|---|
+| `woocommerce-square/get-sync-status` | 428 | ~107 |
+| `woocommerce-square/get-sync-records` | 967 | ~242 |
+| `woocommerce-square/get-connection-status` | 507 | ~127 |
+| `woocommerce-square/get-locations` | 434 | ~109 |
+| `woocommerce-square/get-product-sync-state` | 544 | ~136 |
+| `woocommerce-square/get-credit-card-payment-settings` | 448 | ~112 |
+| `woocommerce-square/get-cash-app-payment-settings` | 409 | ~103 |
+| **Total (compact)** | **3,737** | **~935** |
+| Total (pretty-printed) | 5,598 | ~1,400 |
+
+Budget: **≤ 2,000 tokens per plugin (provisional).**
+Status: **WITHIN BUDGET** (≈47% of the budget at compact serialization).
+
+`get-sync-records` is the heaviest ability — it carries 4 documented
+input properties (type, product_id, sort with enum, limit with min/max).
+Even with that, the surface fits comfortably. No projection-layer
+redesign required.
+
+The estimate is provisional — flagged as such in the PR body — pending
+a real measurement against `wp-abilities-measure` once that skill is
+installed.
+
 ## Notes for reviewers
 
 - The static-mode artifact in this PR establishes the annotation, schema,
