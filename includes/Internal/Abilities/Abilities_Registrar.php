@@ -57,6 +57,7 @@ class Abilities_Registrar {
 		Domain\GetSyncStatus::class,
 		Domain\GetSyncRecords::class,
 		Domain\GetConnectionStatus::class,
+		Domain\GetLocations::class,
 	);
 
 	/**
