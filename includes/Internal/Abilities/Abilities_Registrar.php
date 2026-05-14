@@ -56,6 +56,7 @@ class Abilities_Registrar {
 	private const ABILITY_CLASSES = array(
 		Domain\GetSyncStatus::class,
 		Domain\GetSyncRecords::class,
+		Domain\GetConnectionStatus::class,
 	);
 
 	/**
