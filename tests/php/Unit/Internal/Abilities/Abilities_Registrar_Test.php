@@ -86,6 +86,8 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 			Domain\GetConnectionStatus::class,
 			Domain\GetLocations::class,
 			Domain\GetProductSyncState::class,
+			Domain\GetCreditCardPaymentSettings::class,
+			Domain\GetCashAppPaymentSettings::class,
 		);
 
 		foreach ( $expected as $class ) {
