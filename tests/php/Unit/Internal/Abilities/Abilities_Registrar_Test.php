@@ -85,6 +85,7 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 			Domain\GetSyncRecords::class,
 			Domain\GetConnectionStatus::class,
 			Domain\GetLocations::class,
+			Domain\GetProductSyncState::class,
 		);
 
 		foreach ( $expected as $class ) {
