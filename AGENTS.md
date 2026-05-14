@@ -21,9 +21,6 @@ In particular:
   REST controller's `permission_callback` AND
   `Abilities_Registrar::can_manage_woocommerce_square()` — keep them
   identical, never duplicate the check inline.
-- Re-run `wp-abilities-verify` and update the artifact under
-  `plans/<YYYY-MM-DD>-woocommerce-square-abilities-harness-output.md`.
-
-See `plans/2026-05-14-abilities-audit-woocommerce-square.md` for the
-initial audit and `plans/2026-05-14-woocommerce-square-abilities-harness-output.md`
-for the baseline verification artifact.
+- Re-run the integration harness against `wp-abilities-verify` and
+  capture the updated artifact in your own working notes — these
+  verification artifacts are not tracked in this repository.
