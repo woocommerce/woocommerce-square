@@ -104,11 +104,19 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 			'Subscribers must not pass the manage_woocommerce capability check.'
 		);
 
+		// `manage_woocommerce` is registered by WooCommerce during activation;
+		// in test environments where WC is not active the administrator role
+		// does not carry it, and the assertion below is meaningless. Grant
+		// the cap explicitly to the test administrator so the helper is
+		// exercised end-to-end regardless of whether WC's role registration
+		// has fired.
 		$admin_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$admin    = get_user_by( 'id', $admin_id );
+		$admin->add_cap( 'manage_woocommerce' );
 		wp_set_current_user( $admin_id );
 		$this->assertTrue(
 			Abilities_Registrar::can_manage_woocommerce_square(),
-			'Administrators must pass the manage_woocommerce capability check.'
+			'A user holding manage_woocommerce must pass can_manage_woocommerce_square().'
 		);
 	}
 
