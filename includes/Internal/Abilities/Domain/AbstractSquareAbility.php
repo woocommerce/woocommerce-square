@@ -41,9 +41,6 @@ abstract class AbstractSquareAbility {
 		if ( is_wp_error( $plugin ) ) {
 			return $plugin;
 		}
-		if ( ! method_exists( $plugin, 'get_settings_handler' ) ) {
-			return self::not_initialized_error();
-		}
 		$settings = $plugin->get_settings_handler();
 		if ( ! $settings ) {
 			return self::not_initialized_error();
@@ -61,9 +58,6 @@ abstract class AbstractSquareAbility {
 		$plugin = self::get_plugin_or_error();
 		if ( is_wp_error( $plugin ) ) {
 			return $plugin;
-		}
-		if ( ! method_exists( $plugin, 'get_sync_handler' ) ) {
-			return self::not_initialized_error();
 		}
 		$sync = $plugin->get_sync_handler();
 		if ( ! $sync ) {
