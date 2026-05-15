@@ -34,7 +34,7 @@ abstract class AbstractSquareAbility {
 	 * Resolve the plugin's Settings handler, or a uniform WP_Error if the
 	 * plugin is not initialized.
 	 *
-	 * @return \WooCommerce\Square\Handlers\Settings|\WP_Error
+	 * @return \WooCommerce\Square\Settings|\WP_Error
 	 */
 	protected static function get_settings_handler_or_error() {
 		$plugin = self::get_plugin_or_error();
@@ -55,7 +55,7 @@ abstract class AbstractSquareAbility {
 	 * Resolve the plugin's Sync handler, or a uniform WP_Error if the plugin
 	 * is not initialized.
 	 *
-	 * @return \WooCommerce\Square\Sync\Handler|\WP_Error
+	 * @return \WooCommerce\Square\Handlers\Sync|\WP_Error
 	 */
 	protected static function get_sync_handler_or_error() {
 		$plugin = self::get_plugin_or_error();
