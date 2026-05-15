@@ -113,10 +113,12 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 
 		$input = is_array( $input ) ? $input : array();
 
+		$limit = isset( $input['limit'] ) ? max( 1, min( 50, (int) $input['limit'] ) ) : 50;
+
 		$args = array(
 			'orderby' => 'date',
 			'sort'    => isset( $input['sort'] ) && 'ASC' === $input['sort'] ? 'ASC' : 'DESC',
-			'limit'   => isset( $input['limit'] ) ? (int) $input['limit'] : 50,
+			'limit'   => $limit,
 		);
 
 		if ( ! empty( $input['type'] ) ) {
@@ -126,10 +128,15 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 			$args['product'] = (int) $input['product_id'];
 		}
 
+		// Records::get_records() applies max(50, $limit) as a floor, so a
+		// limit < 50 still returns up to 50 records. Trim post-fetch so the
+		// ability honors the schema's `minimum: 1` (no point advertising a
+		// contract the backing service does not enforce).
 		$records = Records::get_records( $args );
 		if ( ! is_array( $records ) ) {
 			return array();
 		}
+		$records = array_slice( $records, 0, $limit );
 
 		$out = array();
 		foreach ( $records as $record ) {
