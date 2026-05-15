@@ -67,6 +67,24 @@ abstract class AbstractSquareAbility {
 	}
 
 	/**
+	 * Resolve the plugin's Background_Job handler, or a uniform WP_Error if
+	 * the plugin is not initialized.
+	 *
+	 * @return \WooCommerce\Square\Handlers\Background_Job|\WP_Error
+	 */
+	protected static function get_background_job_handler_or_error() {
+		$plugin = self::get_plugin_or_error();
+		if ( is_wp_error( $plugin ) ) {
+			return $plugin;
+		}
+		$jobs = $plugin->get_background_job_handler();
+		if ( ! $jobs ) {
+			return self::not_initialized_error();
+		}
+		return $jobs;
+	}
+
+	/**
 	 * Resolve the plugin instance, or a uniform WP_Error if the wc_square()
 	 * accessor has not loaded yet.
 	 *

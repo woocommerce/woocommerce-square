@@ -59,6 +59,8 @@ class Abilities_Registrar {
 		Domain\GetConnectionStatus::class,
 		Domain\GetLocations::class,
 		Domain\GetProductSyncState::class,
+		Domain\GetPendingJobs::class,
+		Domain\GetOrderPaymentStatus::class,
 	);
 
 	/**
