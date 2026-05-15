@@ -43,11 +43,11 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Returns the WooCommerce Payments/Checkout tab ID so the SDK scopes
-		 * this adapter to ?tab=checkout&section=square.
+		 * Returns 'square' so the schema id matches the JS registerSettingsExtension
+		 * scope.page value. Must NOT return the WC tab id ('checkout').
 		 */
 		public function get_page_id(): string {
-			return Payments_Square_Hub::CHECKOUT_TAB;
+			return Payments_Square_Hub::SECTION;
 		}
 
 		/**
@@ -76,12 +76,13 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Enqueues the Square settings JS bundle which calls registerSettingsExtension.
+		 * No JS bundle in Ticket 1 (empty shell, no fields). Ticket 2 adds the
+		 * woocommerce-square-settings handle once the webpack bundle exists.
 		 *
-		 * @param string $section Unused for Ticket 1 (no fields yet).
+		 * @param string $section Unused.
 		 */
 		public function get_script_handles( string $section ): array {
-			return array( 'woocommerce-square-settings-js' );
+			return array();
 		}
 
 		/**
