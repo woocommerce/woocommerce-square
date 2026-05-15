@@ -678,8 +678,30 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return bool
 	 */
 	public function is_plugin_settings() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce note required, read-only check.
-		return parent::is_plugin_settings() || ( isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && self::PLUGIN_ID === $_GET['tab'] );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce not required, read-only check.
+		$is_legacy_settings = isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && self::PLUGIN_ID === $_GET['tab'];
+		$is_hub_settings    = $this->is_modern_settings_path_active() && Admin\Payments_Square_Hub::is_square_payments_hub();
+
+		return parent::is_plugin_settings() || $is_legacy_settings || $is_hub_settings;
+	}
+
+	/**
+	 * Determines if the modern settings path is active.
+	 *
+	 * All three gates must be true:
+	 *   1. The WooCommerce modern-settings SDK class is present.
+	 *   2. The modern-settings feature flag is enabled.
+	 *   3. The square_disable_modern_settings escape-hatch filter is not applied.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public function is_modern_settings_path_active(): bool {
+		return class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
+			&& class_exists( '\Automattic\WooCommerce\Admin\Features\Features' )
+			&& \Automattic\WooCommerce\Admin\Features\Features::is_enabled( 'modern-settings' )
+			&& ! apply_filters( 'square_disable_modern_settings', false );
 	}
 
 	/**
@@ -869,6 +891,10 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return string
 	 */
 	public function get_settings_url( $gateway_id = null ) {
+
+		if ( $this->is_modern_settings_path_active() ) {
+			return Admin\Payments_Square_Hub::get_hub_url();
+		}
 
 		$params = array(
 			'page' => 'wc-settings',

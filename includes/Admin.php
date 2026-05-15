@@ -88,16 +88,19 @@ class Admin {
 	 */
 	private function add_hooks() {
 
-		// add the settings page.
-		add_filter(
-			'woocommerce_get_settings_pages',
-			function ( $pages ) {
-
-				$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
-
-				return $pages;
-			}
-		);
+		if ( $this->get_plugin()->is_modern_settings_path_active() ) {
+			// Modern path: hub under WooCommerce > Settings > Payments > Square.
+			Admin\Payments_Square_Hub::init();
+		} else {
+			// Legacy path: top-level WooCommerce > Settings > Square tab.
+			add_filter(
+				'woocommerce_get_settings_pages',
+				function ( $pages ) {
+					$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
+					return $pages;
+				}
+			);
+		}
 
 		// load admin scripts.
 		add_action(
