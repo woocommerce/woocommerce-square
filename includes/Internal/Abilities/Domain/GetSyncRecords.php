@@ -67,7 +67,7 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 						'minimum'     => 1,
 						'maximum'     => 50,
 						'default'     => 50,
-						'description' => __( 'Maximum number of records to return. The backing service caps at 50; values above 50 are clamped.', 'woocommerce-square' ),
+						'description' => __( 'Maximum number of records to return. The schema enforces a hard upper bound of 50.', 'woocommerce-square' ),
 					),
 				),
 				'additionalProperties' => false,
