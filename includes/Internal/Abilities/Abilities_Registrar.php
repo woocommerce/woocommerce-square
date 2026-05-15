@@ -59,8 +59,6 @@ class Abilities_Registrar {
 		Domain\GetConnectionStatus::class,
 		Domain\GetLocations::class,
 		Domain\GetProductSyncState::class,
-		Domain\GetCreditCardPaymentSettings::class,
-		Domain\GetCashAppPaymentSettings::class,
 	);
 
 	/**
