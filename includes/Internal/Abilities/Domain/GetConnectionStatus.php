@@ -68,27 +68,9 @@ class GetConnectionStatus extends AbstractSquareAbility implements AbilityDefini
 	public static function execute( $input = null ) {
 		unset( $input );
 
-		if ( ! function_exists( 'wc_square' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		$plugin = wc_square();
-		if ( ! $plugin || ! method_exists( $plugin, 'get_settings_handler' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		$settings = $plugin->get_settings_handler();
-		if ( ! $settings ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
+		$settings = self::get_settings_handler_or_error();
+		if ( is_wp_error( $settings ) ) {
+			return $settings;
 		}
 
 		$location_id = $settings->get_location_id();

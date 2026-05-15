@@ -83,27 +83,9 @@ class GetSyncStatus extends AbstractSquareAbility implements AbilityDefinition {
 	public static function execute( $input = null ) {
 		unset( $input );
 
-		if ( ! function_exists( 'wc_square' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		$plugin = wc_square();
-		if ( ! $plugin || ! method_exists( $plugin, 'get_sync_handler' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		$sync_handler = $plugin->get_sync_handler();
-		if ( ! $sync_handler ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
+		$sync_handler = self::get_sync_handler_or_error();
+		if ( is_wp_error( $sync_handler ) ) {
+			return $sync_handler;
 		}
 
 		$job            = $sync_handler->get_job_in_progress();
