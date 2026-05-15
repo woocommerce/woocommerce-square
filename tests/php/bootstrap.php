@@ -47,7 +47,7 @@ spl_autoload_register(
 		$relative = substr( $class, strlen( $prefix ) );
 		$file     = $_plugin_root . '/includes/' . str_replace( '\\', '/', $relative ) . '.php';
 		if ( file_exists( $file ) ) {
-			require $file;
+			require_once $file;
 		}
 	}
 );
