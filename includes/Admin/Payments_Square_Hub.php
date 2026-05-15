@@ -98,9 +98,9 @@ class Payments_Square_Hub {
 	 */
 	private static function remove_checkout_page_hooks( \WC_Settings_Payment_Gateways $page ): void {
 		remove_filter( 'woocommerce_settings_tabs_array', array( $page, 'add_settings_page' ), 20 );
-		remove_action( 'woocommerce_sections_' . $page->id, array( $page, 'output_sections' ) );
-		remove_action( 'woocommerce_settings_' . $page->id, array( $page, 'output' ) );
-		remove_action( 'woocommerce_settings_save_' . $page->id, array( $page, 'save' ) );
+		remove_action( 'woocommerce_sections_' . $page->get_id(), array( $page, 'output_sections' ) );
+		remove_action( 'woocommerce_settings_' . $page->get_id(), array( $page, 'output' ) );
+		remove_action( 'woocommerce_settings_save_' . $page->get_id(), array( $page, 'save' ) );
 		remove_action( 'woocommerce_admin_field_add_settings_slot', array( $page, 'add_settings_slot' ) );
 		remove_filter( 'admin_body_class', array( $page, 'add_modern_settings_body_class' ) );
 		remove_filter( 'admin_body_class', array( $page, 'add_body_classes' ), 30 );
