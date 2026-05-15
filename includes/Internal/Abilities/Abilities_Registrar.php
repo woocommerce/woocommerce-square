@@ -5,7 +5,7 @@
  * @package WooCommerce\Square
  */
 
-// @phan-file-suppress PhanUndeclaredFunction, PhanUndeclaredClassMethod @phan-suppress-current-line UnusedSuppression -- Abilities API added in WP 6.9; suppression covers the WP 6.8 compat run. @todo Remove when Square for WooCommerce drops WP <6.9.
+// @phan-file-suppress PhanUndeclaredFunction, PhanUndeclaredClassMethod @phan-suppress-current-line UnusedSuppression -- Abilities API ships with WooCommerce 10.9; the suppression covers static analysis runs on older WC versions where the wp_register_ability()/AbilitiesLoader symbols are not loaded. @todo Remove when Square for WooCommerce requires WooCommerce >= 10.9.
 
 namespace WooCommerce\Square\Internal\Abilities;
 
@@ -88,6 +88,13 @@ class Abilities_Registrar {
 
 		/**
 		 * Filter whether Square for WooCommerce's Abilities API registrations are active.
+		 *
+		 * This filter is evaluated from Plugin::__construct() during
+		 * `plugins_loaded` priority 10. Callbacks must be registered before
+		 * that point to take effect — e.g. from a must-use plugin, a
+		 * `plugins_loaded` callback at priority < 10, or wp-config-time
+		 * code. Callbacks registered later (on `init`, `wp_loaded`,
+		 * `rest_api_init`, etc.) will silently no-op.
 		 *
 		 * @since 5.4.0
 		 *
