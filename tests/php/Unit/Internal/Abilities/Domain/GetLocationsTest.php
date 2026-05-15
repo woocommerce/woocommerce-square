@@ -50,7 +50,11 @@ class GetLocationsTest extends WP_UnitTestCase {
 
 		$meta        = $ability->get_meta();
 		$annotations = $meta['annotations'] ?? array();
-		$this->assertTrue( $annotations['readonly'] ?? false );
+		// get-locations is deliberately `readonly: false` — Settings::get_locations()
+		// has documented cold-cache side-effects (transient hydration +
+		// clear_location_id self-heal). Phase 2 will bypass that path and
+		// flip this back to true.
+		$this->assertFalse( $annotations['readonly'] ?? true );
 		$this->assertFalse( $annotations['destructive'] ?? true );
 		$this->assertTrue( $annotations['idempotent'] ?? false );
 		$this->assertTrue( $meta['show_in_rest'] ?? false );
