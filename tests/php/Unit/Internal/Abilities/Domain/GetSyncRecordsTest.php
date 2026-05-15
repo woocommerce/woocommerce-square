@@ -19,10 +19,16 @@ class GetSyncRecordsTest extends WP_UnitTestCase {
 			$this->markTestSkipped( 'WooCommerce 10.9 AbilitiesLoader required for these tests.' );
 		}
 		add_filter( 'woocommerce_square_abilities_enabled', '__return_true' );
+		// init() runs once at plugin bootstrap with the feature flag
+		// defaulting to false, so abilities are never registered there.
+		// Re-run it now that we have flipped the flag so wp_get_ability()
+		// can resolve woocommerce-square/* below.
+		Abilities_Registrar::init();
 	}
 
 	public function tearDown(): void {
 		remove_all_filters( 'woocommerce_square_abilities_enabled' );
+		Abilities_Registrar::reset_initialized_for_testing();
 		wp_set_current_user( 0 );
 		parent::tearDown();
 	}
