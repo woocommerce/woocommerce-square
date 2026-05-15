@@ -124,40 +124,62 @@ class GetOrderPaymentStatus extends AbstractSquareAbility implements AbilityDefi
 		}
 
 		$prefix = '_wc_' . $payment_method . '_';
-		$meta   = static function ( $key ) use ( $order, $prefix ) {
+		$read   = static function ( $key ) use ( $order, $prefix ) {
 			$value = $order->get_meta( $prefix . $key, true );
 			return '' === $value ? null : $value;
 		};
 
-		$charge_captured = $meta( 'charge_captured' );
-		$charge_type     = $meta( 'charge_type' );
+		// Pre-fetch every meta key once. get_meta() does a linear scan of the
+		// order's meta_data on each call — read each here, reference the local
+		// from the result array below.
+		$trans_id            = $read( 'trans_id' );
+		$trans_date          = $read( 'trans_date' );
+		$square_order_id     = $read( 'square_order_id' );
+		$square_location_id  = $read( 'square_location_id' );
+		$square_version      = $read( 'square_version' );
+		$charge_type         = $read( 'charge_type' );
+		$charge_captured     = $read( 'charge_captured' );
+		$capture_total       = $read( 'capture_total' );
+		$authorization_amt   = $read( 'authorization_amount' );
+		$auth_can_capture    = $read( 'auth_can_be_captured' );
+		$retry_count         = $read( 'retry_count' );
+		$is_tender_gift_card = $read( 'is_tender_type_gift_card' );
 
 		$result['square'] = array(
-			'transaction_id'        => $meta( 'trans_id' ) !== null ? (string) $meta( 'trans_id' ) : null,
-			'transaction_date'      => $meta( 'trans_date' ) !== null ? (string) $meta( 'trans_date' ) : null,
-			'square_order_id'       => $meta( 'square_order_id' ) !== null ? (string) $meta( 'square_order_id' ) : null,
-			'square_location_id'    => $meta( 'square_location_id' ) !== null ? (string) $meta( 'square_location_id' ) : null,
-			'square_version'        => $meta( 'square_version' ) !== null ? (string) $meta( 'square_version' ) : null,
+			'transaction_id'        => null === $trans_id ? null : (string) $trans_id,
+			'transaction_date'      => null === $trans_date ? null : (string) $trans_date,
+			'square_order_id'       => null === $square_order_id ? null : (string) $square_order_id,
+			'square_location_id'    => null === $square_location_id ? null : (string) $square_location_id,
+			'square_version'        => null === $square_version ? null : (string) $square_version,
 			'charge_type'           => null === $charge_type ? null : (string) $charge_type,
 			'charge_captured'       => null === $charge_captured ? null : (string) $charge_captured,
-			'capture_total'         => $meta( 'capture_total' ) !== null ? (float) $meta( 'capture_total' ) : null,
-			'authorization_amount'  => $meta( 'authorization_amount' ) !== null ? (float) $meta( 'authorization_amount' ) : null,
-			'auth_can_be_captured'  => $meta( 'auth_can_be_captured' ) !== null ? (string) $meta( 'auth_can_be_captured' ) : null,
-			'retry_count'           => $meta( 'retry_count' ) !== null ? (int) $meta( 'retry_count' ) : null,
-			'has_square_charge'     => null !== $meta( 'trans_id' ),
+			'capture_total'         => null === $capture_total ? null : (float) $capture_total,
+			'authorization_amount'  => null === $authorization_amt ? null : (float) $authorization_amt,
+			'auth_can_be_captured'  => null === $auth_can_capture ? null : (string) $auth_can_capture,
+			'retry_count'           => null === $retry_count ? null : (int) $retry_count,
+			'has_square_charge'     => null !== $trans_id,
 			'is_fully_captured'     => 'yes' === $charge_captured,
 			'is_partially_captured' => 'partial' === $charge_captured,
 		);
 
-		$gift_card_split = 'PARTIAL' === $charge_type || 'yes' === $meta( 'is_tender_type_gift_card' );
+		// Match the canonical reader in Handlers\Order::is_tender_type_gift_card(),
+		// which compares against the string '1' (WC stores meta-bool `true` as '1').
+		// Previous version compared against 'yes' here, which never matched and
+		// made the gift-card-only branch dead.
+		$gift_card_split = 'PARTIAL' === $charge_type || '1' === (string) $is_tender_gift_card;
 
 		if ( $gift_card_split ) {
+			$gift_trans_id  = $read( 'gift_card_trans_id' );
+			$gift_partial   = $read( 'gift_card_partial_total' );
+			$gift_refunded  = $read( 'gift_card_recorded_refund_total' );
+			$gift_line_item = $read( 'gift_card_line_item_id' );
+
 			$result['square']['gift_card'] = array(
 				'is_split_payment' => true,
-				'transaction_id'   => $meta( 'gift_card_trans_id' ) !== null ? (string) $meta( 'gift_card_trans_id' ) : null,
-				'partial_total'    => $meta( 'gift_card_partial_total' ) !== null ? (float) $meta( 'gift_card_partial_total' ) : null,
-				'refunded_total'   => $meta( 'gift_card_recorded_refund_total' ) !== null ? (float) $meta( 'gift_card_recorded_refund_total' ) : 0.0,
-				'line_item_id'     => $meta( 'gift_card_line_item_id' ) !== null ? (string) $meta( 'gift_card_line_item_id' ) : null,
+				'transaction_id'   => null === $gift_trans_id ? null : (string) $gift_trans_id,
+				'partial_total'    => null === $gift_partial ? null : (float) $gift_partial,
+				'refunded_total'   => null === $gift_refunded ? 0.0 : (float) $gift_refunded,
+				'line_item_id'     => null === $gift_line_item ? null : (string) $gift_line_item,
 			);
 		} else {
 			$result['square']['gift_card'] = array( 'is_split_payment' => false );
