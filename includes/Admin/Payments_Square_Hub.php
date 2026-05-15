@@ -125,9 +125,7 @@ class Payments_Square_Hub {
 			 * Appends the Square section to the standard Payments/Checkout sections.
 			 */
 			public function get_sections(): array {
-				$sections = parent::get_sections();
-				$sections[ Payments_Square_Hub::SECTION ] = __( 'Square', 'woocommerce-square' );
-				return $sections;
+				return parent::get_sections() + array( Payments_Square_Hub::SECTION => __( 'Square', 'woocommerce-square' ) );
 			}
 
 			/**
@@ -246,10 +244,11 @@ class Payments_Square_Hub {
 	 * @return bool
 	 */
 	public static function is_square_payments_hub(): bool {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		return isset( $_GET['page'], $_GET['tab'], $_GET['section'] )
 			&& 'wc-settings' === $_GET['page']
 			&& self::CHECKOUT_TAB === $_GET['tab']
 			&& self::SECTION === $_GET['section'];
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 	}
 }

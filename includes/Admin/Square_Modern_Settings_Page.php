@@ -110,10 +110,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$base_url   = Payments_Square_Hub::get_hub_url();
 
 			$tabs = array(
-				Payments_Square_Hub::TAB_GENERAL               => __( 'General', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_PAYMENT_METHODS       => __( 'Payment Methods', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_GENERAL         => __( 'General', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_PAYMENT_METHODS => __( 'Payment Methods', 'woocommerce-square' ),
 				Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS => __( 'Payments & Transactions', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_SYNCHRONIZE           => __( 'Synchronize Square', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_SYNCHRONIZE     => __( 'Synchronize Square', 'woocommerce-square' ),
 			);
 
 			$nav = array();

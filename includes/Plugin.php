@@ -698,10 +698,23 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return bool
 	 */
 	public function is_modern_settings_path_active(): bool {
-		return class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
-			&& class_exists( '\Automattic\WooCommerce\Admin\Features\Features' )
-			&& \Automattic\WooCommerce\Admin\Features\Features::is_enabled( 'modern-settings' )
-			&& ! apply_filters( 'square_disable_modern_settings', false );
+		if ( ! class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
+			|| ! class_exists( '\Automattic\WooCommerce\Admin\Features\Features' )
+			|| ! \Automattic\WooCommerce\Admin\Features\Features::is_enabled( 'modern-settings' ) ) {
+			return false;
+		}
+
+		/**
+		 * Filters whether to disable the Square modern settings path.
+		 *
+		 * Return true to force Square to render with the legacy settings page
+		 * regardless of the modern-settings feature flag.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $disabled Whether to disable the modern settings path. Default false.
+		 */
+		return ! (bool) apply_filters( 'square_disable_modern_settings', false );
 	}
 
 	/**
