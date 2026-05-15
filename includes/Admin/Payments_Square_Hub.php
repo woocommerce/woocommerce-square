@@ -155,24 +155,43 @@ class Payments_Square_Hub {
 		};
 	}
 
+	/** Gateway section IDs that should redirect to the Square hub. */
+	const LEGACY_GATEWAY_SECTIONS = array(
+		'square_credit_card',
+		'square_cash_app_pay',
+		'gift_cards_pay',
+	);
+
 	/**
-	 * Redirects legacy ?tab=square URLs to the hub at ?tab=checkout&section=square.
+	 * Redirects legacy Square URLs to the hub at ?tab=checkout&section=square.
+	 *
+	 * Handles two cases:
+	 *   - ?tab=square (old dedicated Square tab)
+	 *   - ?tab=checkout&section=<gateway_id> (payments-list deep-links for Square gateways)
 	 *
 	 * @since x.x.x
 	 */
 	public static function redirect_legacy_square_settings_tab(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! isset( $_GET['page'], $_GET['tab'] ) ) {
+		if ( ! isset( $_GET['page'], $_GET['tab'] ) || 'wc-settings' !== $_GET['page'] ) {
 			return;
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( 'wc-settings' !== $_GET['page'] || Plugin::PLUGIN_ID !== $_GET['tab'] ) {
-			return;
+		$tab = sanitize_key( wp_unslash( $_GET['tab'] ) );
+
+		if ( Plugin::PLUGIN_ID === $tab ) {
+			wp_safe_redirect( self::get_hub_url() );
+			exit;
 		}
 
-		wp_safe_redirect( self::get_hub_url() );
-		exit;
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
+
+		if ( self::CHECKOUT_TAB === $tab && in_array( $section, self::LEGACY_GATEWAY_SECTIONS, true ) ) {
+			wp_safe_redirect( self::get_hub_url() );
+			exit;
+		}
 	}
 
 	/**
