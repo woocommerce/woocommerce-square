@@ -39,7 +39,7 @@ class GetLocations extends AbstractSquareAbility implements AbilityDefinition {
 	public static function get_registration_args(): array {
 		return array(
 			'label'               => __( 'Get Square locations', 'woocommerce-square' ),
-			'description'         => __( 'Return the Square locations the merchant\'s connected account exposes (id, name, status, currency, country). Empty array when not connected. Response is cached for ~1 hour; treat as point-in-time.', 'woocommerce-square' ),
+			'description'         => __( 'Return the Square locations the merchant\'s connected account exposes (id, name, status, currency, country). Empty array when not connected. Response is cached for ~1 hour; treat as point-in-time. On cold cache the call hydrates a transient and may self-heal a stale stored location_id, so the underlying path is not strictly read-only — phase 2 will switch to a bypass.', 'woocommerce-square' ),
 			'category'            => self::CATEGORY_SLUG,
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -51,7 +51,12 @@ class GetLocations extends AbstractSquareAbility implements AbilityDefinition {
 			'permission_callback' => array( Abilities_Registrar::class, 'can_manage_woocommerce_square' ),
 			'meta'                => array(
 				'annotations'  => array(
-					'readonly'    => true,
+					// Cold-cache path writes a transient and may call
+					// Settings::clear_location_id() (self-heal of a stale
+					// stored location_id). Reflected here so MCP/agent
+					// clients see the honest contract; phase 2 will
+					// bypass Settings::get_locations() and restore readonly.
+					'readonly'    => false,
 					'destructive' => false,
 					'idempotent'  => true,
 				),
@@ -72,41 +77,17 @@ class GetLocations extends AbstractSquareAbility implements AbilityDefinition {
 	public static function execute( $input = null ) {
 		unset( $input );
 
-		if ( ! function_exists( 'wc_square' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
+		$settings = self::get_settings_handler_or_error();
+		if ( is_wp_error( $settings ) ) {
+			return $settings;
 		}
 
-		$plugin = wc_square();
-		if ( ! $plugin || ! method_exists( $plugin, 'get_settings_handler' ) ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		$settings = $plugin->get_settings_handler();
-		if ( ! $settings ) {
-			return new \WP_Error(
-				'woocommerce_square_not_initialized',
-				__( 'Square for WooCommerce is not initialized.', 'woocommerce-square' )
-			);
-		}
-
-		// verify-ignore: readonly -- Settings::get_locations() has two
-		// side-effects on cold cache: (1) it hydrates a transient
-		// (wc_square_locations_<ver>, TTL 1 hour) which is a cache-population
-		// write; (2) if the merchant's stored location_id is no longer
-		// present in the connected Square account's locations list, the
-		// method self-heals by calling clear_location_id(). Both side
-		// effects are infrequent (cache miss only) and benefit the
-		// merchant, but the second is a real settings mutation. Tracked
-		// as a Phase 2 follow-up: bypass Settings::get_locations() and
-		// either read the transient directly or call the API client
-		// without the self-heal step, so the readonly claim becomes
-		// load-bearing rather than approximate.
+		// Settings::get_locations() has two cold-cache side-effects:
+		// (1) hydrates the wc_square_locations_<ver> transient (TTL 1 hour);
+		// (2) self-heals a stale stored location_id via clear_location_id().
+		// These are reflected in the ability's `readonly: false` annotation.
+		// Phase 2 will bypass Settings::get_locations() (read transient + API
+		// client directly, skip the self-heal) and restore `readonly: true`.
 		$locations = $settings->get_locations( false );
 
 		if ( ! is_array( $locations ) ) {
