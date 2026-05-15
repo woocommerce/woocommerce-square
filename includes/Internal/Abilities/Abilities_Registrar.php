@@ -89,12 +89,17 @@ class Abilities_Registrar {
 		/**
 		 * Filter whether Square for WooCommerce's Abilities API registrations are active.
 		 *
-		 * This filter is evaluated from Plugin::__construct() during
-		 * `plugins_loaded` priority 10. Callbacks must be registered before
-		 * that point to take effect — e.g. from a must-use plugin, a
-		 * `plugins_loaded` callback at priority < 10, or wp-config-time
-		 * code. Callbacks registered later (on `init`, `wp_loaded`,
-		 * `rest_api_init`, etc.) will silently no-op.
+		 * This filter is evaluated from Plugin::__construct() the first time
+		 * wc_square() is called — typically inside the plugin's
+		 * `plugins_loaded` priority-10 init. To take effect, callbacks must
+		 * be registered _before_ that point. Safe registration windows:
+		 *   - a must-use plugin, or wp-config-time code;
+		 *   - any `plugins_loaded` callback at priority < 10;
+		 *   - a priority-10 `plugins_loaded` callback that runs BEFORE Square's
+		 *     own (depends on load order — fragile, prefer one of the above).
+		 *
+		 * Callbacks registered on later hooks (`init`, `wp_loaded`,
+		 * `rest_api_init`, …) will silently no-op.
 		 *
 		 * @since 5.4.0
 		 *
