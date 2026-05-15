@@ -54,7 +54,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * {@inheritDoc}
 		 *
 		 * Returns the schema for the Square hub. The groups array is intentionally
-		 * empty in Ticket 1; field groups are added in Tickets 2–5.
+		 * empty in Ticket 1; field groups are added in Tickets 2-5.
 		 *
 		 * @param string $section WC section ID (unused; Square sub-tab is read from
 		 *                        the square-tab query arg instead).
