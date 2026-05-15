@@ -41,6 +41,13 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 		);
 	}
 
+	/**
+	 * The silent-bail safety property is load-bearing on WC < 10.9 and is
+	 * exercised only when AbilitiesLoader is absent. Once the CI matrix
+	 * targets WC 10.9+, this test always skips. Until then, runs against
+	 * WC < 10.9 versions (or against environments where Woo Core is not
+	 * installed at all) provide the coverage.
+	 */
 	public function test_init_bails_when_loader_absent() {
 		if ( class_exists( '\\Automattic\\WooCommerce\\Internal\\Abilities\\AbilitiesLoader' ) ) {
 			$this->markTestSkipped( 'AbilitiesLoader is present in this environment; bail test only applies when it is absent.' );
@@ -93,6 +100,10 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 		foreach ( $expected as $class ) {
 			$this->assertContains( $class, $classes, "append_classes() must include $class." );
 		}
+		// Intentional: when a Phase 2 ability is added to ABILITY_CLASSES,
+		// this assertion fails until $expected above is updated. That's the
+		// signal — every new ability should ride with a deliberate test
+		// review, not slip in unreviewed.
 		$this->assertCount( count( $expected ), $classes, 'append_classes() must return exactly the expected Domain classes.' );
 	}
 
