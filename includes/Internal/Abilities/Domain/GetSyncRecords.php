@@ -25,8 +25,11 @@ use WooCommerce\Square\Sync\Records;
  * to expose: type, product_id, limit, sort. orderby stays internal at
  * 'date' for predictability.
  *
- * Backing detail: Records::get_records() caps results at max(50, $limit)
- * — passing limit > 50 does NOT return more than 50; the cap is hard.
+ * Backing detail: Records::get_records() applies `max(50, $limit)` — that
+ * is a floor, not a ceiling, so the service itself returns up to 50
+ * records regardless of values below 50. The 50-record upper bound is
+ * enforced by the input schema's `maximum: 50` on the `limit` property,
+ * which clamps oversize requests before they reach the backing service.
  * Each Record is coerced to a plain associative array so the internal
  * Record class shape stays out of the ability contract.
  *
@@ -41,7 +44,7 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 	public static function get_registration_args(): array {
 		return array(
 			'label'               => __( 'Get Square sync records', 'woocommerce-square' ),
-			'description'         => __( 'Return entries from the Square sync log (per-product warnings, errors, hidden products) with optional filters by type, product, sort and limit. Limit is capped at 50 by the backing service.', 'woocommerce-square' ),
+			'description'         => __( 'Return entries from the Square sync log (per-product warnings, errors, hidden products) with optional filters by type, product, sort and limit. Limit is clamped to 50 by the input schema.', 'woocommerce-square' ),
 			'category'            => self::CATEGORY_SLUG,
 			'input_schema'        => array(
 				'type'                 => 'object',
@@ -95,6 +98,12 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 	 * @return array|\WP_Error Array of record summaries.
 	 */
 	public static function execute( $input = null ) {
+		// Records is a static service — no plugin instance involved — so we
+		// guard the class itself rather than reaching for
+		// AbstractSquareAbility::get_settings_handler_or_error() /
+		// get_sync_handler_or_error(), which gate on the plugin instance and
+		// its handlers. The error code is intentionally identical so MCP
+		// clients see a uniform "plugin not initialized" surface.
 		if ( ! class_exists( Records::class ) ) {
 			return new \WP_Error(
 				'woocommerce_square_not_initialized',
