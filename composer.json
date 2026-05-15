@@ -4,6 +4,7 @@
 	"homepage": "https://woocommerce.com/products/woocommerce-square/",
 	"license": "GPL-3.0-or-later",
 	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require": {
 		"square/square": "40.0.0.20250123"
 	},
