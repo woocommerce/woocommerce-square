@@ -273,7 +273,8 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 		self::update_variation( $product, $catalog_object );
 
 		if ( ! $catalog_object->getId() ) {
-			$catalog_object->setId( self::get_square_item_variation_id( $product ) );
+			// Use a temp ID so stale stored variation IDs do not cause Square to reject the batch.
+			$catalog_object->setId( '#item_variation_' . $product->get_id() );
 		}
 
 		if ( ! $catalog_object->getVersion() ) {
