@@ -106,6 +106,9 @@ class Admin {
 				$this->load_scripts_styles( $hook );
 			}
 		);
+
+		// Show warning notice for the user to manually trigger a sync if it has been a while since the last successful sync.
+		add_action( 'admin_notices', array( $this, 'maybe_show_sync_status_notice' ) );
 	}
 
 
@@ -367,5 +370,101 @@ class Admin {
 	protected function get_plugin() {
 
 		return $this->plugin;
+	}
+
+	/**
+	 * Maybe show a warning notice for the user to manually trigger a sync if it has been a while since the last successful sync.
+	 *
+	 * If the following conditions are met, show the notice:
+	 * - The connection is established.
+	 * - The location is set.
+	 * - The product sync is enabled.
+	 * - The last synced at is set and is before the threshold time (default is 24 hours, 48 hours if the sync interval is 24 hours).
+	 * - The synced products count is greater than 0 (at least one product is synced with Square).
+	 *
+	 * @since 5.3.3
+	 *
+	 * @return void
+	 */
+	public function maybe_show_sync_status_notice() {
+		// Bail if the user does not have the manage_woocommerce capability.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+			return;
+		}
+
+		// Bail if the connection is not established, the location is not set, or the product sync is not enabled.
+		$is_connected            = wc_square()->get_settings_handler()->is_connected();
+		$location_id             = wc_square()->get_settings_handler()->get_location_id();
+		$is_product_sync_enabled = wc_square()->get_settings_handler()->is_product_sync_enabled();
+		if ( ! $is_connected || ! $location_id || ! $is_product_sync_enabled ) {
+			return;
+		}
+
+		// Bail if the last synced at is not set.
+		$last_synced_at = wc_square()->get_sync_handler()->get_last_synced_at();
+		if ( ! $last_synced_at ) {
+			return;
+		}
+
+		// The threshold time is 24 hours by default, 48 hours if the sync interval is 24 hours.
+		$sync_interval     = wc_square()->get_settings_handler()->get_sync_interval();
+		$threshold_seconds = $sync_interval >= 24 * HOUR_IN_SECONDS ? 48 * HOUR_IN_SECONDS : 24 * HOUR_IN_SECONDS;
+
+		/**
+		 * Filters the threshold time for the sync status notice.
+		 *
+		 * @since 5.3.3
+		 *
+		 * @param int $threshold_seconds The threshold time in seconds. Default is 24 hours, or 48 hours when the sync interval is 24 hours.
+		 * @param int $sync_interval     The sync interval in seconds.
+		 */
+		$threshold_seconds = apply_filters( 'wc_square_sync_status_notice_threshold_seconds', $threshold_seconds, $sync_interval );
+		$threshold_time    = time() - $threshold_seconds;
+
+		// Bail if the last synced at is after the threshold time.
+		if ( $last_synced_at > $threshold_time ) {
+			return;
+		}
+
+		// Get the synced products count.
+		$synced_products_count_key = 'wc_square_synced_products_count_' . $location_id;
+		$synced_products_count     = get_transient( $synced_products_count_key );
+
+		if ( false === $synced_products_count ) {
+			$synced_products_count = count( Product::get_products_synced_with_square() );
+
+			// Set the transient for the synced products count.
+			set_transient( $synced_products_count_key, $synced_products_count, $threshold_seconds );
+		}
+
+		// Bail if synced products count is 0.
+		if ( 0 === (int) $synced_products_count ) {
+			return;
+		}
+
+		// Show the notice if the last synced at is before the threshold time.
+		?>
+		<div class="notice notice-warning is-dismissible">
+			<p>
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag, %3$s - <a> tag, %4$s - </a> tag */
+						__( 'It has been a while since the last successful sync. Please manually trigger a sync from the %1$supdate page%2$s, or clear the ongoing sync from the %3$stools page%4$s if it is stuck, to ensure that your products are up to date.', 'woocommerce-square' ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=square&section=update' ) ) . '">',
+						'</a>',
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=tools' ) ) . '">',
+						'</a>'
+					),
+					array(
+						'a' => array(
+							'href' => array(),
+						),
+					)
+				);
+				?>
+			</p>
+		</div>
+		<?php
 	}
 }

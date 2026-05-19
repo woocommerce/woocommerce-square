@@ -1169,6 +1169,61 @@ class Product {
 
 
 	/**
+	 * Looks up a Square catalog variation ID by SKU (e.g. when mapping was lost after timeout).
+	 * Optionally persists the mapping so future syncs don't need to look it up again.
+	 *
+	 * @since 5.3.3
+	 *
+	 * @param string     $sku        WooCommerce product/variation SKU.
+	 * @param int|null   $product_id Optional. Product ID to save the mapping to when found.
+	 * @param bool       $persist    Optional. Whether to save the variation ID to the product when found. Default true.
+	 * @return string|null Square variation ID if found, null otherwise.
+	 */
+	public static function get_square_variation_id_by_sku( $sku, $product_id = null, $persist = true ) {
+
+		$sku = is_string( $sku ) ? trim( $sku ) : '';
+		if ( '' === $sku ) {
+			return null;
+		}
+
+		try {
+			$exact_query = new \Square\Models\CatalogQueryExact( 'sku', $sku );
+
+			$query = new \Square\Models\CatalogQuery();
+			$query->setExactQuery( $exact_query );
+
+			$response = wc_square()->get_api()->search_catalog_objects(
+				array(
+					'object_types' => array( 'ITEM_VARIATION' ),
+					'query'        => $query,
+					'limit'        => 1,
+				)
+			);
+
+			$data = $response->get_data();
+			if ( ! $data instanceof \Square\Models\SearchCatalogObjectsResponse ) {
+				return null;
+			}
+
+			$objects = $data->getObjects();
+			if ( ! is_array( $objects ) || empty( $objects ) || ! $objects[0] instanceof \Square\Models\CatalogObject ) {
+				return null;
+			}
+
+			$variation_id = $objects[0]->getId();
+			if ( $variation_id && $product_id && $persist ) {
+				self::set_square_item_variation_id( $product_id, $variation_id );
+			}
+
+			return $variation_id ? $variation_id : null;
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'SKU lookup for Square variation failed: ' . $e->getMessage(), array( 'sku' => $sku ) );
+			return null;
+		}
+	}
+
+
+	/**
 	 * Returns the Square item version (if known) for the given product.
 	 *
 	 * @since 2.0.0
