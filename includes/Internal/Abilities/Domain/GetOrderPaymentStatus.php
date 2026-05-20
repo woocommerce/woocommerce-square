@@ -105,9 +105,28 @@ class GetOrderPaymentStatus extends AbstractSquareAbility implements AbilityDefi
 		}
 
 		$payment_method = (string) $order->get_payment_method();
-		$is_square_card = Plugin::GATEWAY_ID === $payment_method;
-		$is_square_cash = Plugin::CASH_APP_PAY_GATEWAY_ID === $payment_method;
-		$is_square      = $is_square_card || $is_square_cash;
+
+		// Treat as Square only when the live plugin actually owns this
+		// gateway id AND it is one of the two Square-branded gateways. The
+		// gift-cards gateway is intentionally excluded — its data attaches
+		// to the parent Square charge via gift_card_* meta read below.
+		$plugin    = self::get_plugin_or_error();
+		$is_square = false;
+		$prefix    = '';
+		if ( ! is_wp_error( $plugin )
+			&& $plugin->has_gateway( $payment_method )
+			&& in_array( $payment_method, array( Plugin::GATEWAY_ID, Plugin::CASH_APP_PAY_GATEWAY_ID ), true )
+		) {
+			// Defer to the gateway for the meta-key prefix so the storage
+			// path (Payment_Gateway::update_order_meta()) and this reader
+			// share a single source of truth. If the gateway ever changes
+			// how it derives its prefix, this reader follows automatically.
+			$gateway = $plugin->get_gateway( $payment_method );
+			if ( $gateway && method_exists( $gateway, 'get_order_meta_prefix' ) ) {
+				$prefix    = (string) $gateway->get_order_meta_prefix();
+				$is_square = '' !== $prefix;
+			}
+		}
 
 		$result = array(
 			'order_id'          => $order_id,
@@ -123,8 +142,7 @@ class GetOrderPaymentStatus extends AbstractSquareAbility implements AbilityDefi
 			return $result;
 		}
 
-		$prefix = '_wc_' . $payment_method . '_';
-		$read   = static function ( $key ) use ( $order, $prefix ) {
+		$read = static function ( $key ) use ( $order, $prefix ) {
 			$value = $order->get_meta( $prefix . $key, true );
 			return '' === $value ? null : $value;
 		};
