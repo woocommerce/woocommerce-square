@@ -9,6 +9,17 @@
 	<file>.</file>
 	<arg name="extensions" value="php,inc" />
 
+	<!--
+	Symfony polyfills are transitively required by apimatic/core via square/square.
+	They ship bootstrap files (`bootstrap80.php`) and runtime classes that reference
+	PHP 8.0+ symbols (`ValueError`, union types) inside files that are only loaded
+	at runtime when the host PHP version supports them. The scanner can't see the
+	runtime guards and flags the symbols as version-incompatible — a known
+	false-positive for polyfill packages. Excluded here so the scan stays focused
+	on this plugin's own code.
+	-->
+	<exclude-pattern>*/vendor/symfony/polyfill-*/*</exclude-pattern>
+
     <rule ref="PHPCompatibility">
         <!--
         Contained in /wp-includes/compat.php.
