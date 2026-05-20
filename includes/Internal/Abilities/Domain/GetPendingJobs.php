@@ -109,7 +109,12 @@ class GetPendingJobs extends AbstractSquareAbility implements AbilityDefinition 
 			return $handler;
 		}
 
-		$input    = is_array( $input ) ? $input : array();
+		$input = is_array( $input ) ? $input : array();
+		// Runtime clamp duplicates the schema's `minimum: 1` / `maximum: 20` bound on `limit`.
+		// The Abilities Loader applies the schema before execute() runs, so this branch only
+		// kicks in for direct callers that reach execute() outside the loader (tests, other
+		// PHP code). Keeping both copies guards against a future reader tightening one side
+		// of the contract and leaving the other stale.
 		$limit    = isset( $input['limit'] ) ? max( 1, min( 20, (int) $input['limit'] ) ) : 20;
 		$statuses = ! empty( $input['include_terminal'] )
 			? array( 'queued', 'processing', 'completed', 'failed' )

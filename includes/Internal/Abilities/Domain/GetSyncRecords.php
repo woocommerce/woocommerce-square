@@ -113,6 +113,11 @@ class GetSyncRecords extends AbstractSquareAbility implements AbilityDefinition 
 
 		$input = is_array( $input ) ? $input : array();
 
+		// Runtime clamp duplicates the schema's `minimum: 1` / `maximum: 50` bound on `limit`.
+		// The Abilities Loader applies the schema before execute() runs, so this branch only
+		// kicks in for direct callers that reach execute() outside the loader (tests, other
+		// PHP code). Keeping both copies guards against a future reader tightening one side
+		// of the contract and leaving the other stale.
 		$limit = isset( $input['limit'] ) ? max( 1, min( 50, (int) $input['limit'] ) ) : 50;
 
 		$args = array(
