@@ -6,7 +6,8 @@
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"require": {
-		"square/square": "40.0.0.20250123"
+		"square/square": "40.0.0.20250123",
+		"apimatic/core": "0.3.14"
 	},
 	"require-dev": {
 		"woocommerce/woocommerce-sniffs": "1.0.0",
