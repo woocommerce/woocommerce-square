@@ -55,7 +55,7 @@ class GetSyncRecordsTest extends WP_UnitTestCase {
 		$this->assertNotNull( $ability, 'woocommerce-square/get-sync-records should be registered.' );
 		$this->assertSame( Abilities_Registrar::CATEGORY_SLUG, $ability->get_category() );
 
-		$meta = $ability->get_meta();
+		$meta        = $ability->get_meta();
 		$annotations = $meta['annotations'] ?? array();
 		$this->assertTrue( $annotations['readonly'] ?? false );
 		$this->assertFalse( $annotations['destructive'] ?? true );

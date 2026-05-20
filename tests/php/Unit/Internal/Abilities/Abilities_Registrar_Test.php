@@ -165,7 +165,7 @@ class Abilities_Registrar_Test extends WP_UnitTestCase {
 		foreach ( $wp_filter[ $hook ]->callbacks as $callbacks ) {
 			foreach ( $callbacks as $entry ) {
 				if ( $entry['function'] === $callback ) {
-					$count++;
+					++$count;
 				}
 			}
 		}

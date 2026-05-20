@@ -14,12 +14,13 @@
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir ) {
-	$_tmp        = getenv( 'TMPDIR' ) ? rtrim( getenv( 'TMPDIR' ), '/' ) : '/tmp';
-	$_tests_dir  = $_tmp . '/wordpress-tests-lib';
+	$_tmp       = getenv( 'TMPDIR' ) ? rtrim( getenv( 'TMPDIR' ), '/' ) : '/tmp';
+	$_tests_dir = $_tmp . '/wordpress-tests-lib';
 }
 
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
-	echo "Could not find $_tests_dir/includes/functions.php — have you run bin/install-wp-tests.sh ?" . PHP_EOL;
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $_tests_dir is env-derived, CLI-only bootstrap context, no HTML target.
+	echo "Could not find {$_tests_dir}/includes/functions.php — have you run bin/install-wp-tests.sh ?" . PHP_EOL;
 	exit( 1 );
 }
 
@@ -39,12 +40,12 @@ if ( file_exists( $_autoload ) ) {
 	require_once $_autoload;
 }
 spl_autoload_register(
-	static function ( $class ) use ( $_plugin_root ) {
+	static function ( $class_name ) use ( $_plugin_root ) {
 		$prefix = 'WooCommerce\\Square\\';
-		if ( strncmp( $class, $prefix, strlen( $prefix ) ) !== 0 ) {
+		if ( strncmp( $class_name, $prefix, strlen( $prefix ) ) !== 0 ) {
 			return;
 		}
-		$relative = substr( $class, strlen( $prefix ) );
+		$relative = substr( $class_name, strlen( $prefix ) );
 		$file     = $_plugin_root . '/includes/' . str_replace( '\\', '/', $relative ) . '.php';
 		if ( file_exists( $file ) ) {
 			require_once $file;
