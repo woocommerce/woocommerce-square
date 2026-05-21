@@ -1391,7 +1391,6 @@ class Manual_Synchronization extends Stepped_Job {
 			return array();
 		}
 
-		$failed_ids  = array();
 		$all_changes = array_merge( ...array_values( $inventory_changes ) );
 
 		// Chunk by the batch limit in case the set of products has many variations.
@@ -1421,7 +1420,7 @@ class Manual_Synchronization extends Stepped_Job {
 			)
 		);
 
-		return $failed_ids;
+		return array();
 	}
 
 
