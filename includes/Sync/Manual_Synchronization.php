@@ -1380,31 +1380,7 @@ class Manual_Synchronization extends Stepped_Job {
 				continue;
 			}
 
-			$product_inventory_changes = array();
-
-			if ( $product->is_type( 'variable' ) && $product->has_child() ) {
-
-				foreach ( $product->get_children() as $child_id ) {
-
-					$child = wc_get_product( $child_id );
-					if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
-						continue;
-					}
-
-					$inventory_change = Product::get_inventory_change_physical_count_type( $child );
-					if ( $inventory_change ) {
-						$product_inventory_changes[] = $inventory_change;
-					}
-				}
-			} else {
-
-				if ( $product->get_manage_stock() ) {
-					$inventory_change = Product::get_inventory_change_physical_count_type( $product );
-					if ( $inventory_change ) {
-						$product_inventory_changes[] = $inventory_change;
-					}
-				}
-			}
+			$product_inventory_changes = $this->get_product_inventory_changes( $product );
 
 			if ( ! empty( $product_inventory_changes ) ) {
 				$inventory_changes[ $product_id ] = $product_inventory_changes;
@@ -1446,6 +1422,53 @@ class Manual_Synchronization extends Stepped_Job {
 		);
 
 		return $failed_ids;
+	}
+
+
+	/**
+	 * Builds inventory change objects for a single product.
+	 *
+	 * Handles both variable and simple products. For variable products it iterates
+	 * each child variation; for simple products it acts on the product itself.
+	 * Only products with stock management enabled produce inventory changes.
+	 *
+	 * Note: this method does not perform SKU-based Square ID lookups. It assumes
+	 * Square variation IDs are already stored in WC postmeta, which is guaranteed
+	 * for products that have just been upserted via upsert_catalog_objects().
+	 * The deferred push_inventory() step handles its own SKU lookups separately.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product WooCommerce product object.
+	 * @return \Square\Models\InventoryChange[] Inventory change objects for the product.
+	 */
+	private function get_product_inventory_changes( \WC_Product $product ): array {
+
+		$changes = array();
+
+		if ( $product->is_type( 'variable' ) && $product->has_child() ) {
+
+			foreach ( $product->get_children() as $child_id ) {
+
+				$child = wc_get_product( $child_id );
+				if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+					continue;
+				}
+
+				$change = Product::get_inventory_change_physical_count_type( $child );
+				if ( $change ) {
+					$changes[] = $change;
+				}
+			}
+		} elseif ( $product->get_manage_stock() ) {
+
+			$change = Product::get_inventory_change_physical_count_type( $product );
+			if ( $change ) {
+				$changes[] = $change;
+			}
+		}
+
+		return $changes;
 	}
 
 
