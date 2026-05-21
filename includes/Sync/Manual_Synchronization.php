@@ -1396,14 +1396,18 @@ class Manual_Synchronization extends Stepped_Job {
 		// Chunk by the batch limit in case the set of products has many variations.
 		$chunks = array_chunk( $all_changes, self::BATCH_CHANGE_INVENTORY_LIMIT );
 
-		foreach ( $chunks as $chunk ) {
+		$total_chunks = count( $chunks );
+
+		foreach ( $chunks as $chunk_index => $chunk ) {
 			try {
 				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $chunk ) ) . '_inline_inventory_' . $this->get_attr( 'id' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 				wc_square()->get_api()->batch_change_inventory( $idempotency_key, $chunk );
 			} catch ( \Exception $e ) {
 				wc_square()->log(
 					sprintf(
-						'Inline inventory push failed for %d products during upsert_new_products: %s. These will be retried by the push_inventory step.',
+						'Inline inventory push failed on chunk %d of %d for %d products during upsert_new_products: %s. These will be retried by the push_inventory step.',
+						$chunk_index + 1,
+						$total_chunks,
 						count( $inventory_changes ),
 						$e->getMessage()
 					)
