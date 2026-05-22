@@ -382,7 +382,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$option_id = $option->getId();
 
 						// Get the Square ID of the attribute value.
-						$updated_option_values = $option->getItemOptionData()->getValues();
+						$updated_option_values = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 						foreach ( $updated_option_values as $option_value ) {
 							if ( $option_value->getItemOptionValueData()->getName() === $attribute_value ) {
 								$option_value_id = $option_value->getId();
