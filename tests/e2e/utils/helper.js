@@ -112,9 +112,27 @@ export async function createProduct( page, product, save = true, newEditor = fal
 
 		if ( product.category ) {
 			await page.locator('#product_cat-add-toggle').click();
-			await page.locator('#newproduct_cat').fill( product.category );
-			await page.locator('#product_cat-add-submit').click();
-			await page.waitForTimeout( 2000 );
+			const categories = product.category
+				.split( ',' )
+				.map( ( c ) => c.trim() )
+				.filter( Boolean );
+			for ( const category of categories ) {
+				if (
+					await page
+						.locator( '#product_catchecklist' )
+						.getByText( category )
+						.isVisible()
+				) {
+					await page
+						.locator( '#product_catchecklist' )
+						.getByText( category )
+						.click();
+				} else {
+					await page.locator('#newproduct_cat').fill( category );
+					await page.locator('#product_cat-add-submit').click();
+					await page.waitForTimeout( 2000 );
+				}
+			}
 		}
 
 		if ( save ) {
