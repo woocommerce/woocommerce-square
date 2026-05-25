@@ -1172,7 +1172,7 @@ class Product {
 	 * Looks up a Square catalog variation ID by SKU (e.g. when mapping was lost after timeout).
 	 * Optionally persists the mapping so future syncs don't need to look it up again.
 	 *
-	 * @since x.x.x
+	 * @since 5.3.3
 	 *
 	 * @param string     $sku        WooCommerce product/variation SKU.
 	 * @param int|null   $product_id Optional. Product ID to save the mapping to when found.

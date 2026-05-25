@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.3.2
+Stable tag: 5.3.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,17 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.3.3 - 2026-05-07 =
+* Add - Admin notice to inform merchants if a successful product sync has not occurred in a while.
+* Fix - Add SKU-based existence check before creating new Square catalog items to prevent duplicates.
+* Fix - Skip SKU-based product matching for Square variations with no SKU to prevent unrelated WooCommerce products from being overwritten during sync.
+* Fix - Push inventory now attempts SKU-based lookup for synced products missing a Square variation ID.
+* Fix - Syncs no longer crash when encountering certain malformed items in your Square catalog.
+* Fix - Add safeguard to skip disabling cards on Square when removing tokens from staging/non-production sites.
+* Fix - Ensure the debug mode admin notice link points to the correct settings page.
+* Dev - Bump WooCommerce "tested up to" version 10.7.
+* Dev - Bump WooCommerce minimum supported version to 10.5.
 
 = 5.3.2 - 2026-04-06 =
 * Fix - Prevent stale Square catalog IDs from breaking checkout while still surfacing genuine coupon redemption failures as checkout errors.
