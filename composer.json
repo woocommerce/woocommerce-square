@@ -39,7 +39,8 @@
 			"/vendor/apimatic/*/.*",
 			"/vendor/square/square/tests/**",
 			"/vendor/square/square/doc/**",
-			"/vendor/square/square/.*"
+			"/vendor/square/square/.*",
+			"AGENTS.md"
 		]
 	},
 	"extra": {
