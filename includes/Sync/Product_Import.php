@@ -613,44 +613,7 @@ class Product_Import extends Stepped_Job {
 		);
 
 		// Process multiple categories from Square.
-		$item_data            = $catalog_object->getItemData();
-		$categories           = array();
-		$missing_category_ids = array();
-
-		if ( $item_data->getCategories() && is_array( $item_data->getCategories() ) ) {
-			foreach ( $item_data->getCategories() as $category ) {
-				if ( $category instanceof \Square\Models\CatalogObjectCategory ) {
-					$category_id = Category::get_category_id_by_square_id( $category->getId() );
-					if ( $category_id ) {
-						$categories[] = $category_id;
-					} else {
-						$missing_category_ids[] = $category->getId();
-					}
-				}
-			}
-		}
-
-		// Fetch and import missing categories.
-		if ( ! empty( $missing_category_ids ) ) {
-			try {
-				$response = wc_square()->get_api()->batch_retrieve_catalog_objects( $missing_category_ids );
-				if ( $response->get_data() instanceof \Square\Models\BatchRetrieveCatalogObjectsResponse ) {
-					$missing_categories = $response->get_data()->getObjects();
-					if ( $missing_categories && is_array( $missing_categories ) ) {
-						foreach ( $missing_categories as $missing_category ) {
-							$imported_category_id = Category::import_or_update( $missing_category );
-							if ( $imported_category_id ) {
-								$categories[] = $imported_category_id;
-							}
-						}
-					}
-				}
-			} catch ( \Exception $e ) {
-				wc_square()->log( 'Error fetching missing categories for product ' . $product_name . ': ' . $e->getMessage() );
-			}
-		}
-
-		$data['categories'] = array_unique( $categories );
+		$data['categories'] = Category::get_category_ids_from_catalog_item( $catalog_object->getItemData() );
 
 		// variable product
 		if ( 'variable' === $data['type'] ) {

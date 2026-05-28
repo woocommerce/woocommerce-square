@@ -1001,8 +1001,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$catalog_objects = array();
 		foreach ( $product_ids as $product_id ) {
-			$catalog_item   = new \Square\Models\CatalogItem();
-			$catalog_object = new CatalogObject( 'ITEM', Product::get_square_item_id( $product_id ) );
+			$catalog_item = new \Square\Models\CatalogItem();
+			// Always use a Square temp ID (prefixed with '#') regardless of any stored Square ID.
+			// Stored IDs may be stale (e.g. catalog wiped on the Square side) and would cause Square
+			// to reject the entire batch with INVALID_VALUE. Square maps temp IDs to new permanent IDs
+			// in the response, which are written back to WC postmeta by upsert_catalog_objects().
+			$catalog_object = new CatalogObject( 'ITEM', '#item_' . $product_id );
 			$catalog_object->setItemData( $catalog_item );
 			$catalog_objects[ $product_id ] = $catalog_object;
 		}
