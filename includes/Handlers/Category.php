@@ -267,7 +267,7 @@ class Category {
 	/**
 	 * Get the WooCommerce category IDs from a catalog item.
 	 *
-	 * @since x.x.x
+	 * @since 5.4.0
 	 *
 	 * @param \Square\Models\CatalogItem $catalog_item the catalog item object
 	 * @return array
