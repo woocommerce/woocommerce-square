@@ -4,16 +4,23 @@
 	"homepage": "https://woocommerce.com/products/woocommerce-square/",
 	"license": "GPL-3.0-or-later",
 	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require": {
-		"square/square": "40.0.0.20250123"
+		"square/square": "40.0.0.20250123",
+		"apimatic/core": "0.3.14"
 	},
 	"require-dev": {
 		"woocommerce/woocommerce-sniffs": "1.0.0",
-		"sirbrillig/phpcs-changed": "^2.11.1"
+		"sirbrillig/phpcs-changed": "^2.11.1",
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^2.0"
 	},
 	"scripts": {
 		"phpcs": [
 			"vendor/bin/phpcs"
+		],
+		"test-unit": [
+			"vendor/bin/phpunit --configuration tests/php/phpunit.xml.dist"
 		]
 	},
 	"archive": {
@@ -41,6 +48,9 @@
 	"config": {
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"platform": {
+			"php": "7.4"
 		}
 	}
 }
