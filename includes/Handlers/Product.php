@@ -230,35 +230,6 @@ class Product {
 			$product->set_description( $product_description );
 		}
 
-		$square_category_id = Category::get_square_category_id( $catalog_item );
-		$category_id        = Category::get_category_id_by_square_id( $square_category_id );
-
-		if ( $category_id ) {
-			wp_set_object_terms( $product->get_id(), intval( $category_id ), 'product_cat' );
-		} else {
-			$message = sprintf(
-				/* translators: Placeholder: %s category ID */
-				__( 'Square category with id (%s) was not imported to your Store. Please run Import Products from Square settings.', 'woocommerce-square' ),
-				$square_category_id
-			);
-
-			$records = Records::get_records();
-			foreach ( $records as $record ) {
-				if ( $record->get_message() === $message ) {
-					$is_recorded = true;
-				}
-			}
-
-			if ( ! isset( $is_recorded ) ) {
-				Records::set_record(
-					array(
-						'type'    => 'alert',
-						'message' => $message,
-					)
-				);
-			}
-		}
-
 		if ( $catalog_id ) {
 			$product->update_meta_data( self::SQUARE_ID_META_KEY, $catalog_id );
 		}

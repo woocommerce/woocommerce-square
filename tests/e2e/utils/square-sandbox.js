@@ -132,6 +132,11 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		category = catalogObject.categories[ 0 ]?.id;
 	}
 
+	const categories =
+		( catalogObject.item_data?.categories || [] )
+			.map( ( cat ) => cat?.id || '' )
+			.filter( ( cat ) => cat !== '' );
+
 	const variations = catalogObject.item_data.variations.map(
 		( variation ) => {
 			return {
@@ -149,6 +154,7 @@ export function extractCatalogInfo( catalogObject = {} ) {
 		catalogId,
 		name,
 		category,
+		categories,
 		description,
 		variations,
 	};
@@ -159,14 +165,18 @@ export function extractCatalogInfo( catalogObject = {} ) {
  * @param {string} name  Name of the variation.
  * @param {string} sku   SKU.
  * @param {string} price Price of the variation.
- * @return {Object}
+ * @param {string} description Description of the variation.
+ * @param {string} categoryId Category ID.
+ * @param {string} categoryId2 Category ID 2.
+ * @return {Object} Response object.
  */
 export async function createCatalogObject(
 	name,
 	sku,
 	price,
 	description = '',
-	categoryId = ''
+	categoryId = '',
+	categoryId2 = ''
 ) {
 	const url = 'https://connect.squareupsandbox.com/v2/catalog/object';
 	const method = 'POST';
@@ -204,7 +214,11 @@ export async function createCatalogObject(
 	};
 
 	if ( categoryId ) {
-		data.object.item_data.categories = [ { id: categoryId } ];
+		const categories = [ { id: categoryId } ];
+		if ( categoryId2 ) {
+			categories.push( { id: categoryId2 } );
+		}
+		data.object.item_data.categories = categories;
 		data.object.item_data.reporting_category = { id: categoryId };
 	}
 
