@@ -38,6 +38,7 @@ use WooCommerce\Square\Handlers\Order_Sync;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Handlers\Sync;
 use WooCommerce\Square\Handlers\Products;
+use WooCommerce\Square\Internal\Abilities\Abilities_Registrar;
 
 /**
  * The main plugin class.
@@ -150,6 +151,10 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		// Unschedule order sync event if order sync is disabled.
 		add_action( 'admin_init', array( $this, 'unschedule_order_sync' ) );
+
+		// Register WordPress Abilities API definitions (gated by the
+		// `woocommerce_square_abilities_enabled` filter, default false).
+		Abilities_Registrar::init();
 	}
 
 	/**
@@ -997,11 +1002,6 @@ class Plugin extends Payment_Gateway_Plugin {
 		if ( false !== get_option( 'wc_square_payment_token_migration_complete' ) ) {
 			return;
 		}
-
-		// Remove all OLD scheduled actions to cleanup DB.
-		// TODO: Remove this in next release.
-		global $wpdb;
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = 'wc_square_init_payment_token_migration'" );
 
 		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration_v2' ) ) {
 			as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => 1 ) );
