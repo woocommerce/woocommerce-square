@@ -89,12 +89,21 @@ final class Order_Ajax_Authorization {
 
 		$order_customer_id = (int) $order->get_user_id();
 
-		// Guest orders (`user_id` 0) only need a valid key. Orders with a customer account require the current user to be that customer.
-		if ( ! $order_customer_id || get_current_user_id() === $order_customer_id ) {
+		// Guest orders (user_id 0) only need a valid key.
+		if ( ! $order_customer_id ) {
 			return true;
 		}
 
-		return false;
+		// Logged-in order owner.
+		if ( get_current_user_id() === $order_customer_id ) {
+			return true;
+		}
+
+		// Respect the WordPress capability system. Allows site-level user_has_cap filters
+		// to grant pay_for_order (e.g. a snippet that authorises guests via the order key).
+		// Note: AJAX requests do not include $_GET['key']; filters that verify the order key
+		// should read it from $_POST['order_key'] instead, which is always present here.
+		return current_user_can( 'pay_for_order', $order->get_id() );
 	}
 
 	/**
@@ -102,7 +111,7 @@ final class Order_Ajax_Authorization {
 	 *
 	 * On normal checkout AJAX, a forged `order_id` must be ignored (returns 0). When the pay-for-order endpoint
 	 * is active or `is_pay_for_order_page` is posted as true, returns the sanitized ID for the order being paid.
-	 * Used `is_authorized_for_pay_for_order()` to check if the order is authorized to be paid.
+	 * Uses `is_authorized_for_pay_for_order()` to check if the order is authorized to be paid.
 	 *
 	 * @since 5.3.1
 	 *
