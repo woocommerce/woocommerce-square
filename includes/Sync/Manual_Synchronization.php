@@ -248,11 +248,11 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$response = wc_square()->get_api()->batch_retrieve_catalog_objects( $square_ids );
 
-				// swap the square ID into the array key for quick lookup
+				// Key by Square ID for lookup; handling duplicate mapping issue by storing all WC term IDs for each Square ID.
 				$mapped_category_audit = array();
 
 				foreach ( $mapped_categories as $mapped_category_id => $mapped_category ) {
-					$mapped_category_audit[ $mapped_category['square_id'] ] = $mapped_category_id;
+					$mapped_category_audit[ $mapped_category['square_id'] ][] = $mapped_category_id;
 				}
 
 				if ( ! $response->get_data() instanceof BatchRetrieveCatalogObjectsResponse ) {
@@ -266,9 +266,10 @@ class Manual_Synchronization extends Stepped_Job {
 						// don't check for the name, it will get overwritten by the Woo value anyway
 						if ( isset( $mapped_category_audit[ $category->getId() ] ) ) {
 
-							$category_id = $mapped_category_audit[ $category->getId() ];
-
-							$map[ $category_id ]['square_version'] = $category->getVersion();
+							$category_ids = $mapped_category_audit[ $category->getId() ];
+							foreach ( (array) $category_ids as $category_id ) {
+								$map[ $category_id ]['square_version'] = $category->getVersion();
+							}
 							unset( $mapped_category_audit[ $category->getId() ] );
 						}
 					}
@@ -277,7 +278,7 @@ class Manual_Synchronization extends Stepped_Job {
 				// any remaining categories were not found in Square and should have their local mapping data removed
 				if ( ! empty( $mapped_category_audit ) ) {
 
-					$outdated_category_ids = array_values( $mapped_category_audit );
+					$outdated_category_ids = array_merge( ...array_values( $mapped_category_audit ) );
 
 					foreach ( $outdated_category_ids as $outdated_category_id ) {
 
@@ -1007,8 +1008,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$catalog_objects = array();
 		foreach ( $product_ids as $product_id ) {
-			$catalog_item   = new \Square\Models\CatalogItem();
-			$catalog_object = new CatalogObject( 'ITEM', Product::get_square_item_id( $product_id ) );
+			$catalog_item = new \Square\Models\CatalogItem();
+			// Always use a Square temp ID (prefixed with '#') regardless of any stored Square ID.
+			// Stored IDs may be stale (e.g. catalog wiped on the Square side) and would cause Square
+			// to reject the entire batch with INVALID_VALUE. Square maps temp IDs to new permanent IDs
+			// in the response, which are written back to WC postmeta by upsert_catalog_objects().
+			$catalog_object = new CatalogObject( 'ITEM', '#item_' . $product_id );
 			$catalog_object->setItemData( $catalog_item );
 			$catalog_objects[ $product_id ] = $catalog_object;
 		}

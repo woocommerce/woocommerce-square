@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.3.3
+Stable tag: 5.4.0
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,17 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.4.0 - 2026-05-28 =
+* Add - Register seven read-only abilities with the WordPress Abilities API, gated behind the woocommerce_square_abilities_enabled filter (default off) and the WC 10.9 loader.
+* Fix - Correct button alignment in the Import Products modal on WP 7.0.
+* Fix - Allow extending the "Pay for Order" functionality via the WordPress capability system.
+* Fix - Square product syncs no longer fail entirely when one item has an outdated catalog ID.
+* Fix - Product categories are updated properly during manual sync.
+* Fix - Ensure stale category mappings are fully cleaned up when two WooCommerce categories share the same Square category ID.
+* Dev - Removed stale Action Scheduler DELETE hook from Plugin.php.
+* Dev - Bump WooCommerce "tested up to" version 10.8.
+* Dev - Bump WooCommerce minimum supported version to 10.6.
 
 = 5.3.3 - 2026-05-07 =
 * Add - Admin notice to inform merchants if a successful product sync has not occurred in a while.
