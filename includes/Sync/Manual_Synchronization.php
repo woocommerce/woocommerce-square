@@ -975,9 +975,16 @@ class Manual_Synchronization extends Stepped_Job {
 			// Remove linked products from the upsert batch.
 			$product_ids = array_values( array_diff( $product_ids, $linked_product_ids ) );
 
-			// Linked products count as processed and need inventory push.
-			$processed_product_ids      = array_merge( $linked_product_ids, $processed_product_ids );
-			$inventory_push_product_ids = array_merge( $linked_product_ids, $inventory_push_product_ids );
+			// Linked products count as processed. Push their inventory inline when inventory sync
+			// is enabled - Square IDs are fresh in postmeta at this point. Only failed IDs are
+			// queued for the deferred step.
+			$processed_product_ids = array_merge( $linked_product_ids, $processed_product_ids );
+			if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+				$failed_linked_ids          = $this->push_inventory_for_products( $linked_product_ids );
+				$inventory_push_product_ids = array_merge( $failed_linked_ids, $inventory_push_product_ids );
+			} else {
+				$inventory_push_product_ids = array_merge( $linked_product_ids, $inventory_push_product_ids );
+			}
 			$this->set_attr( 'processed_product_ids', $processed_product_ids );
 			$this->set_attr( 'inventory_push_product_ids', $inventory_push_product_ids );
 
