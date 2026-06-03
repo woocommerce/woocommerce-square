@@ -699,8 +699,8 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function is_modern_settings_path_active(): bool {
 		if ( ! class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
-			|| ! class_exists( '\Automattic\WooCommerce\Admin\Features\Features' )
-			|| ! \Automattic\WooCommerce\Admin\Features\Features::is_enabled( 'modern-settings' ) ) {
+			|| ! class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' )
+			|| ! \Automattic\WooCommerce\Utilities\FeaturesUtil::feature_is_enabled( 'modern-settings' ) ) {
 			return false;
 		}
 
