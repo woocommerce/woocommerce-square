@@ -92,6 +92,10 @@ class Payments_Square_Hub {
 	/**
 	 * Removes all hooks registered by the original WC_Settings_Payment_Gateways instance.
 	 *
+	 * Priorities (20, 30, PHP_INT_MAX) and method names are coupled to WC_Settings_Payment_Gateways
+	 * internals as of WooCommerce 10.8. If WC changes them, remove_* calls silently no-op and
+	 * duplicate hooks may fire. Verify against WC_Settings_Payment_Gateways when upgrading WC.
+	 *
 	 * @since x.x.x
 	 *
 	 * @param \WC_Settings_Payment_Gateways $page Original checkout settings page.
