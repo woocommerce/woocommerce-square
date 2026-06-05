@@ -698,9 +698,14 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return bool
 	 */
 	public function is_modern_settings_path_active(): bool {
+		// `modern-settings` is a WooCommerce admin JS feature (registered via the
+		// `woocommerce_admin_features` filter), not a PHP FeaturesController feature.
+		// FeaturesUtil::feature_is_enabled() only covers FeaturesController-registered
+		// features and will always return false for this flag. Features::is_enabled()
+		// reads from `woocommerce_admin_features` and is the correct check here.
 		if ( ! class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
-			|| ! class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' )
-			|| ! \Automattic\WooCommerce\Utilities\FeaturesUtil::feature_is_enabled( 'modern-settings' ) ) {
+			|| ! class_exists( '\Automattic\WooCommerce\Admin\Features\Features' )
+			|| ! \Automattic\WooCommerce\Admin\Features\Features::is_enabled( 'modern-settings' ) ) {
 			return false;
 		}
 
