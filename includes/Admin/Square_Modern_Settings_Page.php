@@ -33,9 +33,6 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 	 * Provides the schema used by the SDK to render the 4-tab Square hub:
 	 *   General | Payment Methods | Payments & Transactions | Synchronize Square
 	 *
-	 * Tickets 2-5 add field groups to each tab. This Ticket 1 implementation
-	 * registers the shell with empty groups so the tab structure is navigable.
-	 *
 	 * @since x.x.x
 	 */
 	class Square_Modern_Settings_Page extends \Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter {
@@ -53,49 +50,181 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Returns the schema for the Square hub. The groups array is intentionally
-		 * empty in Ticket 1; field groups are added in Tickets 2-5.
-		 *
 		 * @param string $section WC section ID (unused; Square sub-tab is read from
 		 *                        the square-tab query arg instead).
 		 */
 		public function get_schema( string $section ): array {
+			$save_adapter = $this->get_save_adapter( $section );
+
 			return array(
 				'id'      => $this->get_page_id(),
 				'title'   => __( 'Square', 'woocommerce-square' ),
-				'section' => Payments_Square_Hub::SECTION,
+				'section' => Payments_Square_Hub::get_active_tab(),
 				'shell'   => array(
 					'title'             => __( 'Square', 'woocommerce-square' ),
 					'sectionNavigation' => $this->get_square_tab_navigation(),
 				),
-				'groups'  => array(),
-				'save'    => array( 'adapter' => $this->get_save_adapter( $section ) ),
+				'groups'  => $this->get_tab_groups(),
+				'save'    => array(
+					'adapter' => $save_adapter,
+					'handler' => 'square/save',
+				),
 			);
 		}
 
 		/**
 		 * {@inheritDoc}
 		 *
-		 * No JS bundle in Ticket 1 (empty shell, no fields). Ticket 2 adds the
-		 * woocommerce-square-settings handle once the webpack bundle exists.
-		 *
 		 * @param string $section Unused.
 		 */
 		public function get_script_handles( string $section ): array {
-			return array();
+			return array( 'woocommerce-square-settings' );
 		}
 
 		/**
 		 * {@inheritDoc}
 		 *
-		 * Returns 'none' for Ticket 1 since no fields are present yet.
-		 * Subsequent tickets switch applicable groups to 'custom' with
-		 * the square/save handler routing to the existing REST endpoints.
+		 * Returns 'custom' for tabs that have editable fields, 'none' otherwise.
 		 *
 		 * @param string $section Unused.
 		 */
 		public function get_save_adapter( string $section ): string {
-			return 'none';
+			return Payments_Square_Hub::TAB_GENERAL === Payments_Square_Hub::get_active_tab()
+				? 'custom'
+				: 'none';
+		}
+
+		/**
+		 * Returns the groups array for the currently active Square tab.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<string, array>
+		 */
+		private function get_tab_groups(): array {
+			switch ( Payments_Square_Hub::get_active_tab() ) {
+				case Payments_Square_Hub::TAB_GENERAL:
+					return $this->get_general_tab_groups();
+				default:
+					return array();
+			}
+		}
+
+		/**
+		 * Returns the field groups for the General tab.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<string, array>
+		 */
+		private function get_general_tab_groups(): array {
+			$settings = (array) get_option( 'wc_square_settings', array() );
+
+			return array(
+				'square_connect_section'  => array(
+					'id'          => 'square_connect_section',
+					'title'       => '',
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 0,
+					'fields'      => array(
+						array(
+							'id'          => 'square_connect_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Connect to Square', 'woocommerce-square' ),
+							'description' => __( 'Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes.', 'woocommerce-square' ),
+							'value'       => '',
+						),
+						array(
+							'id'          => 'enable_sandbox',
+							'label'       => __( 'Environment Selection', 'woocommerce-square' ),
+							'type'        => 'text',
+							'component'   => 'square/environment-selector',
+							'description' => '',
+							'value'       => ! empty( $settings['enable_sandbox'] ) && wc_string_to_bool( $settings['enable_sandbox'] ) ? 'yes' : 'no',
+						),
+						array(
+							'id'          => 'sandbox_application_id',
+							'label'       => __( 'Sandbox Application ID', 'woocommerce-square' ),
+							'type'        => 'text',
+							'description' => sprintf(
+								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+								__( 'Application ID for the sandbox Application. View details in %1$sMy Applications ↗%2$s', 'woocommerce-square' ),
+								'<a href="https://developer.squareup.com/apps" target="_blank" rel="noopener">',
+								'</a>'
+							),
+							'value'       => $settings['sandbox_application_id'] ?? '',
+						),
+						array(
+							'id'          => 'sandbox_token',
+							'label'       => __( 'Sandbox Access Token', 'woocommerce-square' ),
+							'type'        => 'text',
+							'description' => sprintf(
+								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+								__( 'Access Token for the Sandbox Test Account. See the details in the %1$sSandbox Test Account ↗%2$s section. Make sure you use the correct Sandbox Access Token for your application — each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ),
+								'<a href="https://developer.squareup.com/docs/devtools/sandbox/overview" target="_blank" rel="noopener">',
+								'</a>'
+							),
+							'value'       => $settings['sandbox_token'] ?? '',
+						),
+						array(
+							'id'        => 'square_connect_divider',
+							'is_option' => false,
+							'label'     => '',
+							'type'      => 'text',
+							'component' => 'square/divider',
+							'value'     => '',
+							'description' => '',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'        => 'square_oauth_connect',
+							'is_option' => false,
+							'label'     => '',
+							'type'      => 'text',
+							'component' => 'square/oauth-connect',
+							'value'     => '',
+							'description' => '',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+					),
+				),
+				'square_location_section' => array(
+					'id'          => 'square_location_section',
+					'title'       => '',
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 1,
+					'fields'      => array(
+						array(
+							'id'          => 'square_location_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Business location', 'woocommerce-square' ),
+							'description' => sprintf(
+								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+								__( 'Select the Square location you wish to link with this WooCommerce store. %1$sLearn more about active locations ↗%2$s', 'woocommerce-square' ),
+								'<a href="https://squareup.com/help/us/en/article/5593-locations" target="_blank" rel="noopener">',
+								'</a>'
+							),
+							'value'       => '',
+						),
+						array(
+							'id'        => 'square_location_picker',
+							'is_option' => false,
+							'label'     => '',
+							'type'      => 'text',
+							'component' => 'square/location-picker',
+							'value'     => '',
+							'description' => '',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+					),
+				),
+			);
 		}
 
 		/**
@@ -110,10 +239,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$base_url   = Payments_Square_Hub::get_hub_url();
 
 			$tabs = array(
-				Payments_Square_Hub::TAB_GENERAL         => __( 'General', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_PAYMENT_METHODS => __( 'Payment Methods', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_GENERAL               => __( 'General', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_PAYMENT_METHODS       => __( 'Payment methods', 'woocommerce-square' ),
 				Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS => __( 'Payments & Transactions', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_SYNCHRONIZE     => __( 'Synchronize Square', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_SYNCHRONIZE           => __( 'Synchronize Square', 'woocommerce-square' ),
 			);
 
 			$nav = array();
