@@ -12,12 +12,12 @@ module.exports = {
 		new WooDependencyExtractionWebpackPlugin( {
 			requestToExternal: ( request ) => {
 				if ( '@woocommerce/modern-settings-sdk' === request ) {
-					return [ 'wc', 'modernSettingsSdk' ];
+					return [ 'wc', 'settingsUiSdk' ];
 				}
 			},
 			requestToHandle: ( request ) => {
 				if ( '@woocommerce/modern-settings-sdk' === request ) {
-					return 'wc-modern-settings-sdk';
+					return 'wc-settings-ui-sdk';
 				}
 			},
 		} ),
