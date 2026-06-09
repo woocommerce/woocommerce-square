@@ -253,35 +253,10 @@ class Admin {
 					);
 
 					if ( $is_modern_square_hub ) {
-						// The SDK's save button uses @wordpress/i18n in JS, so a PHP gettext
-						// filter has no effect. Override the locale data before the SDK mounts.
-						wp_add_inline_script(
-							'woocommerce-square-settings',
-							"( function () { var i18n = window.wp && window.wp.i18n; if ( i18n && i18n.setLocaleData ) { i18n.setLocaleData( { 'Save changes': [ '" . esc_js( __( 'Save', 'woocommerce-square' ) ) . "' ] }, 'woocommerce' ); } } )();",
-							'before'
-						);
-
-						// Layout overrides for our single-column design.
-						// The SDK reserves a left sidebar column (296px) for each group's
-						// title/description. We render those inside the panel via the
-						// `square/section-header` component instead, so we hide the empty
-						// sidebar, constrain the wrapper to the panel width, and center
-						// it within the page.
-						//
-						// Selector specificity must MATCH the SDK base rule
-						// (`body.woocommerce_page_wc-settings.woocommerce-modern-settings-page
-						// .wc-modern-settings`) to win, and centering is done with
-						// `align-self`/`margin: auto` because `.admin-ui-page` is a flex
-						// container — plain `margin: auto` alone wouldn't center us.
-						$square_panel_width = '600px';
-						$body                = 'body.woocommerce_page_wc-settings.woocommerce-modern-settings-page';
-						$no_header           = ':not(:has(.wc-modern-settings__group-header))';
-
-						$square_modern_css  = $body . ' .wc-modern-settings' . $no_header . '{max-width:' . $square_panel_width . ';width:100%;margin-left:auto;margin-right:auto;align-self:center;}';
-						$square_modern_css .= $body . ' .wc-modern-settings__group' . $no_header . '{justify-content:center;}';
-						$square_modern_css .= $body . ' .wc-modern-settings__group' . $no_header . ' .wc-modern-settings__group-panel{flex:1 1 100%;max-width:100%;width:100%;}';
-						$square_modern_css .= $body . ' .wc-modern-settings__actions{margin-left:auto;margin-right:auto;max-width:' . $square_panel_width . ';width:100%;justify-content:flex-end;}';
-						$square_modern_css .= '.wc-square-section-header{margin:0 0 4px;}';
+						// Custom component styles for section-header and divider.
+						// The SDK (WC 10.9+) handles card layout and centering natively;
+						// these styles only cover our own square/* custom field components.
+						$square_modern_css  = '.wc-square-section-header{margin:0 0 4px;}';
 						$square_modern_css .= '.wc-square-section-header__title{color:#1e1e1e;font-size:16px;font-weight:600;line-height:24px;margin:0 0 4px;}';
 						$square_modern_css .= '.wc-square-section-header__description{color:#505050;font-size:13px;line-height:20px;}';
 						$square_modern_css .= '.wc-square-section-header__description p{margin:0;}';
