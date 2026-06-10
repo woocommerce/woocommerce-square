@@ -135,9 +135,10 @@ class Payments_Square_Hub {
 			/**
 			 * {@inheritDoc}
 			 *
-			 * Returns the Square modern settings adapter when the Square section is active.
+			 * Returns the Square settings UI adapter when the Square section is active.
+			 * WC 10.9+ calls this method to opt a settings page into the SDK renderer.
 			 */
-			public function get_modern_settings_page(): ?\Automattic\WooCommerce\Admin\Settings\ModernSettingsPageInterface {
+			public function get_settings_ui_page(): ?\Automattic\WooCommerce\Admin\Settings\SettingsUIPageInterface {
 				if ( ! $this->is_square_section() ) {
 					return null;
 				}
