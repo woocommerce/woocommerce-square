@@ -691,7 +691,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * All three gates must be true:
 	 *   1. The WooCommerce modern-settings SDK class is present.
 	 *   2. The modern-settings feature flag is enabled.
-	 *   3. The square_disable_modern_settings escape-hatch filter is not applied.
+	 *   3. The wc_square_is_modern_settings_active escape-hatch filter is not overridden to false.
 	 *
 	 * @since x.x.x
 	 *
@@ -714,16 +714,16 @@ class Plugin extends Payment_Gateway_Plugin {
 		}
 
 		/**
-		 * Filters whether to disable the Square modern settings path.
+		 * Filters whether the Square modern settings path is active.
 		 *
-		 * Return true to force Square to render with the legacy settings page
+		 * Return false to force Square to render with the legacy settings page
 		 * regardless of the modern-settings feature flag.
 		 *
 		 * @since x.x.x
 		 *
-		 * @param bool $disabled Whether to disable the modern settings path. Default false.
+		 * @param bool $active Whether the modern settings path is active. Default true.
 		 */
-		return ! (bool) apply_filters( 'square_disable_modern_settings', false );
+		return (bool) apply_filters( 'wc_square_is_modern_settings_active', true );
 	}
 
 	/**
