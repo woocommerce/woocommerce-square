@@ -169,7 +169,10 @@ class Admin {
 					),
 				)
 			);
-		} elseif ( $this->get_plugin()->is_plugin_settings() ) {
+		} elseif ( $this->get_plugin()->is_plugin_settings() && ! Admin\Payments_Square_Hub::is_square_payments_hub() ) {
+			// Legacy settings scripts must not load on the modern hub page; the SDK
+			// renders its own assets and these legacy bundles depend on jQuery markup
+			// that no longer exists.
 			wp_enqueue_style(
 				'wc-square-admin',
 				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',
