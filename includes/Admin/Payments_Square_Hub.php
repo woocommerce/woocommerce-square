@@ -32,7 +32,7 @@ use WooCommerce\Square\Plugin;
  *
  * When the modern-settings path is active, this class:
  *   - Extends the WooCommerce Payments/Checkout settings tab to include a Square section.
- *   - Provides get_modern_settings_page() so the SDK renders the 4-tab Square hub.
+ *   - Provides get_settings_ui_page() so the SDK renders the 4-tab Square hub.
  *   - Redirects the legacy ?tab=square URL to the new hub location.
  *
  * @since x.x.x
@@ -106,7 +106,10 @@ class Payments_Square_Hub {
 		remove_action( 'woocommerce_settings_' . $page->get_id(), array( $page, 'output' ) );
 		remove_action( 'woocommerce_settings_save_' . $page->get_id(), array( $page, 'save' ) );
 		remove_action( 'woocommerce_admin_field_add_settings_slot', array( $page, 'add_settings_slot' ) );
+		// WC <10.9 uses add_modern_settings_body_class; WC 10.9+ renamed it to
+		// add_settings_ui_body_class. Remove both so we cover the supported range.
 		remove_filter( 'admin_body_class', array( $page, 'add_modern_settings_body_class' ) );
+		remove_filter( 'admin_body_class', array( $page, 'add_settings_ui_body_class' ) );
 		remove_filter( 'admin_body_class', array( $page, 'add_body_classes' ), 30 );
 		remove_action( 'admin_head', array( $page, 'hide_help_tabs' ) );
 		remove_action( 'in_admin_header', array( $page, 'suppress_admin_notices' ), PHP_INT_MAX );
