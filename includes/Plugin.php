@@ -395,7 +395,7 @@ class Plugin extends Payment_Gateway_Plugin {
 						'<strong>',
 						count( Product::get_products_synced_with_square() ),
 						'</strong>',
-						'<a href="' . esc_url( add_query_arg( 'section', 'update', $this->get_settings_url() ) ) . '">',
+						'<a href="' . esc_url( $this->get_sync_records_url() ) . '">',
 						'</a>'
 					);
 
@@ -924,6 +924,35 @@ class Plugin extends Payment_Gateway_Plugin {
 		);
 
 		// All usage of this return value has been escaped late.
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		return add_query_arg( $params, admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Gets the URL of the sync records / "Update from Square" screen.
+	 *
+	 * On the legacy path this is ?tab=square&section=update.
+	 * On the modern path this is the Synchronize sub-tab of the Square hub.
+	 *
+	 * Using a dedicated helper avoids callers appending section=update to
+	 * get_settings_url(), which on the modern path overwrites section=square
+	 * and lands the user on the wrong WC settings section.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string
+	 */
+	public function get_sync_records_url(): string {
+		if ( $this->is_modern_settings_path_active() ) {
+			return Admin\Payments_Square_Hub::get_hub_url( Admin\Payments_Square_Hub::TAB_SYNCHRONIZE );
+		}
+
+		$params = array(
+			'page'    => 'wc-settings',
+			'tab'     => self::PLUGIN_ID,
+			'section' => 'update',
+		);
+
 		// nosemgrep audit.php.wp.security.xss.query-arg
 		return add_query_arg( $params, admin_url( 'admin.php' ) );
 	}
