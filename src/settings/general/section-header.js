@@ -26,9 +26,7 @@ export default function SectionHeader( { field } ) {
 	return (
 		<div className="wc-square-section-header">
 			{ title && (
-				<h3 className="wc-square-section-header__title">
-					{ title }
-				</h3>
+				<h3 className="wc-square-section-header__title">{ title }</h3>
 			) }
 			{ description && (
 				<div className="wc-square-section-header__description">

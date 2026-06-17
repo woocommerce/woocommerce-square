@@ -50,9 +50,11 @@ export default function LocationPicker( { values } ) {
 	const currentId = isSandbox ? state.sandboxId : state.productionId;
 
 	const handleChange = async ( e ) => {
-		const newId    = e.target.value;
-		const field    = isSandbox ? 'sandbox_location_id' : 'production_location_id';
-		const key      = isSandbox ? 'sandboxId' : 'productionId';
+		const newId = e.target.value;
+		const field = isSandbox
+			? 'sandbox_location_id'
+			: 'production_location_id';
+		const key = isSandbox ? 'sandboxId' : 'productionId';
 		const previous = currentId;
 
 		// Optimistic update.
@@ -92,7 +94,10 @@ export default function LocationPicker( { values } ) {
 				disabled={ state.saving }
 			>
 				<option value="">
-					{ __( '- Please select a location -', 'woocommerce-square' ) }
+					{ __(
+						'- Please select a location -',
+						'woocommerce-square'
+					) }
 				</option>
 				{ state.locations.map( ( loc ) => (
 					<option key={ loc.value } value={ loc.value }>

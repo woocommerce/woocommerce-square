@@ -18,7 +18,8 @@ registerSettingsExtension( {
 	fieldVisibility: {
 		// Sandbox credential fields are only shown when sandbox is selected.
 		// The radio component stores 'yes' (sandbox) or 'no' (production).
-		sandbox_application_id: ( { values } ) => values.enable_sandbox === 'yes',
+		sandbox_application_id: ( { values } ) =>
+			values.enable_sandbox === 'yes',
 		sandbox_token: ( { values } ) => values.enable_sandbox === 'yes',
 	},
 	saveHandlers: {
