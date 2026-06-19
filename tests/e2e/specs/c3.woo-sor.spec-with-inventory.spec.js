@@ -26,7 +26,7 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 	await deleteAllCatalogItems();
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=square&section' );
 	await page.getByTestId( 'sync-settings-field' ).selectOption( { label: 'WooCommerce' } );
-	await page.getByTestId( 'push-inventory-field' ).check();
+	await page.getByTestId( 'push-inventory-field' ).check( { force: true } );
 	await saveSquareSettings( page );
 
 	if ( ! ( await doesProductExist( baseURL, 'oneplus-8' ) ) ) {

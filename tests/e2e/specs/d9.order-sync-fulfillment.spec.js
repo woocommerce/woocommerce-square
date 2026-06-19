@@ -17,8 +17,8 @@ test.beforeEach(async ({ page }) => {
 	// Check only if already not enabled.
 	const isEnabled = await page.locator('[data-testid="order-fulfillment-sync-field"]').isChecked();
 	if (!isEnabled) {
-		await page.locator('[data-testid="order-fulfillment-sync-field"]').check();
-		await page.locator('[data-testid="square-settings-save-button"]').click();
+		await page.locator('[data-testid="order-fulfillment-sync-field"]').check( { force: true } );
+		await page.locator('[data-testid="square-settings-save-button"]').click( { force: true } );
 	}
 
 	await page.waitForTimeout(2000);
