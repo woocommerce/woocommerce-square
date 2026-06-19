@@ -356,7 +356,7 @@ test( '[Woo SOR] Merchant should able to sync products with multiple variations 
 	await page
 		.getByTestId( 'sync-settings-field' )
 		.selectOption( { label: 'WooCommerce' } );
-	await page.getByTestId( 'push-inventory-field' ).check( { force: true } );
+	await page.getByTestId( 'push-inventory-field' ).check();
 	await saveSquareSettings( page );
 
 	await page.goto(

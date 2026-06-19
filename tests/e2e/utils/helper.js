@@ -533,7 +533,7 @@ export async function saveCashAppPaySettings(page, options) {
 		.getByTestId('cash-app-gateway-button-shape-field')
 		.selectOption(settings.buttonShape);
 
-	await page.getByTestId( 'payment-gateway-settings-save-button' ).click( { force: true } );
+	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
@@ -633,13 +633,13 @@ export async function isToggleChecked( page, selector ) {
 }
 
 export async function saveSquareSettings( page ) {
-	await page.getByTestId( 'square-settings-save-button' ).click( { force: true } );
+	await page.getByTestId( 'square-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 	await page.waitForTimeout( 2000 );
 }
 
 export async function savePaymentGatewaySettings( page ) {
-	await page.getByTestId( 'payment-gateway-settings-save-button' ).click( { force: true } );
+	await page.getByTestId( 'payment-gateway-settings-save-button' ).click();
 	await expect( await page.getByText( 'Changes Saved!' ) ).toBeVisible();
 }
 
