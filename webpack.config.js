@@ -36,6 +36,7 @@ module.exports = {
 
 		// modern-settings SDK extension
 		'square-settings': './src/settings/index.js',
+		'modern-hub': './src/settings/modern-hub.css',
 
 		// admin files.
 		'assets/admin/wc-square-admin-products':

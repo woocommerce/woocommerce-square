@@ -253,15 +253,12 @@ class Admin {
 					);
 
 					if ( $is_modern_square_hub ) {
-						// Custom component styles for section-header and divider.
-						// The SDK (WC 10.9+) handles card layout and centering natively;
-						// these styles only cover our own square/* custom field components.
-						$square_modern_css  = '.wc-square-section-header{margin:0 0 4px;}';
-						$square_modern_css .= '.wc-square-section-header__title{color:#1e1e1e;font-size:16px;font-weight:600;line-height:24px;margin:0 0 4px;}';
-						$square_modern_css .= '.wc-square-section-header__description{color:#505050;font-size:13px;line-height:20px;}';
-						$square_modern_css .= '.wc-square-section-header__description p{margin:0;}';
-						$square_modern_css .= '.wc-square-divider{border:0;border-top:1px solid #e0e0e0;margin:8px 0;height:0;}';
-						wp_add_inline_style( 'wp-components', $square_modern_css );
+						wp_enqueue_style(
+							'woocommerce-square-modern-hub',
+							WC_SQUARE_PLUGIN_URL . 'build/modern-hub.css',
+							array(),
+							$asset['version']
+						);
 					}
 				}
 			} elseif ( ! $is_modern_square_hub ) {

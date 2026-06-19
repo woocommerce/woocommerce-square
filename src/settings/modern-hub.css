@@ -1,0 +1,35 @@
+/**
+ * Styles for Square custom field components rendered inside the modern settings hub.
+ *
+ * The WC 10.9+ SDK handles card layout, centering, and spacing natively.
+ * These rules cover only Square's own square/* custom field components.
+ */
+
+.wc-square-section-header {
+	margin: 0 0 4px;
+}
+
+.wc-square-section-header__title {
+	color: #1e1e1e;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 24px;
+	margin: 0 0 4px;
+}
+
+.wc-square-section-header__description {
+	color: #505050;
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.wc-square-section-header__description p {
+	margin: 0;
+}
+
+.wc-square-divider {
+	border: 0;
+	border-top: 1px solid #e0e0e0;
+	margin: 8px 0;
+	height: 0;
+}
