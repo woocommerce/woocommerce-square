@@ -100,6 +100,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$editable_tabs = array(
 				Payments_Square_Hub::TAB_GENERAL,
 				Payments_Square_Hub::TAB_PAYMENT_METHODS,
+				Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS,
 			);
 
 			return in_array( Payments_Square_Hub::get_active_tab(), $editable_tabs, true )
@@ -120,6 +121,8 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					return $this->get_general_tab_groups();
 				case Payments_Square_Hub::TAB_PAYMENT_METHODS:
 					return $this->get_payment_methods_tab_groups();
+				case Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS:
+					return $this->get_payments_transactions_tab_groups();
 				default:
 					return array();
 			}
@@ -563,6 +566,199 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'label'       => __( 'Preview', 'woocommerce-square' ),
 							'value'       => '',
 							'description' => '',
+						),
+					),
+				),
+			);
+		}
+
+		/**
+		 * Returns the transaction-type select options shared by the Credit Card
+		 * and Cash App Pay sections (Charge / Authorization).
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<int, array{value: string, label: string}>
+		 */
+		private function get_transaction_type_options(): array {
+			return array(
+				array( 'value' => 'charge',        'label' => _x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ) ),
+				array( 'value' => 'authorization', 'label' => _x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ) ),
+			);
+		}
+
+		/**
+		 * Returns the field groups for the Payments & Transactions tab.
+		 *
+		 * Migrates the transaction-handling fields that previously lived on the
+		 * separate Credit Card, Cash App and main Square settings pages into one
+		 * tab. UI-only migration: same option keys, same REST controllers.
+		 *
+		 * Three groups:
+		 *  - Credit and debit cards: title, description, transaction type
+		 *    (+ Authorization-only sub-fields) and customer profiles.
+		 *  - Cash App Pay: title, description, transaction type. Shown only when
+		 *    Cash App is enabled on the Payment Methods tab (JS groupVisibility
+		 *    keyed off the seeded `cash_app_enabled` field).
+		 *  - Advanced: detailed decline messages.
+		 *
+		 * Debug Mode is intentionally NOT migrated here — it is blocked on an open
+		 * question with the WooCommerce team (see SQUARE-281 ticket) and will be
+		 * scheduled separately.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<string, array>
+		 */
+		private function get_payments_transactions_tab_groups(): array {
+			$settings = (array) get_option( 'wc_square_settings', array() );
+			$cc       = (array) get_option( 'woocommerce_square_credit_card_settings', array() );
+			$cash_app = (array) get_option( 'woocommerce_square_cash_app_pay_settings', array() );
+
+			$cash_app_enabled = wc_string_to_bool( $cash_app['enabled'] ?? 'no' );
+
+			return array(
+				'pt_credit_card_section' => array(
+					'id'          => 'pt_credit_card_section',
+					'title'       => '',
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 0,
+					'fields'      => array(
+						array(
+							'id'          => 'pt_credit_card_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Credit and debit cards', 'woocommerce-square' ),
+							'description' => __( 'Configure how credit and debit card transactions are processed.', 'woocommerce-square' ),
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'cc_title',
+							'label'       => __( 'Title', 'woocommerce-square' ),
+							'type'        => 'text',
+							'description' => __( 'Payment method title shown to customers during checkout.', 'woocommerce-square' ),
+							'value'       => $cc['title'] ?? __( 'Credit Card', 'woocommerce-square' ),
+						),
+						array(
+							'id'          => 'cc_description',
+							'label'       => __( 'Description', 'woocommerce-square' ),
+							'type'        => 'text',
+							'component'   => 'square/textarea',
+							'description' => __( 'Payment method description shown to customers during checkout.', 'woocommerce-square' ),
+							'value'       => $cc['description'] ?? '',
+						),
+						array(
+							'id'          => 'cc_transaction_type',
+							'label'       => __( 'Transaction Type', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => __( 'Select how transactions should be processed. Charge submits all transactions for settlement, Authorization simply authorizes the order total for capture later.', 'woocommerce-square' ),
+							'value'       => $cc['transaction_type'] ?? 'charge',
+							'options'     => $this->get_transaction_type_options(),
+						),
+						array(
+							'id'          => 'cc_charge_virtual_orders',
+							'label'       => __( 'Charge Virtual-Only Orders', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'component'   => 'square/gateway-toggle',
+							'description' => __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $cc['charge_virtual_orders'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'cc_enable_paid_capture',
+							'label'       => __( 'Capture Paid Orders', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'component'   => 'square/gateway-toggle',
+							'description' => __( 'Automatically capture orders when they are changed to a paid status.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $cc['enable_paid_capture'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'cc_tokenization',
+							'label'       => __( 'Customer Profiles', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'component'   => 'square/gateway-toggle',
+							'description' => __( 'Check to enable tokenization and allow customers to securely save their payment details for future checkout.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $cc['tokenization'] ?? 'no' ) ),
+						),
+					),
+				),
+				'pt_cash_app_section'    => array(
+					'id'          => 'pt_cash_app_section',
+					'title'       => '',
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 1,
+					'fields'      => array(
+						array(
+							'id'        => 'cash_app_enabled',
+							'type'      => 'text',
+							'component' => 'square/hidden-field',
+							'is_option' => false,
+							'label'     => '',
+							'value'     => wc_bool_to_string( $cash_app_enabled ),
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'pt_cash_app_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Cash App Pay', 'woocommerce-square' ),
+							'description' => __( 'Configure how Cash App Pay transactions are processed.', 'woocommerce-square' ),
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'cashapp_title',
+							'label'       => __( 'Title', 'woocommerce-square' ),
+							'type'        => 'text',
+							'description' => __( 'Payment method title shown to customers during checkout.', 'woocommerce-square' ),
+							'value'       => $cash_app['title'] ?? __( 'Cash App Pay', 'woocommerce-square' ),
+						),
+						array(
+							'id'          => 'cashapp_description',
+							'label'       => __( 'Description', 'woocommerce-square' ),
+							'type'        => 'text',
+							'component'   => 'square/textarea',
+							'description' => __( 'Payment method description shown to customers during checkout.', 'woocommerce-square' ),
+							'value'       => $cash_app['description'] ?? '',
+						),
+						array(
+							'id'          => 'cashapp_transaction_type',
+							'label'       => __( 'Transaction Type', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => __( 'Select how transactions should be processed. Charge submits all transactions for settlement, Authorization simply authorizes the order total for capture later.', 'woocommerce-square' ),
+							'value'       => $cash_app['transaction_type'] ?? 'charge',
+							'options'     => $this->get_transaction_type_options(),
+						),
+					),
+				),
+				'pt_advanced_section'    => array(
+					'id'          => 'pt_advanced_section',
+					'title'       => '',
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 2,
+					'fields'      => array(
+						array(
+							'id'          => 'pt_advanced_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Advanced settings', 'woocommerce-square' ),
+							'description' => '',
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'enable_customer_decline_messages',
+							'label'       => __( 'Detailed Decline Messages', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'component'   => 'square/gateway-toggle',
+							'description' => __( 'Check to enable detailed decline messages to the customer during checkout when possible, rather than a generic decline message.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['enable_customer_decline_messages'] ?? 'no' ) ),
 						),
 					),
 				),
