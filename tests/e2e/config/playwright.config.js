@@ -64,6 +64,8 @@ module.exports = defineConfig({
     baseURL: 'http://localhost:8889',
     storageState: 'state.json',
     navigationTimeout: 60000,
+    // Disable CSS animations/transitions so Playwright doesn't time out on @wordpress/components buttons.
+    reducedMotion: 'reduce',
   },
 
   /* Configure projects for major browsers */
@@ -105,4 +107,3 @@ module.exports = defineConfig({
   //   port: 3000,
   // },
 });
-
