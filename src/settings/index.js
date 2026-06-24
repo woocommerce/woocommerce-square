@@ -41,6 +41,12 @@ registerSettingsExtension( {
 		digital_wallet_preview: ( { values } ) =>
 			values.digital_wallets_google_pay_enabled === 'yes' ||
 			values.digital_wallets_apple_pay_enabled === 'yes',
+		// Payments & Transactions tab: Authorization-only sub-fields appear only
+		// when the matching Transaction Type is set to 'authorization'.
+		cc_charge_virtual_orders: ( { values } ) =>
+			values.cc_transaction_type === 'authorization',
+		cc_enable_paid_capture: ( { values } ) =>
+			values.cc_transaction_type === 'authorization',
 	},
 	groupVisibility: {
 		// Payment Methods tab: show one sub-page at a time based on the
@@ -52,6 +58,10 @@ registerSettingsExtension( {
 			values.payment_methods_view === 'digital-wallet',
 		cash_app_pay_section: ( { values } ) =>
 			values.payment_methods_view === 'cash-app',
+		// Payments & Transactions tab: Cash App section is shown only when Cash
+		// App is enabled on the Payment Methods tab (seeded `cash_app_enabled`).
+		pt_cash_app_section: ( { values } ) =>
+			values.cash_app_enabled === 'yes',
 	},
 	saveHandlers: {
 		'square/save': squareSaveHandler,
