@@ -1,5 +1,10 @@
 *** WooCommerce Square Changelog ***
 
+= 5.4.1 - 2026-06-24 =
+* Fix - Syncing new products to Square no longer leaves them at zero inventory if the sync fails partway through.
+* Dev - Bump WooCommerce "tested up to" version 10.9.
+* Dev - Bump WooCommerce minimum supported version to 10.7.
+
 = 5.4.0 - 2026-05-28 =
 * Add - Register seven read-only abilities with the WordPress Abilities API, gated behind the woocommerce_square_abilities_enabled filter (default off) and the WC 10.9 loader.
 * Fix - Correct button alignment in the Import Products modal on WP 7.0.

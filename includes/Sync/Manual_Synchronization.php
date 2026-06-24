@@ -1376,7 +1376,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * push_inventory step. If the API call fails the exception is caught, the failure is logged,
 	 * and the affected product IDs are returned so the caller can queue them for the deferred step.
 	 *
-	 * @since x.x.x
+	 * @since 5.4.1
 	 *
 	 * @param int[] $product_ids WooCommerce product IDs to push inventory for.
 	 * @return int[] Product IDs for which the inventory push failed.
@@ -1452,7 +1452,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * for products that have just been upserted via upsert_catalog_objects().
 	 * The deferred push_inventory() step handles its own SKU lookups separately.
 	 *
-	 * @since x.x.x
+	 * @since 5.4.1
 	 *
 	 * @param \WC_Product $product WooCommerce product object.
 	 * @return \Square\Models\InventoryChange[] Inventory change objects for the product.
