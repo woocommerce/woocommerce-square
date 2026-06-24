@@ -245,3 +245,77 @@
 .wc-square-cashapp-preview__logo {
 	flex-shrink: 0;
 }
+
+/* Payments & Transactions tab — counted text/textarea + sub-header */
+
+.wc-square-sub-header {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1e1e1e;
+	margin: 16px 0 8px;
+}
+
+.wc-square-text-counted {
+	margin-bottom: 16px;
+}
+
+.wc-square-text-counted__label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	color: #757575;
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+	margin-bottom: 6px;
+}
+
+.wc-square-text-counted__input-wrapper {
+	position: relative;
+}
+
+.wc-square-text-counted__input {
+	width: 100%;
+	padding: 8px 70px 8px 12px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #1e1e1e;
+	background: #fff;
+	box-sizing: border-box;
+}
+
+.wc-square-text-counted__input:focus {
+	outline: none;
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wc-square-text-counted__input--textarea {
+	min-height: 64px;
+	resize: vertical;
+	font-family: inherit;
+}
+
+.wc-square-text-counted__counter {
+	position: absolute;
+	top: 50%;
+	right: 12px;
+	transform: translateY(-50%);
+	font-size: 12px;
+	color: #757575;
+	pointer-events: none;
+}
+
+.wc-square-text-counted__counter--textarea {
+	top: auto;
+	bottom: 8px;
+	transform: none;
+}
+
+.wc-square-text-counted__help {
+	font-size: 13px;
+	color: #757575;
+	margin: 6px 0 0;
+	line-height: 1.4;
+}
