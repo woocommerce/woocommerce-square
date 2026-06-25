@@ -30,10 +30,13 @@ use WooCommerce\Square\Plugin;
 /**
  * Registers the Square settings hub under WooCommerce > Settings > Payments > Square.
  *
- * When the modern-settings path is active, this class:
- *   - Extends the WooCommerce Payments/Checkout settings tab to include a Square section.
- *   - Provides get_settings_ui_page() so the SDK renders the 4-tab Square hub.
- *   - Redirects the legacy ?tab=square URL to the new hub location.
+ * When the modern-settings path is active, this class registers the Square hub under
+ * WooCommerce > Settings > Payments > Square and redirects legacy Square URLs to the hub.
+ *
+ * Two registration paths depending on WC version:
+ *   - WC 11.0+ (PR #65975): registers Square_Settings_Section via SettingsSectionRegistry.
+ *   - WC 10.9: replaces WC_Settings_Payment_Gateways with a subclass that provides
+ *     get_settings_ui_page() returning Square_Modern_Settings_Page.
  *
  * @since x.x.x
  */
@@ -56,11 +59,44 @@ class Payments_Square_Hub {
 	/**
 	 * Initialises hooks. Only called when the modern-settings path is active.
 	 *
+	 * On WC 11.0+ (after WooCommerce Core PR #65975, which adds get_settings_ui_page() to
+	 * SettingsSection), Square registers via SettingsSectionRegistry so WC Core resolves the
+	 * hub natively without a WC_Settings_Payment_Gateways subclass. On WC 10.9 the subclass
+	 * path is used as a fallback.
+	 *
 	 * @since x.x.x
 	 */
 	public static function init(): void {
-		add_filter( 'woocommerce_get_settings_pages', array( self::class, 'add_square_hub_to_checkout_page' ), 20 );
+		if ( self::can_use_registry_path() ) {
+			add_action( 'woocommerce_settings_sections_registration', array( self::class, 'register_settings_section' ) );
+		} else {
+			add_filter( 'woocommerce_get_settings_pages', array( self::class, 'add_square_hub_to_checkout_page' ), 20 );
+		}
 		add_action( 'admin_init', array( self::class, 'redirect_legacy_square_settings_tab' ) );
+	}
+
+	/**
+	 * Returns true when WC 11.0+ native registry support is available.
+	 *
+	 * The presence of SettingsSection::get_settings_ui_page() is the indicator: that method
+	 * was added in WooCommerce Core PR #65975 (milestone 11.0.0) together with the
+	 * SettingsSectionUIPageProviderInterface that makes the registry resolve native pages.
+	 *
+	 * @since x.x.x
+	 */
+	private static function can_use_registry_path(): bool {
+		return method_exists( '\Automattic\WooCommerce\Admin\Settings\SettingsSection', 'get_settings_ui_page' );
+	}
+
+	/**
+	 * Registers the Square hub section via SettingsSectionRegistry (WC 11.0+ path).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Automattic\WooCommerce\Admin\Settings\SettingsSectionRegistry $registry Registry instance.
+	 */
+	public static function register_settings_section( \Automattic\WooCommerce\Admin\Settings\SettingsSectionRegistry $registry ): void {
+		$registry->register( new Square_Settings_Section() );
 	}
 
 	/**
