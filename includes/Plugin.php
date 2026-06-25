@@ -689,8 +689,8 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * Determines if the modern settings path is active.
 	 *
 	 * All three gates must be true:
-	 *   1. The WooCommerce modern-settings SDK class is present.
-	 *   2. The modern-settings feature flag is enabled.
+	 *   1. WooCommerce 11.0+ native registry support is present (SettingsSection::get_settings_ui_page).
+	 *   2. The settings-ui feature flag is enabled.
 	 *   3. The wc_square_is_modern_settings_active escape-hatch filter is not overridden to false.
 	 *
 	 * @since x.x.x
@@ -698,18 +698,15 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return bool
 	 */
 	public function is_modern_settings_path_active(): bool {
-		// Both flags are checked for cross-version compat:
-		// - WC <10.9 registered the feature as 'modern-settings'.
-		// - WC 10.9+ renamed it to 'settings-ui' (WC core now gates on 'settings-ui').
-		// Features::is_enabled() reads from `woocommerce_admin_features`; FeaturesUtil
-		// only covers FeaturesController features and always returns false for these.
-		if ( ! class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAdapter' )
+		// Requires WC 11.0+ (WooCommerce Core PR #65975). The presence of
+		// SettingsSection::get_settings_ui_page() is the precise version indicator.
+		if ( ! method_exists( '\Automattic\WooCommerce\Admin\Settings\SettingsSection', 'get_settings_ui_page' )
 			|| ! class_exists( '\Automattic\WooCommerce\Admin\Features\Features' ) ) {
 			return false;
 		}
 
 		$features = \Automattic\WooCommerce\Admin\Features\Features::class;
-		if ( ! $features::is_enabled( 'settings-ui' ) && ! $features::is_enabled( 'modern-settings' ) ) {
+		if ( ! $features::is_enabled( 'settings-ui' ) ) {
 			return false;
 		}
 

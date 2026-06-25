@@ -30,10 +30,9 @@ use WooCommerce\Square\Plugin;
 /**
  * Registers the Square settings hub under WooCommerce > Settings > Payments > Square.
  *
- * When the modern-settings path is active, this class:
- *   - Extends the WooCommerce Payments/Checkout settings tab to include a Square section.
- *   - Provides get_settings_ui_page() so the SDK renders the 4-tab Square hub.
- *   - Redirects the legacy ?tab=square URL to the new hub location.
+ * When the modern-settings path is active (WC 11.0+), registers Square_Settings_Section
+ * via SettingsSectionRegistry so WC Core resolves the 4-tab hub natively. On older WC
+ * or when the feature flag is off, the legacy Settings_Page.php path is used instead.
  *
  * @since x.x.x
  */
@@ -59,106 +58,19 @@ class Payments_Square_Hub {
 	 * @since x.x.x
 	 */
 	public static function init(): void {
-		add_filter( 'woocommerce_get_settings_pages', array( self::class, 'add_square_hub_to_checkout_page' ), 20 );
+		add_action( 'woocommerce_settings_sections_registration', array( self::class, 'register_settings_section' ) );
 		add_action( 'admin_init', array( self::class, 'redirect_legacy_square_settings_tab' ) );
 	}
 
 	/**
-	 * Replaces the WC Payments settings page instance with a Square-hub-aware subclass.
+	 * Registers the Square hub section via SettingsSectionRegistry.
 	 *
 	 * @since x.x.x
 	 *
-	 * @param array $pages Settings pages returned by the woocommerce_get_settings_pages filter.
-	 * @return array
+	 * @param \Automattic\WooCommerce\Admin\Settings\SettingsSectionRegistry $registry Registry instance.
 	 */
-	public static function add_square_hub_to_checkout_page( array $pages ): array {
-		if ( ! class_exists( 'WC_Settings_Payment_Gateways' ) ) {
-			return $pages;
-		}
-
-		foreach ( $pages as $index => $page ) {
-			if ( ! ( $page instanceof \WC_Settings_Payment_Gateways ) ) {
-				continue;
-			}
-
-			self::remove_checkout_page_hooks( $page );
-			$pages[ $index ] = self::create_checkout_page_with_square_hub();
-			break;
-		}
-
-		return $pages;
-	}
-
-	/**
-	 * Removes all hooks registered by the original WC_Settings_Payment_Gateways instance.
-	 *
-	 * Priorities (20, 30, PHP_INT_MAX) and method names are coupled to WC_Settings_Payment_Gateways
-	 * internals as of WooCommerce 10.8. If WC changes them, remove_* calls silently no-op and
-	 * duplicate hooks may fire. Verify against WC_Settings_Payment_Gateways when upgrading WC.
-	 *
-	 * @since x.x.x
-	 *
-	 * @param \WC_Settings_Payment_Gateways $page Original checkout settings page.
-	 */
-	private static function remove_checkout_page_hooks( \WC_Settings_Payment_Gateways $page ): void {
-		remove_filter( 'woocommerce_settings_tabs_array', array( $page, 'add_settings_page' ), 20 );
-		remove_action( 'woocommerce_sections_' . $page->get_id(), array( $page, 'output_sections' ) );
-		remove_action( 'woocommerce_settings_' . $page->get_id(), array( $page, 'output' ) );
-		remove_action( 'woocommerce_settings_save_' . $page->get_id(), array( $page, 'save' ) );
-		remove_action( 'woocommerce_admin_field_add_settings_slot', array( $page, 'add_settings_slot' ) );
-		// WC <10.9 uses add_modern_settings_body_class; WC 10.9+ renamed it to
-		// add_settings_ui_body_class. Remove both so we cover the supported range.
-		remove_filter( 'admin_body_class', array( $page, 'add_modern_settings_body_class' ) );
-		remove_filter( 'admin_body_class', array( $page, 'add_settings_ui_body_class' ) );
-		remove_filter( 'admin_body_class', array( $page, 'add_body_classes' ), 30 );
-		remove_action( 'admin_head', array( $page, 'hide_help_tabs' ) );
-		remove_action( 'in_admin_header', array( $page, 'suppress_admin_notices' ), PHP_INT_MAX );
-		remove_filter( 'woocommerce_admin_features', array( $page, 'suppress_store_alerts' ), PHP_INT_MAX );
-	}
-
-	/**
-	 * Creates a WC_Settings_Payment_Gateways subclass that adds the Square hub section.
-	 *
-	 * @since x.x.x
-	 *
-	 * @return \WC_Settings_Payment_Gateways
-	 */
-	private static function create_checkout_page_with_square_hub(): \WC_Settings_Payment_Gateways {
-		return new class() extends \WC_Settings_Payment_Gateways {
-
-			/**
-			 * {@inheritDoc}
-			 *
-			 * Appends the Square section to the standard Payments/Checkout sections.
-			 */
-			public function get_sections(): array {
-				return parent::get_sections() + array( Payments_Square_Hub::SECTION => __( 'Square', 'woocommerce-square' ) );
-			}
-
-			/**
-			 * {@inheritDoc}
-			 *
-			 * Returns the Square settings UI adapter when the Square section is active.
-			 * WC 10.9+ calls this method to opt a settings page into the SDK renderer.
-			 */
-			public function get_settings_ui_page(): ?\Automattic\WooCommerce\Admin\Settings\SettingsUIPageInterface {
-				if ( ! $this->is_square_section() ) {
-					return null;
-				}
-
-				return new Square_Modern_Settings_Page( $this );
-			}
-
-			/**
-			 * Returns true when ?tab=checkout&section=square is active.
-			 */
-			private function is_square_section(): bool {
-				global $current_tab, $current_section;
-
-				return Payments_Square_Hub::CHECKOUT_TAB === $current_tab
-					&& Payments_Square_Hub::SECTION === $current_section;
-			}
-		};
+	public static function register_settings_section( \Automattic\WooCommerce\Admin\Settings\SettingsSectionRegistry $registry ): void {
+		$registry->register( new Square_Settings_Section() );
 	}
 
 	/** Gateway section IDs that should redirect to the Square hub. */
