@@ -1,46 +1,22 @@
-import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import apiFetch from '@wordpress/api-fetch';
+import useSquareSettings from '../use-square-settings';
 
 export default function OAuthConnect( { values } ) {
-	const [ state, setState ] = useState( {
-		loading: true,
-		isConnected: false,
-		connectionUrl: '',
-		connectionUrlSandbox: '',
-		disconnectionUrl: '',
-		fetchedSandbox: false,
-	} );
+	const { loading, data } = useSquareSettings();
 
-	useEffect( () => {
-		apiFetch( { path: '/wc/v3/wc_square/settings' } )
-			.then( ( settings ) => {
-				setState( {
-					loading: false,
-					isConnected: !! settings.is_connected,
-					connectionUrl: settings.connection_url ?? '',
-					connectionUrlSandbox: settings.connection_url_sandbox ?? '',
-					disconnectionUrl: settings.disconnection_url ?? '',
-					fetchedSandbox: settings.enable_sandbox === 'yes',
-				} );
-			} )
-			.catch( () =>
-				setState( ( prev ) => ( { ...prev, loading: false } ) )
-			);
-	}, [] );
-
-	if ( state.loading ) {
+	if ( loading || ! data ) {
 		return null;
 	}
 
-	if ( state.isConnected ) {
+	// Connection state reflects the saved environment.
+	if ( data.is_connected ) {
 		// Guard against a missing URL so we never render a dead link.
-		if ( ! state.disconnectionUrl ) {
+		if ( ! data.disconnection_url ) {
 			return null;
 		}
 		return (
 			<a
-				href={ state.disconnectionUrl }
+				href={ data.disconnection_url }
 				className="button button-primary"
 			>
 				{ __( 'Disconnect from Square', 'woocommerce-square' ) }
@@ -48,25 +24,25 @@ export default function OAuthConnect( { values } ) {
 		);
 	}
 
-	// Track the live Environment Selection radio so the connect link points at
-	// the right OAuth endpoint without a page reload. Fall back to the fetched
-	// value when the form has not surfaced it yet.
+	// OAuth Connect is a production-only flow; sandbox connects via the manual
+	// Application ID + Access Token fields. Track the live Environment Selection
+	// radio so the button hides immediately when Sandbox is selected.
 	const isSandbox =
 		values?.enable_sandbox !== undefined
 			? values.enable_sandbox === 'yes'
-			: state.fetchedSandbox;
+			: data.enable_sandbox === 'yes';
 
-	const connectionUrl = isSandbox
-		? state.connectionUrlSandbox
-		: state.connectionUrl;
+	if ( isSandbox ) {
+		return null;
+	}
 
 	// Avoid rendering a dead link when the URL is unavailable.
-	if ( ! connectionUrl ) {
+	if ( ! data.connection_url ) {
 		return null;
 	}
 
 	return (
-		<a href={ connectionUrl } className="button button-primary">
+		<a href={ data.connection_url } className="button button-primary">
 			{ __( 'Connect to Square', 'woocommerce-square' ) }
 		</a>
 	);
