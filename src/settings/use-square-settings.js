@@ -7,7 +7,6 @@ const SETTINGS_PATH = '/wc/v3/wc_square/settings';
 // request instead of each fetching the settings endpoint on mount.
 let cache = null;
 let inflight = null;
-const subscribers = new Set();
 
 /**
  * Loads the Square settings, reusing the in-flight request when one is pending.
@@ -32,24 +31,6 @@ function load() {
 }
 
 /**
- * Forces a fresh fetch and notifies every mounted consumer.
- *
- * Called after a save so connection state and locations reflect the newly
- * persisted environment without a full page reload.
- *
- * @return {Promise<Object>} The refreshed settings payload.
- */
-export function refreshSquareSettings() {
-	cache = null;
-	inflight = null;
-
-	return load().then( ( data ) => {
-		subscribers.forEach( ( cb ) => cb( data ) );
-		return data;
-	} );
-}
-
-/**
  * Shared hook exposing the Square settings payload.
  *
  * @return {{loading: boolean, data: Object|null, error: Object|null}} State.
@@ -64,29 +45,25 @@ export default function useSquareSettings() {
 	useEffect( () => {
 		let active = true;
 
-		const sync = ( data ) => {
-			if ( active ) {
-				setState( { loading: false, data, error: null } );
-			}
-		};
-
-		subscribers.add( sync );
-
 		if ( cache !== null ) {
-			sync( cache );
-		} else {
-			load()
-				.then( ( data ) => sync( data ) )
-				.catch( ( error ) => {
-					if ( active ) {
-						setState( { loading: false, data: cache, error } );
-					}
-				} );
+			setState( { loading: false, data: cache, error: null } );
+			return undefined;
 		}
+
+		load()
+			.then( ( data ) => {
+				if ( active ) {
+					setState( { loading: false, data, error: null } );
+				}
+			} )
+			.catch( ( error ) => {
+				if ( active ) {
+					setState( { loading: false, data: cache, error } );
+				}
+			} );
 
 		return () => {
 			active = false;
-			subscribers.delete( sync );
 		};
 	}, [] );
 

@@ -1,6 +1,5 @@
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
-import { refreshSquareSettings } from './use-square-settings';
 
 const SETTINGS_FIELDS = new Set( [
 	'enable_sandbox',
@@ -54,9 +53,15 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 		);
 	}
 
-	// Refresh the shared settings cache so connection state and locations reflect
-	// the newly saved environment without a full page reload.
-	await refreshSquareSettings().catch( () => {} );
+	// Reload after saving so the Business location dropdown repopulates from the
+	// freshly fetched locations for the saved environment, matching the legacy
+	// settings page. The short delay lets the success notice render first. The
+	// SDK keeps a beforeunload guard active, so clear it first to avoid a "Leave
+	// site?" prompt blocking the programmatic reload.
+	setTimeout( () => {
+		window.onbeforeunload = null;
+		window.location.reload();
+	}, 1200 );
 
 	// `values` is the SDK's full current state — returning it keeps every field
 	// in sync. `notice` must be a plain string; the SDK passes it directly as
