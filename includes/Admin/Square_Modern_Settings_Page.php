@@ -120,6 +120,11 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		private function get_general_tab_groups(): array {
 			$settings = (array) get_option( 'wc_square_settings', array() );
 
+			$is_sandbox          = ! empty( $settings['enable_sandbox'] ) && wc_string_to_bool( $settings['enable_sandbox'] );
+			$current_location_id = $is_sandbox
+				? ( $settings['sandbox_location_id'] ?? '' )
+				: ( $settings['production_location_id'] ?? '' );
+
 			return array(
 				'square_connect_section'  => array(
 					'id'          => 'square_connect_section',
@@ -213,14 +218,12 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'value'       => '',
 						),
 						array(
-							'id'          => 'square_location_picker',
-							'is_option'   => false,
+							'id'          => 'location_id',
 							'label'       => '',
 							'type'        => 'text',
 							'component'   => 'square/location-picker',
-							'value'       => '',
+							'value'       => $current_location_id,
 							'description' => '',
-							'save'        => array( 'adapter' => 'none' ),
 						),
 					),
 				),

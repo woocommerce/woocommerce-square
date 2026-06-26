@@ -20,6 +20,14 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	// which calls onChange('yes') or onChange('no') directly — no conversion needed.
 	// The REST API already expects 'yes'/'no' and that is exactly what we have.
 
+	// The location picker writes to a single `location_id` field; route it to the
+	// option key for the currently selected environment.
+	if ( 'location_id' in changedValues ) {
+		const isSandbox = values.enable_sandbox === 'yes';
+		payload[ isSandbox ? 'sandbox_location_id' : 'production_location_id' ] =
+			changedValues.location_id;
+	}
+
 	if ( Object.keys( payload ).length === 0 ) {
 		// Nothing to save — return the full values so SDK state stays intact.
 		return { values };
