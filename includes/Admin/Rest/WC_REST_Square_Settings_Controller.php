@@ -233,8 +233,8 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
-		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ) ?? '' );
-		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ) ?? '' );
+		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ?? '' ) );
+		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ?? '' ) );
 
 		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
