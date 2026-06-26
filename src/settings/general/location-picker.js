@@ -30,7 +30,10 @@ export default function LocationPicker( { value, onChange } ) {
 				onChange={ ( e ) => onChange( e.target.value ) }
 			>
 				<option value="">
-					{ __( '- Please select a location -', 'woocommerce-square' ) }
+					{ __(
+						'- Please select a location -',
+						'woocommerce-square'
+					) }
 				</option>
 				{ locations.map( ( loc ) => (
 					<option key={ loc.value } value={ loc.value }>

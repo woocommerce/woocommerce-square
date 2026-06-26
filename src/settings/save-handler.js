@@ -25,8 +25,9 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	// option key for the currently selected environment.
 	if ( 'location_id' in changedValues ) {
 		const isSandbox = values.enable_sandbox === 'yes';
-		payload[ isSandbox ? 'sandbox_location_id' : 'production_location_id' ] =
-			changedValues.location_id;
+		payload[
+			isSandbox ? 'sandbox_location_id' : 'production_location_id'
+		] = changedValues.location_id;
 	}
 
 	if ( Object.keys( payload ).length === 0 ) {
