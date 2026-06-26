@@ -128,20 +128,11 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			return array(
 				'square_connect_section'  => array(
 					'id'          => 'square_connect_section',
-					'title'       => '',
-					'description' => '',
+					'title'       => __( 'Connect to Square', 'woocommerce-square' ),
+					'description' => __( 'Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes.', 'woocommerce-square' ),
 					'actions'     => array(),
 					'order'       => 0,
 					'fields'      => array(
-						array(
-							'id'          => 'square_connect_header',
-							'type'        => 'text',
-							'component'   => 'square/section-header',
-							'is_option'   => false,
-							'label'       => __( 'Connect to Square', 'woocommerce-square' ),
-							'description' => __( 'Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes.', 'woocommerce-square' ),
-							'value'       => '',
-						),
 						array(
 							'id'          => 'enable_sandbox',
 							'label'       => __( 'Environment Selection', 'woocommerce-square' ),
