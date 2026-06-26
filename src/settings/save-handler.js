@@ -1,5 +1,6 @@
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
+import { refreshSquareSettings } from './use-square-settings';
 
 const SETTINGS_FIELDS = new Set( [
 	'enable_sandbox',
@@ -51,6 +52,10 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 				)
 		);
 	}
+
+	// Refresh the shared settings cache so connection state and locations reflect
+	// the newly saved environment without a full page reload.
+	await refreshSquareSettings().catch( () => {} );
 
 	// `values` is the SDK's full current state — returning it keeps every field
 	// in sync. `notice` must be a plain string; the SDK passes it directly as
