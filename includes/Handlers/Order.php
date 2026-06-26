@@ -71,19 +71,9 @@ class Order {
 		// remove Square variation IDs from order item meta
 		add_action( 'woocommerce_hidden_order_itemmeta', array( $this, 'hide_square_order_item_meta' ) );
 
-		if ( version_compare( WC()->version, '7.6', '>=' ) ) {
-			// Add hooks for stock sync.
-			add_action( 'woocommerce_reduce_order_item_stock', array( $this, 'maybe_stage_stock_updates_for_product' ), 10, 3 );
-			add_action( 'woocommerce_reduce_order_stock', array( $this, 'maybe_sync_staged_inventory_updates' ) );
-		} else {
-			// @todo Remove this block when WooCommerce 7.6 is the minimum supported version.
-			// ADD hooks for stock syncs based on changes from orders not from this gateway
-			add_action( 'woocommerce_checkout_order_processed', array( $this, 'maybe_sync_stock_for_order_via_other_gateway' ), 10, 3 );
-			add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'maybe_sync_stock_for_store_api_order_via_other_gateway' ), 10, 1 );
-
-			// Add specific hook for paypal IPN callback
-			add_action( 'valid-paypal-standard-ipn-request', array( $this, 'maybe_sync_stock_for_order_via_paypal' ), 10, 1 );
-		}
+		// Add hooks for stock sync.
+		add_action( 'woocommerce_reduce_order_item_stock', array( $this, 'maybe_stage_stock_updates_for_product' ), 10, 3 );
+		add_action( 'woocommerce_reduce_order_stock', array( $this, 'maybe_sync_staged_inventory_updates' ) );
 
 		// ADD hooks to restore stock for pending and cancelled order status.
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'maybe_sync_inventory_for_stock_increase' ), 1 );
