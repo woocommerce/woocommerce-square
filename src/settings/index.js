@@ -3,7 +3,6 @@ import OAuthConnect from './general/oauth-connect';
 import LocationPicker from './general/location-picker';
 import EnvironmentSelector from './general/environment-selector';
 import SectionHeader from './general/section-header';
-import Divider from './general/divider';
 import squareSaveHandler from './save-handler';
 
 registerSettingsExtension( {
@@ -13,7 +12,6 @@ registerSettingsExtension( {
 		'square/location-picker': LocationPicker,
 		'square/environment-selector': EnvironmentSelector,
 		'square/section-header': SectionHeader,
-		'square/divider': Divider,
 	},
 	fieldVisibility: {
 		// Sandbox credential fields are only shown when sandbox is selected.

@@ -125,8 +125,8 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 				? ( $settings['sandbox_location_id'] ?? '' )
 				: ( $settings['production_location_id'] ?? '' );
 
-			return array(
-				'square_connect_section'  => array(
+			$groups = array(
+				'square_connect_section' => array(
 					'id'          => 'square_connect_section',
 					'title'       => __( 'Connect to Square', 'woocommerce-square' ),
 					'description' => __( 'Choose between connecting to a live production account for real transactions or a sandbox account for testing purposes.', 'woocommerce-square' ),
@@ -166,16 +166,6 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'value'       => $settings['sandbox_token'] ?? '',
 						),
 						array(
-							'id'          => 'square_connect_divider',
-							'is_option'   => false,
-							'label'       => '',
-							'type'        => 'text',
-							'component'   => 'square/divider',
-							'value'       => '',
-							'description' => '',
-							'save'        => array( 'adapter' => 'none' ),
-						),
-						array(
 							'id'          => 'square_oauth_connect',
 							'is_option'   => false,
 							'label'       => '',
@@ -187,7 +177,12 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 						),
 					),
 				),
-				'square_location_section' => array(
+			);
+
+			// Only show the Business location section once connected; there are no
+			// locations to choose before connecting.
+			if ( wc_square()->get_settings_handler()->is_connected() ) {
+				$groups['square_location_section'] = array(
 					'id'          => 'square_location_section',
 					'title'       => '',
 					'description' => '',
@@ -217,8 +212,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 						),
 					),
-				),
-			);
+				);
+			}
+
+			return $groups;
 		}
 
 		/**

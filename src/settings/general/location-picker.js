@@ -15,10 +15,6 @@ export default function LocationPicker( { value, onChange } ) {
 
 	const locations = getActiveLocations( data.locations ?? [] );
 
-	if ( locations.length === 0 ) {
-		return null;
-	}
-
 	// The selected value lives in SDK form state and is persisted by the Save
 	// button (via squareSaveHandler), keeping it consistent with the rest of the
 	// General tab instead of saving immediately on change.
