@@ -1,24 +1,39 @@
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
 
-const SETTINGS_FIELDS = new Set( [
+const ENDPOINTS = {
+	settings: '/wc/v3/wc_square/settings',
+	cashApp: '/wc/v3/wc_square/cash_app_settings',
+};
+
+// General tab fields routed to the main settings endpoint.
+const GENERAL_FIELDS = new Set( [
 	'enable_sandbox',
 	'sandbox_application_id',
 	'sandbox_token',
 ] );
 
+// Cash App "Customize" sub-page fields routed to the Cash App endpoint.
+const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
+
 export default async function squareSaveHandler( { values, changedValues } ) {
-	const payload = {};
+	// Collect a payload per REST endpoint so each settings group is saved
+	// against its own controller without wiping the others.
+	const payloads = {};
+	const add = ( endpoint, key, val ) => {
+		if ( ! payloads[ endpoint ] ) {
+			payloads[ endpoint ] = {};
+		}
+		payloads[ endpoint ][ key ] = val;
+	};
 
 	for ( const [ key, val ] of Object.entries( changedValues ) ) {
-		if ( SETTINGS_FIELDS.has( key ) ) {
-			payload[ key ] = val;
+		if ( GENERAL_FIELDS.has( key ) ) {
+			add( ENDPOINTS.settings, key, val );
+		} else if ( CASH_APP_FIELDS.has( key ) ) {
+			add( ENDPOINTS.cashApp, key, val );
 		}
 	}
-
-	// `enable_sandbox` comes from a custom radio component (EnvironmentSelector)
-	// which calls onChange('yes') or onChange('no') directly — no conversion needed.
-	// The REST API already expects 'yes'/'no' and that is exactly what we have.
 
 	// The Business location select writes to a single `location_id` field; route
 	// it to the option key for the currently selected environment. Skip it when the
@@ -28,16 +43,19 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	const envChanged = 'enable_sandbox' in changedValues;
 	if ( 'location_id' in changedValues && ! envChanged ) {
 		const isSandbox = values.enable_sandbox === 'yes';
-		payload[
-			isSandbox ? 'sandbox_location_id' : 'production_location_id'
-		] = changedValues.location_id;
+		add(
+			ENDPOINTS.settings,
+			isSandbox ? 'sandbox_location_id' : 'production_location_id',
+			changedValues.location_id
+		);
 	}
 
-	if ( Object.keys( payload ).length === 0 ) {
-		// Nothing to send through this handler — fields may have self-saved
-		// (e.g. gateway-list toggles call `/wc/v3/payment_gateways/{id}`
-		// directly). Still return a notice so the SDK exits its loading
-		// state and acknowledges the save.
+	const endpoints = Object.keys( payloads );
+
+	if ( endpoints.length === 0 ) {
+		// Nothing routed through this handler — fields may have self-saved (e.g.
+		// gateway-list toggles hit the gateways endpoint directly). Still return a
+		// notice so the SDK exits its loading state and acknowledges the save.
 		return {
 			values,
 			notice: __( 'Settings saved.', 'woocommerce-square' ),
@@ -45,11 +63,11 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	}
 
 	try {
-		await apiFetch( {
-			path: '/wc/v3/wc_square/settings',
-			method: 'POST',
-			data: payload,
-		} );
+		await Promise.all(
+			endpoints.map( ( path ) =>
+				apiFetch( { path, method: 'POST', data: payloads[ path ] } )
+			)
+		);
 	} catch ( error ) {
 		// The SDK catches a thrown Error and renders error.message as the save
 		// notice. Surface a clean, translatable message instead of the raw REST
@@ -68,7 +86,7 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	// the saved environment (matching the legacy settings page). A location-only save
 	// needs no reload. The short delay lets the success notice render first; clear the
 	// SDK's beforeunload guard so a "Leave site?" prompt can't block the reload.
-	const needsReload = [ ...SETTINGS_FIELDS ].some(
+	const needsReload = [ ...GENERAL_FIELDS ].some(
 		( field ) => field in changedValues
 	);
 	if ( needsReload ) {
