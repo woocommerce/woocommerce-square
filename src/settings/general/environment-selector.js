@@ -45,6 +45,7 @@ export default function EnvironmentSelector( { field, value, onChange } ) {
 				<label
 					key={ option.value }
 					htmlFor={ `square_environment_${ option.value }` }
+					aria-label={ option.label }
 					className="wc-square-environment-selector__option"
 				>
 					<input
