@@ -253,11 +253,19 @@ class Admin {
 					);
 
 					if ( $is_modern_square_hub ) {
+						// Version the stylesheet by its own build hash so CSS-only
+						// changes bust the cache (the square-settings.js hash above
+						// does not change when only modern-hub.css changes).
+						$style_asset_file = WC_SQUARE_PLUGIN_PATH . 'build/modern-hub.asset.php';
+						$style_version    = file_exists( $style_asset_file )
+							? ( include $style_asset_file )['version']
+							: $asset['version'];
+
 						wp_enqueue_style(
 							'woocommerce-square-modern-hub',
 							WC_SQUARE_PLUGIN_URL . 'build/modern-hub.css',
 							array(),
-							$asset['version']
+							$style_version
 						);
 					}
 				}

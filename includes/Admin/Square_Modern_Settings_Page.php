@@ -78,6 +78,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @param string $section Unused.
 		 */
 		public function get_script_handles( string $section ): array {
+			// Only advertise the handle when its build artifact exists; otherwise
+			// the SDK would enqueue an unregistered handle (Admin.php registers it
+			// only when build/square-settings.asset.php is present), and WordPress
+			// could print a broken <script src=""> tag.
+			if ( ! file_exists( WC_SQUARE_PLUGIN_PATH . 'build/square-settings.asset.php' ) ) {
+				return array();
+			}
+
 			return array( 'woocommerce-square-settings' );
 		}
 
@@ -118,7 +126,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @return array<string, array>
 		 */
 		private function get_general_tab_groups(): array {
-			$settings = (array) get_option( 'wc_square_settings', array() );
+			$settings = (array) get_option( Rest\WC_REST_Square_Settings_Controller::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 
 			$is_sandbox          = ! empty( $settings['enable_sandbox'] ) && wc_string_to_bool( $settings['enable_sandbox'] );
 			$current_location_id = $is_sandbox
@@ -184,38 +192,67 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			if ( wc_square()->get_settings_handler()->is_connected() ) {
 				$groups['square_location_section'] = array(
 					'id'          => 'square_location_section',
-					'title'       => '',
-					'description' => '',
+					'title'       => __( 'Business location', 'woocommerce-square' ),
+					'description' => sprintf(
+						/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+						__( 'Select the Square location you wish to link with this WooCommerce store. %1$sLearn more about active locations ↗%2$s', 'woocommerce-square' ),
+						'<a href="https://squareup.com/help/us/en/article/5593-locations" target="_blank" rel="noopener">',
+						'</a>'
+					),
 					'actions'     => array(),
 					'order'       => 1,
 					'fields'      => array(
 						array(
-							'id'          => 'square_location_header',
-							'type'        => 'text',
-							'component'   => 'square/section-header',
-							'is_option'   => false,
-							'label'       => __( 'Business location', 'woocommerce-square' ),
-							'description' => sprintf(
-								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
-								__( 'Select the Square location you wish to link with this WooCommerce store. %1$sLearn more about active locations ↗%2$s', 'woocommerce-square' ),
-								'<a href="https://squareup.com/help/us/en/article/5593-locations" target="_blank" rel="noopener">',
-								'</a>'
-							),
-							'value'       => '',
-						),
-						array(
-							'id'          => 'location_id',
-							'label'       => '',
-							'type'        => 'text',
-							'component'   => 'square/location-picker',
-							'value'       => $current_location_id,
-							'description' => '',
+							'id'      => 'location_id',
+							'label'   => '',
+							'type'    => 'select',
+							'value'   => $current_location_id,
+							'options' => $this->get_location_options(),
 						),
 					),
 				);
 			}
 
 			return $groups;
+		}
+
+		/**
+		 * Builds the Business location select options from the connected account.
+		 *
+		 * Fetches a fresh list for the currently connected environment and filters
+		 * to ACTIVE locations that can process credit cards, matching the legacy
+		 * settings page (see Settings::add_location_settings_field()). The list is
+		 * rendered server-side so it always reflects the saved environment after a
+		 * save + reload, mirroring legacy behaviour.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<int, array{label: string, value: string}>
+		 */
+		private function get_location_options(): array {
+			$options = array(
+				array(
+					'label' => __( 'Please choose a location', 'woocommerce-square' ),
+					'value' => '',
+				),
+			);
+
+			$locations = wc_square()->get_settings_handler()->get_locations( true );
+
+			if ( empty( $locations ) ) {
+				return $options;
+			}
+
+			foreach ( $locations as $location ) {
+				if ( 'ACTIVE' === $location->getStatus() && in_array( 'CREDIT_CARD_PROCESSING', (array) $location->getCapabilities(), true ) ) {
+					$options[] = array(
+						'label' => $location->getName(),
+						'value' => $location->getId(),
+					);
+				}
+			}
+
+			return $options;
 		}
 
 		/**

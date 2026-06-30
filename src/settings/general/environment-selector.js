@@ -24,7 +24,9 @@ const OPTIONS = [
  *
  * Renders a radio group (Production / Sandbox) and calls `onChange` with
  * 'yes' (sandbox) or 'no' (production) — matching the `enable_sandbox`
- * option values expected by the REST API.
+ * option values expected by the REST API. The SDK's native `radio` field
+ * type renders a dropdown (SelectControl), not the Figma radio layout with
+ * per-option descriptions, so this stays a custom component.
  *
  * @param {Object}   props
  * @param {Object}   props.field    SDK field descriptor (label, etc.).
@@ -33,55 +35,37 @@ const OPTIONS = [
  */
 export default function EnvironmentSelector( { field, value, onChange } ) {
 	return (
-		<div>
+		<fieldset className="wc-square-environment-selector">
 			{ field?.label && (
-				<div style={ { fontWeight: 600, marginBottom: '12px' } }>
+				<legend className="wc-square-environment-selector__legend">
 					{ field.label }
-				</div>
+				</legend>
 			) }
-			<fieldset style={ { border: 'none', padding: 0, margin: 0 } }>
-				{ OPTIONS.map( ( option ) => (
-					<label
-						key={ option.value }
-						htmlFor={ `square_environment_${ option.value }` }
-						aria-label={ option.label }
-						style={ {
-							display: 'flex',
-							alignItems: 'flex-start',
-							gap: '8px',
-							marginBottom: '12px',
-							cursor: 'pointer',
-							fontWeight: 'normal',
-						} }
-					>
-						<input
-							type="radio"
-							id={ `square_environment_${ option.value }` }
-							name="square_environment"
-							value={ option.value }
-							checked={ value === option.value }
-							onChange={ () => onChange( option.value ) }
-							style={ { marginTop: '3px', flexShrink: 0 } }
-						/>
-						<span
-							style={ {
-								display: 'flex',
-								flexDirection: 'column',
-								gap: '2px',
-							} }
-						>
-							<span style={ { fontWeight: 500 } }>
-								{ option.label }
-							</span>
-							<span
-								style={ { color: '#757575', fontSize: '13px' } }
-							>
-								{ option.description }
-							</span>
+			{ OPTIONS.map( ( option ) => (
+				<label
+					key={ option.value }
+					htmlFor={ `square_environment_${ option.value }` }
+					className="wc-square-environment-selector__option"
+				>
+					<input
+						type="radio"
+						id={ `square_environment_${ option.value }` }
+						name="square_environment"
+						value={ option.value }
+						checked={ value === option.value }
+						onChange={ () => onChange( option.value ) }
+						className="wc-square-environment-selector__input"
+					/>
+					<span className="wc-square-environment-selector__text">
+						<span className="wc-square-environment-selector__label">
+							{ option.label }
 						</span>
-					</label>
-				) ) }
-			</fieldset>
-		</div>
+						<span className="wc-square-environment-selector__description">
+							{ option.description }
+						</span>
+					</span>
+				</label>
+			) ) }
+		</fieldset>
 	);
 }
