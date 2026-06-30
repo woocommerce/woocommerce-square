@@ -67,3 +67,80 @@
 	color: #757575;
 	font-size: 13px;
 }
+
+/* In-card section header (e.g. Google Pay / Apple Pay sub-headers). */
+.wc-square-section-header {
+	margin: 0 0 4px;
+}
+
+.wc-square-section-header__title {
+	color: #1e1e1e;
+	font-size: 16px;
+	font-weight: 600;
+	line-height: 24px;
+	margin: 0 0 4px;
+}
+
+.wc-square-section-header__description {
+	color: #505050;
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.wc-square-section-header__description p {
+	margin: 0;
+}
+
+/* Payment Methods list */
+.wc-square-payment-methods-list__description {
+	color: #505050;
+	font-size: 13px;
+	margin: 0 0 16px;
+}
+
+.wc-square-payment-methods-list__row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 0;
+	border-top: 1px solid #e0e0e0;
+}
+
+.wc-square-payment-methods-list__row:first-of-type {
+	border-top: none;
+}
+
+.wc-square-payment-methods-list__row-icon {
+	display: flex;
+	align-items: flex-start;
+	flex-shrink: 0;
+	padding-top: 1px;
+	color: #1e1e1e;
+}
+
+.wc-square-payment-methods-list__row-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.wc-square-payment-methods-list__row-title {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1e1e1e;
+	margin-bottom: 4px;
+}
+
+.wc-square-payment-methods-list__row-description {
+	font-size: 12px;
+	color: #505050;
+	margin: 0;
+}
+
+.wc-square-payment-methods-list__row-actions {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
