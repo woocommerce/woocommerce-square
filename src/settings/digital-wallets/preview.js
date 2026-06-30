@@ -118,12 +118,7 @@ function GooglePayButton( { payments, paymentRequest, buttonColor, buttonType } 
 		};
 	}, [ payments, paymentRequest, buttonColor, buttonType ] );
 
-	return (
-		<div
-			ref={ containerRef }
-			style={ { width: '100%', minHeight: '48px' } }
-		/>
-	);
+	return <div ref={ containerRef } className="wc-square-preview__gpay" />;
 }
 
 /**
@@ -268,44 +263,15 @@ export default function DigitalWalletPreview( { value, values } ) {
 		};
 	}, [ applicationId, locationId, squareJsUrl, countryCode, currencyCode ] );
 
-	const containerStyle = {
-		padding:      '16px',
-		border:       '1px solid #e0e0e0',
-		borderRadius: '4px',
-		marginTop:    '4px',
-	};
-
-	const placeholderStyle = {
-		textAlign:  'center',
-		padding:    '24px 0',
-		color:      '#757575',
-		fontSize:   '13px',
-	};
-
-	// The CSS property -webkit-appearance: -apple-pay-button IS the real Apple
-	// Pay button in WebKit browsers — not a replica. In Chrome/Firefox it renders
-	// as nothing, which mirrors storefront behaviour.
-	const appleButtonStyle = {
-		display:                            'block',
-		width:                              '100%',
-		height:                             '48px',
-		marginTop:                          '8px',
-		cursor:                             'default',
-		WebkitAppearance:                   '-apple-pay-button',
-		'--apple-pay-button-width':         '100%',
-		'--apple-pay-button-height':        '48px',
-		'--apple-pay-button-border-radius': '4px',
-	};
-
 	return (
-		<div style={ containerStyle }>
+		<div className="wc-square-preview">
 			{ status === 'loading' && (
-				<div style={ placeholderStyle }>
+				<div className="wc-square-preview__placeholder">
 					<Spinner />
 				</div>
 			) }
 			{ status === 'error' && (
-				<p style={ { margin: 0, ...placeholderStyle } }>{ errorMsg }</p>
+				<p className="wc-square-preview__placeholder">{ errorMsg }</p>
 			) }
 
 			{ /* Google Pay — the keyed child remounts on every color/type change so
@@ -328,11 +294,9 @@ export default function DigitalWalletPreview( { value, values } ) {
 			{ status === 'ready' && applePaySupported && (
 				<div
 					lang="en"
-					style={ {
-						...appleButtonStyle,
-						// buttonStyle controls black vs. white; read live from values.
-						'--apple-pay-button-style': appleStyle,
-					} }
+					className="wc-square-preview__applepay"
+					// Only the dynamic black/white style is inline; layout is in CSS.
+					style={ { '--apple-pay-button-style': appleStyle } }
 					aria-label={ __( 'Apple Pay button preview', 'woocommerce-square' ) }
 				/>
 			) }
@@ -340,7 +304,7 @@ export default function DigitalWalletPreview( { value, values } ) {
 			{ /* Outside Safari the Apple Pay API is unavailable. Tell the merchant
 			     why the button is absent so the empty space is not mistaken for a bug. */ }
 			{ status === 'ready' && ! applePaySupported && (
-				<p style={ { margin: '8px 0 0', fontSize: '12px', color: '#757575' } }>
+				<p className="wc-square-preview__note">
 					{ __( 'Apple Pay preview is only available in Safari. The button will appear for eligible customers at checkout.', 'woocommerce-square' ) }
 				</p>
 			) }

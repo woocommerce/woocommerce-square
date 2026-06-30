@@ -1,9 +1,9 @@
 import { __ } from '@wordpress/i18n';
 
-const BORDER_RADIUS = {
-	semiround: '8px',
-	round:     '999px',
-	square:    '0px',
+const SHAPE_CLASS = {
+	semiround: 'shape-semiround',
+	round:     'shape-round',
+	square:    'shape-square',
 };
 
 /**
@@ -19,7 +19,7 @@ function CashAppLogo() {
 			height="24"
 			aria-hidden="true"
 			focusable="false"
-			style={ { flexShrink: 0 } }
+			className="wc-square-cashapp-preview__logo"
 		>
 			<defs>
 				<style>{ '.ca1{fill:#fff;}.ca2{fill:#00d633;fill-rule:evenodd;}' }</style>
@@ -44,40 +44,16 @@ function CashAppLogo() {
  * @param {Object} props.values - All current form field values for the page.
  */
 export default function CashAppButtonPreview( { values } ) {
-	const theme        = values?.button_theme ?? 'dark';
-	const shape        = values?.button_shape ?? 'semiround';
-	const isDark       = theme === 'dark';
-	const borderRadius = BORDER_RADIUS[ shape ] ?? BORDER_RADIUS.semiround;
-
-	const containerStyle = {
-		padding:      '16px',
-		border:       '1px solid #e0e0e0',
-		borderRadius: '4px',
-		marginTop:    '4px',
-	};
-
-	const buttonStyle = {
-		display:        'flex',
-		alignItems:     'center',
-		justifyContent: 'center',
-		gap:            '8px',
-		width:          '100%',
-		padding:        '14px 20px',
-		background:     isDark ? '#000000' : '#ffffff',
-		color:          isDark ? '#ffffff' : '#000000',
-		border:         isDark ? 'none' : '1px solid #000000',
-		borderRadius,
-		fontSize:       '16px',
-		fontWeight:     500,
-		cursor:         'default',
-		boxSizing:      'border-box',
-	};
+	const theme      = values?.button_theme ?? 'dark';
+	const shape      = values?.button_shape ?? 'semiround';
+	const themeClass = theme === 'dark' ? 'is-dark' : 'is-light';
+	const shapeClass = SHAPE_CLASS[ shape ] ?? SHAPE_CLASS.semiround;
 
 	return (
-		<div style={ containerStyle }>
+		<div className="wc-square-preview">
 			<button
 				disabled
-				style={ buttonStyle }
+				className={ `wc-square-cashapp-preview__button ${ themeClass } ${ shapeClass }` }
 				aria-label={ __( 'Cash App Pay button preview', 'woocommerce-square' ) }
 			>
 				<CashAppLogo />
