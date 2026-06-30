@@ -173,12 +173,17 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings = array();
+		// Start from the stored settings so callers that send only changed fields
+		// (e.g. the settings UI SDK save handler) don't wipe unrelated keys.
+		$settings = (array) get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 
 		foreach ( $this->allowed_params as $index => $key ) {
-			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
+			$param = $request->get_param( $key );
+			if ( null === $param ) {
+				continue;
+			}
 
-			$settings[ $key ] = $new_value;
+			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
 		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
