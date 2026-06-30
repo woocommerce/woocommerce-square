@@ -1,0 +1,88 @@
+import { __ } from '@wordpress/i18n';
+
+const BORDER_RADIUS = {
+	semiround: '8px',
+	round:     '999px',
+	square:    '0px',
+};
+
+/**
+ * Inline SVG replica of the Cash App logo mark (green rounded-square with white $).
+ * Sourced from build/images/cash-app.svg — inlined to avoid an extra network request.
+ */
+function CashAppLogo() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 210 210"
+			width="24"
+			height="24"
+			aria-hidden="true"
+			focusable="false"
+			style={ { flexShrink: 0 } }
+		>
+			<defs>
+				<style>{ '.ca1{fill:#fff;}.ca2{fill:#00d633;fill-rule:evenodd;}' }</style>
+			</defs>
+			<path className="ca1" d="M110.25,68.83c10.32,.02,20.29,3.68,28.17,10.35,1.69,1.53,4.28,1.48,5.9-.12l8.11-8.14c1.63-1.62,1.64-4.25,.02-5.88-.08-.08-.16-.15-.24-.22-6.37-5.42-13.74-9.55-21.68-12.15l2.43-11.98c.47-2.29-1-4.52-3.29-4.99-.28-.06-.57-.09-.86-.09h-15.61c-1.99,0-3.72,1.38-4.15,3.33l-2.19,10.71c-20.79,1.02-38.42,11.32-38.42,32.43,0,18.25,14.57,26.09,29.97,31.58,14.57,5.42,22.29,7.43,22.29,15.06s-7.7,12.44-19.04,12.44c-11.01,.18-21.64-3.99-29.6-11.59-1.64-1.62-4.28-1.62-5.93,0l-8.69,8.5c-1.67,1.61-1.72,4.27-.11,5.94,.03,.04,.07,.07,.11,.11,7.08,6.64,15.73,11.38,25.13,13.77l-2.43,11.1c-.48,2.34,1.02,4.63,3.36,5.11,.25,.05,.51,.08,.77,.09h15.66c2.01,.01,3.75-1.39,4.18-3.35l2.26-10.52c24.91-1.53,40.14-14.94,40.14-34.57,0-18.07-15.18-25.7-33.61-31.92-10.54-3.96-19.65-6.56-19.65-14.38s8.5-10.64,17-10.64Z" />
+			<path className="ca2" d="M73.14,0c-21.05,0-31.59,0-42.84,3.5C17.88,8,8.09,17.79,3.59,30.22,0,41.59,0,52.11,0,73.17v63.55c0,21.18,0,31.61,3.5,42.95,4.5,12.43,14.29,22.22,26.71,26.72,11.36,3.6,21.88,3.6,42.93,3.6h63.62c21.08,0,31.59,0,42.93-3.6,12.43-4.5,22.21-14.29,26.71-26.72,3.59-11.37,3.59-21.89,3.59-42.95v-63.46c0-21.09,0-31.61-3.59-42.95-4.5-12.43-14.29-22.22-26.71-26.72-11.44-3.6-21.85-3.6-43.03-3.6h-63.52Zm20.11,79.47c0,7.82,9.11,10.42,19.65,14.38,18.43,6.22,33.61,13.85,33.61,31.92,0,19.63-15.23,33.04-40.14,34.57l-2.26,10.52c-.42,1.96-2.17,3.36-4.18,3.35h-15.66c-.26,0-.52-.04-.77-.09-2.34-.48-3.84-2.77-3.36-5.11l2.43-11.1c-9.4-2.4-18.05-7.14-25.13-13.77-.04-.03-.07-.07-.11-.11-1.61-1.67-1.56-4.33,.11-5.94l8.69-8.5c1.64-1.62,4.28-1.62,5.93,0,7.96,7.6,18.6,11.76,29.6,11.59,11.34,0,19.04-4.81,19.04-12.44s-7.72-9.64-22.29-15.06c-15.4-5.49-29.97-13.34-29.97-31.58,0-21.11,17.63-31.41,38.42-32.43l2.19-10.71c.43-1.95,2.16-3.33,4.15-3.33h15.61c.29,0,.58,.03,.86,.09,2.29,.47,3.76,2.7,3.29,4.99l-2.43,11.98c7.95,2.6,15.31,6.73,21.68,12.15,.08,.07,.16,.15,.24,.22,1.62,1.63,1.61,4.26-.02,5.88l-8.11,8.14c-1.62,1.6-4.21,1.65-5.9,.12-7.87-6.67-17.85-10.33-28.17-10.35-8.5,0-17,2.82-17,10.64Z" />
+		</svg>
+	);
+}
+
+/**
+ * Live preview of the Cash App Pay button.
+ *
+ * Reads button_theme and button_shape from the shared `values` prop passed by
+ * the SDK to every registered component. Re-renders automatically on every
+ * dropdown change — no extra state or effects needed.
+ *
+ * Registered as a custom component (components map, not typeRenderers) so it
+ * is addressed via component: 'square/cash-app-button-preview' in the PHP field.
+ *
+ * @param {Object} props
+ * @param {Object} props.values - All current form field values for the page.
+ */
+export default function CashAppButtonPreview( { values } ) {
+	const theme        = values?.button_theme ?? 'dark';
+	const shape        = values?.button_shape ?? 'semiround';
+	const isDark       = theme === 'dark';
+	const borderRadius = BORDER_RADIUS[ shape ] ?? BORDER_RADIUS.semiround;
+
+	const containerStyle = {
+		padding:      '16px',
+		border:       '1px solid #e0e0e0',
+		borderRadius: '4px',
+		marginTop:    '4px',
+	};
+
+	const buttonStyle = {
+		display:        'flex',
+		alignItems:     'center',
+		justifyContent: 'center',
+		gap:            '8px',
+		width:          '100%',
+		padding:        '14px 20px',
+		background:     isDark ? '#000000' : '#ffffff',
+		color:          isDark ? '#ffffff' : '#000000',
+		border:         isDark ? 'none' : '1px solid #000000',
+		borderRadius,
+		fontSize:       '16px',
+		fontWeight:     500,
+		cursor:         'default',
+		boxSizing:      'border-box',
+	};
+
+	return (
+		<div style={ containerStyle }>
+			<button
+				disabled
+				style={ buttonStyle }
+				aria-label={ __( 'Cash App Pay button preview', 'woocommerce-square' ) }
+			>
+				<CashAppLogo />
+				{ __( 'Cash App Pay', 'woocommerce-square' ) }
+			</button>
+		</div>
+	);
+}
