@@ -97,7 +97,12 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @param string $section Unused.
 		 */
 		public function get_save_adapter( string $section ): string {
-			return Payments_Square_Hub::TAB_GENERAL === Payments_Square_Hub::get_active_tab()
+			$editable_tabs = array(
+				Payments_Square_Hub::TAB_GENERAL,
+				Payments_Square_Hub::TAB_PAYMENT_METHODS,
+			);
+
+			return in_array( Payments_Square_Hub::get_active_tab(), $editable_tabs, true )
 				? 'custom'
 				: 'none';
 		}
@@ -113,6 +118,8 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			switch ( Payments_Square_Hub::get_active_tab() ) {
 				case Payments_Square_Hub::TAB_GENERAL:
 					return $this->get_general_tab_groups();
+				case Payments_Square_Hub::TAB_PAYMENT_METHODS:
+					return $this->get_payment_methods_tab_groups();
 				default:
 					return array();
 			}
@@ -256,6 +263,237 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		}
 
 		/**
+		 * Builds the credential payload injected into the digital wallet preview field value.
+		 *
+		 * The preview component (square/digital-wallet-preview) reads this JSON to
+		 * initialise window.Square.payments(applicationId, locationId) client-side.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return string JSON-encoded credentials object.
+		 */
+		private function get_digital_wallet_preview_data(): string {
+			$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
+
+			return (string) wp_json_encode(
+				array(
+					'applicationId' => wc_square()->get_gateway()->get_application_id(),
+					'locationId'    => wc_square()->get_settings_handler()->get_location_id(),
+					'squareJsUrl'   => $is_sandbox
+						? 'https://sandbox.web.squarecdn.com/v1/square.js'
+						: 'https://web.squarecdn.com/v1/square.js',
+					'countryCode'   => 'US',
+					'currencyCode'  => get_woocommerce_currency() ?: 'USD',
+				)
+			);
+		}
+
+		/**
+		 * Returns the field groups for the Payment Methods tab.
+		 *
+		 * Three groups: the default gateway list, then Digital Wallet and Cash App
+		 * customise sub-pages. JS `groupVisibility` predicates show exactly one group
+		 * at a time based on the `payment_methods_view` sentinel field.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<string, array>
+		 */
+		private function get_payment_methods_tab_groups(): array {
+			$credit_card = (array) get_option( Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+			$cash_app    = (array) get_option( Rest\WC_REST_Square_Cash_App_Settings_Controller::SQUARE_CASH_APP_SETTINGS_OPTION_NAME, array() );
+			$gift_cards  = (array) get_option( \WooCommerce\Square\Gateway\Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+
+			$gateway_states = (string) wp_json_encode(
+				array(
+					'credit_card'    => wc_string_to_bool( $credit_card['enabled'] ?? 'yes' ),
+					'digital_wallet' => wc_string_to_bool( $credit_card['digital_wallets_enabled'] ?? 'yes' ),
+					'cash_app'       => wc_string_to_bool( $cash_app['enabled'] ?? 'yes' ),
+					'gift_cards'     => wc_string_to_bool( $gift_cards['enabled'] ?? 'yes' ),
+				)
+			);
+
+			return array(
+				'payment_methods_list' => array(
+					'id'          => 'payment_methods_list',
+					'title'       => __( 'Choose your payment methods', 'woocommerce-square' ),
+					'description' => '',
+					'actions'     => array(),
+					'order'       => 0,
+					'fields'      => array(
+						array(
+							'id'        => 'payment_methods_view',
+							'type'      => 'text',
+							'component' => 'square/hidden-field',
+							'is_option' => false,
+							'label'     => '',
+							'value'     => 'list',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'payment_methods_gateway_list',
+							'type'        => 'text',
+							'component'   => 'square/gateway-list',
+							'is_option'   => false,
+							'label'       => '',
+							'description' => '',
+							'value'       => $gateway_states,
+							'save'        => array( 'adapter' => 'none' ),
+						),
+					),
+				),
+				'digital_wallets_section' => array(
+					'id'          => 'digital_wallets_section',
+					'title'       => __( 'Digital wallet settings', 'woocommerce-square' ),
+					'description' => __( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. <a href="https://woocommerce.com/document/square/" target="_blank">Learn more about digital wallets</a>', 'woocommerce-square' ),
+					'actions'     => array(),
+					'order'       => 1,
+					'fields'      => array(
+						array(
+							'id'        => 'digital_wallets_google_pay_header',
+							'type'      => 'text',
+							'component' => 'square/section-header',
+							'is_option' => false,
+							'label'     => __( 'Google Pay', 'woocommerce-square' ),
+							'value'     => '',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'        => 'digital_wallets_google_pay_enabled',
+							'label'     => __( 'Activate Google Pay', 'woocommerce-square' ),
+							'type'      => 'checkbox',
+							'component' => 'square/gateway-toggle',
+							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['digital_wallets_google_pay_enabled'] ?? 'yes' ) ),
+						),
+						array(
+							'id'          => 'digital_wallets_google_pay_button_type',
+							'label'       => __( 'Button label', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $credit_card['digital_wallets_google_pay_button_type'] ?? $credit_card['digital_wallets_button_type'] ?? 'buy',
+							'options'     => array(
+								array( 'value' => 'buy',       'label' => __( 'Buy now', 'woocommerce-square' ) ),
+								array( 'value' => 'checkout',  'label' => __( 'Checkout', 'woocommerce-square' ) ),
+								array( 'value' => 'pay',       'label' => __( 'Pay', 'woocommerce-square' ) ),
+								array( 'value' => 'plain',     'label' => __( 'Plain (no text)', 'woocommerce-square' ) ),
+								array( 'value' => 'donate',    'label' => __( 'Donate', 'woocommerce-square' ) ),
+								array( 'value' => 'book',      'label' => __( 'Book', 'woocommerce-square' ) ),
+								array( 'value' => 'subscribe', 'label' => __( 'Subscribe', 'woocommerce-square' ) ),
+								array( 'value' => 'order',     'label' => __( 'Order', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'          => 'digital_wallets_google_pay_button_color',
+							'label'       => __( 'Button color', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $credit_card['digital_wallets_google_pay_button_color'] ?? 'black',
+							'options'     => array(
+								array( 'value' => 'black', 'label' => __( 'Black', 'woocommerce-square' ) ),
+								array( 'value' => 'white', 'label' => __( 'White', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'        => 'digital_wallets_apple_pay_header',
+							'type'      => 'text',
+							'component' => 'square/section-header',
+							'is_option' => false,
+							'label'     => __( 'Apple Pay', 'woocommerce-square' ),
+							'value'     => '',
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'        => 'digital_wallets_apple_pay_enabled',
+							'label'     => __( 'Enable Apple Pay', 'woocommerce-square' ),
+							'type'      => 'checkbox',
+							'component' => 'square/gateway-toggle',
+							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['digital_wallets_apple_pay_enabled'] ?? 'yes' ) ),
+						),
+						array(
+							'id'          => 'digital_wallets_apple_pay_button_type',
+							'label'       => __( 'Button label', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $credit_card['digital_wallets_apple_pay_button_type'] ?? $credit_card['digital_wallets_button_type'] ?? 'buy',
+							'options'     => array(
+								array( 'value' => 'buy',       'label' => __( 'Buy now', 'woocommerce-square' ) ),
+								array( 'value' => 'checkout',  'label' => __( 'Checkout', 'woocommerce-square' ) ),
+								array( 'value' => 'pay',       'label' => __( 'Pay', 'woocommerce-square' ) ),
+								array( 'value' => 'plain',     'label' => __( 'Plain (no text)', 'woocommerce-square' ) ),
+								array( 'value' => 'donate',    'label' => __( 'Donate', 'woocommerce-square' ) ),
+								array( 'value' => 'book',      'label' => __( 'Book', 'woocommerce-square' ) ),
+								array( 'value' => 'subscribe', 'label' => __( 'Subscribe', 'woocommerce-square' ) ),
+								array( 'value' => 'order',     'label' => __( 'Order', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'          => 'digital_wallets_apple_pay_button_color',
+							'label'       => __( 'Button color', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $credit_card['digital_wallets_apple_pay_button_color'] ?? 'black',
+							'options'     => array(
+								array( 'value' => 'black',           'label' => __( 'Black', 'woocommerce-square' ) ),
+								array( 'value' => 'white',           'label' => __( 'White', 'woocommerce-square' ) ),
+								array( 'value' => 'white-with-line', 'label' => __( 'White with outline', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'          => 'digital_wallet_preview',
+							'type'        => 'text',
+							'component'   => 'square/digital-wallet-preview',
+							'is_option'   => false,
+							'label'       => __( 'Preview', 'woocommerce-square' ),
+							'description' => '',
+							'value'       => $this->get_digital_wallet_preview_data(),
+						),
+					),
+				),
+				'cash_app_pay_section' => array(
+					'id'          => 'cash_app_pay_section',
+					'title'       => __( 'Cash App Pay settings', 'woocommerce-square' ),
+					'description' => __( 'Customize the way Cash App appears on your website.', 'woocommerce-square' ),
+					'actions'     => array(),
+					'order'       => 2,
+					'fields'      => array(
+						array(
+							'id'          => 'button_theme',
+							'label'       => __( 'Button Theme', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $cash_app['button_theme'] ?? 'dark',
+							'options'     => array(
+								array( 'value' => 'dark',  'label' => __( 'Dark', 'woocommerce-square' ) ),
+								array( 'value' => 'light', 'label' => __( 'Light', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'          => 'button_shape',
+							'label'       => __( 'Button Shape', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => '',
+							'value'       => $cash_app['button_shape'] ?? 'semiround',
+							'options'     => array(
+								array( 'value' => 'semiround', 'label' => __( 'Semiround', 'woocommerce-square' ) ),
+								array( 'value' => 'round',     'label' => __( 'Round', 'woocommerce-square' ) ),
+								array( 'value' => 'square',    'label' => __( 'Square', 'woocommerce-square' ) ),
+							),
+						),
+						array(
+							'id'          => 'cash_app_button_preview',
+							'type'        => 'text',
+							'component'   => 'square/cash-app-button-preview',
+							'is_option'   => false,
+							'label'       => __( 'Preview', 'woocommerce-square' ),
+							'value'       => '',
+							'description' => '',
+						),
+					),
+				),
+			);
+		}
+
+		/**
 		 * Builds the sectionNavigation array for the 4 Square hub sub-tabs.
 		 *
 		 * @since x.x.x
@@ -267,10 +505,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$base_url   = Payments_Square_Hub::get_hub_url();
 
 			$tabs = array(
-				Payments_Square_Hub::TAB_GENERAL         => __( 'General', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_PAYMENT_METHODS => __( 'Payment methods', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_GENERAL               => __( 'General', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_PAYMENT_METHODS       => __( 'Payment methods', 'woocommerce-square' ),
 				Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS => __( 'Payments & Transactions', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_SYNCHRONIZE     => __( 'Synchronize Square', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_SYNCHRONIZE           => __( 'Synchronize Square', 'woocommerce-square' ),
 			);
 
 			$nav = array();
