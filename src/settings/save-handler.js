@@ -34,8 +34,14 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	}
 
 	if ( Object.keys( payload ).length === 0 ) {
-		// Nothing to save — return the full values so SDK state stays intact.
-		return { values };
+		// Nothing to send through this handler — fields may have self-saved
+		// (e.g. gateway-list toggles call `/wc/v3/payment_gateways/{id}`
+		// directly). Still return a notice so the SDK exits its loading
+		// state and acknowledges the save.
+		return {
+			values,
+			notice: __( 'Settings saved.', 'woocommerce-square' ),
+		};
 	}
 
 	try {
