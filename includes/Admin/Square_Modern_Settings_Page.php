@@ -307,7 +307,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$gateway_states = (string) wp_json_encode(
 				array(
 					'credit_card'    => wc_string_to_bool( $credit_card['enabled'] ?? 'yes' ),
-					'digital_wallet' => wc_string_to_bool( $credit_card['digital_wallets_enabled'] ?? 'yes' ),
+					'digital_wallet' => wc_string_to_bool( $credit_card['enable_digital_wallets'] ?? 'yes' ),
 					'cash_app'       => wc_string_to_bool( $cash_app['enabled'] ?? 'yes' ),
 					'gift_cards'     => wc_string_to_bool( $gift_cards['enabled'] ?? 'yes' ),
 				)

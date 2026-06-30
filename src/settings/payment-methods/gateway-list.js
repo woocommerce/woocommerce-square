@@ -1,6 +1,7 @@
 import { useState } from '@wordpress/element';
 import { ToggleControl, Button } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+import apiFetch from '@wordpress/api-fetch';
 
 // Card icon (Credit/debit card + Digital wallet rows). Exported from Figma.
 const CardIcon = () => (
@@ -19,17 +20,38 @@ const SquareMarkIcon = () => (
 );
 
 const GATEWAY_IDS = {
-	creditCard:    'square_credit_card',
-	digitalWallet: 'square_credit_card',
-	cashApp:       'square_cash_app_pay',
-	giftCards:     'gift_cards_pay',
+	creditCard: 'square_credit_card',
+	cashApp:    'square_cash_app_pay',
+	giftCards:  'gift_cards_pay',
 };
 
+/**
+ * Enable/disable a WooCommerce payment gateway.
+ *
+ * @param {string}  gatewayId WC gateway id.
+ * @param {boolean} enabled   New enabled state.
+ */
 async function updateGatewayEnabled( gatewayId, enabled ) {
-	await window.wp.apiFetch( {
+	await apiFetch( {
 		path:   `/wc/v3/payment_gateways/${ gatewayId }`,
 		method: 'PUT',
 		data:   { enabled },
+	} );
+}
+
+/**
+ * Toggle digital wallets. This is NOT a separate gateway — it is the
+ * `enable_digital_wallets` option on the Credit Card gateway, so it routes to
+ * the Square payment settings endpoint rather than the gateways endpoint
+ * (toggling the gateway itself would disable card payments entirely).
+ *
+ * @param {boolean} enabled New enabled state.
+ */
+async function updateDigitalWalletsEnabled( enabled ) {
+	await apiFetch( {
+		path:   '/wc/v3/wc_square/payment_settings',
+		method: 'POST',
+		data:   { enable_digital_wallets: enabled ? 'yes' : 'no' },
 	} );
 }
 
@@ -66,7 +88,14 @@ export default function GatewayList( { value, setValue, onChange } ) {
 	const handleToggle = async ( key, gatewayId, newVal ) => {
 		setSaving( ( s ) => ( { ...s, [ key ]: true } ) );
 		try {
-			await updateGatewayEnabled( gatewayId, newVal );
+			// Digital wallets is an option on the Credit Card gateway, not its own
+			// gateway; route it to the payment settings endpoint. All other rows are
+			// real gateways toggled via the gateways endpoint.
+			if ( 'digital_wallet' === key ) {
+				await updateDigitalWalletsEnabled( newVal );
+			} else {
+				await updateGatewayEnabled( gatewayId, newVal );
+			}
 			const next = { ...enabled, [ key ]: newVal };
 			setEnabled( next );
 			onChange?.( JSON.stringify( next ) );
@@ -88,7 +117,7 @@ export default function GatewayList( { value, setValue, onChange } ) {
 		},
 		{
 			key:         'digital_wallet',
-			gatewayId:   GATEWAY_IDS.digitalWallet,
+			gatewayId:   null,
 			icon:        <CardIcon />,
 			title:       __( 'Digital wallet', 'woocommerce-square' ),
 			description: __( 'Let customers pay quickly and securely using supported digital wallets like Apple pay and Google Pay.', 'woocommerce-square' ),
@@ -144,6 +173,11 @@ export default function GatewayList( { value, setValue, onChange } ) {
 							disabled={ saving[ row.key ] }
 							onChange={ ( val ) => handleToggle( row.key, row.gatewayId, val ) }
 							label=""
+							aria-label={ sprintf(
+								/* translators: %s: payment method name */
+								__( 'Enable %s', 'woocommerce-square' ),
+								row.title
+							) }
 							__nextHasNoMarginBottom
 						/>
 					</div>
