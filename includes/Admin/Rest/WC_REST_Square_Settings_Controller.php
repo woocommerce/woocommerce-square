@@ -236,13 +236,8 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
-		$is_sandbox = wc_clean( wp_unslash( $settings['enable_sandbox'] ?? '' ) );
-
-		// Read the sandbox token from the request, not from the merged settings.
-		// Because $settings is now seeded from the stored option, reading from it
-		// would re-apply (re-encrypt + re-write) the token on every sandbox save
-		// even when unchanged. Only (re)apply when a token was actually submitted.
-		$sandbox_token_param = $request->get_param( 'sandbox_token' );
+		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ?? '' ) );
+		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ?? '' ) );
 
 		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
@@ -250,10 +245,16 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		// and won't refresh until the next page load.
 		wc_square()->get_settings_handler()->init_settings();
 
-		if ( 'yes' === $is_sandbox && null !== $sandbox_token_param ) {
-			$sandbox_token = wc_clean( wp_unslash( $sandbox_token_param ) );
-			if ( ! empty( $sandbox_token ) ) {
-				wc_square()->get_settings_handler()->update_access_token( $sandbox_token );
+		// Propagate the sandbox token into the encrypted access-token store so the
+		// connection registers in sandbox mode. Use the merged value (stored or
+		// just-submitted) — switching INTO sandbox must apply the stored token even
+		// when it was not re-typed, otherwise is_connected() stays false and the
+		// Business location section never appears. Skip the re-encrypt when the
+		// token already matches what is stored, so it does not re-write on every save.
+		if ( 'yes' === $is_sandbox && ! empty( $sandbox_token ) ) {
+			$handler = wc_square()->get_settings_handler();
+			if ( $sandbox_token !== $handler->get_access_token() ) {
+				$handler->update_access_token( $sandbox_token );
 			}
 		}
 
