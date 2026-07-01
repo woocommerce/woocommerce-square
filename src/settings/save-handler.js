@@ -4,6 +4,7 @@ import { __ } from '@wordpress/i18n';
 const ENDPOINTS = {
 	settings: '/wc/v3/wc_square/settings',
 	cashApp: '/wc/v3/wc_square/cash_app_settings',
+	paymentSettings: '/wc/v3/wc_square/payment_settings',
 };
 
 // General tab fields routed to the main settings endpoint.
@@ -15,6 +16,18 @@ const GENERAL_FIELDS = new Set( [
 
 // Cash App "Customize" sub-page fields routed to the Cash App endpoint.
 const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
+
+// Digital wallet "Customize" fields that map to an existing Credit Card gateway
+// option accepted by the payment_settings controller. Keys are the SDK field
+// ids; values are the REST param name. The per-wallet enable toggles and the
+// Google Pay button label have no backend key (Google's button label is not
+// configurable — it always renders "Buy with"), so they are intentionally
+// omitted and continue to no-op until per-wallet persistence is defined.
+const DIGITAL_WALLET_FIELDS = {
+	digital_wallets_google_pay_button_color: 'digital_wallets_google_pay_button_color',
+	digital_wallets_apple_pay_button_color: 'digital_wallets_apple_pay_button_color',
+	digital_wallets_apple_pay_button_type: 'digital_wallets_button_type',
+};
 
 export default async function squareSaveHandler( { values, changedValues } ) {
 	// Collect a payload per REST endpoint so each settings group is saved
@@ -32,6 +45,8 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 			add( ENDPOINTS.settings, key, val );
 		} else if ( CASH_APP_FIELDS.has( key ) ) {
 			add( ENDPOINTS.cashApp, key, val );
+		} else if ( key in DIGITAL_WALLET_FIELDS ) {
+			add( ENDPOINTS.paymentSettings, DIGITAL_WALLET_FIELDS[ key ], val );
 		}
 	}
 
