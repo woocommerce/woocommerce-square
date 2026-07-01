@@ -22,11 +22,16 @@ function loadSquareSdk( url ) {
 			existing.addEventListener( 'error', reject );
 			return;
 		}
-		const script    = document.createElement( 'script' );
-		script.src      = url;
-		script.async    = true;
-		script.onload   = resolve;
-		script.onerror  = () => reject( new Error( __( 'Failed to load Square SDK.', 'woocommerce-square' ) ) );
+		const script = document.createElement( 'script' );
+		script.src = url;
+		script.async = true;
+		script.onload = resolve;
+		script.onerror = () =>
+			reject(
+				new Error(
+					__( 'Failed to load Square SDK.', 'woocommerce-square' )
+				)
+			);
 		document.head.appendChild( script );
 	} );
 }
@@ -44,10 +49,13 @@ let gpayLock = Promise.resolve();
  * operations on the page. Returns a promise that resolves when this op is done.
  *
  * @param {Function} op - Async function performing the Google Pay work.
- * @return {Promise<*>}
+ * @return {Promise<*>} Resolves with the operation's result once it completes.
  */
 function runGooglePaySerial( op ) {
-	const next = gpayLock.then( () => op(), () => op() );
+	const next = gpayLock.then(
+		() => op(),
+		() => op()
+	);
 	// Keep the chain alive even if op rejects, so the next op still waits.
 	gpayLock = next.catch( () => {} );
 	return next;
@@ -75,7 +83,12 @@ function runGooglePaySerial( op ) {
  * @param {string} props.buttonColor    - Google Pay buttonColor option.
  * @param {string} props.buttonType     - Google Pay buttonType option.
  */
-function GooglePayButton( { payments, paymentRequest, buttonColor, buttonType } ) {
+function GooglePayButton( {
+	payments,
+	paymentRequest,
+	buttonColor,
+	buttonType,
+} ) {
 	const containerRef = useRef( null );
 
 	useEffect( () => {
@@ -83,8 +96,8 @@ function GooglePayButton( { payments, paymentRequest, buttonColor, buttonType } 
 			return;
 		}
 
-		let cancelled  = false;
-		let googlePay  = null;
+		let cancelled = false;
+		let googlePay = null;
 
 		// Create + attach, serialised behind any pending Google Pay work.
 		const createPromise = runGooglePaySerial( async () => {
@@ -152,9 +165,9 @@ export default function DigitalWalletPreview( { value, values } ) {
 	// once per credential set and shared with the GooglePayButton child.
 	const applePayRef = useRef( null );
 
-	const [ status, setStatus ]             = useState( 'idle' ); // 'idle' | 'loading' | 'ready' | 'error'
-	const [ errorMsg, setErrorMsg ]         = useState( '' );
-	const [ payments, setPayments ]         = useState( null );
+	const [ status, setStatus ] = useState( 'idle' ); // 'idle' | 'loading' | 'ready' | 'error'
+	const [ errorMsg, setErrorMsg ] = useState( '' );
+	const [ payments, setPayments ] = useState( null );
 	const [ paymentRequest, setPaymentRequest ] = useState( null );
 	// Tracks whether payments.applePay() succeeded. It throws in non-WebKit
 	// browsers (Chrome/Firefox), so this stays false there — which is why the
@@ -175,14 +188,19 @@ export default function DigitalWalletPreview( { value, values } ) {
 		applicationId,
 		locationId,
 		squareJsUrl,
-		countryCode  = 'US',
+		countryCode = 'US',
 		currencyCode = 'USD',
 	} = credentials;
 
-	const googleColor = values?.digital_wallets_google_pay_button_color  ?? 'black';
-	const appleStyle  = values?.digital_wallets_apple_pay_button_color   ?? 'black';
+	const googleColor =
+		values?.digital_wallets_google_pay_button_color ?? 'black';
+	const appleStyle =
+		values?.digital_wallets_apple_pay_button_color ?? 'black';
 	// Prefer the per-gateway field; fall back to the legacy shared field for backwards compat.
-	const buttonType  = values?.digital_wallets_google_pay_button_type   ?? values?.digital_wallets_button_type ?? 'buy';
+	const buttonType =
+		values?.digital_wallets_google_pay_button_type ??
+		values?.digital_wallets_button_type ??
+		'buy';
 
 	// Debounce the Google Pay options. Each change remounts the GooglePayButton,
 	// which creates and attaches a new SDK button asynchronously. Google's Pay
@@ -191,7 +209,7 @@ export default function DigitalWalletPreview( { value, values } ) {
 	// the button only once the options settle, avoiding the churn.
 	const [ debouncedGoogle, setDebouncedGoogle ] = useState( {
 		color: googleColor,
-		type:  buttonType,
+		type: buttonType,
 	} );
 
 	useEffect( () => {
@@ -206,7 +224,12 @@ export default function DigitalWalletPreview( { value, values } ) {
 	useEffect( () => {
 		if ( ! applicationId || ! locationId || ! squareJsUrl ) {
 			setStatus( 'error' );
-			setErrorMsg( __( 'Connect your Square account to see a live preview.', 'woocommerce-square' ) );
+			setErrorMsg(
+				__(
+					'Connect your Square account to see a live preview.',
+					'woocommerce-square'
+				)
+			);
 			return;
 		}
 
@@ -219,7 +242,10 @@ export default function DigitalWalletPreview( { value, values } ) {
 				await loadSquareSdk( squareJsUrl );
 				if ( cancelled ) return;
 
-				const paymentsInstance = window.Square.payments( applicationId, locationId );
+				const paymentsInstance = window.Square.payments(
+					applicationId,
+					locationId
+				);
 
 				// A minimal payment request is required to initialise the buttons.
 				// Amount and label are for SDK initialisation only — no payment occurs.
@@ -231,7 +257,9 @@ export default function DigitalWalletPreview( { value, values } ) {
 
 				// Apple Pay — real API call. Throws in non-WebKit browsers.
 				try {
-					applePayRef.current = await paymentsInstance.applePay( request );
+					applePayRef.current = await paymentsInstance.applePay(
+						request
+					);
 					if ( ! cancelled ) {
 						setApplePaySupported( true );
 					}
@@ -249,14 +277,20 @@ export default function DigitalWalletPreview( { value, values } ) {
 			} catch ( err ) {
 				if ( ! cancelled ) {
 					setStatus( 'error' );
-					setErrorMsg( err.message || __( 'Preview unavailable.', 'woocommerce-square' ) );
+					setErrorMsg(
+						err.message ||
+							__( 'Preview unavailable.', 'woocommerce-square' )
+					);
 				}
 			}
 		} )();
 
 		return () => {
 			cancelled = true;
-			if ( applePayRef.current && typeof applePayRef.current.destroy === 'function' ) {
+			if (
+				applePayRef.current &&
+				typeof applePayRef.current.destroy === 'function'
+			) {
 				applePayRef.current.destroy().catch( () => {} );
 				applePayRef.current = null;
 			}
@@ -297,7 +331,10 @@ export default function DigitalWalletPreview( { value, values } ) {
 					className="wc-square-preview__applepay"
 					// Only the dynamic black/white style is inline; layout is in CSS.
 					style={ { '--apple-pay-button-style': appleStyle } }
-					aria-label={ __( 'Apple Pay button preview', 'woocommerce-square' ) }
+					aria-label={ __(
+						'Apple Pay button preview',
+						'woocommerce-square'
+					) }
 				/>
 			) }
 
@@ -305,7 +342,10 @@ export default function DigitalWalletPreview( { value, values } ) {
 			     why the button is absent so the empty space is not mistaken for a bug. */ }
 			{ status === 'ready' && ! applePaySupported && (
 				<p className="wc-square-preview__note">
-					{ __( 'Apple Pay preview is only available in Safari. The button will appear for eligible customers at checkout.', 'woocommerce-square' ) }
+					{ __(
+						'Apple Pay preview is only available in Safari. The button will appear for eligible customers at checkout.',
+						'woocommerce-square'
+					) }
 				</p>
 			) }
 		</div>

@@ -283,7 +283,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 						? 'https://sandbox.web.squarecdn.com/v1/square.js'
 						: 'https://web.squarecdn.com/v1/square.js',
 					'countryCode'   => 'US',
-					'currencyCode'  => get_woocommerce_currency() ?: 'USD',
+					'currencyCode'  => get_woocommerce_currency() ? get_woocommerce_currency() : 'USD',
 				)
 			);
 		}
@@ -314,7 +314,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			);
 
 			return array(
-				'payment_methods_list' => array(
+				'payment_methods_list'    => array(
 					'id'          => 'payment_methods_list',
 					'title'       => __( 'Choose your payment methods', 'woocommerce-square' ),
 					'description' => '',
@@ -372,14 +372,38 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $credit_card['digital_wallets_google_pay_button_type'] ?? $credit_card['digital_wallets_button_type'] ?? 'buy',
 							'options'     => array(
-								array( 'value' => 'buy',       'label' => __( 'Buy now', 'woocommerce-square' ) ),
-								array( 'value' => 'checkout',  'label' => __( 'Checkout', 'woocommerce-square' ) ),
-								array( 'value' => 'pay',       'label' => __( 'Pay', 'woocommerce-square' ) ),
-								array( 'value' => 'plain',     'label' => __( 'Plain (no text)', 'woocommerce-square' ) ),
-								array( 'value' => 'donate',    'label' => __( 'Donate', 'woocommerce-square' ) ),
-								array( 'value' => 'book',      'label' => __( 'Book', 'woocommerce-square' ) ),
-								array( 'value' => 'subscribe', 'label' => __( 'Subscribe', 'woocommerce-square' ) ),
-								array( 'value' => 'order',     'label' => __( 'Order', 'woocommerce-square' ) ),
+								array(
+									'value' => 'buy',
+									'label' => __( 'Buy now', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'checkout',
+									'label' => __( 'Checkout', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'pay',
+									'label' => __( 'Pay', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'plain',
+									'label' => __( 'Plain (no text)', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'donate',
+									'label' => __( 'Donate', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'book',
+									'label' => __( 'Book', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'subscribe',
+									'label' => __( 'Subscribe', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'order',
+									'label' => __( 'Order', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -389,8 +413,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $credit_card['digital_wallets_google_pay_button_color'] ?? 'black',
 							'options'     => array(
-								array( 'value' => 'black', 'label' => __( 'Black', 'woocommerce-square' ) ),
-								array( 'value' => 'white', 'label' => __( 'White', 'woocommerce-square' ) ),
+								array(
+									'value' => 'black',
+									'label' => __( 'Black', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'white',
+									'label' => __( 'White', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -416,14 +446,38 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $credit_card['digital_wallets_apple_pay_button_type'] ?? $credit_card['digital_wallets_button_type'] ?? 'buy',
 							'options'     => array(
-								array( 'value' => 'buy',       'label' => __( 'Buy now', 'woocommerce-square' ) ),
-								array( 'value' => 'checkout',  'label' => __( 'Checkout', 'woocommerce-square' ) ),
-								array( 'value' => 'pay',       'label' => __( 'Pay', 'woocommerce-square' ) ),
-								array( 'value' => 'plain',     'label' => __( 'Plain (no text)', 'woocommerce-square' ) ),
-								array( 'value' => 'donate',    'label' => __( 'Donate', 'woocommerce-square' ) ),
-								array( 'value' => 'book',      'label' => __( 'Book', 'woocommerce-square' ) ),
-								array( 'value' => 'subscribe', 'label' => __( 'Subscribe', 'woocommerce-square' ) ),
-								array( 'value' => 'order',     'label' => __( 'Order', 'woocommerce-square' ) ),
+								array(
+									'value' => 'buy',
+									'label' => __( 'Buy now', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'checkout',
+									'label' => __( 'Checkout', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'pay',
+									'label' => __( 'Pay', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'plain',
+									'label' => __( 'Plain (no text)', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'donate',
+									'label' => __( 'Donate', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'book',
+									'label' => __( 'Book', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'subscribe',
+									'label' => __( 'Subscribe', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'order',
+									'label' => __( 'Order', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -433,9 +487,18 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $credit_card['digital_wallets_apple_pay_button_color'] ?? 'black',
 							'options'     => array(
-								array( 'value' => 'black',           'label' => __( 'Black', 'woocommerce-square' ) ),
-								array( 'value' => 'white',           'label' => __( 'White', 'woocommerce-square' ) ),
-								array( 'value' => 'white-with-line', 'label' => __( 'White with outline', 'woocommerce-square' ) ),
+								array(
+									'value' => 'black',
+									'label' => __( 'Black', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'white',
+									'label' => __( 'White', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'white-with-line',
+									'label' => __( 'White with outline', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -449,7 +512,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 						),
 					),
 				),
-				'cash_app_pay_section' => array(
+				'cash_app_pay_section'    => array(
 					'id'          => 'cash_app_pay_section',
 					'title'       => __( 'Cash App Pay settings', 'woocommerce-square' ),
 					'description' => __( 'Customize the way Cash App appears on your website.', 'woocommerce-square' ),
@@ -463,8 +526,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $cash_app['button_theme'] ?? 'dark',
 							'options'     => array(
-								array( 'value' => 'dark',  'label' => __( 'Dark', 'woocommerce-square' ) ),
-								array( 'value' => 'light', 'label' => __( 'Light', 'woocommerce-square' ) ),
+								array(
+									'value' => 'dark',
+									'label' => __( 'Dark', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'light',
+									'label' => __( 'Light', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -474,9 +543,18 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => '',
 							'value'       => $cash_app['button_shape'] ?? 'semiround',
 							'options'     => array(
-								array( 'value' => 'semiround', 'label' => __( 'Semiround', 'woocommerce-square' ) ),
-								array( 'value' => 'round',     'label' => __( 'Round', 'woocommerce-square' ) ),
-								array( 'value' => 'square',    'label' => __( 'Square', 'woocommerce-square' ) ),
+								array(
+									'value' => 'semiround',
+									'label' => __( 'Semiround', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'round',
+									'label' => __( 'Round', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'square',
+									'label' => __( 'Square', 'woocommerce-square' ),
+								),
 							),
 						),
 						array(
@@ -505,10 +583,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$base_url   = Payments_Square_Hub::get_hub_url();
 
 			$tabs = array(
-				Payments_Square_Hub::TAB_GENERAL               => __( 'General', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_PAYMENT_METHODS       => __( 'Payment methods', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_GENERAL         => __( 'General', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_PAYMENT_METHODS => __( 'Payment methods', 'woocommerce-square' ),
 				Payments_Square_Hub::TAB_PAYMENTS_TRANSACTIONS => __( 'Payments & Transactions', 'woocommerce-square' ),
-				Payments_Square_Hub::TAB_SYNCHRONIZE           => __( 'Synchronize Square', 'woocommerce-square' ),
+				Payments_Square_Hub::TAB_SYNCHRONIZE     => __( 'Synchronize Square', 'woocommerce-square' ),
 			);
 
 			$nav = array();

@@ -24,8 +24,10 @@ const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
 // configurable — it always renders "Buy with"), so they are intentionally
 // omitted and continue to no-op until per-wallet persistence is defined.
 const DIGITAL_WALLET_FIELDS = {
-	digital_wallets_google_pay_button_color: 'digital_wallets_google_pay_button_color',
-	digital_wallets_apple_pay_button_color: 'digital_wallets_apple_pay_button_color',
+	digital_wallets_google_pay_button_color:
+		'digital_wallets_google_pay_button_color',
+	digital_wallets_apple_pay_button_color:
+		'digital_wallets_apple_pay_button_color',
 	digital_wallets_apple_pay_button_type: 'digital_wallets_button_type',
 };
 
