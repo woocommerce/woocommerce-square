@@ -21,8 +21,12 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	// The REST API already expects 'yes'/'no' and that is exactly what we have.
 
 	// The Business location select writes to a single `location_id` field; route
-	// it to the option key for the currently selected environment.
-	if ( 'location_id' in changedValues ) {
+	// it to the option key for the currently selected environment. Skip it when the
+	// environment changed in this same save: the location options are server-rendered
+	// for the saved environment and only refetch on reload, so the selected value
+	// still belongs to the old environment and would be written under the wrong env key.
+	const envChanged = 'enable_sandbox' in changedValues;
+	if ( 'location_id' in changedValues && ! envChanged ) {
 		const isSandbox = values.enable_sandbox === 'yes';
 		payload[
 			isSandbox ? 'sandbox_location_id' : 'production_location_id'
@@ -53,15 +57,20 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 		);
 	}
 
-	// Reload after saving so the Business location dropdown repopulates from the
-	// freshly fetched locations for the saved environment, matching the legacy
-	// settings page. The short delay lets the success notice render first. The
-	// SDK keeps a beforeunload guard active, so clear it first to avoid a "Leave
-	// site?" prompt blocking the programmatic reload.
-	setTimeout( () => {
-		window.onbeforeunload = null;
-		window.location.reload();
-	}, 1200 );
+	// Reload only when the environment or credentials changed, since that is what
+	// repopulates the Business location dropdown from freshly fetched locations for
+	// the saved environment (matching the legacy settings page). A location-only save
+	// needs no reload. The short delay lets the success notice render first; clear the
+	// SDK's beforeunload guard so a "Leave site?" prompt can't block the reload.
+	const needsReload = [ ...SETTINGS_FIELDS ].some(
+		( field ) => field in changedValues
+	);
+	if ( needsReload ) {
+		setTimeout( () => {
+			window.onbeforeunload = null;
+			window.location.reload();
+		}, 1200 );
+	}
 
 	// `values` is the SDK's full current state — returning it keeps every field
 	// in sync. `notice` must be a plain string; the SDK passes it directly as
