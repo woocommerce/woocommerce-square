@@ -549,6 +549,13 @@ class Settings extends \WC_Settings_API {
 		update_option( 'wc_square_access_tokens', $access_tokens );
 
 		Utilities\Token_Scope_Utility::clear_scope_cache( $environment );
+
+		// A token change points at a (potentially different) Square account, so any
+		// cached business locations are now stale. Clear the per-request memo and the
+		// transient; otherwise the settings page reloads the previously connected
+		// account's locations instead of refetching for the new token.
+		$this->locations = null;
+		delete_transient( 'wc_square_locations_' . $this->get_plugin()->get_version() );
 	}
 
 
