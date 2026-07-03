@@ -10,7 +10,5 @@ export default function SubHeader( { field } ) {
 	if ( ! field?.label ) {
 		return null;
 	}
-	return (
-		<h4 className="wc-square-sub-header">{ field.label }</h4>
-	);
+	return <h4 className="wc-square-sub-header">{ field.label }</h4>;
 }
