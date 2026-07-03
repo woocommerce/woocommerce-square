@@ -192,7 +192,7 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$filtered_settings['connection_url_sandbox'] = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( true, array( 'from' => 'wizard' ) );
 		$filtered_settings['disconnection_url']      = html_entity_decode( wp_nonce_url( $url, $action ), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 
-		// Locations are consumed by the legacy new-user-experience app; keep this or the legacy settings page breaks.
+		// Add locations to the response.
 		if ( wc_square()->get_settings_handler()->is_connected() ) {
 			$filtered_settings['locations'] = wc_square()->get_settings_handler()->get_locations();
 		}
