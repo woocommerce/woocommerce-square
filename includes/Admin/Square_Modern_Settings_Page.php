@@ -582,8 +582,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 */
 		private function get_transaction_type_options(): array {
 			return array(
-				array( 'value' => 'charge',        'label' => _x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ) ),
-				array( 'value' => 'authorization', 'label' => _x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ) ),
+				array(
+					'value' => 'charge',
+					'label' => _x( 'Charge', 'noun, credit card transaction type', 'woocommerce-square' ),
+				),
+				array(
+					'value' => 'authorization',
+					'label' => _x( 'Authorization', 'credit card transaction type', 'woocommerce-square' ),
+				),
 			);
 		}
 
