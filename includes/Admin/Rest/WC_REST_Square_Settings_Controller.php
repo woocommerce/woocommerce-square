@@ -192,17 +192,9 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$filtered_settings['connection_url_sandbox'] = wc_square()->get_gateway()->get_plugin()->get_connection_handler()->get_connect_url( true, array( 'from' => 'wizard' ) );
 		$filtered_settings['disconnection_url']      = html_entity_decode( wp_nonce_url( $url, $action ), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
 
-		// Add locations to the response. Force a fresh fetch so the list reflects
-		// the currently connected environment instead of a stale transient (the
-		// hub runs under tab=checkout, so is_admin_settings_screen() is false and
-		// the cached transient would otherwise be served).
-		//
-		// Required by the legacy new-user-experience app (onboarding + settings React
-		// UIs read `settings.locations`); the modern hub ignores it and renders the
-		// Business location <select> from PHP options instead. Keep it so the legacy
-		// settings page is not broken.
+		// Locations are consumed by the legacy new-user-experience app; keep this or the legacy settings page breaks.
 		if ( wc_square()->get_settings_handler()->is_connected() ) {
-			$filtered_settings['locations'] = wc_square()->get_settings_handler()->get_locations( true );
+			$filtered_settings['locations'] = wc_square()->get_settings_handler()->get_locations();
 		}
 
 		return new WP_REST_Response( $filtered_settings );
