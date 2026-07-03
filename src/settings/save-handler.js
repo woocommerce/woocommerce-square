@@ -80,6 +80,13 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 		if ( ! payloads[ endpoint ] ) {
 			payloads[ endpoint ] = {};
 		}
+		// Native SDK checkboxes emit booleans, but every Square option store
+		// persists WooCommerce-style 'yes'/'no' strings and is read back with
+		// strict 'yes' comparisons on the legacy pages. Normalise here so a
+		// checkbox saved from the modern UI stays legible to the legacy code.
+		if ( typeof val === 'boolean' ) {
+			val = val ? 'yes' : 'no';
+		}
 		payloads[ endpoint ][ key ] = val;
 	};
 
