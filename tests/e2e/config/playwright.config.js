@@ -65,7 +65,9 @@ module.exports = defineConfig({
     storageState: 'state.json',
     navigationTimeout: 60000,
     // Disable CSS animations/transitions so Playwright doesn't time out on @wordpress/components buttons.
-    reducedMotion: 'reduce',
+    contextOptions: {
+      reducedMotion: 'reduce',
+    },
   },
 
   /* Configure projects for major browsers */
