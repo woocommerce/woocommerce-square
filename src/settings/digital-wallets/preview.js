@@ -219,6 +219,14 @@ export default function DigitalWalletPreview( { value, values } ) {
 		return () => clearTimeout( timer );
 	}, [ googleColor, buttonType ] );
 
+	// True once the debounced options match the live selection, i.e. the button
+	// currently attached reflects the chosen label/color. While false (just after
+	// a change, during the debounce + rebuild), we show a loading state instead of
+	// the stale previous button so the change never looks like it reverted.
+	const gpaySettled =
+		debouncedGoogle.color === googleColor &&
+		debouncedGoogle.type === buttonType;
+
 	// Load the SDK and initialise payments ONCE per credential set. Apple Pay is
 	// initialised here too (its appearance is driven entirely by CSS variables).
 	useEffect( () => {
@@ -310,15 +318,30 @@ export default function DigitalWalletPreview( { value, values } ) {
 
 			{ /* Google Pay — the keyed child remounts on every color/type change so
 			     the Square SDK injects a fresh real iframe button each time. */ }
-			{ status === 'ready' && payments && paymentRequest && (
-				<GooglePayButton
-					key={ `${ debouncedGoogle.color }-${ debouncedGoogle.type }` }
-					payments={ payments }
-					paymentRequest={ paymentRequest }
-					buttonColor={ debouncedGoogle.color }
-					buttonType={ debouncedGoogle.type }
-				/>
-			) }
+			{ status === 'ready' &&
+				payments &&
+				paymentRequest &&
+				gpaySettled && (
+					<GooglePayButton
+						key={ `${ debouncedGoogle.color }-${ debouncedGoogle.type }` }
+						payments={ payments }
+						paymentRequest={ paymentRequest }
+						buttonColor={ debouncedGoogle.color }
+						buttonType={ debouncedGoogle.type }
+					/>
+				) }
+
+			{ /* Selection changed but the button hasn't been rebuilt yet: show a
+			     loading state (not the previous button) so the change reads as
+			     "updating" rather than reverting. */ }
+			{ status === 'ready' &&
+				payments &&
+				paymentRequest &&
+				! gpaySettled && (
+					<div className="wc-square-preview__gpay wc-square-preview__placeholder">
+						<Spinner />
+					</div>
+				) }
 
 			{ /* Apple Pay — only rendered when payments.applePay() succeeded, i.e.
 			     in Safari/WebKit. The button itself is drawn by the CSS property
