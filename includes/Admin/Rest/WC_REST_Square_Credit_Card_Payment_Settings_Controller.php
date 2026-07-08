@@ -58,6 +58,10 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 			'digital_wallets_apple_pay_button_color',
 			'digital_wallets_google_pay_button_color',
 			'digital_wallets_hide_button_options',
+			'digital_wallets_google_pay_enabled',
+			'digital_wallets_apple_pay_enabled',
+			'digital_wallets_google_pay_button_type',
+			'digital_wallets_apple_pay_button_type',
 			'gift_card_settings',
 		);
 
@@ -148,6 +152,26 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 					'digital_wallets_hide_button_options' => array(
 						'description'       => __( 'Array of digital wallet buttons to hide', 'woocommerce-square' ),
 						'type'              => 'array',
+						'sanitize_callback' => '',
+					),
+					'digital_wallets_google_pay_enabled'  => array(
+						'description'       => __( 'Whether the Google Pay button is enabled.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'digital_wallets_apple_pay_enabled'   => array(
+						'description'       => __( 'Whether the Apple Pay button is enabled.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'digital_wallets_google_pay_button_type' => array(
+						'description'       => __( 'Button label for the Google Pay button.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'sanitize_callback' => '',
+					),
+					'digital_wallets_apple_pay_button_type' => array(
+						'description'       => __( 'Button label for the Apple Pay button.', 'woocommerce-square' ),
+						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
 				),
