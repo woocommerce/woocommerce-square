@@ -17,18 +17,23 @@ const GENERAL_FIELDS = new Set( [
 // Cash App "Customize" sub-page fields routed to the Cash App endpoint.
 const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
 
-// Digital wallet "Customize" fields that map to an existing Credit Card gateway
-// option accepted by the payment_settings controller. Keys are the SDK field
-// ids; values are the REST param name. The per-wallet enable toggles and the
-// Google Pay button label have no backend key (Google's button label is not
-// configurable — it always renders "Buy with"), so they are intentionally
-// omitted and continue to no-op until per-wallet persistence is defined.
+// Digital wallet "Customize" fields routed to the Credit Card gateway option
+// via the payment_settings controller. Keys are the SDK field ids; the field id
+// and the REST param name are intentionally identical (1:1) so the same option
+// keys are shared with the legacy settings page. The per-wallet enable toggles
+// and the per-wallet button-label selects use dedicated keys (replacing the old
+// shared `digital_wallets_button_type` and `digital_wallets_hide_button_options`).
 const DIGITAL_WALLET_FIELDS = {
+	digital_wallets_google_pay_enabled: 'digital_wallets_google_pay_enabled',
+	digital_wallets_apple_pay_enabled: 'digital_wallets_apple_pay_enabled',
+	digital_wallets_google_pay_button_type:
+		'digital_wallets_google_pay_button_type',
+	digital_wallets_apple_pay_button_type:
+		'digital_wallets_apple_pay_button_type',
 	digital_wallets_google_pay_button_color:
 		'digital_wallets_google_pay_button_color',
 	digital_wallets_apple_pay_button_color:
 		'digital_wallets_apple_pay_button_color',
-	digital_wallets_apple_pay_button_type: 'digital_wallets_button_type',
 };
 
 export default async function squareSaveHandler( { values, changedValues } ) {
