@@ -163,7 +163,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => sprintf(
 								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
 								__( 'Application ID for the sandbox Application. View details in %1$sMy Applications ↗%2$s', 'woocommerce-square' ),
-								'<a href="https://developer.squareup.com/apps" target="_blank" rel="noopener">',
+								'<a href="https://developer.squareup.com/console/en/apps" target="_blank" rel="noopener">',
 								'</a>'
 							),
 							'value'       => $settings['sandbox_application_id'] ?? '',
@@ -175,7 +175,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => sprintf(
 								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
 								__( 'Access Token for the Sandbox Test Account. See the details in the %1$sSandbox Test Account ↗%2$s section. Make sure you use the correct Sandbox Access Token for your application — each Authorized Application is assigned a different Access Token.', 'woocommerce-square' ),
-								'<a href="https://developer.squareup.com/docs/devtools/sandbox/overview" target="_blank" rel="noopener">',
+								'<a href="https://developer.squareup.com/console/en/sandbox-test-accounts" target="_blank" rel="noopener">',
 								'</a>'
 							),
 							'value'       => $settings['sandbox_token'] ?? '',
@@ -203,7 +203,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					'description' => sprintf(
 						/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
 						__( 'Select the Square location you wish to link with this WooCommerce store. %1$sLearn more about active locations ↗%2$s', 'woocommerce-square' ),
-						'<a href="https://squareup.com/help/us/en/article/5593-locations" target="_blank" rel="noopener">',
+						'<a href="https://woocommerce.com/document/woocommerce-square/sync-settings/#woocommerce-square-sync-general-settings" target="_blank" rel="noopener">',
 						'</a>'
 					),
 					'actions'     => array(),
