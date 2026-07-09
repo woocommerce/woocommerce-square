@@ -207,11 +207,12 @@ export default function DigitalWalletPreview( { value, values, setValue } ) {
 		values?.digital_wallets_google_pay_button_color ?? 'black';
 	const appleStyle =
 		values?.digital_wallets_apple_pay_button_color ?? 'black';
-	// Prefer the per-gateway field; fall back to the legacy shared field for backwards compat.
+	// Google Pay buttonType for the live SDK button — only 'long'/'short' are
+	// valid for googlePay.attach(); default to 'long' (full "Buy with" button).
 	const buttonType =
-		values?.digital_wallets_google_pay_button_type ??
-		values?.digital_wallets_button_type ??
-		'buy';
+		values?.digital_wallets_google_pay_button_type === 'short'
+			? 'short'
+			: 'long';
 
 	// Debounce the Google Pay options. Each change remounts the GooglePayButton,
 	// which creates and attaches a new SDK button asynchronously. Google's Pay
