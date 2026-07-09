@@ -364,7 +364,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 				'digital_wallets_section' => array(
 					'id'          => 'digital_wallets_section',
 					'title'       => __( 'Digital wallet settings', 'woocommerce-square' ),
-					'description' => __( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. <a href="https://woocommerce.com/document/woocommerce-square/" target="_blank">Learn more about digital wallets</a>', 'woocommerce-square' ),
+					'description' => __( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. <a href="https://woocommerce.com/document/woocommerce-square/payment-settings/enabling-digital-wallets/" target="_blank">Learn more about digital wallets</a>', 'woocommerce-square' ),
 					'actions'     => array(),
 					'order'       => 1,
 					'fields'      => array(
