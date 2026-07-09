@@ -24,6 +24,8 @@ const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
 // and the per-wallet button-label selects use dedicated keys (replacing the old
 // shared `digital_wallets_button_type` and `digital_wallets_hide_button_options`).
 const DIGITAL_WALLET_FIELDS = {
+	// Digital wallet parent enable (Credit Card gateway option).
+	enable_digital_wallets: 'enable_digital_wallets',
 	digital_wallets_google_pay_enabled: 'digital_wallets_google_pay_enabled',
 	digital_wallets_apple_pay_enabled: 'digital_wallets_apple_pay_enabled',
 	digital_wallets_google_pay_button_type:
@@ -34,6 +36,15 @@ const DIGITAL_WALLET_FIELDS = {
 		'digital_wallets_google_pay_button_color',
 	digital_wallets_apple_pay_button_color:
 		'digital_wallets_apple_pay_button_color',
+};
+
+// Payment Methods list enable toggles for real WooCommerce gateways. Keys are
+// the SDK field ids; values are the WC gateway ids. These persist to the WC
+// payment_gateways endpoint (PUT) on Save, not to a wc_square controller.
+const GATEWAY_ENABLE_FIELDS = {
+	square_credit_card_enabled: 'square_credit_card',
+	square_cash_app_pay_enabled: 'square_cash_app_pay',
+	gift_cards_pay_enabled: 'gift_cards_pay',
 };
 
 export default async function squareSaveHandler( { values, changedValues } ) {
@@ -47,6 +58,10 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 		payloads[ endpoint ][ key ] = val;
 	};
 
+	// WC gateway enables persist via PUT to the payment_gateways endpoint, one
+	// request per changed gateway.
+	const gatewayPuts = [];
+
 	for ( const [ key, val ] of Object.entries( changedValues ) ) {
 		if ( GENERAL_FIELDS.has( key ) ) {
 			add( ENDPOINTS.settings, key, val );
@@ -54,6 +69,11 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 			add( ENDPOINTS.cashApp, key, val );
 		} else if ( key in DIGITAL_WALLET_FIELDS ) {
 			add( ENDPOINTS.paymentSettings, DIGITAL_WALLET_FIELDS[ key ], val );
+		} else if ( key in GATEWAY_ENABLE_FIELDS ) {
+			gatewayPuts.push( {
+				id: GATEWAY_ENABLE_FIELDS[ key ],
+				enabled: val === 'yes',
+			} );
 		}
 	}
 
@@ -74,10 +94,9 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 
 	const endpoints = Object.keys( payloads );
 
-	if ( endpoints.length === 0 ) {
-		// Nothing routed through this handler — fields may have self-saved (e.g.
-		// gateway-list toggles hit the gateways endpoint directly). Still return a
-		// notice so the SDK exits its loading state and acknowledges the save.
+	if ( endpoints.length === 0 && gatewayPuts.length === 0 ) {
+		// Nothing changed routed through this handler. Still return a notice so
+		// the SDK exits its loading state and acknowledges the save.
 		return {
 			values,
 			notice: __( 'Settings saved.', 'woocommerce-square' ),
@@ -85,11 +104,18 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	}
 
 	try {
-		await Promise.all(
-			endpoints.map( ( path ) =>
+		await Promise.all( [
+			...endpoints.map( ( path ) =>
 				apiFetch( { path, method: 'POST', data: payloads[ path ] } )
-			)
-		);
+			),
+			...gatewayPuts.map( ( g ) =>
+				apiFetch( {
+					path: `/wc/v3/payment_gateways/${ g.id }`,
+					method: 'PUT',
+					data: { enabled: g.enabled },
+				} )
+			),
+		] );
 	} catch ( error ) {
 		// The SDK catches a thrown Error and renders error.message as the save
 		// notice. Surface a clean, translatable message instead of the raw REST

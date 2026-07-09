@@ -304,13 +304,52 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$cash_app    = (array) get_option( Rest\WC_REST_Square_Cash_App_Settings_Controller::SQUARE_CASH_APP_SETTINGS_OPTION_NAME, array() );
 			$gift_cards  = (array) get_option( \WooCommerce\Square\Gateway\Gift_Card::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 
-			$gateway_states = (string) wp_json_encode(
+			// Each payment method's enable state is a shared, reactive value read
+			// and written by the gateway list toggles (and, for digital wallets,
+			// the per-wallet toggles on the Customize sub-page). Nothing here
+			// self-saves: the values ride the SDK form and are persisted only when
+			// the page Save button is clicked (routed by save-handler.js), so the
+			// save adapter is 'none' on each.
+			$enable_state_fields = array(
+				'square_credit_card_enabled'  => $credit_card['enabled'] ?? 'yes',
+				'enable_digital_wallets'      => $credit_card['enable_digital_wallets'] ?? 'yes',
+				'square_cash_app_pay_enabled' => $cash_app['enabled'] ?? 'yes',
+				'gift_cards_pay_enabled'      => $gift_cards['enabled'] ?? 'yes',
+			);
+
+			$enable_fields = array(
 				array(
-					'credit_card'    => wc_string_to_bool( $credit_card['enabled'] ?? 'yes' ),
-					'digital_wallet' => wc_string_to_bool( $credit_card['enable_digital_wallets'] ?? 'yes' ),
-					'cash_app'       => wc_string_to_bool( $cash_app['enabled'] ?? 'yes' ),
-					'gift_cards'     => wc_string_to_bool( $gift_cards['enabled'] ?? 'yes' ),
-				)
+					'id'        => 'payment_methods_view',
+					'type'      => 'text',
+					'component' => 'square/hidden-field',
+					'is_option' => false,
+					'label'     => '',
+					'value'     => 'list',
+					'save'      => array( 'adapter' => 'none' ),
+				),
+			);
+
+			foreach ( $enable_state_fields as $field_id => $raw ) {
+				$enable_fields[] = array(
+					'id'        => $field_id,
+					'type'      => 'text',
+					'component' => 'square/hidden-field',
+					'is_option' => false,
+					'label'     => '',
+					'value'     => wc_bool_to_string( wc_string_to_bool( $raw ) ),
+					'save'      => array( 'adapter' => 'none' ),
+				);
+			}
+
+			$enable_fields[] = array(
+				'id'          => 'payment_methods_gateway_list',
+				'type'        => 'text',
+				'component'   => 'square/gateway-list',
+				'is_option'   => false,
+				'label'       => '',
+				'description' => '',
+				'value'       => '',
+				'save'        => array( 'adapter' => 'none' ),
 			);
 
 			return array(
@@ -320,41 +359,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					'description' => '',
 					'actions'     => array(),
 					'order'       => 0,
-					'fields'      => array(
-						array(
-							'id'        => 'payment_methods_view',
-							'type'      => 'text',
-							'component' => 'square/hidden-field',
-							'is_option' => false,
-							'label'     => '',
-							'value'     => 'list',
-							'save'      => array( 'adapter' => 'none' ),
-						),
-						array(
-							// Shared, reactive parent Digital Wallet enable state. The
-							// gateway list toggle and the per-wallet toggles both read
-							// and write this so the two sub-views stay in sync. Persisted
-							// to the Credit Card gateway via apiFetch on change (not the
-							// page Save), so the save adapter is 'none' here.
-							'id'        => 'enable_digital_wallets',
-							'type'      => 'text',
-							'component' => 'square/hidden-field',
-							'is_option' => false,
-							'label'     => '',
-							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['enable_digital_wallets'] ?? 'yes' ) ),
-							'save'      => array( 'adapter' => 'none' ),
-						),
-						array(
-							'id'          => 'payment_methods_gateway_list',
-							'type'        => 'text',
-							'component'   => 'square/gateway-list',
-							'is_option'   => false,
-							'label'       => '',
-							'description' => '',
-							'value'       => $gateway_states,
-							'save'        => array( 'adapter' => 'none' ),
-						),
-					),
+					'fields'      => $enable_fields,
 				),
 				'digital_wallets_section' => array(
 					'id'          => 'digital_wallets_section',
