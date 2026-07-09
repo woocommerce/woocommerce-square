@@ -47,7 +47,7 @@
 /* WP-admin's `input[type="radio"]` rule sets `margin: -4px 4px 0 0`, which
    floats the radio ~4px above the label. The attribute+class selector below
    (specificity 0,2,1) outranks it so the margins reset cleanly. */
-.wc-square-environment-selector__input[type='radio'] {
+.wc-square-environment-selector__input[type="radio"] {
 	margin: 0;
 }
 
@@ -145,12 +145,26 @@
 	flex-shrink: 0;
 }
 
-/* Shared preview container (Digital wallet + Cash App button previews). */
+/* Hidden sentinel/state fields render nothing; collapse their empty field
+   wrappers so the section's flex gap doesn't add blank space at the top. */
+.wc-settings-ui__field:empty {
+	display: none;
+}
+
+/* Shared preview container (Digital wallet + Cash App button previews).
+   Dotted grid background + generous padding to match the Figma preview. */
 .wc-square-preview {
-	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 32px 24px;
 	border: 1px solid #e0e0e0;
-	border-radius: 4px;
+	border-radius: 8px;
 	margin-top: 4px;
+	background-color: #fff;
+	background-image: radial-gradient(circle, #d7d7db 1px, transparent 1.5px);
+	background-size: 14px 14px;
 }
 
 .wc-square-preview__placeholder {
@@ -170,6 +184,7 @@
 /* Google Pay button container (the SDK injects its own button markup here). */
 .wc-square-preview__gpay {
 	width: 100%;
+	max-width: 360px;
 	min-height: 48px;
 }
 
@@ -179,8 +194,8 @@
 .wc-square-preview__applepay {
 	display: block;
 	width: 100%;
+	max-width: 360px;
 	height: 48px;
-	margin-top: 8px;
 	cursor: default;
 	-webkit-appearance: -apple-pay-button;
 	--apple-pay-button-width: 100%;
@@ -195,6 +210,7 @@
 	justify-content: center;
 	gap: 8px;
 	width: 100%;
+	max-width: 360px;
 	padding: 14px 20px;
 	font-size: 16px;
 	font-weight: 500;
