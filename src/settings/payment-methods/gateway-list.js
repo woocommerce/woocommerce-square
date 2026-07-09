@@ -1,5 +1,6 @@
 import { ToggleControl, Button } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
+import { goToView, useViewSync } from './use-view';
 
 // Card icon (Credit/debit card + Digital wallet rows). Exported from Figma.
 const CardIcon = () => (
@@ -61,6 +62,9 @@ const SquareMarkIcon = () => (
  */
 export default function GatewayList( { values, setValue } ) {
 	const isOn = ( key ) => values?.[ key ] === 'yes';
+
+	// Keep the sub-view in sync with the browser Back/Forward buttons.
+	useViewSync( setValue );
 
 	const handleToggle = ( key, checked ) => {
 		setValue( key, checked ? 'yes' : 'no' );
@@ -155,10 +159,7 @@ export default function GatewayList( { values, setValue } ) {
 								<Button
 									variant="link"
 									onClick={ () =>
-										setValue(
-											'payment_methods_view',
-											row.customize
-										)
+										goToView( setValue, row.customize )
 									}
 								>
 									{ __( 'Customize', 'woocommerce-square' ) }

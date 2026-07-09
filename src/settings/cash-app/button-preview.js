@@ -1,4 +1,5 @@
 import { __ } from '@wordpress/i18n';
+import { useViewSync } from '../payment-methods/use-view';
 
 const SHAPE_CLASS = {
 	semiround: 'shape-semiround',
@@ -48,10 +49,15 @@ function CashAppLogo() {
  * Registered as a custom component (components map, not typeRenderers) so it
  * is addressed via component: 'square/cash-app-button-preview' in the PHP field.
  *
- * @param {Object} props
- * @param {Object} props.values - All current form field values for the page.
+ * @param {Object}   props
+ * @param {Object}   props.values   - All current form field values for the page.
+ * @param {Function} props.setValue - SDK setter (used for Back/Forward view sync).
  */
-export default function CashAppButtonPreview( { values } ) {
+export default function CashAppButtonPreview( { values, setValue } ) {
+	// Keep the sub-view in sync with the browser Back/Forward buttons while the
+	// Cash App Customize view is shown.
+	useViewSync( setValue );
+
 	const theme = values?.button_theme ?? 'dark';
 	const shape = values?.button_shape ?? 'semiround';
 	const themeClass = theme === 'dark' ? 'is-dark' : 'is-light';

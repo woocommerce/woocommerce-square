@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Spinner } from '@wordpress/components';
+import { useViewSync } from '../payment-methods/use-view';
 
 /**
  * Dynamically loads square.js from the Square CDN (sandbox or production).
@@ -156,11 +157,16 @@ function GooglePayButton( {
  * the field's `value` prop as a JSON string. Button style/type values are read
  * live from the shared `values` prop.
  *
- * @param {Object} props
- * @param {string} props.value  - JSON string with Square credentials (injected by PHP).
- * @param {Object} props.values - All current form field values for the page.
+ * @param {Object}   props
+ * @param {string}   props.value    - JSON string with Square credentials (injected by PHP).
+ * @param {Object}   props.values   - All current form field values for the page.
+ * @param {Function} props.setValue - SDK setter (used for Back/Forward view sync).
  */
-export default function DigitalWalletPreview( { value, values } ) {
+export default function DigitalWalletPreview( { value, values, setValue } ) {
+	// Keep the sub-view in sync with the browser Back/Forward buttons while the
+	// Digital Wallet Customize view is shown.
+	useViewSync( setValue );
+
 	// Persist SDK objects across renders. payments/paymentRequest are created
 	// once per credential set and shared with the GooglePayButton child.
 	const applePayRef = useRef( null );

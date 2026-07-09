@@ -317,6 +317,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 				'gift_cards_pay_enabled'      => $gift_cards['enabled'] ?? 'yes',
 			);
 
+			// Which sub-view to show is URL-addressable via the `pm-view` query arg
+			// so the Customize sub-pages survive a reload and are deep-linkable.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$pm_view = isset( $_GET['pm-view'] ) ? sanitize_key( wp_unslash( $_GET['pm-view'] ) ) : 'list';
+			if ( ! in_array( $pm_view, array( 'list', 'digital-wallet', 'cash-app' ), true ) ) {
+				$pm_view = 'list';
+			}
+
 			$enable_fields = array(
 				array(
 					'id'        => 'payment_methods_view',
@@ -324,7 +332,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					'component' => 'square/hidden-field',
 					'is_option' => false,
 					'label'     => '',
-					'value'     => 'list',
+					'value'     => $pm_view,
 					'save'      => array( 'adapter' => 'none' ),
 				),
 			);
