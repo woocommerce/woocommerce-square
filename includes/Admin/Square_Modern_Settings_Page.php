@@ -397,9 +397,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'label'       => __( 'Button label', 'woocommerce-square' ),
 							'type'        => 'select',
 							'description' => '',
-							// The Square Web Payments SDK Google Pay button only supports
-							// `long` ("Buy with G Pay" text) and `short` (mark only) — the
-							// Google-API named labels (buy/pay/plain/…) are not accepted by
+							// The Square Web Payments SDK Google Pay button only
+							// renders two types: `long` (full "Buy with G Pay" text)
+							// and `short` (mark only). The Google-API named labels
+							// (buy/pay/plain/...) are not accepted by
 							// `googlePay.attach()` and do not render at checkout.
 							'value'       => $credit_card['digital_wallets_google_pay_button_type'] ?? 'long',
 							'options'     => array(
@@ -451,38 +452,22 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'label'       => __( 'Button label', 'woocommerce-square' ),
 							'type'        => 'select',
 							'description' => '',
-							// Values are Apple's `-apple-pay-button-type` set (note
-							// `check-out`, not `checkout`). `pay` is not a valid Apple
-							// button type, so it is intentionally omitted.
+							// Options mirror the legacy settings screen's Button Type
+							// select exactly (buy / donate / plain), which is the set
+							// the checkout Apple Pay button honours.
 							'value'       => $credit_card['digital_wallets_apple_pay_button_type'] ?? 'buy',
 							'options'     => array(
 								array(
 									'value' => 'buy',
-									'label' => __( 'Buy now', 'woocommerce-square' ),
-								),
-								array(
-									'value' => 'check-out',
-									'label' => __( 'Checkout', 'woocommerce-square' ),
-								),
-								array(
-									'value' => 'plain',
-									'label' => __( 'Plain (no text)', 'woocommerce-square' ),
+									'label' => __( 'Buy Now', 'woocommerce-square' ),
 								),
 								array(
 									'value' => 'donate',
 									'label' => __( 'Donate', 'woocommerce-square' ),
 								),
 								array(
-									'value' => 'book',
-									'label' => __( 'Book', 'woocommerce-square' ),
-								),
-								array(
-									'value' => 'subscribe',
-									'label' => __( 'Subscribe', 'woocommerce-square' ),
-								),
-								array(
-									'value' => 'order',
-									'label' => __( 'Order', 'woocommerce-square' ),
+									'value' => 'plain',
+									'label' => __( 'No Text', 'woocommerce-square' ),
 								),
 							),
 						),
@@ -502,7 +487,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 									'label' => __( 'White', 'woocommerce-square' ),
 								),
 								array(
-									'value' => 'white-with-line',
+									'value' => 'white-outline',
 									'label' => __( 'White with outline', 'woocommerce-square' ),
 								),
 							),
