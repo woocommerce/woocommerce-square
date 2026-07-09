@@ -39,6 +39,10 @@ registerSettingsExtension( {
 			values.digital_wallets_apple_pay_enabled === 'yes',
 		digital_wallets_apple_pay_button_color: ( { values } ) =>
 			values.digital_wallets_apple_pay_enabled === 'yes',
+		// Hide the whole preview (and its "Preview" label) when neither wallet is on.
+		digital_wallet_preview: ( { values } ) =>
+			values.digital_wallets_google_pay_enabled === 'yes' ||
+			values.digital_wallets_apple_pay_enabled === 'yes',
 	},
 	groupVisibility: {
 		// Payment Methods tab: show one sub-page at a time based on the

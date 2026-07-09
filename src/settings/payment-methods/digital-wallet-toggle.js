@@ -9,10 +9,10 @@ const APPLE = 'digital_wallets_apple_pay_enabled';
  *
  * Only updates SDK values — nothing self-saves; everything persists when the
  * page Save button is clicked. Coupling rule: when BOTH wallets end up
- * disabled, the parent Digital Wallet method is auto-disabled too and the view
- * returns to the list — otherwise the method would be "on" with nothing to
- * display. The per-wallet values themselves are never wiped, so re-enabling the
- * parent restores the merchant's prior choices.
+ * disabled, the parent Digital Wallet method is auto-disabled too (otherwise it
+ * would be "on" with nothing to display). We stay on the Customize page — the
+ * merchant navigates back themselves. The per-wallet values are never wiped, so
+ * re-enabling the parent restores the merchant's prior choices.
  *
  * @param {Object}   props
  * @param {Object}   props.field    - Field config from the SDK (id + label).
@@ -39,12 +39,11 @@ export default function DigitalWalletToggle( {
 			onChange={ ( checked ) => {
 				onChange( checked ? 'yes' : 'no' );
 
-				// Both wallets now off → disable the parent method and go back to
-				// the list (its Customize entry hides while the parent is off).
+				// Both wallets now off → disable the parent method (otherwise it
+				// would be "on" with nothing to display). Stay on this page.
 				const siblingOn = values?.[ siblingId ] === 'yes';
 				if ( ! checked && ! siblingOn ) {
 					setValue( 'enable_digital_wallets', 'no' );
-					setValue( 'payment_methods_view', 'list' );
 				}
 			} }
 		/>

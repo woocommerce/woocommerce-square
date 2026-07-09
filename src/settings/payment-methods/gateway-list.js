@@ -71,8 +71,7 @@ export default function GatewayList( { values, setValue } ) {
 		if ( key === 'enable_digital_wallets' && checked ) {
 			const googleOn =
 				values?.digital_wallets_google_pay_enabled === 'yes';
-			const appleOn =
-				values?.digital_wallets_apple_pay_enabled === 'yes';
+			const appleOn = values?.digital_wallets_apple_pay_enabled === 'yes';
 			if ( ! googleOn && ! appleOn ) {
 				setValue( 'digital_wallets_google_pay_enabled', 'yes' );
 				setValue( 'digital_wallets_apple_pay_enabled', 'yes' );
@@ -149,11 +148,10 @@ export default function GatewayList( { values, setValue } ) {
 					</div>
 					<div className="wc-square-payment-methods-list__row-actions">
 						{ row.customize &&
-							// Digital wallet display settings are only meaningful
-							// while the method is enabled; hide the entry to its
-							// Customize sub-page when the parent toggle is off.
-							( row.key !== 'enable_digital_wallets' ||
-								isOn( 'enable_digital_wallets' ) ) && (
+							// Display settings are only meaningful while the method
+							// is enabled; hide the entry to its Customize sub-page
+							// when that method's toggle is off.
+							isOn( row.key ) && (
 								<Button
 									variant="link"
 									onClick={ () =>

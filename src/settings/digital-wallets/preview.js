@@ -192,6 +192,11 @@ export default function DigitalWalletPreview( { value, values } ) {
 		currencyCode = 'USD',
 	} = credentials;
 
+	// Each wallet previews only while its own toggle is on — the preview mirrors
+	// what a shopper would actually see at checkout.
+	const googleEnabled = values?.digital_wallets_google_pay_enabled !== 'no';
+	const appleEnabled = values?.digital_wallets_apple_pay_enabled !== 'no';
+
 	const googleColor =
 		values?.digital_wallets_google_pay_button_color ?? 'black';
 	const appleStyle =
@@ -317,8 +322,10 @@ export default function DigitalWalletPreview( { value, values } ) {
 			) }
 
 			{ /* Google Pay — the keyed child remounts on every color/type change so
-			     the Square SDK injects a fresh real iframe button each time. */ }
+			     the Square SDK injects a fresh real iframe button each time. Only
+			     while Google Pay is enabled. */ }
 			{ status === 'ready' &&
+				googleEnabled &&
 				payments &&
 				paymentRequest &&
 				gpaySettled && (
@@ -335,6 +342,7 @@ export default function DigitalWalletPreview( { value, values } ) {
 			     loading state (not the previous button) so the change reads as
 			     "updating" rather than reverting. */ }
 			{ status === 'ready' &&
+				googleEnabled &&
 				payments &&
 				paymentRequest &&
 				! gpaySettled && (
@@ -348,7 +356,7 @@ export default function DigitalWalletPreview( { value, values } ) {
 			     -webkit-appearance: -apple-pay-button (Apple's mandated mechanism;
 			     attach() is not used for Apple Pay). In Chrome/Firefox the API call
 			     throws, applePaySupported stays false, and nothing renders here. */ }
-			{ status === 'ready' && applePaySupported && (
+			{ status === 'ready' && appleEnabled && applePaySupported && (
 				<div
 					lang="en"
 					className="wc-square-preview__applepay"
@@ -363,7 +371,7 @@ export default function DigitalWalletPreview( { value, values } ) {
 
 			{ /* Outside Safari the Apple Pay API is unavailable. Tell the merchant
 			     why the button is absent so the empty space is not mistaken for a bug. */ }
-			{ status === 'ready' && ! applePaySupported && (
+			{ status === 'ready' && appleEnabled && ! applePaySupported && (
 				<p className="wc-square-preview__note">
 					{ __(
 						'Apple Pay preview is only available in Safari. The button will appear for eligible customers at checkout.',
