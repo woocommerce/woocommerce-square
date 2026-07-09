@@ -181,26 +181,48 @@
 	color: #757575;
 }
 
-/* Google Pay button container (the SDK injects its own button markup here). */
-.wc-square-preview__gpay {
+/* Static wallet preview button (Google Pay / Apple Pay mock). Renders instantly
+   from the chosen colour + label — no SDK, so it never flickers. */
+.wc-square-wallet-preview__button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
 	width: 100%;
 	max-width: 360px;
 	min-height: 48px;
+	padding: 12px 20px;
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font-size: 15px;
+	font-weight: 500;
+	cursor: default;
+	box-sizing: border-box;
 }
 
-/* Apple Pay button — drawn by the WebKit -apple-pay-button appearance. The
-   dynamic button style (black/white) is set inline via the
-   --apple-pay-button-style custom property. */
-.wc-square-preview__applepay {
-	display: block;
-	width: 100%;
-	max-width: 360px;
-	height: 48px;
-	cursor: default;
-	-webkit-appearance: -apple-pay-button;
-	--apple-pay-button-width: 100%;
-	--apple-pay-button-height: 48px;
-	--apple-pay-button-border-radius: 4px;
+.wc-square-wallet-preview__button.is-black {
+	background: #000;
+	color: #fff;
+}
+
+.wc-square-wallet-preview__button.is-white {
+	background: #fff;
+	color: #000;
+}
+
+.wc-square-wallet-preview__button.has-line {
+	border-color: #000;
+}
+
+.wc-square-wallet-preview__mark {
+	display: inline-flex;
+	align-items: center;
+	font-weight: 500;
+}
+
+.wc-square-wallet-preview__gpay-g {
+	color: #4285f4;
+	font-weight: 700;
 }
 
 /* Cash App Pay button preview. Theme (dark/light) and shape are modifiers. */
