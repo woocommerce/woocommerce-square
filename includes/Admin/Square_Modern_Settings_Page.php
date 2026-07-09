@@ -331,6 +331,20 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'save'      => array( 'adapter' => 'none' ),
 						),
 						array(
+							// Shared, reactive parent Digital Wallet enable state. The
+							// gateway list toggle and the per-wallet toggles both read
+							// and write this so the two sub-views stay in sync. Persisted
+							// to the Credit Card gateway via apiFetch on change (not the
+							// page Save), so the save adapter is 'none' here.
+							'id'        => 'enable_digital_wallets',
+							'type'      => 'text',
+							'component' => 'square/hidden-field',
+							'is_option' => false,
+							'label'     => '',
+							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['enable_digital_wallets'] ?? 'yes' ) ),
+							'save'      => array( 'adapter' => 'none' ),
+						),
+						array(
 							'id'          => 'payment_methods_gateway_list',
 							'type'        => 'text',
 							'component'   => 'square/gateway-list',
@@ -362,7 +376,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'id'        => 'digital_wallets_google_pay_enabled',
 							'label'     => __( 'Activate Google Pay', 'woocommerce-square' ),
 							'type'      => 'checkbox',
-							'component' => 'square/gateway-toggle',
+							'component' => 'square/digital-wallet-toggle',
 							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['digital_wallets_google_pay_enabled'] ?? 'yes' ) ),
 						),
 						array(
@@ -436,7 +450,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'id'        => 'digital_wallets_apple_pay_enabled',
 							'label'     => __( 'Enable Apple Pay', 'woocommerce-square' ),
 							'type'      => 'checkbox',
-							'component' => 'square/gateway-toggle',
+							'component' => 'square/digital-wallet-toggle',
 							'value'     => wc_bool_to_string( wc_string_to_bool( $credit_card['digital_wallets_apple_pay_enabled'] ?? 'yes' ) ),
 						),
 						array(
