@@ -94,7 +94,7 @@ async function updateDigitalWalletsEnabled( enabled ) {
  * @param {Function} props.setValue - SDK setter; navigates to sub-pages.
  * @param {Function} props.onChange - SDK change handler for this field.
  */
-export default function GatewayList( { value, setValue, onChange } ) {
+export default function GatewayList( { value, values, setValue, onChange } ) {
 	const initial = ( () => {
 		try {
 			return JSON.parse( value ) || {};
@@ -103,25 +103,24 @@ export default function GatewayList( { value, setValue, onChange } ) {
 		}
 	} )();
 
+	// Credit Card / Cash App / Gift Cards are independent gateways tracked in
+	// local state. The Digital Wallet row is NOT tracked here — it is driven by
+	// the shared, reactive `enable_digital_wallets` value so it stays in sync
+	// with the per-wallet toggles on the Customize sub-page (which can turn the
+	// parent off when both wallets are disabled).
 	const [ enabled, setEnabled ] = useState( {
 		credit_card: initial.credit_card ?? true,
-		digital_wallet: initial.digital_wallet ?? true,
 		cash_app: initial.cash_app ?? true,
 		gift_cards: initial.gift_cards ?? true,
 	} );
 	const [ saving, setSaving ] = useState( {} );
 
+	const digitalWalletOn = values?.enable_digital_wallets === 'yes';
+
 	const handleToggle = async ( key, gatewayId, newVal ) => {
 		setSaving( ( s ) => ( { ...s, [ key ]: true } ) );
 		try {
-			// Digital wallets is an option on the Credit Card gateway, not its own
-			// gateway; route it to the payment settings endpoint. All other rows are
-			// real gateways toggled via the gateways endpoint.
-			if ( key === 'digital_wallet' ) {
-				await updateDigitalWalletsEnabled( newVal );
-			} else {
-				await updateGatewayEnabled( gatewayId, newVal );
-			}
+			await updateGatewayEnabled( gatewayId, newVal );
 			const next = { ...enabled, [ key ]: newVal };
 			setEnabled( next );
 			onChange?.( JSON.stringify( next ) );
@@ -129,6 +128,39 @@ export default function GatewayList( { value, setValue, onChange } ) {
 			// Toggle reverts on failure — no state change.
 		} finally {
 			setSaving( ( s ) => ( { ...s, [ key ]: false } ) );
+		}
+	};
+
+	const handleDigitalWalletToggle = async ( newVal ) => {
+		setSaving( ( s ) => ( { ...s, digital_wallet: true } ) );
+		try {
+			await updateDigitalWalletsEnabled( newVal );
+			setValue( 'enable_digital_wallets', newVal ? 'yes' : 'no' );
+			if ( newVal ) {
+				// Turning the parent on: enable both wallets by default when
+				// neither is currently on (fresh config, or re-enabling after
+				// both were turned off). Existing per-wallet choices are kept.
+				const googleOn =
+					values?.digital_wallets_google_pay_enabled === 'yes';
+				const appleOn =
+					values?.digital_wallets_apple_pay_enabled === 'yes';
+				if ( ! googleOn && ! appleOn ) {
+					setValue( 'digital_wallets_google_pay_enabled', 'yes' );
+					setValue( 'digital_wallets_apple_pay_enabled', 'yes' );
+					await apiFetch( {
+						path: '/wc/v3/wc_square/payment_settings',
+						method: 'POST',
+						data: {
+							digital_wallets_google_pay_enabled: 'yes',
+							digital_wallets_apple_pay_enabled: 'yes',
+						},
+					} );
+				}
+			}
+		} catch ( e ) {
+			// Toggle reverts on failure — no state change.
+		} finally {
+			setSaving( ( s ) => ( { ...s, digital_wallet: false } ) );
 		}
 	};
 
@@ -204,24 +236,39 @@ export default function GatewayList( { value, setValue, onChange } ) {
 						</p>
 					</div>
 					<div className="wc-square-payment-methods-list__row-actions">
-						{ row.customize && (
-							<Button
-								variant="link"
-								onClick={ () =>
-									setValue(
-										'payment_methods_view',
-										row.customize
-									)
-								}
-							>
-								{ __( 'Customize', 'woocommerce-square' ) }
-							</Button>
-						) }
+						{ row.customize &&
+							// Digital wallet display settings are only meaningful
+							// while the method is enabled; hide the entry to its
+							// Customize sub-page when the parent toggle is off.
+							( row.key !== 'digital_wallet' ||
+								digitalWalletOn ) && (
+								<Button
+									variant="link"
+									onClick={ () =>
+										setValue(
+											'payment_methods_view',
+											row.customize
+										)
+									}
+								>
+									{ __( 'Customize', 'woocommerce-square' ) }
+								</Button>
+							) }
 						<ToggleControl
-							checked={ enabled[ row.key ] }
+							checked={
+								row.key === 'digital_wallet'
+									? digitalWalletOn
+									: enabled[ row.key ]
+							}
 							disabled={ saving[ row.key ] }
 							onChange={ ( val ) =>
-								handleToggle( row.key, row.gatewayId, val )
+								row.key === 'digital_wallet'
+									? handleDigitalWalletToggle( val )
+									: handleToggle(
+											row.key,
+											row.gatewayId,
+											val
+									  )
 							}
 							label=""
 							aria-label={ sprintf(
