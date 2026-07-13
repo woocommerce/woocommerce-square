@@ -231,14 +231,21 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 		$google_enabled = $settings['digital_wallets_google_pay_enabled'] ?? null;
 		$apple_enabled  = $settings['digital_wallets_apple_pay_enabled'] ?? null;
 
+		$hide_options_existing = isset( $settings['digital_wallets_hide_button_options'] ) && is_array( $settings['digital_wallets_hide_button_options'] )
+			? $settings['digital_wallets_hide_button_options']
+			: array();
+
 		if ( null !== $google_enabled || null !== $apple_enabled ) {
 			$hide_options = array();
 
-			if ( 'no' === ( $google_enabled ?? 'yes' ) ) {
+			$google_is_hidden = null !== $google_enabled ? ( 'no' === $google_enabled ) : in_array( 'google', $hide_options_existing, true );
+			$apple_is_hidden  = null !== $apple_enabled ? ( 'no' === $apple_enabled ) : in_array( 'apple', $hide_options_existing, true );
+
+			if ( $google_is_hidden ) {
 				$hide_options[] = 'google';
 			}
 
-			if ( 'no' === ( $apple_enabled ?? 'yes' ) ) {
+			if ( $apple_is_hidden ) {
 				$hide_options[] = 'apple';
 			}
 
