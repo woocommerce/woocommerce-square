@@ -157,22 +157,26 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 					'digital_wallets_google_pay_enabled'  => array(
 						'description'       => __( 'Whether the Google Pay button is enabled.', 'woocommerce-square' ),
 						'type'              => 'string',
-						'sanitize_callback' => '',
+						'enum'              => array( 'yes', 'no' ),
+						'sanitize_callback' => 'sanitize_key',
 					),
 					'digital_wallets_apple_pay_enabled'   => array(
 						'description'       => __( 'Whether the Apple Pay button is enabled.', 'woocommerce-square' ),
 						'type'              => 'string',
-						'sanitize_callback' => '',
+						'enum'              => array( 'yes', 'no' ),
+						'sanitize_callback' => 'sanitize_key',
 					),
 					'digital_wallets_google_pay_button_type' => array(
 						'description'       => __( 'Button label for the Google Pay button.', 'woocommerce-square' ),
 						'type'              => 'string',
-						'sanitize_callback' => '',
+						'enum'              => array( 'long', 'short' ),
+						'sanitize_callback' => 'sanitize_key',
 					),
 					'digital_wallets_apple_pay_button_type' => array(
 						'description'       => __( 'Button label for the Apple Pay button.', 'woocommerce-square' ),
 						'type'              => 'string',
-						'sanitize_callback' => '',
+						'enum'              => array( 'buy', 'donate', 'plain' ),
+						'sanitize_callback' => 'sanitize_key',
 					),
 				),
 			)

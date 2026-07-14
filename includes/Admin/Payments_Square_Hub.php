@@ -123,6 +123,11 @@ class Payments_Square_Hub {
 	 * @since x.x.x
 	 */
 	public static function redirect_modern_hub_to_legacy(): void {
+		// Never redirect AJAX requests or users who cannot manage WooCommerce.
+		if ( wp_doing_ajax() || ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
 		if ( ! self::is_square_payments_hub() ) {
 			return;
 		}

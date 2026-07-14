@@ -104,18 +104,33 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	}
 
 	try {
-		await Promise.all( [
-			...endpoints.map( ( path ) =>
-				apiFetch( { path, method: 'POST', data: payloads[ path ] } )
-			),
-			...gatewayPuts.map( ( g ) =>
-				apiFetch( {
-					path: `/wc/v3/payment_gateways/${ g.id }`,
-					method: 'PUT',
-					data: { enabled: g.enabled },
-				} )
-			),
-		] );
+		// Run the controller POSTs first, then the gateway enable PUTs, never
+		// concurrently. A gateway PUT and a controller POST can target the SAME
+		// stored option (e.g. the credit-card gateway PUT writes `enabled` while
+		// the payment_settings POST writes `enable_digital_wallets`, both in
+		// woocommerce_square_credit_card_settings; likewise Cash App). Firing them
+		// together read-modify-writes the same array in parallel and the slower
+		// response clobbers the faster one. Sequencing removes the race; each PUT
+		// then reads the option the POST already persisted. The POSTs target
+		// distinct options, as do the PUTs, so each group can still run in parallel.
+		if ( endpoints.length > 0 ) {
+			await Promise.all(
+				endpoints.map( ( path ) =>
+					apiFetch( { path, method: 'POST', data: payloads[ path ] } )
+				)
+			);
+		}
+		if ( gatewayPuts.length > 0 ) {
+			await Promise.all(
+				gatewayPuts.map( ( g ) =>
+					apiFetch( {
+						path: `/wc/v3/payment_gateways/${ g.id }`,
+						method: 'PUT',
+						data: { enabled: g.enabled },
+					} )
+				)
+			);
+		}
 	} catch ( error ) {
 		// The SDK catches a thrown Error and renders error.message as the save
 		// notice. Surface a clean, translatable message instead of the raw REST

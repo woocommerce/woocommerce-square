@@ -39,10 +39,14 @@ export default function DigitalWalletToggle( {
 			onChange={ ( checked ) => {
 				onChange( checked ? 'yes' : 'no' );
 
-				// Both wallets now off → disable the parent method (otherwise it
-				// would be "on" with nothing to display). Stay on this page.
 				const siblingOn = values?.[ siblingId ] === 'yes';
-				if ( ! checked && ! siblingOn ) {
+				if ( checked ) {
+					// A wallet just turned on → ensure the parent method is on too,
+					// so enabling a wallet here can never leave it stranded off.
+					setValue( 'enable_digital_wallets', 'yes' );
+				} else if ( ! siblingOn ) {
+					// Both wallets now off → disable the parent method (otherwise it
+					// would be "on" with nothing to display). Stay on this page.
 					setValue( 'enable_digital_wallets', 'no' );
 				}
 			} }
