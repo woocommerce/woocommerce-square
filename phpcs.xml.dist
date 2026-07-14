@@ -34,6 +34,14 @@
 		</properties>
 	</rule>
 
+	<!-- manage_woocommerce is a first-class WooCommerce capability; register it
+	     so the capability sniff does not flag it as an unknown custom cap. -->
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array" value="manage_woocommerce"/>
+		</properties>
+	</rule>
+
 	<!-- Files to check -->
 	<arg name="extensions" value="php"/>
 	<file>.</file>
