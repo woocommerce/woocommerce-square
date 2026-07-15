@@ -273,16 +273,15 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @return string JSON-encoded credentials object.
 		 */
 		private function get_digital_wallet_preview_data(): string {
-			$is_sandbox = wc_square()->get_settings_handler()->is_sandbox();
+			$base_location = wc_get_base_location();
+			$country_code  = ! empty( $base_location['country'] ) ? $base_location['country'] : 'US';
 
 			return (string) wp_json_encode(
 				array(
 					'applicationId' => wc_square()->get_gateway()->get_application_id(),
 					'locationId'    => wc_square()->get_settings_handler()->get_location_id(),
-					'squareJsUrl'   => $is_sandbox
-						? 'https://sandbox.web.squarecdn.com/v1/square.js'
-						: 'https://web.squarecdn.com/v1/square.js',
-					'countryCode'   => 'US',
+					'squareJsUrl'   => wc_square()->get_settings_handler()->get_square_js_url(),
+					'countryCode'   => $country_code,
 					'currencyCode'  => get_woocommerce_currency() ? get_woocommerce_currency() : 'USD',
 				)
 			);
@@ -310,11 +309,15 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			// self-saves: the values ride the SDK form and are persisted only when
 			// the page Save button is clicked (routed by save-handler.js), so the
 			// save adapter is 'none' on each.
+			// Read each gateway's real enabled state via is_enabled() rather than
+			// defaulting an absent option key to 'yes': the gateway default is 'no',
+			// so a never-saved gateway must show its toggle off (and, since Save only
+			// sends changed values, a wrong default could never be corrected).
 			$enable_state_fields = array(
-				'square_credit_card_enabled'  => $credit_card['enabled'] ?? 'yes',
+				'square_credit_card_enabled'  => wc_bool_to_string( wc_square()->get_gateway( \WooCommerce\Square\Plugin::GATEWAY_ID )->is_enabled() ),
 				'enable_digital_wallets'      => $credit_card['enable_digital_wallets'] ?? 'yes',
-				'square_cash_app_pay_enabled' => $cash_app['enabled'] ?? 'yes',
-				'gift_cards_pay_enabled'      => $gift_cards['enabled'] ?? 'yes',
+				'square_cash_app_pay_enabled' => wc_bool_to_string( wc_square()->get_gateway( \WooCommerce\Square\Plugin::CASH_APP_PAY_GATEWAY_ID )->is_enabled() ),
+				'gift_cards_pay_enabled'      => wc_bool_to_string( wc_square()->get_gateway( \WooCommerce\Square\Plugin::GIFT_CARD_PAY_GATEWAY_ID )->is_enabled() ),
 			);
 
 			// Which sub-view to show is URL-addressable via the `pm-view` query arg
@@ -372,7 +375,11 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 				'digital_wallets_section' => array(
 					'id'          => 'digital_wallets_section',
 					'title'       => __( 'Digital wallet settings', 'woocommerce-square' ),
-					'description' => __( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. <a href="https://woocommerce.com/document/woocommerce-square/payment-settings/enabling-digital-wallets/" target="_blank">Learn more about digital wallets</a>', 'woocommerce-square' ),
+					'description' => sprintf(
+						/* translators: %s: "Learn more about digital wallets" link to the documentation */
+						__( 'Allow customers to pay with Apple Pay or Google Pay from your Product, Cart and Checkout pages. %s', 'woocommerce-square' ),
+						'<a href="https://woocommerce.com/document/woocommerce-square/payment-settings/enabling-digital-wallets/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Learn more about digital wallets', 'woocommerce-square' ) . '</a>'
+					),
 					'actions'     => array(),
 					'order'       => 1,
 					'fields'      => array(

@@ -3,7 +3,6 @@ import OAuthConnect from './general/oauth-connect';
 import EnvironmentSelector from './general/environment-selector';
 import SectionHeader from './general/section-header';
 import GatewayList from './payment-methods/gateway-list';
-import GatewayToggle from './payment-methods/gateway-toggle';
 import DigitalWalletToggle from './payment-methods/digital-wallet-toggle';
 import HiddenField from './payment-methods/hidden-field';
 import CashAppButtonPreview from './cash-app/button-preview';
@@ -17,7 +16,6 @@ registerSettingsExtension( {
 		'square/environment-selector': EnvironmentSelector,
 		'square/section-header': SectionHeader,
 		'square/gateway-list': GatewayList,
-		'square/gateway-toggle': GatewayToggle,
 		'square/digital-wallet-toggle': DigitalWalletToggle,
 		'square/hidden-field': HiddenField,
 		'square/cash-app-button-preview': CashAppButtonPreview,

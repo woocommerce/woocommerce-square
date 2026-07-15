@@ -10,6 +10,8 @@ const CardIcon = () => (
 		viewBox="0 0 40 40"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
+		aria-hidden="true"
+		focusable="false"
 	>
 		<path
 			d="M0 4C0 1.79086 1.79086 0 4 0H36C38.2091 0 40 1.79086 40 4V36C40 38.2091 38.2091 40 36 40H4C1.79086 40 0 38.2091 0 36V4Z"
@@ -32,6 +34,8 @@ const SquareMarkIcon = () => (
 		viewBox="0 0 40 40"
 		fill="none"
 		xmlns="http://www.w3.org/2000/svg"
+		aria-hidden="true"
+		focusable="false"
 	>
 		<path
 			d="M0 4C0 1.79086 1.79086 0 4 0H36C38.2091 0 40 1.79086 40 4V36C40 38.2091 38.2091 40 36 40H4C1.79086 40 0 38.2091 0 36V4Z"
@@ -99,7 +103,7 @@ export default function GatewayList( { values, setValue } ) {
 			icon: <CardIcon />,
 			title: __( 'Digital wallet', 'woocommerce-square' ),
 			description: __(
-				'Let customers pay quickly and securely using supported digital wallets like Apple pay and Google Pay.',
+				'Let customers pay quickly and securely using supported digital wallets like Apple Pay and Google Pay.',
 				'woocommerce-square'
 			),
 			customize: 'digital-wallet',

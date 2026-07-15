@@ -66,6 +66,7 @@ export default function CashAppButtonPreview( { values, setValue } ) {
 	return (
 		<div className="wc-square-preview">
 			<button
+				type="button"
 				disabled
 				className={ `wc-square-cashapp-preview__button ${ themeClass } ${ shapeClass }` }
 				aria-label={ __(

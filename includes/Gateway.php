@@ -327,11 +327,7 @@ class Gateway extends Payment_Gateway_Direct {
 			return;
 		}
 
-		if ( $this->get_plugin()->get_settings_handler()->is_sandbox() ) {
-			$url = 'https://sandbox.web.squarecdn.com/v1/square.js';
-		} else {
-			$url = 'https://web.squarecdn.com/v1/square.js';
-		}
+		$url = $this->get_plugin()->get_settings_handler()->get_square_js_url();
 
 		wp_enqueue_script( 'wc-' . $this->get_plugin()->get_id_dasherized() . '-payment-form', $url, array(), Plugin::VERSION );
 
