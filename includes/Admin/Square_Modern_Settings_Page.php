@@ -608,9 +608,9 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 *    keyed off the seeded `cash_app_enabled` field).
 		 *  - Advanced: detailed decline messages.
 		 *
-		 * Debug Mode is intentionally NOT migrated here — it is blocked on an open
-		 * question with the WooCommerce team (see SQUARE-281 ticket) and will be
-		 * scheduled separately.
+		 * Debug/logging settings are intentionally NOT migrated here. They are
+		 * being refactored from the legacy 7-option dropdown to a two-boolean
+		 * model under SQUARE-295, and are handled in that ticket.
 		 *
 		 * @since x.x.x
 		 *
