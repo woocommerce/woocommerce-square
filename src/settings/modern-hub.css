@@ -1,0 +1,69 @@
+/**
+ * Styles for Square custom field components rendered inside the modern settings hub.
+ *
+ * The WC 10.9+ SDK handles card layout, centering, and spacing natively.
+ * These rules cover only Square's own square/* custom field components.
+ */
+
+.wc-square-divider {
+	border: 0;
+	border-top: 1px solid #e0e0e0;
+	/* The SDK already adds a ~16px gap between fields above the divider, so use a
+	   smaller top margin and larger bottom margin to keep the line visually
+	   centered between the fields above and the action button below. */
+	margin: 8px 0 24px;
+	height: 0;
+}
+
+/* Environment selector (Production / Sandbox radio group). */
+.wc-square-environment-selector {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.wc-square-environment-selector__legend {
+	font-weight: 600;
+	margin-bottom: 12px;
+	padding: 0;
+}
+
+.wc-square-environment-selector__option {
+	align-items: flex-start;
+	cursor: pointer;
+	display: flex;
+	font-weight: normal;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.wc-square-environment-selector__input {
+	flex-shrink: 0;
+	/* Pin the control size so it lines up with the label's first line. */
+	width: 16px;
+	height: 16px;
+}
+
+/* WP-admin's `input[type="radio"]` rule sets `margin: -4px 4px 0 0`, which
+   floats the radio ~4px above the label. The attribute+class selector below
+   (specificity 0,2,1) outranks it so the margins reset cleanly. */
+.wc-square-environment-selector__input[type='radio'] {
+	margin: 0;
+}
+
+.wc-square-environment-selector__text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.wc-square-environment-selector__label {
+	font-weight: 500;
+	/* Match the radio height so the radio centers on the label line. */
+	line-height: 16px;
+}
+
+.wc-square-environment-selector__description {
+	color: #757575;
+	font-size: 13px;
+}

@@ -9,7 +9,18 @@ module.exports = {
 			( plugin ) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
 		),
-		new WooDependencyExtractionWebpackPlugin(),
+		new WooDependencyExtractionWebpackPlugin( {
+			requestToExternal: ( request ) => {
+				if ( request === '@woocommerce/modern-settings-sdk' ) {
+					return [ 'wc', 'settingsUi' ];
+				}
+			},
+			requestToHandle: ( request ) => {
+				if ( request === '@woocommerce/modern-settings-sdk' ) {
+					return 'wc-settings-ui';
+				}
+			},
+		} ),
 		new CopyWebpackPlugin( {
 			patterns: [ { from: './src/images', to: 'images' } ],
 		} ),
@@ -22,6 +33,10 @@ module.exports = {
 		// nux
 		onboarding: './src/new-user-experience/onboarding/index.js',
 		settings: './src/new-user-experience/settings/index.js',
+
+		// modern-settings SDK extension
+		'square-settings': './src/settings/index.js',
+		'modern-hub': './src/settings/modern-hub.css',
 
 		// admin files.
 		'assets/admin/wc-square-admin-products':
