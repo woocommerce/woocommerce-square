@@ -976,9 +976,16 @@ class Manual_Synchronization extends Stepped_Job {
 			// Remove linked products from the upsert batch.
 			$product_ids = array_values( array_diff( $product_ids, $linked_product_ids ) );
 
-			// Linked products count as processed and need inventory push.
-			$processed_product_ids      = array_merge( $linked_product_ids, $processed_product_ids );
-			$inventory_push_product_ids = array_merge( $linked_product_ids, $inventory_push_product_ids );
+			// Linked products count as processed. Push their inventory inline when inventory sync
+			// is enabled - Square IDs are fresh in postmeta at this point. Only failed IDs are
+			// queued for the deferred step.
+			$processed_product_ids = array_merge( $linked_product_ids, $processed_product_ids );
+			if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
+				$failed_linked_ids          = $this->push_inventory_for_products( $linked_product_ids );
+				$inventory_push_product_ids = array_merge( $failed_linked_ids, $inventory_push_product_ids );
+			} else {
+				$inventory_push_product_ids = array_merge( $linked_product_ids, $inventory_push_product_ids );
+			}
 			$this->set_attr( 'processed_product_ids', $processed_product_ids );
 			$this->set_attr( 'inventory_push_product_ids', $inventory_push_product_ids );
 
@@ -1013,8 +1020,16 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$result = $this->upsert_catalog_objects( $catalog_objects, true );
 
-		// newly upserted IDs should get their inventory pushed
-		$inventory_push_product_ids = array_merge( $result['processed'], $inventory_push_product_ids );
+		// Push inventory inline immediately after each upsert batch when inventory sync is enabled.
+		// This ensures products don't sit in Square with zero inventory if the sync fails before
+		// the deferred push_inventory step runs. Only IDs whose inline push failed are queued for
+		// the deferred step - successful pushes are not re-queued to avoid double-counting.
+		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() && ! empty( $result['processed'] ) ) {
+			$failed_inventory_ids       = $this->push_inventory_for_products( $result['processed'] );
+			$inventory_push_product_ids = array_merge( $failed_inventory_ids, $inventory_push_product_ids );
+		} else {
+			$inventory_push_product_ids = array_merge( $result['processed'], $inventory_push_product_ids );
+		}
 		$this->set_attr( 'inventory_push_product_ids', $inventory_push_product_ids );
 
 		// update the processed list
@@ -1350,6 +1365,125 @@ class Manual_Synchronization extends Stepped_Job {
 				}
 			}
 		}
+	}
+
+
+	/**
+	 * Pushes WooCommerce inventory to Square for a specific set of product IDs.
+	 *
+	 * Called inline after each upsert_new_products batch so that newly created Square catalog
+	 * objects receive correct stock quantities immediately, rather than waiting for the deferred
+	 * push_inventory step. If the API call fails the exception is caught, the failure is logged,
+	 * and the affected product IDs are returned so the caller can queue them for the deferred step.
+	 *
+	 * @since 5.4.1
+	 *
+	 * @param int[] $product_ids WooCommerce product IDs to push inventory for.
+	 * @return int[] Product IDs for which the inventory push failed.
+	 */
+	private function push_inventory_for_products( array $product_ids ): array {
+
+		$inventory_changes = array();
+
+		foreach ( $product_ids as $product_id ) {
+
+			$product = wc_get_product( $product_id );
+			if ( ! $product instanceof \WC_Product ) {
+				continue;
+			}
+
+			$product_inventory_changes = $this->get_product_inventory_changes( $product );
+
+			if ( ! empty( $product_inventory_changes ) ) {
+				$inventory_changes[ $product_id ] = $product_inventory_changes;
+			}
+		}
+
+		if ( empty( $inventory_changes ) ) {
+			return array();
+		}
+
+		$all_changes = array_merge( ...array_values( $inventory_changes ) );
+
+		// Chunk by the batch limit in case the set of products has many variations.
+		$chunks = array_chunk( $all_changes, self::BATCH_CHANGE_INVENTORY_LIMIT );
+
+		$total_chunks = count( $chunks );
+
+		foreach ( $chunks as $chunk_index => $chunk ) {
+			try {
+				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $chunk ) ) . '_inline_inventory_' . $this->get_attr( 'id' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				wc_square()->get_api()->batch_change_inventory( $idempotency_key, $chunk );
+			} catch ( \Exception $e ) {
+				wc_square()->log(
+					sprintf(
+						'Inline inventory push failed on chunk %d of %d for %d products during upsert_new_products: %s. These will be retried by the push_inventory step.',
+						$chunk_index + 1,
+						$total_chunks,
+						count( $inventory_changes ),
+						$e->getMessage()
+					)
+				);
+				// Return all product IDs so the deferred push_inventory step retries them.
+				return array_keys( $inventory_changes );
+			}
+		}
+
+		wc_square()->log(
+			sprintf(
+				'Pushed inventory inline for %d newly upserted products.',
+				count( $inventory_changes )
+			)
+		);
+
+		return array();
+	}
+
+
+	/**
+	 * Builds inventory change objects for a single product.
+	 *
+	 * Handles both variable and simple products. For variable products it iterates
+	 * each child variation; for simple products it acts on the product itself.
+	 * Only products with stock management enabled produce inventory changes.
+	 *
+	 * Note: this method does not perform SKU-based Square ID lookups. It assumes
+	 * Square variation IDs are already stored in WC postmeta, which is guaranteed
+	 * for products that have just been upserted via upsert_catalog_objects().
+	 * The deferred push_inventory() step handles its own SKU lookups separately.
+	 *
+	 * @since 5.4.1
+	 *
+	 * @param \WC_Product $product WooCommerce product object.
+	 * @return \Square\Models\InventoryChange[] Inventory change objects for the product.
+	 */
+	private function get_product_inventory_changes( \WC_Product $product ): array {
+
+		$changes = array();
+
+		if ( $product->is_type( 'variable' ) && $product->has_child() ) {
+
+			foreach ( $product->get_children() as $child_id ) {
+
+				$child = wc_get_product( $child_id );
+				if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+					continue;
+				}
+
+				$change = Product::get_inventory_change_physical_count_type( $child );
+				if ( $change ) {
+					$changes[] = $change;
+				}
+			}
+		} elseif ( $product->get_manage_stock() ) {
+
+			$change = Product::get_inventory_change_physical_count_type( $product );
+			if ( $change ) {
+				$changes[] = $change;
+			}
+		}
+
+		return $changes;
 	}
 
 

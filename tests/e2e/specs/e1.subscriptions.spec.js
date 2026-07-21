@@ -42,6 +42,12 @@ test.describe( 'Subscriptions Tests @general', () => {
 			) )
 		) {
 			await runWpCliCommand(
+				'wp option update woocommerce_subscriptions_enable_simple_subscription "yes"'
+			);
+			await runWpCliCommand(
+				'wp option update woocommerce_subscriptions_enable_variable_subscription "yes"'
+			);
+			await runWpCliCommand(
 				'wp wc product create --name="Simple Subscription Product" --slug="simple-subscription-product" --user=1 --regular_price=10 --type=subscription --meta_data=\'[{"key":"_subscription_price","value":"10"},{"key":"_subscription_period","value":"month"},{"key":"_subscription_period_interval","value":"1"}]\''
 			);
 		}
