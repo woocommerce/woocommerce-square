@@ -751,7 +751,7 @@ class Products {
 								esc_html__( 'The product catalog visibility has been set to "hidden", as a matching product could not be found in Square on %1$s at %2$s. %3$sCheck sync records%4$s.', 'woocommerce-square' ),
 								date_i18n( wc_date_format(), $record->get_timestamp() ),
 								date_i18n( wc_time_format(), $record->get_timestamp() ),
-								'<a href="' . esc_url( add_query_arg( array( 'section' => 'update' ), wc_square()->get_settings_url() ) ) . '">',
+								'<a href="' . esc_url( wc_square()->get_sync_records_url() ) . '">',
 								'</a>'
 							)
 						);

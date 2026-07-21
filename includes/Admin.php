@@ -88,16 +88,19 @@ class Admin {
 	 */
 	private function add_hooks() {
 
-		// add the settings page.
-		add_filter(
-			'woocommerce_get_settings_pages',
-			function ( $pages ) {
-
-				$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
-
-				return $pages;
-			}
-		);
+		if ( $this->get_plugin()->is_modern_settings_path_active() ) {
+			// Modern path: hub under WooCommerce > Settings > Payments > Square.
+			Admin\Payments_Square_Hub::init();
+		} else {
+			// Legacy path: top-level WooCommerce > Settings > Square tab.
+			add_filter(
+				'woocommerce_get_settings_pages',
+				function ( $pages ) {
+					$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
+					return $pages;
+				}
+			);
+		}
 
 		// load admin scripts.
 		add_action(
@@ -166,7 +169,10 @@ class Admin {
 					),
 				)
 			);
-		} elseif ( $this->get_plugin()->is_plugin_settings() ) {
+		} elseif ( $this->get_plugin()->is_plugin_settings() && ! Admin\Payments_Square_Hub::is_square_payments_hub() ) {
+			// Legacy settings scripts must not load on the modern hub page; the SDK
+			// renders its own assets and these legacy bundles depend on jQuery markup
+			// that no longer exists.
 			wp_enqueue_style(
 				'wc-square-admin',
 				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',

@@ -395,7 +395,7 @@ class Plugin extends Payment_Gateway_Plugin {
 						'<strong>',
 						count( Product::get_products_synced_with_square() ),
 						'</strong>',
-						'<a href="' . esc_url( add_query_arg( 'section', 'update', $this->get_settings_url() ) ) . '">',
+						'<a href="' . esc_url( $this->get_sync_records_url() ) . '">',
 						'</a>'
 					);
 
@@ -678,8 +678,49 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * @return bool
 	 */
 	public function is_plugin_settings() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce note required, read-only check.
-		return parent::is_plugin_settings() || ( isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && self::PLUGIN_ID === $_GET['tab'] );
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce not required, read-only check.
+		$is_legacy_settings = isset( $_GET['page'], $_GET['tab'] ) && 'wc-settings' === $_GET['page'] && self::PLUGIN_ID === $_GET['tab'];
+		$is_hub_settings    = $this->is_modern_settings_path_active() && Admin\Payments_Square_Hub::is_square_payments_hub();
+
+		return parent::is_plugin_settings() || $is_legacy_settings || $is_hub_settings;
+	}
+
+	/**
+	 * Determines if the modern settings path is active.
+	 *
+	 * All three gates must be true:
+	 *   1. WooCommerce 11.0+ native registry support is present (SettingsSection::get_settings_ui_page).
+	 *   2. The settings-ui feature flag is enabled.
+	 *   3. The wc_square_is_modern_settings_active escape-hatch filter is not overridden to false.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	public function is_modern_settings_path_active(): bool {
+		// Requires WC 11.0+ (WooCommerce Core PR #65975). The presence of
+		// SettingsSection::get_settings_ui_page() is the precise version indicator.
+		if ( ! method_exists( '\Automattic\WooCommerce\Admin\Settings\SettingsSection', 'get_settings_ui_page' )
+			|| ! class_exists( '\Automattic\WooCommerce\Admin\Features\Features' ) ) {
+			return false;
+		}
+
+		$features = \Automattic\WooCommerce\Admin\Features\Features::class;
+		if ( ! $features::is_enabled( 'settings-ui' ) ) {
+			return false;
+		}
+
+		/**
+		 * Filters whether the Square modern settings path is active.
+		 *
+		 * Return false to force Square to render with the legacy settings page
+		 * regardless of the modern-settings feature flag.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param bool $active Whether the modern settings path is active. Default true.
+		 */
+		return (bool) apply_filters( 'wc_square_is_modern_settings_active', true );
 	}
 
 	/**
@@ -870,12 +911,45 @@ class Plugin extends Payment_Gateway_Plugin {
 	 */
 	public function get_settings_url( $gateway_id = null ) {
 
+		if ( $this->is_modern_settings_path_active() ) {
+			return Admin\Payments_Square_Hub::get_hub_url();
+		}
+
 		$params = array(
 			'page' => 'wc-settings',
 			'tab'  => self::PLUGIN_ID,
 		);
 
 		// All usage of this return value has been escaped late.
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		return add_query_arg( $params, admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Gets the URL of the sync records / "Update from Square" screen.
+	 *
+	 * On the legacy path this is ?tab=square&section=update.
+	 * On the modern path this is the Synchronize sub-tab of the Square hub.
+	 *
+	 * Using a dedicated helper avoids callers appending section=update to
+	 * get_settings_url(), which on the modern path overwrites section=square
+	 * and lands the user on the wrong WC settings section.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string
+	 */
+	public function get_sync_records_url(): string {
+		if ( $this->is_modern_settings_path_active() ) {
+			return Admin\Payments_Square_Hub::get_hub_url( Admin\Payments_Square_Hub::TAB_SYNCHRONIZE );
+		}
+
+		$params = array(
+			'page'    => 'wc-settings',
+			'tab'     => self::PLUGIN_ID,
+			'section' => 'update',
+		);
+
 		// nosemgrep audit.php.wp.security.xss.query-arg
 		return add_query_arg( $params, admin_url( 'admin.php' ) );
 	}
