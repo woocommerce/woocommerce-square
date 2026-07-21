@@ -35,7 +35,11 @@
 
 .import-modal-cover button.button-primary {
 	float: right;
-	font-size: 16px;
+
+	&:hover,
+	&:focus {
+		color: #fff;
+	}
 }
 
 .import-modal-cover button.is-secondary {

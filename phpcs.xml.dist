@@ -28,6 +28,12 @@
 		<exclude name="WooCommerce.Commenting.CommentTags.LicenseTag" />
 	</rule>
 
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array" value="pay_for_order"/>
+		</properties>
+	</rule>
+
 	<rule ref="WordPress.Security.EscapeOutput">
 		<properties>
 			<property name="customAutoEscapedFunctions" type="array" value="wc_price"/>
