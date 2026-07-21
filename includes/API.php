@@ -641,7 +641,7 @@ class API extends Base {
 			$option_name                              = $this->get_item_option_name_from_catalog_object( $object );
 			$options_data[ $object->getId() ]['name'] = $option_name;
 
-			$option_values_object = $object->getItemOptionData()->getValues();
+			$option_values_object = $object->getItemOptionData() ? $object->getItemOptionData()->getValues() : array();
 			$option_values        = array();
 			$option_values_ids    = array();
 
@@ -680,7 +680,7 @@ class API extends Base {
 			$option   = $response->get_data()->getObject();
 
 			// Filter out the existing option values from the attribute values.
-			$square_existing_option_objects = $option->getItemOptionData()->getValues();
+			$square_existing_option_objects = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 			$options_value_data             = $square_existing_option_objects;
 
 			$square_existing_option_values = array();
@@ -726,7 +726,7 @@ class API extends Base {
 			$response = $this->retrieve_catalog_object( $option_id );
 			$option   = $response->get_data()->getObject();
 
-			$option_values_object = $option->getItemOptionData()->getValues();
+			$option_values_object = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 			$option_value_ids     = array();
 			$option_values        = array();
 
