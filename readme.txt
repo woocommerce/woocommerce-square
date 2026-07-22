@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.4.1
+Stable tag: 5.4.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,13 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.4.2 - 2026-07-22 =
+* Update - Remove deprecated beta Product Editor (`@woocommerce/product-editor`) integration.
+* Fix - Remove obsolete pre-7.6 WooCommerce compatibility code, as the minimum supported WooCommerce version is now 10.7.
+* Dev - Bump WooCommerce "tested up to" version 11.0.
+* Dev - Bump WooCommerce minimum supported version to 10.8.
+* Dev - Bump WordPress minimum supported version to 6.9.
 
 = 5.4.1 - 2026-06-24 =
 * Fix - Syncing new products to Square no longer leaves them at zero inventory if the sync fails partway through.

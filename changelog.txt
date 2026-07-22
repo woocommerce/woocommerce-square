@@ -1,5 +1,12 @@
 *** WooCommerce Square Changelog ***
 
+= 5.4.2 - 2026-07-22 =
+* Update - Remove deprecated beta Product Editor (`@woocommerce/product-editor`) integration.
+* Fix - Remove obsolete pre-7.6 WooCommerce compatibility code, as the minimum supported WooCommerce version is now 10.7.
+* Dev - Bump WooCommerce "tested up to" version 11.0.
+* Dev - Bump WooCommerce minimum supported version to 10.8.
+* Dev - Bump WordPress minimum supported version to 6.9.
+
 = 5.4.1 - 2026-06-24 =
 * Fix - Syncing new products to Square no longer leaves them at zero inventory if the sync fails partway through.
 * Dev - Bump WooCommerce "tested up to" version 10.9.

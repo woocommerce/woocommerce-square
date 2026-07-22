@@ -122,12 +122,12 @@ class Order {
 	 * a later stage.
 	 *
 	 * @since 2.1.1
-	 * @deprecated x.x.x No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
+	 * @deprecated 5.4.2 No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
 	 *
 	 * @param array $posted values returned from PayPal Standard IPN callback.
 	 */
 	public function maybe_sync_stock_for_order_via_paypal( $posted ) {
-		wc_deprecated_function( __METHOD__, 'x.x.x' );
+		wc_deprecated_function( __METHOD__, '5.4.2' );
 		if ( empty( $posted['custom'] ) ) {
 			return;
 		}
@@ -153,14 +153,14 @@ class Order {
 	 * This functions sets a process in motion that gathers products that will be processed on shutdown.
 	 *
 	 * @since 2.0.8
-	 * @deprecated x.x.x No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
+	 * @deprecated 5.4.2 No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
 	 *
 	 * @param int      $order_id    Order ID number.
 	 * @param array    $posted_data Submitted order data.
 	 * @param WC_Order $order       Order object.
 	 */
 	public function maybe_sync_stock_for_order_via_other_gateway( $order_id, $posted_data, $order ) {
-		wc_deprecated_function( __METHOD__, 'x.x.x' );
+		wc_deprecated_function( __METHOD__, '5.4.2' );
 		// Confirm we are not processing the order through the Square gateway.
 		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
@@ -176,12 +176,12 @@ class Order {
 	 * This functions sets a process in motion that gathers products that will be processed on shutdown.
 	 *
 	 * @since 4.0.0
-	 * @deprecated x.x.x No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
+	 * @deprecated 5.4.2 No longer used; stock sync is handled via woocommerce_reduce_order_stock on WC 7.6+.
 	 *
 	 * @param \WC_Order $order Order object.
 	 */
 	public function maybe_sync_stock_for_store_api_order_via_other_gateway( $order ) {
-		wc_deprecated_function( __METHOD__, 'x.x.x' );
+		wc_deprecated_function( __METHOD__, '5.4.2' );
 		// Confirm we are not processing the order through the Square gateway.
 		if ( ! $order instanceof \WC_Order || in_array( $order->get_payment_method(), $this->square_payment_gateways, true ) ) {
 			return;
