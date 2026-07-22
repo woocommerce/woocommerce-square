@@ -471,7 +471,6 @@ class WooCommerce_Square_Loader {
 				 */
 				return;
 			}
-			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
 
