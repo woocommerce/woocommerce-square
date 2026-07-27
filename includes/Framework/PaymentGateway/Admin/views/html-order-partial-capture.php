@@ -17,6 +17,8 @@
  *
  * Modified by WooCommerce on 03 January 2022.
  */
+
+defined( 'ABSPATH' ) || exit;
 ?>
 
 <div class="wc-order-data-row wc-order-data-row-toggle sv-wc-payment-gateway-partial-capture wc-<?php echo esc_attr( $gateway->get_id_dasherized() ); ?>-partial-capture" style="display:none;">
