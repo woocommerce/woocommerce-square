@@ -157,12 +157,24 @@ class Background_Job extends Background_Job_Handler {
 			return;
 		}
 
+		// Heartbeat: record activity on every processed step so a genuinely long running sync is
+		// never mistaken for a stalled one. started_processing_at (below) is stamped only once, so
+		// it cannot tell a slow large-catalog sync apart from a stuck job; last_activity_at can.
+		$job->last_activity_at = time();
+
 		// indicate that the job has started processing
 		if ( 'processing' !== $job->status ) {
 
 			$job->status                = 'processing';
 			$job->started_processing_at = current_time( 'mysql' );
-			$job                        = $this->update_job( $job );
+		}
+
+		$job = $this->update_job( $job );
+
+		// The row can be gone if the job was cleared concurrently (e.g. the Clear Square Sync tool).
+		// This path now runs on every step, so guard before dereferencing the job below.
+		if ( ! $job ) {
+			return;
 		}
 
 		if ( 'poll' === $job->action ) {
