@@ -64,6 +64,11 @@ class Background_Job extends Background_Job_Handler {
 
 		// Sync healthcheck
 		add_action( $this->cron_hook_identifier, array( $this, 'handle_sync_healthcheck' ) );
+
+		// Safety net for sites where cron/Action Scheduler execution is broken (the reported
+		// incident had the healthcheck actions themselves failing for a month): any admin page
+		// load can also detect and recover a stalled sync. Throttled internally.
+		add_action( 'admin_init', array( $this, 'maybe_recover_stuck_sync_from_admin' ) );
 	}
 
 
@@ -314,6 +319,31 @@ class Background_Job extends Background_Job_Handler {
 		$this->debug_message = esc_html__( 'Success! You can now sync your products.', 'woocommerce-square' );
 
 		return true;
+	}
+
+	/**
+	 * Runs the stalled-sync recovery check from admin page loads, throttled.
+	 *
+	 * The scheduled healthcheck is the primary trigger, but on sites where cron or Action
+	 * Scheduler execution is broken (as in the reported incident, where the healthcheck actions
+	 * themselves failed for a month) it never runs. Admin page loads are the one context such a
+	 * site still exercises, so use them as a fallback trigger. Throttled to once per five minutes
+	 * and restricted to users who can manage WooCommerce.
+	 *
+	 * @since x.x.x
+	 */
+	public function maybe_recover_stuck_sync_from_admin() {
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+			return;
+		}
+
+		if ( get_transient( 'wc_square_admin_recovery_check' ) ) {
+			return;
+		}
+		set_transient( 'wc_square_admin_recovery_check', 1, 5 * MINUTE_IN_SECONDS );
+
+		$this->maybe_recover_stuck_sync();
 	}
 
 	/**
