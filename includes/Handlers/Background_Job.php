@@ -424,6 +424,64 @@ class Background_Job extends Background_Job_Handler {
 	}
 
 	/**
+	 * Deletes stale failed Square Action Scheduler actions to prevent table bloat.
+	 *
+	 * Runs at most once per day. Removes actions for the plugin's sync hooks that are in the failed
+	 * state and older than a filterable retention window. Never touches pending or in-progress
+	 * actions, and does not change Action Scheduler's own timeout handling.
+	 *
+	 * @since x.x.x
+	 */
+	protected function cleanup_stale_failed_actions() {
+
+		$last_run = (int) get_option( 'wc_square_failed_action_cleanup_at', 0 );
+		if ( $last_run && ( time() - $last_run ) < DAY_IN_SECONDS ) {
+			return;
+		}
+		update_option( 'wc_square_failed_action_cleanup_at', time(), false );
+
+		if ( ! function_exists( 'as_get_scheduled_actions' ) || ! class_exists( 'ActionScheduler_Store' ) ) {
+			return;
+		}
+
+		/**
+		 * Filters how many days a failed Square action is retained before automatic cleanup.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param int $days retention in days (default 30)
+		 */
+		$retention_days = max( 1, (int) apply_filters( 'wc_square_failed_action_retention_days', 30 ) );
+		$cutoff         = gmdate( 'Y-m-d H:i:s', time() - ( $retention_days * DAY_IN_SECONDS ) );
+
+		$hooks = array( 'wc_square_job_runner', 'wc_square_background_sync_cron', 'wc_square_sync', 'wc_square_sync_orders' );
+
+		try {
+			$store = \ActionScheduler_Store::instance();
+
+			foreach ( $hooks as $hook ) {
+				$action_ids = as_get_scheduled_actions(
+					array(
+						'hook'         => $hook,
+						'status'       => \ActionScheduler_Store::STATUS_FAILED,
+						'date'         => $cutoff,
+						'date_compare' => '<=',
+						'per_page'     => 200,
+						'orderby'      => 'none',
+					),
+					'ids'
+				);
+
+				foreach ( (array) $action_ids as $action_id ) {
+					$store->delete_action( $action_id );
+				}
+			}
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'Failed-action cleanup skipped: ' . $e->getMessage() );
+		}
+	}
+
+	/**
 	 * Handle Sync healthcheck
 	 *
 	 * Restart the background sync process if not already running
@@ -438,6 +496,10 @@ class Background_Job extends Background_Job_Handler {
 		// non-empty, so the as_has_scheduled_action() guard below would otherwise never let the sync
 		// restart. Running recovery before the early returns is what breaks that deadlock.
 		$this->maybe_recover_stuck_sync();
+
+		// Housekeeping: prune old failed Square actions so the Action Scheduler store does not bloat
+		// (the reported incident left 14,000+ failed actions behind). Throttled internally.
+		$this->cleanup_stale_failed_actions();
 
 		if ( $this->is_process_running() ) {
 			// background process already running
