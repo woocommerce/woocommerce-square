@@ -214,6 +214,9 @@ class Background_Job extends Background_Job_Handler {
 	 */
 	public function job_complete( $job ) {
 
+		// A sync completed successfully, so clear any pending auto-recovery notice.
+		delete_option( 'wc_square_sync_auto_recovered_at' );
+
 		wc_square()->get_sync_handler()->set_last_synced_at();
 
 		wc_square()->get_sync_handler()->record_sync( $job->processed_product_ids, $job );

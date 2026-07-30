@@ -109,6 +109,9 @@ class Admin {
 
 		// Show warning notice for the user to manually trigger a sync if it has been a while since the last successful sync.
 		add_action( 'admin_notices', array( $this, 'maybe_show_sync_status_notice' ) );
+
+		// Show a notice when a stalled sync job was automatically recovered, prompting a re-run.
+		add_action( 'admin_notices', array( $this, 'maybe_show_sync_recovered_notice' ) );
 	}
 
 
@@ -454,6 +457,61 @@ class Admin {
 						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=square&section=update' ) ) . '">',
 						'</a>',
 						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=tools' ) ) . '">',
+						'</a>'
+					),
+					array(
+						'a' => array(
+							'href' => array(),
+						),
+					)
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Maybe show a notice that a stalled sync job was automatically recovered.
+	 *
+	 * Shown when auto-recovery has fired and no successful sync has completed since, so the
+	 * merchant knows the previous sync was interrupted and restarted and can verify their products.
+	 * Clears itself once a sync completes successfully after the recovery.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return void
+	 */
+	public function maybe_show_sync_recovered_notice() {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+			return;
+		}
+
+		$settings = wc_square()->get_settings_handler();
+		if ( ! $settings->is_connected() || ! $settings->get_location_id() || ! $settings->is_product_sync_enabled() ) {
+			return;
+		}
+
+		$recovered_at = (int) get_option( 'wc_square_sync_auto_recovered_at', 0 );
+		if ( ! $recovered_at ) {
+			return;
+		}
+
+		// Once a sync has completed successfully after the recovery, the notice is no longer relevant.
+		$last_synced_at = (int) wc_square()->get_sync_handler()->get_last_synced_at();
+		if ( $last_synced_at >= $recovered_at ) {
+			delete_option( 'wc_square_sync_auto_recovered_at' );
+			return;
+		}
+		?>
+		<div class="notice notice-warning is-dismissible">
+			<p>
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
+						__( 'A Square sync job was interrupted and has been automatically restarted. Please verify your products are up to date, or manually trigger a sync from the %1$supdate page%2$s.', 'woocommerce-square' ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=square&section=update' ) ) . '">',
 						'</a>'
 					),
 					array(
