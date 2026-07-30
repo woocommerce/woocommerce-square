@@ -317,6 +317,83 @@ class Background_Job extends Background_Job_Handler {
 	}
 
 	/**
+	 * Detects a sync job stalled in "processing" and recovers it so the queue can resume.
+	 *
+	 * A job is considered stalled when it has been in "processing" without any step activity for
+	 * longer than a filterable threshold (measured against the per-step heartbeat, so a legitimately
+	 * long sync is not affected). Recovery marks the job failed, releases the process lock, and
+	 * clears the pending/failing wc_square_job_runner action cascade that would otherwise keep the
+	 * queue non-empty and block a restart. A flag is stored so the admin notice can prompt a re-run.
+	 *
+	 * @since x.x.x
+	 */
+	protected function maybe_recover_stuck_sync() {
+
+		$job = $this->get_job();
+
+		if ( ! $job || ! isset( $job->status ) || 'processing' !== $job->status ) {
+			return;
+		}
+
+		/**
+		 * Filters how long (in seconds) a sync job may sit in "processing" without any step activity
+		 * before it is treated as stalled and automatically recovered.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param int $threshold threshold in seconds (default 15 minutes)
+		 */
+		$threshold = (int) apply_filters( 'wc_square_stuck_job_threshold', 15 * MINUTE_IN_SECONDS );
+
+		$is_stalled = function ( $job ) use ( $threshold ) {
+			if ( ! $job || 'processing' !== ( $job->status ?? '' ) ) {
+				return false;
+			}
+			// Prefer the per-step heartbeat; fall back to the one-time start stamp for jobs created
+			// before this change shipped. started_processing_at is a site-local mysql string, so
+			// convert to GMT before comparing against the UTC epoch from time().
+			if ( ! empty( $job->last_activity_at ) ) {
+				$reference = (int) $job->last_activity_at;
+			} elseif ( ! empty( $job->started_processing_at ) ) {
+				$reference = (int) strtotime( get_gmt_from_date( $job->started_processing_at ) );
+			} else {
+				return false;
+			}
+
+			return $reference > 0 && ( time() - $reference ) > $threshold;
+		};
+
+		if ( ! $is_stalled( $job ) ) {
+			return;
+		}
+
+		// A live worker still holds the process lock: the job is progressing, not stuck. Leave it.
+		if ( $this->is_process_running() ) {
+			return;
+		}
+
+		// Re-read immediately before acting: a concurrent step may have advanced the job in the
+		// window since get_job() above, in which case we must not clobber it with a stale snapshot.
+		$job = $this->get_job( $job->id );
+		if ( ! $is_stalled( $job ) ) {
+			return;
+		}
+
+		// Recover: fail the stalled job, release the lock, and clear the action cascade.
+		$this->fail_job( $job, __( 'Sync job stalled and was automatically recovered.', 'woocommerce-square' ) );
+		$this->unlock_process();
+
+		if ( function_exists( 'as_unschedule_all_actions' ) ) {
+			as_unschedule_all_actions( 'wc_square_job_runner' );
+		}
+
+		// Recorded so the stale-sync admin notice can tell the merchant the sync was restarted.
+		update_option( 'wc_square_sync_auto_recovered_at', time() );
+
+		wc_square()->log( 'Auto-recovered a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). Cleared the job_runner queue for restart.' );
+	}
+
+	/**
 	 * Handle Sync healthcheck
 	 *
 	 * Restart the background sync process if not already running
@@ -325,6 +402,12 @@ class Background_Job extends Background_Job_Handler {
 	 * @since 3.8.2
 	 */
 	public function handle_sync_healthcheck() {
+
+		// Auto-recover a stalled sync first, on purpose. A job stuck in "processing" (timeout, fatal,
+		// worker kill) or a cascade of failing wc_square_job_runner actions keeps the queue
+		// non-empty, so the as_has_scheduled_action() guard below would otherwise never let the sync
+		// restart. Running recovery before the early returns is what breaks that deadlock.
+		$this->maybe_recover_stuck_sync();
 
 		if ( $this->is_process_running() ) {
 			// background process already running
