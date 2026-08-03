@@ -479,7 +479,21 @@ class Order {
 
 		wc_square()->log( 'Order from other gateway Refund inventory updates syncing..' );
 		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
-		wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+
+		// Same protection as the checkout path: a Square API failure during a refund of an order
+		// paid through another gateway must not abort the refund flow. Log and continue.
+		try {
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory sync failed for refund #%d of order #%d from other gateway (refund flow left untouched): %s',
+					$refund_id,
+					$order_id,
+					$exception->getMessage()
+				)
+			);
+		}
 	}
 
 	/**
