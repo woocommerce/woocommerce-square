@@ -402,7 +402,8 @@ class Product {
 		}
 		$inventory_tracking = Helper::get_catalog_inventory_tracking( array( $result->get_data()->getObject() ) );
 
-		$stock = 0;
+		$stock        = 0;
+		$has_in_stock = false;
 
 		if ( $response->get_data() && $response->get_data()->getCounts() ) {
 
@@ -410,7 +411,8 @@ class Product {
 			foreach ( $response->get_data()->getCounts() as $count ) {
 
 				if ( 'IN_STOCK' === $count->getState() ) {
-					$stock += (float) $count->getQuantity();
+					$stock       += (float) $count->getQuantity();
+					$has_in_stock = true;
 				}
 			}
 		}
@@ -419,13 +421,23 @@ class Product {
 		$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 		$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
-		if ( $is_inventory_tracking ) {
-			$product->set_manage_stock( true );
-			$product->set_stock_quantity( $stock );
-		} else {
+		if ( $is_inventory_tracking && $has_in_stock ) {
+
+			// A zero needs provenance: a never-counted item reports IN_STOCK 0 exactly like a real
+			// sellout, and only real zeros may be written (SQUARE-145).
+			$zero_verified = false;
+			if ( 0.0 === (float) $stock ) {
+				$zero_verified = in_array( $square_id, Helper::get_catalog_objects_with_inventory_history( array( $square_id ) ), true );
+			}
+
+			Helper::apply_square_inventory_count( $product, (float) $stock, (bool) $sold_out, $zero_verified );
+		} elseif ( ! $is_inventory_tracking ) {
+
+			// Not tracked in Square: reflect availability only; manage_stock is merchant intent
+			// and is not changed here.
 			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-			$product->set_manage_stock( false );
 		}
+		// Tracked but no IN_STOCK count returned: "no information", never a zero.
 
 		if ( $save ) {
 			$product->save();
