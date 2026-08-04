@@ -1972,8 +1972,9 @@ class Manual_Synchronization extends Stepped_Job {
 		$catalog_objects_inventory_stats = array();
 
 		foreach ( $response_counts as $count ) {
-			// If catalog stats array already contains the catalog object marked as IN_STOCK, then continue.
-			if ( isset( $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] ) && $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ]['IN_STOCK'] ) {
+			// Only explicit IN_STOCK counts are usable data; other states are movements or
+			// purchase-order stages, and coercing them to zero wiped stock (SQUARE-7, SQUARE-145).
+			if ( 'IN_STOCK' !== $count->getState() ) {
 				continue;
 				// Else if the catalog object is IN_STOCK, then mark IN_STOCK as true and set the quantity for later use.
 			} elseif ( 'IN_STOCK' === $count->getState() ) {
