@@ -1568,21 +1568,54 @@ class Product {
 	 */
 	public static function get_inventory_change_physical_count_type( \WC_Product $product ) {
 
-		$inventory_change    = null;
 		$square_variation_id = self::get_square_item_variation_id( $product->get_id(), false );
-		if ( $square_variation_id ) {
 
-			$inventory_physical_count = new \Square\Models\InventoryPhysicalCount();
-			$inventory_physical_count->setCatalogObjectId( $square_variation_id );
-			$inventory_physical_count->setQuantity( '' . max( 0, $product->get_stock_quantity() ) );
-			$inventory_physical_count->setLocationId( wc_square()->get_settings_handler()->get_location_id() );
-			$inventory_physical_count->setState( 'IN_STOCK' );
-			$inventory_physical_count->setOccurredAt( gmdate( 'Y-m-d\TH:i:sP' ) );
-
-			$inventory_change = new \Square\Models\InventoryChange();
-			$inventory_change->setType( 'PHYSICAL_COUNT' );
-			$inventory_change->setPhysicalCount( $inventory_physical_count );
+		if ( ! $square_variation_id ) {
+			return null;
 		}
+
+		if ( $product->get_manage_stock() ) {
+
+			$quantity = $product->get_stock_quantity();
+
+			// An unresolved quantity must never be coerced to zero: pushing a fabricated 0 marks
+			// the item sold out in Square and poisons its inventory history (SQUARE-145).
+			if ( null === $quantity ) {
+				wc_square()->log(
+					sprintf(
+						'Skipped pushing inventory for product #%d: stock is managed but no quantity is set.',
+						$product->get_id()
+					)
+				);
+				return null;
+			}
+
+			// Square cannot hold negative counts; backordered stock is represented as zero.
+			$quantity = max( 0, $quantity );
+		} elseif ( 'outofstock' === $product->get_stock_status() ) {
+
+			// Not stock-managed but out of stock: push an explicit zero so the item is
+			// deterministically marked sold out in Square (sold_out is read-only and only becomes
+			// true through a tracked count of zero), including items that previously held a
+			// positive count.
+			$quantity = 0;
+		} else {
+
+			// Not stock-managed and in stock: there is no real number to send; the item is left
+			// untracked in Square, which is the sellable state.
+			return null;
+		}
+
+		$inventory_physical_count = new \Square\Models\InventoryPhysicalCount();
+		$inventory_physical_count->setCatalogObjectId( $square_variation_id );
+		$inventory_physical_count->setQuantity( '' . $quantity );
+		$inventory_physical_count->setLocationId( wc_square()->get_settings_handler()->get_location_id() );
+		$inventory_physical_count->setState( 'IN_STOCK' );
+		$inventory_physical_count->setOccurredAt( gmdate( 'Y-m-d\TH:i:sP' ) );
+
+		$inventory_change = new \Square\Models\InventoryChange();
+		$inventory_change->setType( 'PHYSICAL_COUNT' );
+		$inventory_change->setPhysicalCount( $inventory_physical_count );
 
 		return $inventory_change;
 	}
