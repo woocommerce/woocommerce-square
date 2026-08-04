@@ -297,6 +297,13 @@ class Interval_Polling extends Stepped_Job {
 			$sold_out              = $inventory_data['sold_out'] ?? false;
 			$product               = Product::get_product_by_square_variation_id( $catalog_object_id );
 			if ( $product instanceof \WC_Product ) {
+				// Respect the per-product "Sync with Square" setting: the push side already honours
+				// it, and the automatic pull must too, or unticking/unlinking cannot stop Square
+				// from overwriting this product's stock.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					continue;
+				}
+
 				$manage_stock = $product->get_manage_stock();
 				$stock_status = $product->get_stock_status();
 				$out_of_stock = 'outofstock' === $stock_status;
@@ -420,6 +427,11 @@ class Interval_Polling extends Stepped_Job {
 
 			// Square can return multiple "types" of counts, WooCommerce only distinguishes whether a product is in stock or not
 			if ( $product instanceof \WC_Product ) {
+				// Respect the per-product "Sync with Square" setting on the pull side as well.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					continue;
+				}
+
 				$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
 				$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 				$sold_out              = $inventory_data['sold_out'] ?? false;
