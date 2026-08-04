@@ -398,8 +398,11 @@ class Interval_Polling extends Stepped_Job {
 		$catalog_objects_inventory_stats = array();
 
 		foreach ( $response->get_counts() as $count ) {
-			// If catalog stats array already contains the catalog object marked as IN_STOCK, then continue.
-			if ( isset( $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] ) && $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ]['IN_STOCK'] ) {
+			// Only explicit IN_STOCK counts are usable data. Other states (SOLD, WASTE, ORDERED,
+			// RECEIVED_FROM_VENDOR, RESERVED, ...) are movements or purchase-order stages, not the
+			// available quantity - coercing them to zero is what wiped stock for purchase-order
+			// users (SQUARE-7) and for uncounted items (SQUARE-145). Ignore them.
+			if ( 'IN_STOCK' !== $count->getState() ) {
 				continue;
 				// Else if the catalog object is IN_STOCK, then mark IN_STOCK as true and set the quantity for later use.
 			} elseif ( 'IN_STOCK' === $count->getState() ) {
