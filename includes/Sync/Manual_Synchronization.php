@@ -1466,16 +1466,19 @@ class Manual_Synchronization extends Stepped_Job {
 			foreach ( $product->get_children() as $child_id ) {
 
 				$child = wc_get_product( $child_id );
-				if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+				if ( ! $child instanceof \WC_Product ) {
 					continue;
 				}
 
+				// The count builder decides per product state: managed -> real quantity (skipping
+				// unresolved quantities), unmanaged out of stock -> explicit zero to mark the item
+				// sold out, unmanaged in stock -> nothing.
 				$change = Product::get_inventory_change_physical_count_type( $child );
 				if ( $change ) {
 					$changes[] = $change;
 				}
 			}
-		} elseif ( $product->get_manage_stock() ) {
+		} else {
 
 			$change = Product::get_inventory_change_physical_count_type( $product );
 			if ( $change ) {
@@ -1516,7 +1519,7 @@ class Manual_Synchronization extends Stepped_Job {
 					foreach ( $product->get_children() as $child_id ) {
 
 						$child = wc_get_product( $child_id );
-						if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+						if ( ! $child instanceof \WC_Product ) {
 							continue;
 						}
 
@@ -1532,8 +1535,11 @@ class Manual_Synchronization extends Stepped_Job {
 						}
 					}
 				} else {
-					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost after timeout).
-					if ( ! $square_variation_id && $product->get_sku() && $product->get_manage_stock() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost
+					// after timeout). Not gated on manage_stock: the push matrix decides what an
+					// unmanaged product pushes (an explicit zero when out of stock), so it needs its
+					// mapping restored too.
+					if ( ! $square_variation_id && $product->get_sku() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
 						++$sku_lookups_this_step;
 						$square_variation_id = Product::get_square_variation_id_by_sku( $product->get_sku(), $product_id, true );
 					}
@@ -1542,7 +1548,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 						$inventory_change = Product::get_inventory_change_physical_count_type( $product );
 
-						if ( $inventory_change && $product->get_manage_stock() ) {
+						if ( $inventory_change ) {
 							$product_inventory_changes[] = $inventory_change;
 						}
 					}
