@@ -457,6 +457,23 @@ class Product {
 	 * @throws \Exception
 	 */
 	public static function update_products_stock_from_square( $product_ids ) {
+
+		// Respect the per-product "Sync with Square" setting: this method backs automatic pulls
+		// (e.g. the add to cart inventory refresh), and a product the merchant unticked or
+		// unlinked must not have its stock overwritten from Square. Filtering up front also
+		// avoids needless Square API calls for excluded products.
+		$product_ids = array_filter(
+			(array) $product_ids,
+			function ( $product_id ) {
+				$product = wc_get_product( $product_id );
+				return $product instanceof \WC_Product && self::is_synced_with_square( $product );
+			}
+		);
+
+		if ( empty( $product_ids ) ) {
+			return;
+		}
+
 		$products_map = self::get_square_meta( $product_ids, 'square_item_variation_id' );
 		$square_ids   = array_keys( $products_map );
 
@@ -478,9 +495,19 @@ class Product {
 			$inventory_hash     = Helper::get_catalog_objects_inventory_stats( $square_ids );
 			$inventory_tracking = Helper::get_catalog_inventory_tracking( $response->get_data()->getObjects() );
 
+			// Verify zero counts against Square's inventory change history: a never-counted item
+			// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
+			// (SQUARE-145).
+			$zero_object_ids = array();
+			foreach ( $inventory_hash as $object_id => $object_quantity ) {
+				if ( 0.0 === (float) $object_quantity ) {
+					$zero_object_ids[] = $object_id;
+				}
+			}
+			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+
 			foreach ( $response->get_data()->getObjects() as $catalog_object ) {
 				$square_id               = $catalog_object->getId();
-				$stock                   = $inventory_hash[ $square_id ] ?? 0;
 				$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
 				$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 				$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
@@ -492,12 +519,27 @@ class Product {
 					continue;
 				}
 
-				if ( $is_inventory_tracking ) {
-					$product->set_manage_stock( true );
-					$product->set_stock_quantity( $stock );
-				} else {
+				if ( $is_inventory_tracking && isset( $inventory_hash[ $square_id ] ) ) {
+
+					$changed = Helper::apply_square_inventory_count(
+						$product,
+						(float) $inventory_hash[ $square_id ],
+						(bool) $sold_out,
+						in_array( $square_id, $verified_zero_ids, true )
+					);
+
+					if ( ! $changed ) {
+						continue;
+					}
+				} elseif ( ! $is_inventory_tracking ) {
+
+					// Not tracked in Square: reflect availability only; manage_stock is merchant
+					// intent and is not changed here.
 					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-					$product->set_manage_stock( false );
+				} else {
+
+					// Tracked but no IN_STOCK count returned: "no information", never a zero.
+					continue;
 				}
 
 				$product->save();
