@@ -176,6 +176,79 @@ class Helper {
 
 
 	/**
+	 * Applies a Square IN_STOCK count to a WooCommerce product using the sync write policy.
+	 *
+	 * Policy (SQUARE-145 / SQUARE-359):
+	 * - A positive count is trusted (a phantom is always zero): write the quantity and keep the
+	 *   existing behavior of enabling stock management to mirror Square tracking.
+	 * - A zero count never changes manage_stock. For a stock-managed product it is written only
+	 *   when Square's change history proves a real count was ever recorded ($zero_verified);
+	 *   a phantom zero from a never-counted item is skipped. For a product that does not manage
+	 *   stock, counts are ignored entirely and only the stock status is reflected.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product the WooCommerce product or variation
+	 * @param float $quantity the IN_STOCK quantity reported by Square
+	 * @param bool $sold_out whether Square reports the item as sold out at the configured location
+	 * @param bool $zero_verified whether a zero count is backed by real inventory history
+	 * @return bool whether the product was modified (caller is responsible for saving)
+	 */
+	public static function apply_square_inventory_count( \WC_Product $product, $quantity, $sold_out, $zero_verified ) {
+
+		$quantity = (float) $quantity;
+
+		if ( $quantity > 0 ) {
+			$product->set_stock_quantity( $quantity );
+			$product->set_manage_stock( true );
+
+			return true;
+		}
+
+		// Zero count: never change the product's manage_stock setting in either direction.
+
+		// A variation inheriting stock management reports the string 'parent': its quantity and
+		// availability are governed by the parent's pooled stock, a quantity written to it is
+		// invisible (reads come from the parent) and a stock status write is overridden by the
+		// pool. A per-variation Square count is not applicable data here; the pool is merchant
+		// intent and one variation's count must not alter stock shared by its siblings.
+		if ( 'parent' === $product->get_manage_stock() ) {
+			wc_square()->log(
+				sprintf(
+					'Skipped writing a zero stock quantity to variation #%d: its stock is managed by the parent product pool.',
+					$product->get_id()
+				)
+			);
+
+			return false;
+		}
+
+		if ( ! $product->get_manage_stock() ) {
+			// Not stock-managed in WooCommerce: counts are not data for this product; reflect
+			// availability only.
+			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
+
+			return true;
+		}
+
+		if ( $zero_verified ) {
+			$product->set_stock_quantity( 0 );
+
+			return true;
+		}
+
+		wc_square()->log(
+			sprintf(
+				'Skipped writing a zero stock quantity to product #%d: Square has no inventory history for the item (phantom zero from an uncounted catalog object).',
+				$product->get_id()
+			)
+		);
+
+		return false;
+	}
+
+
+	/**
 	 * Get the inventory tracking value for the given catalog objects.
 	 *
 	 * @param \Square\Models\CatalogObject[] $catalog_objects The catalog objects.
