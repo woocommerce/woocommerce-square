@@ -1976,22 +1976,25 @@ class Manual_Synchronization extends Stepped_Job {
 			// purchase-order stages, and coercing them to zero wiped stock (SQUARE-7, SQUARE-145).
 			if ( 'IN_STOCK' !== $count->getState() ) {
 				continue;
-				// Else if the catalog object is IN_STOCK, then mark IN_STOCK as true and set the quantity for later use.
-			} elseif ( 'IN_STOCK' === $count->getState() ) {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => true,
-					'quantity' => $count->getQuantity(),
-				);
-				// Else if the catalog object doesn't have an IN_STOCK status, then mark IN_STOCK as false and set the quantity as 0 for later use.
-			} else {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => false,
-					'quantity' => 0,
-				);
 			}
+
+			$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
+				'IN_STOCK' => true,
+				'quantity' => $count->getQuantity(),
+			);
 		}
 
 		$catalog_objects_tracking_stats = Helper::get_catalog_objects_tracking_stats( $catalog_object_ids );
+
+		// Verify zero counts against Square's inventory change history: a never-counted item
+		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written.
+		$zero_object_ids = array();
+		foreach ( $catalog_objects_inventory_stats as $object_id => $stats ) {
+			if ( 0.0 === (float) $stats['quantity'] ) {
+				$zero_object_ids[] = $object_id;
+			}
+		}
+		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
 			$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
@@ -2005,23 +2008,33 @@ class Manual_Synchronization extends Stepped_Job {
 
 			if ( $product instanceof \WC_Product ) {
 
-				/* If catalog object is tracked and has a quantity > 0 set in Square. */
-				if ( $is_tracking_inventory && isset( $catalog_objects_inventory_stats[ $catalog_object_id ] ) ) {
-					$product->set_stock_quantity( (float) $catalog_objects_inventory_stats[ $catalog_object_id ]['quantity'] );
-					$product->set_manage_stock( true );
-
-					/* If the catalog object is tracked but the quantity in Square is set to 0. */
-				} elseif ( $is_tracking_inventory ) {
-					$product->set_stock_quantity( 0 );
-					$product->set_manage_stock( true );
-
-					/* If the catalog object is not tracked in Square at all. */
-				} else {
-					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-					$product->set_manage_stock( false );
+				// Respect the per-product "Sync with Square" setting on the pull side as well.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					$in_progress['processed_variation_ids'][] = $catalog_object_id;
+					continue;
 				}
 
-				$product->save();
+				if ( $is_tracking_inventory && isset( $catalog_objects_inventory_stats[ $catalog_object_id ] ) ) {
+
+					$changed = Helper::apply_square_inventory_count(
+						$product,
+						(float) $catalog_objects_inventory_stats[ $catalog_object_id ]['quantity'],
+						(bool) $sold_out,
+						in_array( $catalog_object_id, $verified_zero_ids, true )
+					);
+
+					if ( $changed ) {
+						$product->save();
+					}
+				} elseif ( ! $is_tracking_inventory ) {
+
+					// Not tracked in Square: reflect availability only; manage_stock is merchant
+					// intent and is not changed here.
+					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
+					$product->save();
+				}
+				// Tracked in Square but no IN_STOCK count returned: "no information", never a
+				// zero (SQUARE-145). The product is left untouched.
 
 				$in_progress['processed_variation_ids'][] = $catalog_object_id;
 			} else {
