@@ -90,6 +90,92 @@ class Helper {
 	}
 
 	/**
+	 * Returns the subset of catalog object IDs that have real inventory history in Square.
+	 *
+	 * A tracked item that has never had a count recorded reports an IN_STOCK count of 0 that is
+	 * indistinguishable from a genuine sellout by state alone. Square's inventory change history is
+	 * the reliable discriminator: a never-counted item has an empty history, while any real count or
+	 * sale leaves a PHYSICAL_COUNT / ADJUSTMENT record. Callers use this to decide whether a zero
+	 * count may be written to WooCommerce (real) or must be ignored (phantom).
+	 *
+	 * On an API failure this returns an empty array, which callers must treat as "no zeros are
+	 * verified" - failing closed so an outage can never cause a zero to be written.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string[] $catalog_object_ids catalog object (variation) IDs to check
+	 * @return string[] IDs that have at least one real inventory change recorded
+	 */
+	public static function get_catalog_objects_with_inventory_history( $catalog_object_ids ) {
+
+		$catalog_object_ids = array_values( array_filter( (array) $catalog_object_ids ) );
+
+		if ( empty( $catalog_object_ids ) ) {
+			return array();
+		}
+
+		$with_history = array();
+
+		try {
+			foreach ( array_chunk( $catalog_object_ids, 100 ) as $chunk ) {
+				$remaining = array_flip( $chunk );
+				$cursor    = null;
+
+				// Results are paginated globally across the requested IDs (oldest first), so a
+				// single page can be exhausted by high-activity items before a quiet item's only
+				// record appears: the cursor must be followed or a real sellout is misread as a
+				// phantom.
+				do {
+					// No `types` request filter: the API rejects TRANSFER as a filter value, and
+					// filtering to the other two would misread an item whose only history is a
+					// transfer as never counted. All change types are fetched and matched below.
+					$response = wc_square()->get_api()->batch_retrieve_inventory_changes(
+						array(
+							'catalog_object_ids' => $chunk,
+							'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+							'cursor'             => $cursor,
+						)
+					);
+
+					$data = $response->get_data();
+
+					if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
+						wc_square()->log( 'Could not verify inventory history for zero counts, skipping zero writes: unexpected API response.' );
+						return array();
+					}
+
+					if ( is_array( $data->getChanges() ) ) {
+						foreach ( $data->getChanges() as $change ) {
+							$object_id = null;
+
+							if ( $change->getPhysicalCount() ) {
+								$object_id = $change->getPhysicalCount()->getCatalogObjectId();
+							} elseif ( $change->getAdjustment() ) {
+								$object_id = $change->getAdjustment()->getCatalogObjectId();
+							} elseif ( $change->getTransfer() ) {
+								$object_id = $change->getTransfer()->getCatalogObjectId();
+							}
+
+							if ( $object_id ) {
+								$with_history[ $object_id ] = true;
+								unset( $remaining[ $object_id ] );
+							}
+						}
+					}
+
+					$cursor = $data->getCursor();
+				} while ( $cursor && ! empty( $remaining ) );
+			}
+		} catch ( \Exception $exception ) {
+			wc_square()->log( 'Could not verify inventory history for zero counts, skipping zero writes: ' . $exception->getMessage() );
+			return array();
+		}
+
+		return array_keys( $with_history );
+	}
+
+
+	/**
 	 * Get the inventory tracking value for the given catalog objects.
 	 *
 	 * @param \Square\Models\CatalogObject[] $catalog_objects The catalog objects.
