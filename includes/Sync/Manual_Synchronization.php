@@ -2165,7 +2165,10 @@ class Manual_Synchronization extends Stepped_Job {
 				// only handle product inventory if enabled
 				if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
 					$next_steps[] = 'push_inventory';
-					$next_steps[] = 'pull_inventory';
+					// pull_inventory is intentionally NOT queued when WooCommerce is the system of
+					// record: it only re-read the counts this same job just pushed, and Square's
+					// eventual consistency meant a not-yet-propagated count could come back as 0
+					// and overwrite the stock pushed moments earlier (SQUARE-145).
 				}
 			}
 		} elseif ( $this->is_system_of_record_square() ) {
