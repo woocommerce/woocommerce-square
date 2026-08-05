@@ -25,18 +25,57 @@ const CARD_IFRAME = '#wc-square-credit-card-container iframe.sq-card-component';
  */
 function queueCheckoutRaceTrigger( page ) {
 	return page.addInitScript( () => {
+		window.__squareUpdatedCheckoutCount = 0;
+
 		document.addEventListener( 'DOMContentLoaded', () => {
 			if ( ! window.jQuery ) {
 				return;
 			}
 
 			window.jQuery( ( $ ) => {
+				$( document.body ).on( 'updated_checkout', () => {
+					window.__squareUpdatedCheckoutCount++;
+				} );
+
 				$( document.body ).one( 'updated_checkout', () => {
 					$( document.body ).trigger( 'update_checkout' );
 				} );
 			} );
 		} );
 	} );
+}
+
+/**
+ * Waits for both checkout cycles to finish, then counts the mounted card fields.
+ *
+ * The count is taken as a single non-retrying snapshot: a retrying matcher would pass the
+ * instant the count reached 1, which on a duplicating build is true for a moment before the
+ * second card attaches.
+ *
+ * @param {Object} page Playwright page object.
+ * @return {Promise<Object>} Card iframe and wrapper counts.
+ */
+async function countCardFields( page ) {
+	// Both the initial update and the one the trigger queued must have completed.
+	await page.waitForFunction(
+		() => window.__squareUpdatedCheckoutCount >= 2,
+		null,
+		{ timeout: 30000 }
+	);
+
+	await page.locator( CARD_IFRAME ).first().waitFor( { state: 'attached' } );
+
+	// Let any further attach settle so the snapshot below is of the final DOM.
+	await page.waitForTimeout( 3000 );
+
+	return page.evaluate( () => ( {
+		iframes: document.querySelectorAll(
+			'#wc-square-credit-card-container iframe.sq-card-component'
+		).length,
+		wrappers: document.querySelectorAll(
+			'#wc-square-credit-card-container .sq-card-wrapper'
+		).length,
+	} ) );
 }
 
 test.beforeAll( 'Setup', async ( { baseURL } ) => {
@@ -72,15 +111,10 @@ test( '[non-Block]: Credit card field is not duplicated by a checkout update dur
 	await queueCheckoutRaceTrigger( page );
 	await visitCheckout( page, false );
 
-	await page.locator( CARD_IFRAME ).first().waitFor( { state: 'attached' } );
+	const counts = await countCardFields( page );
 
-	// Let the second checkout update settle before counting.
-	await page.waitForTimeout( 3000 );
-
-	await expect( page.locator( CARD_IFRAME ) ).toHaveCount( 1 );
-	await expect(
-		page.locator( '#wc-square-credit-card-container .sq-card-wrapper' )
-	).toHaveCount( 1 );
+	expect( counts.iframes ).toBe( 1 );
+	expect( counts.wrappers ).toBe( 1 );
 } );
 
 test( '[non-Block]: Order can be placed after a checkout update during form init @general', async ( {
@@ -90,10 +124,8 @@ test( '[non-Block]: Order can be placed after a checkout update during form init
 	await queueCheckoutRaceTrigger( page );
 	await visitCheckout( page, false );
 
-	await page.locator( CARD_IFRAME ).first().waitFor( { state: 'attached' } );
-	await page.waitForTimeout( 3000 );
-
-	await expect( page.locator( CARD_IFRAME ) ).toHaveCount( 1 );
+	const counts = await countCardFields( page );
+	expect( counts.iframes ).toBe( 1 );
 
 	// The surviving card must still be the one the handler tokenizes with.
 	await fillAddressFields( page, false );
