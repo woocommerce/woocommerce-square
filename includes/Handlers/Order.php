@@ -1091,7 +1091,7 @@ class Order {
 	 * an order-specific nonce.
 	 *
 	 * @since 4.2.0
-	 * @since x.x.x Require order key + order-specific nonce; null-guard order.
+	 * @since 5.4.3 Require order key + order-specific nonce; null-guard order.
 	 */
 	public function save_guest_details() {
 		if ( ! isset( $_POST['wc-square-save-guest-details'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -1133,7 +1133,7 @@ class Order {
 	 * the pay for order page — only for an authorized save request.
 	 *
 	 * @since 4.2.0
-	 * @since x.x.x Scope bypass to order-key + nonce verified requests.
+	 * @since 5.4.3 Scope bypass to order-key + nonce verified requests.
 	 *
 	 * @param bool      $email_verification_required If email verification is required.
 	 * @param \WC_Order $order                       Order being viewed/paid.
@@ -1156,7 +1156,7 @@ class Order {
 	/**
 	 * Nonce action for saving guest billing details for a specific order.
 	 *
-	 * @since x.x.x
+	 * @since 5.4.3
 	 *
 	 * @param int $order_id Order ID.
 	 * @return string
@@ -1172,7 +1172,7 @@ class Order {
 	 * is the capability token for guest orders. Capability alone is insufficient
 	 * because guests receive pay_for_order for any order with no customer user.
 	 *
-	 * @since x.x.x
+	 * @since 5.4.3
 	 *
 	 * @param mixed $order Order object or false.
 	 * @return bool
