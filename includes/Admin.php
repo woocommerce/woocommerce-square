@@ -475,7 +475,7 @@ class Admin {
 	 * Maybe show a notice that a stalled sync job was automatically recovered.
 	 *
 	 * Shown when auto-recovery has fired and no successful sync has completed since, so the
-	 * merchant knows the previous sync was interrupted and restarted and can verify their products.
+	 * merchant knows a stuck sync was stopped and can start a new one.
 	 * Clears itself once a sync completes successfully after the recovery.
 	 *
 	 * @since x.x.x
@@ -510,7 +510,7 @@ class Admin {
 				echo wp_kses(
 					sprintf(
 						/* translators: Placeholders: %1$s - <a> tag, %2$s - </a> tag */
-						__( 'A Square sync job was interrupted and has been automatically restarted. Please verify your products are up to date, or manually trigger a sync from the %1$supdate page%2$s.', 'woocommerce-square' ),
+						__( 'A stuck Square sync job was detected and automatically stopped. Product data may be out of date, please start a new sync from the %1$supdate page%2$s.', 'woocommerce-square' ),
 						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=square&section=update' ) ) . '">',
 						'</a>'
 					),
