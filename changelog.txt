@@ -1,5 +1,9 @@
 *** WooCommerce Square Changelog ***
 
+= 5.4.3 - 2026-08-06 =
+* Fix - Hardened validation of guest billing details submitted on the order payment page.
+* Dev - Update WordPress Coding Standards to 3.4.1.
+
 = 5.4.2 - 2026-07-22 =
 * Update - Remove deprecated beta Product Editor (`@woocommerce/product-editor`) integration.
 * Fix - Remove obsolete pre-7.6 WooCommerce compatibility code, as the minimum supported WooCommerce version is now 10.7.
