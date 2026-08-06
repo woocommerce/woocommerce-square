@@ -162,24 +162,19 @@ class Background_Job extends Background_Job_Handler {
 			return;
 		}
 
-		// Heartbeat: record activity on every processed step so a genuinely long running sync is
-		// never mistaken for a stalled one. started_processing_at (below) is stamped only once, so
-		// it cannot tell a slow large-catalog sync apart from a stuck job; last_activity_at can.
-		$job->last_activity_at = time();
-
 		// indicate that the job has started processing
 		if ( 'processing' !== $job->status ) {
 
 			$job->status                = 'processing';
 			$job->started_processing_at = current_time( 'mysql' );
-		}
 
-		$job = $this->update_job( $job );
+			$job = $this->update_job( $job );
 
-		// The row can be gone if the job was cleared concurrently (e.g. the Clear Square Sync tool).
-		// This path now runs on every step, so guard before dereferencing the job below.
-		if ( ! $job ) {
-			return;
+			// The row can be gone if the job was cleared concurrently (e.g. the Clear Square Sync
+			// tool), so guard before dereferencing the job below.
+			if ( ! $job ) {
+				return;
+			}
 		}
 
 		if ( 'poll' === $job->action ) {
@@ -199,6 +194,16 @@ class Background_Job extends Background_Job_Handler {
 			$current_user_id = get_current_user_id();
 			$job             = $job->run();
 			wp_set_current_user( $current_user_id ); // phpcs:ignore Generic.PHP.ForbiddenFunctions.Discouraged -- required for background job processing
+		}
+
+		// Heartbeat: recorded only after the step has finished, never at the start of an attempt.
+		// A job that keeps dying mid step (for example an action scheduler timeout loop) must not
+		// refresh its own heartbeat on every retry, or it would never look stalled and never be
+		// recovered. started_processing_at is stamped once, so it cannot tell a slow large catalog
+		// sync apart from a stuck one; a per completed step heartbeat can.
+		if ( $job && 'processing' === ( $job->status ?? '' ) ) {
+			$job->last_activity_at = time();
+			$job                   = $this->update_job( $job );
 		}
 
 		return $job;
