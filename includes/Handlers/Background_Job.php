@@ -359,9 +359,9 @@ class Background_Job extends Background_Job_Handler {
 	 *
 	 * A job is considered stalled when it has been in "processing" without any step activity for
 	 * longer than a filterable threshold (measured against the per-step heartbeat, so a legitimately
-	 * long sync is not affected). Recovery marks the job failed, releases the process lock, and
-	 * clears the pending/failing wc_square_job_runner action cascade that would otherwise keep the
-	 * queue non-empty and block a restart. A flag is stored so the admin notice can prompt a re-run.
+	 * long sync is not affected). Recovery marks the job failed and releases the process lock;
+	 * scheduled wc_square_job_runner actions are left alone so other queued sync jobs keep
+	 * processing. A flag is stored so the admin notice can prompt a re-run.
 	 *
 	 * @since x.x.x
 	 */
@@ -417,18 +417,16 @@ class Background_Job extends Background_Job_Handler {
 			return;
 		}
 
-		// Recover: fail the stalled job, release the lock, and clear the action cascade.
-		$this->fail_job( $job, __( 'Sync job stalled and was automatically recovered.', 'woocommerce-square' ) );
+		// Recover: fail the stalled job and release the lock. Scheduled job_runner actions are
+		// deliberately left in place so any other sync job waiting in the queue keeps processing;
+		// the failed job no longer comes back from get_job(), so the next run picks up the rest.
+		$this->fail_job( $job, __( 'Sync job stalled and was automatically stopped.', 'woocommerce-square' ) );
 		$this->unlock_process();
 
-		if ( function_exists( 'as_unschedule_all_actions' ) ) {
-			as_unschedule_all_actions( 'wc_square_job_runner' );
-		}
-
-		// Recorded so the stale-sync admin notice can tell the merchant the sync was restarted.
+		// Recorded so the admin notice can tell the merchant a stalled sync was stopped.
 		update_option( 'wc_square_sync_auto_recovered_at', time() );
 
-		wc_square()->log( 'Auto-recovered a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). Cleared the job_runner queue for restart.' );
+		wc_square()->log( 'Auto-recovered a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). The job was marked failed and the queue lock released.' );
 	}
 
 	/**
