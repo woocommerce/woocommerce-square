@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 5.4.2
+Stable tag: 5.4.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,10 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.4.3 - 2026-08-06 =
+* Fix - Hardened validation of guest billing details submitted on the order payment page.
+* Dev - Update WordPress Coding Standards to 3.4.1.
 
 = 5.4.2 - 2026-07-22 =
 * Update - Remove deprecated beta Product Editor (`@woocommerce/product-editor`) integration.
