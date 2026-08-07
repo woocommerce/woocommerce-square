@@ -98,7 +98,7 @@ class Order {
 		add_filter( 'woocommerce_get_order_item_totals', array( $this, 'filter_order_item_totals' ), 10, 2 );
 		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'render_admin_missing_billing_details_notice' ) );
 		add_action( 'before_woocommerce_pay_form', array( $this, 'render_missing_billing_details_notice' ), 10, 1 );
-		add_filter( 'woocommerce_order_email_verification_required', array( $this, 'no_verification_on_guest_save' ) );
+		add_filter( 'woocommerce_order_email_verification_required', array( $this, 'no_verification_on_guest_save' ), 10, 3 );
 	}
 
 	/**
@@ -1067,6 +1067,10 @@ class Order {
 			return;
 		}
 
+		if ( ! $order instanceof \WC_Order ) {
+			return;
+		}
+
 		if ( ! empty( $order->get_billing_country() ) ) {
 			return;
 		}
@@ -1097,7 +1101,10 @@ class Order {
 				woocommerce_form_field( $key, $field, $current_value );
 			}
 
-			wp_nonce_field( 'wc_verify_email', 'check_submission' );
+			wp_nonce_field(
+				$this->get_save_guest_details_nonce_action( $order->get_id() ),
+				'woocommerce_square_save_guest_details'
+			);
 			?>
 
 					<input type="submit" name="wc-square-save-guest-details" value="<?php esc_html_e( 'Save details', 'woocommerce-square' ); ?>">
@@ -1110,22 +1117,25 @@ class Order {
 	/**
 	 * Saves billing details of a guest user on the Pay for order page.
 	 *
+	 * Requires a valid order-pay context, matching order key, guest order, and
+	 * an order-specific nonce.
+	 *
 	 * @since 4.2.0
+	 * @since 5.4.3 Require order key + order-specific nonce; null-guard order.
 	 */
 	public function save_guest_details() {
-		if ( ! isset( $_POST['wc-square-save-guest-details'] ) ) {
-			return;
-		}
-
-		$nonce = isset( $_POST['check_submission'] ) ? wc_clean( wp_unslash( $_POST['check_submission'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-
-		if ( ! wp_verify_nonce( $nonce, 'wc_verify_email' ) ) {
+		if ( ! isset( $_POST['wc-square-save-guest-details'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			return;
 		}
 
 		$order_id = absint( get_query_var( 'order-pay' ) );
-		$order    = wc_get_order( $order_id );
-		$props    = array();
+		$order    = $order_id ? wc_get_order( $order_id ) : false;
+
+		if ( ! $this->can_save_guest_billing_details( $order ) ) {
+			return;
+		}
+
+		$props = array();
 
 		foreach ( WC()->countries->get_address_fields( '', 'billing_' ) as $key => $field ) {
 			if ( 'billing_email' === $key ) {
@@ -1133,9 +1143,9 @@ class Order {
 			}
 
 			if ( is_callable( array( $order, 'set_' . $key ) ) ) {
-				$props[ $key ] = isset( $_POST[ $key ] ) ? wc_clean( wp_unslash( $_POST[ $key ] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$props[ $key ] = isset( $_POST[ $key ] ) ? wc_clean( wp_unslash( $_POST[ $key ] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			} else {
-				$order->update_meta_data( $key, wc_clean( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$order->update_meta_data( $key, isset( $_POST[ $key ] ) ? wc_clean( wp_unslash( $_POST[ $key ] ) ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			}
 		}
 
@@ -1149,22 +1159,89 @@ class Order {
 	}
 
 	/**
-	 * Disables email verification when billing details are updated by guest on the
-	 * pay for order page.
+	 * Disables email verification when billing details are updated by a guest on
+	 * the pay for order page — only for an authorized save request.
 	 *
 	 * @since 4.2.0
+	 * @since 5.4.3 Scope bypass to order-key + nonce verified requests.
 	 *
-	 * @param bool $email_verification_required If email verification is required.
+	 * @param bool      $email_verification_required If email verification is required.
+	 * @param \WC_Order $order                       Order being viewed/paid.
+	 * @param string    $context                     Verification context.
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
-	public function no_verification_on_guest_save( $email_verification_required ) {
-		// Nonce already verified before filter `woocommerce_order_email_verification_required`.
-		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( isset( $_POST['wc-square-save-guest-details'] ) ) {
+	public function no_verification_on_guest_save( $email_verification_required, $order = null, $context = '' ) {
+		if ( ! isset( $_POST['wc-square-save-guest-details'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			return $email_verification_required;
+		}
+
+		if ( 'order-pay' !== $context || ! $this->can_save_guest_billing_details( $order ) ) {
+			return $email_verification_required;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Nonce action for saving guest billing details for a specific order.
+	 *
+	 * @since 5.4.3
+	 *
+	 * @param int $order_id Order ID.
+	 * @return string
+	 */
+	private function get_save_guest_details_nonce_action( $order_id ) {
+		return 'wc_square_save_guest_details_' . absint( $order_id );
+	}
+
+	/**
+	 * Whether the current request may save guest billing details for an order.
+	 *
+	 * Authorization mirrors WooCommerce pay-for-order: the order key in the URL
+	 * is the capability token for guest orders. Capability alone is insufficient
+	 * because guests receive pay_for_order for any order with no customer user.
+	 *
+	 * @since 5.4.3
+	 *
+	 * @param mixed $order Order object or false.
+	 * @return bool
+	 */
+	private function can_save_guest_billing_details( $order ) {
+		if ( ! $order instanceof \WC_Order ) {
 			return false;
 		}
 
-		return $email_verification_required;
+		if ( ! $order->needs_payment() ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$order_key = isset( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : '';
+
+		if ( '' === $order_key || ! $order->key_is_valid( $order_key ) ) {
+			return false;
+		}
+
+		// This form is guest-only (see render_missing_billing_details_notice).
+		if ( $order->get_user_id() ) {
+			return false;
+		}
+
+		// Ensure the order matches the order-pay endpoint being requested.
+		$query_order_id = absint( get_query_var( 'order-pay' ) );
+		if ( ! $query_order_id || $query_order_id !== $order->get_id() ) {
+			return false;
+		}
+
+		$nonce = isset( $_POST['woocommerce_square_save_guest_details'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			? wc_clean( wp_unslash( $_POST['woocommerce_square_save_guest_details'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			: '';
+
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, $this->get_save_guest_details_nonce_action( $order->get_id() ) ) ) {
+			return false;
+		}
+
+		return true;
 	}
 }
