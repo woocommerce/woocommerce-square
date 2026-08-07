@@ -10,7 +10,7 @@
 		"apimatic/core": "0.3.14"
 	},
 	"require-dev": {
-		"woocommerce/woocommerce-sniffs": "1.0.0",
+		"woocommerce/woocommerce-sniffs": "^1.0.1",
 		"sirbrillig/phpcs-changed": "^2.11.1",
 		"phpunit/phpunit": "^9.6",
 		"yoast/phpunit-polyfills": "^2.0"
