@@ -353,7 +353,10 @@ class Background_Job extends Background_Job_Handler {
 		}
 		set_transient( 'wc_square_admin_recovery_check', 1, 5 * MINUTE_IN_SECONDS );
 
-		$this->maybe_recover_stuck_sync();
+		// Run the full healthcheck, not only the recovery: it also prunes stale failed actions and
+		// re-enqueues the runner when jobs are queued with no scheduled action, so a recovery from
+		// a broken cron site is followed by the same queue restart checks the cron path gets.
+		$this->handle_sync_healthcheck();
 	}
 
 	/**
