@@ -402,12 +402,29 @@ class Background_Job extends Background_Job_Handler {
 		};
 
 		if ( ! $is_stalled( $job ) ) {
+			delete_option( 'wc_square_recovery_grace_at' );
 			return;
 		}
 
 		// A live worker still holds the process lock: the job is progressing, not stuck. Leave it.
 		if ( $this->is_process_running() ) {
 			return;
+		}
+
+		// A runner action is still queued: the queue may be paused, not dead (low traffic sites can
+		// go quiet long enough for the threshold to pass, then resume on the visit that triggered
+		// this very check). Give the queue one grace window to make progress; recover only if the
+		// job is still stalled with the same queued action after the grace period.
+		if ( function_exists( 'as_next_scheduled_action' ) && false !== as_next_scheduled_action( 'wc_square_job_runner' ) ) {
+			$grace_started = (int) get_option( 'wc_square_recovery_grace_at', 0 );
+			if ( ! $grace_started ) {
+				update_option( 'wc_square_recovery_grace_at', time(), false );
+				wc_square()->log( 'Stalled sync has a queued runner action; allowing a grace window before auto-failing.' );
+				return;
+			}
+			if ( ( time() - $grace_started ) < $threshold ) {
+				return;
+			}
 		}
 
 		// Re-read immediately before acting: a concurrent step may have advanced the job in the
@@ -422,6 +439,7 @@ class Background_Job extends Background_Job_Handler {
 		// the failed job no longer comes back from get_job(), so the next run picks up the rest.
 		$this->fail_job( $job, __( 'Sync job stalled and was automatically marked as failed.', 'woocommerce-square' ) );
 		$this->unlock_process();
+		delete_option( 'wc_square_recovery_grace_at' );
 
 		// Recorded so the admin notice can tell the merchant a stalled sync was stopped.
 		update_option( 'wc_square_sync_auto_recovered_at', time() );
