@@ -488,21 +488,38 @@ class Background_Job extends Background_Job_Handler {
 		try {
 			$store = \ActionScheduler_Store::instance();
 
-			foreach ( $hooks as $hook ) {
-				$action_ids = as_get_scheduled_actions(
-					array(
-						'hook'         => $hook,
-						'status'       => \ActionScheduler_Store::STATUS_FAILED,
-						'date'         => $cutoff,
-						'date_compare' => '<=',
-						'per_page'     => 200,
-						'orderby'      => 'none',
-					),
-					'ids'
-				);
+			/**
+			 * Filters how many failed actions are deleted per cleanup batch.
+			 *
+			 * @since x.x.x
+			 *
+			 * @param int $batch_size actions per batch (default 200)
+			 */
+			$batch_size  = max( 10, (int) apply_filters( 'wc_square_failed_action_cleanup_batch', 200 ) );
+			$max_batches = 25; // hard bound per run: up to 5,000 deletions, far above the incident growth rate.
 
-				foreach ( (array) $action_ids as $action_id ) {
-					$store->delete_action( $action_id );
+			foreach ( $hooks as $hook ) {
+				for ( $batch = 0; $batch < $max_batches; $batch++ ) {
+					$action_ids = as_get_scheduled_actions(
+						array(
+							'hook'         => $hook,
+							'status'       => \ActionScheduler_Store::STATUS_FAILED,
+							'date'         => $cutoff,
+							'date_compare' => '<=',
+							'per_page'     => $batch_size,
+							'orderby'      => 'none',
+						),
+						'ids'
+					);
+
+					foreach ( (array) $action_ids as $action_id ) {
+						$store->delete_action( $action_id );
+					}
+
+					// A short page means the backlog for this hook is exhausted.
+					if ( count( (array) $action_ids ) < $batch_size ) {
+						break;
+					}
 				}
 			}
 		} catch ( \Exception $e ) {
