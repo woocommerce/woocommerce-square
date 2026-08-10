@@ -420,7 +420,7 @@ class Background_Job extends Background_Job_Handler {
 		// Recover: fail the stalled job and release the lock. Scheduled job_runner actions are
 		// deliberately left in place so any other sync job waiting in the queue keeps processing;
 		// the failed job no longer comes back from get_job(), so the next run picks up the rest.
-		$this->fail_job( $job, __( 'Sync job stalled and was automatically stopped.', 'woocommerce-square' ) );
+		$this->fail_job( $job, __( 'Sync job stalled and was automatically marked as failed.', 'woocommerce-square' ) );
 		$this->unlock_process();
 
 		// Recorded so the admin notice can tell the merchant a stalled sync was stopped.
