@@ -168,10 +168,12 @@ class Background_Job extends Background_Job_Handler {
 			$job->status                = 'processing';
 			$job->started_processing_at = current_time( 'mysql' );
 
-			$job = $this->update_job( $job );
+			$this->update_job( $job );
 
-			// The row can be gone if the job was cleared concurrently (e.g. the Clear Square Sync
-			// tool), so guard before dereferencing the job below.
+			// Re-read the row: update_job() returns the supplied object even when the underlying
+			// option no longer exists (e.g. the Clear Square Sync tool removed it concurrently),
+			// so only a fresh read can prove the job is still there.
+			$job = $this->get_job( $job->id );
 			if ( ! $job ) {
 				return;
 			}
