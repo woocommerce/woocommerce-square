@@ -341,6 +341,11 @@ class Interval_Polling extends Stepped_Job {
 				// Attempts exhausted: proceed with no zero verified, so only the zero writes are
 				// skipped and the job can finish.
 				$verified_zero_ids = array();
+
+				// This step reads the same watermark as the counts step, and an object can appear in
+				// this window without appearing in that one, so hold the watermark here as well or
+				// this window would never be read again.
+				$this->set_attr( 'hold_inventory_watermark', true );
 			} else {
 				$this->clear_unverified_zero_count_attempts( 'update_inventory_tracking' );
 			}
