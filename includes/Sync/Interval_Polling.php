@@ -330,6 +330,12 @@ class Interval_Polling extends Stepped_Job {
 				}
 			}
 			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+			if ( null === $verified_zero_ids ) {
+				// Verification unavailable: stop this cycle WITHOUT advancing any progress marker,
+				// or a genuine sellout would be permanently skipped once the API recovers. The
+				// step retries on the next run.
+				throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next cycle.' );
+			}
 
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
 				$product = Product::get_product_by_square_variation_id( $catalog_object_id );
@@ -445,6 +451,12 @@ class Interval_Polling extends Stepped_Job {
 			}
 		}
 		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable: stop this cycle WITHOUT advancing any progress marker,
+			// or a genuine sellout would be permanently skipped once the API recovers. The
+			// step retries on the next run.
+			throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next cycle.' );
+		}
 
 		foreach ( $catalog_objects_inventory_stats as $catalog_object_id => $stats ) {
 
