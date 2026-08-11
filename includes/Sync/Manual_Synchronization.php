@@ -2002,6 +2002,20 @@ class Manual_Synchronization extends Stepped_Job {
 		}
 		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable: fail this step like any other API failure so the batch is
+			// retried; the processed marker must not advance past an unverified zero or a genuine
+			// sellout would be skipped forever. The queue attribute was already reduced by the
+			// batch slice above and these ids were never marked processed, so put them back or the
+			// retry would skip the whole batch.
+			$this->set_attr(
+				'pull_inventory_variation_ids',
+				array_values( array_unique( array_merge( (array) $this->get_attr( 'pull_inventory_variation_ids', array() ), $catalog_object_ids ) ) )
+			);
+
+			throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next run.' );
+		}
+
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
 			$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 			$sold_out              = $inventory_data['sold_out'] ?? false;
