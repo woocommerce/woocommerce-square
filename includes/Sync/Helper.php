@@ -198,6 +198,23 @@ class Helper {
 
 		$quantity = (float) $quantity;
 
+		// A variation inheriting stock management reports the string 'parent': its quantity and
+		// availability are governed by the parent's pooled stock, a quantity written to it is
+		// invisible (reads come from the parent) and a stock status write is overridden by the
+		// pool. A per-variation Square count, positive or zero, is not applicable data here; the
+		// pool is merchant intent and one variation's count must not alter stock shared by its
+		// siblings or convert the variation to its own management.
+		if ( 'parent' === $product->get_manage_stock() ) {
+			wc_square()->log(
+				sprintf(
+					'Skipped writing a stock quantity to variation #%d: its stock is managed by the parent product pool.',
+					$product->get_id()
+				)
+			);
+
+			return false;
+		}
+
 		if ( $quantity > 0 ) {
 			$product->set_stock_quantity( $quantity );
 			$product->set_manage_stock( true );
@@ -206,22 +223,6 @@ class Helper {
 		}
 
 		// Zero count: never change the product's manage_stock setting in either direction.
-
-		// A variation inheriting stock management reports the string 'parent': its quantity and
-		// availability are governed by the parent's pooled stock, a quantity written to it is
-		// invisible (reads come from the parent) and a stock status write is overridden by the
-		// pool. A per-variation Square count is not applicable data here; the pool is merchant
-		// intent and one variation's count must not alter stock shared by its siblings.
-		if ( 'parent' === $product->get_manage_stock() ) {
-			wc_square()->log(
-				sprintf(
-					'Skipped writing a zero stock quantity to variation #%d: its stock is managed by the parent product pool.',
-					$product->get_id()
-				)
-			);
-
-			return false;
-		}
 
 		if ( ! $product->get_manage_stock() ) {
 			// Not stock-managed in WooCommerce: counts are not data for this product; reflect
