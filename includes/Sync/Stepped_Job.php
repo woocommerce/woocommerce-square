@@ -93,11 +93,13 @@ abstract class Stepped_Job extends Job {
 
 		$this->set_attr( $attr, 0 );
 
-		// One alert per job: a long outage can exhaust the attempts once per batch, and the record
-		// list is capped, so repeating the same message would push other records out.
-		if ( ! $this->get_attr( 'zero_verification_alert_recorded', false ) ) {
+		// One alert per job AND at most one per window across jobs: interval polling creates a fresh
+		// job every cycle, so a job attribute alone would still add a record on every poll during a
+		// sustained outage and push other records out of the capped list.
+		if ( ! $this->get_attr( 'zero_verification_alert_recorded', false ) && ! get_transient( 'wc_square_zero_verification_alerted' ) ) {
 
 			$this->set_attr( 'zero_verification_alert_recorded', true );
+			set_transient( 'wc_square_zero_verification_alerted', 1, 6 * HOUR_IN_SECONDS );
 
 			Records::set_record(
 				array(
