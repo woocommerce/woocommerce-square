@@ -37,6 +37,10 @@ defined( 'ABSPATH' ) || exit;
  */
 class Helper {
 
+
+	/** @var int catalog objects held in the unverified zero count retry list */
+	const MAX_UNVERIFIED_ZERO_COUNTS = 1000;
+
 	/**
 	 * Get the inventory tracking value for the given catalog object ids.
 	 *
@@ -239,16 +243,22 @@ class Helper {
 			}
 		}
 
-		// Drop anything that has sat here for a week, and keep the list bounded so a long incident
-		// cannot grow it without limit.
+		// Give up on anything that has sat here for a week. That is the one remaining window where a
+		// zero could be missed for good, and it is deliberately far longer than any plausible Square
+		// incident.
 		foreach ( $pending as $catalog_object_id => $first_seen ) {
 			if ( $now - (int) $first_seen > WEEK_IN_SECONDS ) {
 				unset( $pending[ $catalog_object_id ] );
+				wc_square()->log( 'Stopped waiting to verify the zero count for catalog object ' . $catalog_object_id . ': it has been pending for over a week.' );
 			}
 		}
 
-		if ( count( $pending ) > 1000 ) {
-			$pending = array_slice( $pending, -1000, null, true );
+		// Keep the list bounded. Retries run oldest first, so the OLDEST entries are kept and the
+		// newest are dropped: evicting the oldest would keep discarding the entries being worked.
+		if ( count( $pending ) > self::MAX_UNVERIFIED_ZERO_COUNTS ) {
+			$dropped = count( $pending ) - self::MAX_UNVERIFIED_ZERO_COUNTS;
+			$pending = array_slice( $pending, 0, self::MAX_UNVERIFIED_ZERO_COUNTS, true );
+			wc_square()->log( sprintf( 'The unverified zero count list is full; %d newer entries were not kept.', $dropped ) );
 		}
 
 		update_option( 'wc_square_unverified_zero_counts', $pending, false );
