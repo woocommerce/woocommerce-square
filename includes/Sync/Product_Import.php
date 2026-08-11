@@ -342,12 +342,11 @@ class Product_Import extends Stepped_Job {
 
 				if ( $product && $product instanceof \WC_Product ) {
 
-					// Freshly imported products are already marked synced by the import step;
-					// this only skips products whose "Sync with Square" was unticked or unlinked,
-					// consistent with the interval and manual pull gates (SQUARE-359).
-					if ( ! Product::is_synced_with_square( $product ) ) {
-						continue;
-					}
+					// No "Sync with Square" gate here on purpose: an import is started by the
+					// merchant, so it belongs with the explicit fetch action rather than with the
+					// automatic pulls SQUARE-359 gates. Products matched and updated during an
+					// import also never receive the synced flag (it is only set for newly imported
+					// products), so gating here would silently skip their inventory.
 					$inventory_data        = $catalog_objects_hash[ $catalog_object->getId() ] ?? array();
 					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
