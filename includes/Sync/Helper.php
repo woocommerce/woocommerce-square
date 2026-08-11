@@ -260,11 +260,26 @@ class Helper {
 		// Zero count: never change the product's manage_stock setting in either direction.
 
 		if ( ! $product->get_manage_stock() ) {
-			// Not stock-managed in WooCommerce: counts are not data for this product; reflect
-			// availability only.
-			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
 
-			return true;
+			// Not stock-managed in WooCommerce, so a quantity is never written. A zero still has to
+			// stop the product selling, but only when it is a proven sellout: an unproven zero (a
+			// tracked item that was never counted) must not mark a product the merchant keeps
+			// permanently sellable as out of stock. A zero is also never a reason to force a
+			// product back in stock, so this branch only ever writes out of stock.
+			if ( $zero_verified ) {
+				$product->set_stock_status( 'outofstock' );
+
+				return true;
+			}
+
+			wc_square()->log(
+				sprintf(
+					'Skipped marking product #%d out of stock: Square has no inventory history for the item, so its zero count is not a proven sellout.',
+					$product->get_id()
+				)
+			);
+
+			return false;
 		}
 
 		if ( $zero_verified ) {
