@@ -329,6 +329,10 @@ class Product_Import extends Stepped_Job {
 			}
 
 			$verified_zero_ids = array();
+
+			// Hand the unverified objects to the shared retry list so a later poll re-checks them by
+			// id rather than leaving them until Square touches them again.
+			Helper::remember_unverified_zero_counts( $zero_object_ids );
 		} else {
 			$this->clear_unverified_zero_count_attempts( 'import_inventory' );
 		}
