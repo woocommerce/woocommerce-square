@@ -98,13 +98,15 @@ class Helper {
 	 * sale leaves a PHYSICAL_COUNT / ADJUSTMENT record. Callers use this to decide whether a zero
 	 * count may be written to WooCommerce (real) or must be ignored (phantom).
 	 *
-	 * On an API failure this returns an empty array, which callers must treat as "no zeros are
-	 * verified" - failing closed so an outage can never cause a zero to be written.
+	 * On an API failure this returns null, which callers MUST treat as "verification unavailable":
+	 * never write the zero, and never advance a watermark or processed marker past the item, or a
+	 * genuine sellout would be permanently skipped once the API recovers. Null is distinct from an
+	 * empty array, which is a POSITIVE verification that none of the ids have history.
 	 *
 	 * @since x.x.x
 	 *
 	 * @param string[] $catalog_object_ids catalog object (variation) IDs to check
-	 * @return string[] IDs that have at least one real inventory change recorded
+	 * @return string[]|null IDs with at least one real inventory change, or null when Square could not be asked
 	 */
 	public static function get_catalog_objects_with_inventory_history( $catalog_object_ids ) {
 
@@ -140,8 +142,8 @@ class Helper {
 					$data = $response->get_data();
 
 					if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
-						wc_square()->log( 'Could not verify inventory history for zero counts, skipping zero writes: unexpected API response.' );
-						return array();
+						wc_square()->log( 'Could not verify inventory history for zero counts: unexpected API response.' );
+						return null;
 					}
 
 					if ( is_array( $data->getChanges() ) ) {
@@ -167,8 +169,8 @@ class Helper {
 				} while ( $cursor && ! empty( $remaining ) );
 			}
 		} catch ( \Exception $exception ) {
-			wc_square()->log( 'Could not verify inventory history for zero counts, skipping zero writes: ' . $exception->getMessage() );
-			return array();
+			wc_square()->log( 'Could not verify inventory history for zero counts: ' . $exception->getMessage() );
+			return null;
 		}
 
 		return array_keys( $with_history );
