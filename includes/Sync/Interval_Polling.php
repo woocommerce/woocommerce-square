@@ -331,10 +331,18 @@ class Interval_Polling extends Stepped_Job {
 			}
 			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 			if ( null === $verified_zero_ids ) {
-				// Verification unavailable: stop this cycle WITHOUT advancing any progress marker,
-				// or a genuine sellout would be permanently skipped once the API recovers. The
-				// step retries on the next run.
-				throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next cycle.' );
+
+				// Verification unavailable. Return WITHOUT advancing any progress marker so the
+				// step runs again, rather than throwing, which would fail the whole job.
+				if ( $this->should_retry_unverified_zero_counts( 'update_inventory_tracking' ) ) {
+					return;
+				}
+
+				// Attempts exhausted: proceed with no zero verified, so only the zero writes are
+				// skipped and the job can finish.
+				$verified_zero_ids = array();
+			} else {
+				$this->clear_unverified_zero_count_attempts();
 			}
 
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
@@ -452,10 +460,16 @@ class Interval_Polling extends Stepped_Job {
 		}
 		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 		if ( null === $verified_zero_ids ) {
-			// Verification unavailable: stop this cycle WITHOUT advancing any progress marker,
-			// or a genuine sellout would be permanently skipped once the API recovers. The
-			// step retries on the next run.
-			throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next cycle.' );
+
+			// Verification unavailable. Return WITHOUT advancing the cursor or the inventory
+			// watermark so the step runs again, rather than throwing and failing the job.
+			if ( $this->should_retry_unverified_zero_counts( 'update_inventory_counts' ) ) {
+				return;
+			}
+
+			$verified_zero_ids = array();
+		} else {
+			$this->clear_unverified_zero_count_attempts();
 		}
 
 		foreach ( $catalog_objects_inventory_stats as $catalog_object_id => $stats ) {
