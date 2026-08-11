@@ -38,8 +38,8 @@ defined( 'ABSPATH' ) || exit;
 class Interval_Polling extends Stepped_Job {
 
 
-	/** @var int consecutive polls that may hold the inventory watermark before it advances anyway */
-	const MAX_INVENTORY_WATERMARK_HOLDS = 3;
+	/** @var int catalog objects re-checked per poll from the unverified zero count list */
+	const MAX_ZERO_COUNT_RETRIES_PER_POLL = 200;
 
 	/**
 	 * Assigns the next steps needed for this sync job.
@@ -346,10 +346,9 @@ class Interval_Polling extends Stepped_Job {
 				// skipped and the job can finish.
 				$verified_zero_ids = array();
 
-				// This step reads the same watermark as the counts step, and an object can appear in
-				// this window without appearing in that one, so hold the watermark here as well or
-				// this window would never be read again.
-				$this->set_attr( 'hold_inventory_watermark', true );
+				// Remember the objects so they are re-checked by id on later polls: the watermark can
+				// then advance normally without this window being lost.
+				Helper::remember_unverified_zero_counts( $zero_object_ids );
 			} else {
 				$this->clear_unverified_zero_count_attempts( 'update_inventory_tracking' );
 			}
@@ -398,6 +397,96 @@ class Interval_Polling extends Stepped_Job {
 			$this->complete_step( 'update_inventory_tracking' );
 		}
 	}
+
+	/**
+	 * Re-checks catalog objects whose zero count could not be verified on an earlier poll.
+	 *
+	 * These are looked up by id rather than by the read window, so a Square incident cannot make the
+	 * window grow and cannot cause a genuine sellout to be skipped permanently. Objects leave the
+	 * list as soon as they resolve, whether that means a zero was finally written, the count came
+	 * back positive, or the object no longer reports a count at all.
+	 *
+	 * @since x.x.x
+	 */
+	protected function retry_unverified_zero_counts() {
+
+		$pending = Helper::get_unverified_zero_counts();
+
+		if ( empty( $pending ) ) {
+			return;
+		}
+
+		$pending = array_slice( $pending, 0, self::MAX_ZERO_COUNT_RETRIES_PER_POLL );
+
+		try {
+			$counts_response = wc_square()->get_api()->batch_retrieve_inventory_counts(
+				array(
+					'catalog_object_ids' => $pending,
+					'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+					'states'             => array( 'IN_STOCK' ),
+				)
+			);
+
+			$counts = array();
+			foreach ( ( $counts_response->get_data() && is_array( $counts_response->get_data()->getCounts() ) ) ? $counts_response->get_data()->getCounts() : array() as $count ) {
+				$counts[ $count->getCatalogObjectId() ] = $count->getQuantity();
+			}
+
+			$zero_ids = array();
+			foreach ( $counts as $object_id => $quantity ) {
+				if ( 0.0 === (float) $quantity ) {
+					$zero_ids[] = $object_id;
+				}
+			}
+
+			$verified = Helper::get_catalog_objects_with_inventory_history( $zero_ids );
+
+			if ( null === $verified ) {
+				// Still unavailable: leave the list untouched and try again on the next poll.
+				return;
+			}
+
+			$tracking = Helper::get_catalog_objects_tracking_stats( $pending );
+			$resolved = array();
+
+			foreach ( $pending as $object_id ) {
+
+				// No count at all any more (item deleted or no longer tracked): nothing to retry.
+				if ( ! isset( $counts[ $object_id ] ) ) {
+					$resolved[] = $object_id;
+					continue;
+				}
+
+				$product = Product::get_product_by_square_variation_id( $object_id );
+
+				if ( ! $product instanceof \WC_Product || ! Product::is_synced_with_square( $product ) ) {
+					$resolved[] = $object_id;
+					continue;
+				}
+
+				$quantity = (float) $counts[ $object_id ];
+
+				// An unverified zero stays on the list; anything else is settled now.
+				if ( 0.0 === $quantity && ! in_array( $object_id, $verified, true ) ) {
+					continue;
+				}
+
+				if ( Helper::apply_square_inventory_count( $product, $quantity, (bool) ( $tracking[ $object_id ]['sold_out'] ?? false ), true ) ) {
+					$product->save();
+				}
+
+				$resolved[] = $object_id;
+			}
+
+			if ( $resolved ) {
+				Helper::forget_unverified_zero_counts( $resolved );
+				wc_square()->log( sprintf( 'Resolved %d previously unverified zero counts by id.', count( $resolved ) ) );
+			}
+		} catch ( \Exception $exception ) {
+			wc_square()->log( 'Could not retry unverified zero counts: ' . $exception->getMessage() );
+		}
+	}
+
 
 	/**
 	 * Updates the inventory counts from the latest in Square.
@@ -478,10 +567,9 @@ class Interval_Polling extends Stepped_Job {
 
 			$verified_zero_ids = array();
 
-			// Verification never succeeded for this window, so hold the inventory watermark back
-			// even though the step completes: the same window is then read again on the next poll
-			// and a genuine sellout is not skipped permanently.
-			$this->set_attr( 'hold_inventory_watermark', true );
+			// Remember the objects so they are re-checked by id on later polls: the watermark can
+			// then advance normally without this window being lost.
+			Helper::remember_unverified_zero_counts( $zero_object_ids );
 		} else {
 			$this->clear_unverified_zero_count_attempts( 'update_inventory_counts' );
 		}
@@ -533,27 +621,11 @@ class Interval_Polling extends Stepped_Job {
 			// that was stored, unless a zero count in this window could not be verified: holding the
 			// watermark back makes the next poll read the same window again so a genuine sellout is
 			// not skipped permanently.
-			if ( $this->get_attr( 'hold_inventory_watermark', false ) ) {
+			// Objects whose zero count could not be verified are retried by id, so the watermark can
+			// advance on schedule: the read window never grows and nothing is permanently skipped.
+			$this->retry_unverified_zero_counts();
 
-				$this->set_attr( 'hold_inventory_watermark', false );
-
-				// Holding the watermark makes the next poll read the same window again, but holding
-				// it through a long Square incident would grow that window on every poll. Allow a
-				// few consecutive holds and then move on: the merchant has already been alerted.
-				$holds = (int) get_option( 'wc_square_inventory_watermark_holds', 0 ) + 1;
-
-				if ( $holds >= self::MAX_INVENTORY_WATERMARK_HOLDS ) {
-					update_option( 'wc_square_inventory_watermark_holds', 0, false );
-					wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
-					wc_square()->log( 'Zero counts stayed unverified across several polls; advancing the inventory watermark so the read window stops growing.' );
-				} else {
-					update_option( 'wc_square_inventory_watermark_holds', $holds, false );
-					wc_square()->log( sprintf( 'Inventory watermark held back (%1$d of %2$d): a zero count in this window could not be verified, so the window is read again on the next poll.', $holds, self::MAX_INVENTORY_WATERMARK_HOLDS ) );
-				}
-			} else {
-				update_option( 'wc_square_inventory_watermark_holds', 0, false );
-				wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
-			}
+			wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
 
 			$this->complete_step( 'update_inventory_counts' );
 		}
