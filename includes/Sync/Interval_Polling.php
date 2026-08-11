@@ -469,6 +469,10 @@ class Interval_Polling extends Stepped_Job {
 
 			$verified_zero_ids = array();
 
+			// Verification never succeeded for this window, so hold the inventory watermark back
+			// even though the step completes: the same window is then read again on the next poll
+			// and a genuine sellout is not skipped permanently.
+			$this->set_attr( 'hold_inventory_watermark', true );
 		} else {
 			$this->clear_unverified_zero_count_attempts( 'update_inventory_counts' );
 		}
@@ -516,8 +520,16 @@ class Interval_Polling extends Stepped_Job {
 		$this->set_attr( 'update_inventory_counts_count', $update_count + count( $catalog_objects_inventory_stats ) );
 
 		if ( ! $cursor ) {
-			// When all the inventory counts are synced then set the last sync time to the start time that was stored
-			wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+			// When all the inventory counts are synced then set the last sync time to the start time
+			// that was stored, unless a zero count in this window could not be verified: holding the
+			// watermark back makes the next poll read the same window again so a genuine sellout is
+			// not skipped permanently.
+			if ( $this->get_attr( 'hold_inventory_watermark', false ) ) {
+				$this->set_attr( 'hold_inventory_watermark', false );
+				wc_square()->log( 'Inventory watermark held back: a zero count in this window could not be verified, so the window is read again on the next poll.' );
+			} else {
+				wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+			}
 
 			$this->complete_step( 'update_inventory_counts' );
 		}
