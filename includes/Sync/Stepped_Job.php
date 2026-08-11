@@ -93,12 +93,19 @@ abstract class Stepped_Job extends Job {
 
 		$this->set_attr( $attr, 0 );
 
-		Records::set_record(
-			array(
-				'type'    => 'alert',
-				'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Run the sync again once Square is responding normally.', 'woocommerce-square' ),
-			)
-		);
+		// One alert per job: a long outage can exhaust the attempts once per batch, and the record
+		// list is capped, so repeating the same message would push other records out.
+		if ( ! $this->get_attr( 'zero_verification_alert_recorded', false ) ) {
+
+			$this->set_attr( 'zero_verification_alert_recorded', true );
+
+			Records::set_record(
+				array(
+					'type'    => 'alert',
+					'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Run the sync again once Square is responding normally.', 'woocommerce-square' ),
+				)
+			);
+		}
 
 		wc_square()->log( sprintf( 'Could not verify zero inventory counts during %s after %d attempts; continuing without writing any zero quantity.', $step_name, self::MAX_ZERO_VERIFICATION_ATTEMPTS ) );
 
