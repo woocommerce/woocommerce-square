@@ -35,6 +35,10 @@ defined( 'ABSPATH' ) || exit;
 abstract class Stepped_Job extends Job {
 
 
+	/** @var int attempts a step makes to verify zero counts before it proceeds without them */
+	const MAX_ZERO_VERIFICATION_ATTEMPTS = 3;
+
+
 	/**
 	 * Executes the next step of this job.
 	 *
@@ -53,6 +57,61 @@ abstract class Stepped_Job extends Job {
 		$this->do_next_step();
 
 		return $this->job;
+	}
+
+
+	/**
+	 * Decides how a step should react when Square's inventory history could not be read.
+	 *
+	 * A zero count cannot be classified as a real sellout or as a never counted item without that
+	 * history, and writing it blind is the behavior SQUARE-145 fixed. The step therefore holds its
+	 * progress and retries on later cycles. Holding forever would keep a job alive without ever
+	 * finishing, so after a bounded number of attempts the step proceeds with no zero verified,
+	 * which skips only the zero writes, and records an alert so the outcome is never silent.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name for the log and record messages
+	 * @return bool true when the caller should stop and retry later, false when it should proceed
+	 */
+	protected function should_retry_unverified_zero_counts( $step_name ) {
+
+		$attempts = (int) $this->get_attr( 'zero_verification_attempts', 0 );
+
+		if ( $attempts < self::MAX_ZERO_VERIFICATION_ATTEMPTS ) {
+
+			$this->set_attr( 'zero_verification_attempts', $attempts + 1 );
+
+			wc_square()->log( sprintf( 'Could not verify zero inventory counts during %1$s; holding progress and retrying (attempt %2$d).', $step_name, $attempts + 1 ) );
+
+			return true;
+		}
+
+		$this->set_attr( 'zero_verification_attempts', 0 );
+
+		Records::set_record(
+			array(
+				'type'    => 'alert',
+				'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Stock will be updated on a later sync.', 'woocommerce-square' ),
+			)
+		);
+
+		wc_square()->log( sprintf( 'Could not verify zero inventory counts during %s after several attempts; continuing without writing any zero quantity.', $step_name ) );
+
+		return false;
+	}
+
+
+	/**
+	 * Clears the unverified zero count retry counter after a successful verification.
+	 *
+	 * @since x.x.x
+	 */
+	protected function clear_unverified_zero_count_attempts() {
+
+		if ( $this->get_attr( 'zero_verification_attempts', 0 ) ) {
+			$this->set_attr( 'zero_verification_attempts', 0 );
+		}
 	}
 
 
@@ -331,5 +390,4 @@ abstract class Stepped_Job extends Job {
 
 		return $update_data;
 	}
-
 }
