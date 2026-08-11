@@ -44,6 +44,9 @@ class Interval_Polling extends Stepped_Job {
 	/** @var int catalog object ids sent per inventory counts request while retrying */
 	const MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST = 100;
 
+	/** @var int pages read per chunk while retrying before the pass is abandoned */
+	const MAX_ZERO_COUNT_RETRY_PAGES = 20;
+
 	/**
 	 * Assigns the next steps needed for this sync job.
 	 *
@@ -432,8 +435,18 @@ class Interval_Polling extends Stepped_Job {
 			foreach ( array_chunk( $pending, self::MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST ) as $chunk ) {
 
 				$cursor = null;
+				$page   = 0;
 
 				do {
+
+					// A cursor that never advances would spin here inside a background job, so the
+					// pass is capped. Hitting the cap means the read is incomplete, which must not be
+					// mistaken for proof that the remaining ids are gone.
+					if ( ++$page > self::MAX_ZERO_COUNT_RETRY_PAGES ) {
+						wc_square()->log( 'Stopped retrying unverified zero counts: the inventory counts response kept paginating past the page limit.' );
+						return;
+					}
+
 					$counts_response = wc_square()->get_api()->batch_retrieve_inventory_counts(
 						array(
 							'catalog_object_ids' => $chunk,
@@ -492,8 +505,16 @@ class Interval_Polling extends Stepped_Job {
 
 				$quantity = (float) $counts[ $object_id ];
 
-				// An unverified zero stays on the list; anything else is settled now.
+				// Past the check above there is no unresolved state left in this loop: the history
+				// lookup succeeded, so it is a positive verification of the whole zero set and an id
+				// missing from it is PROVEN to have no history. That is a phantom, the answer cannot
+				// change while the count stays at zero, and the correct action is to never write it.
+				// Leaving it pending would fill the list with entries that can never resolve, and
+				// because retries take the oldest first they would starve the genuine sellouts queued
+				// behind them.
 				if ( 0.0 === $quantity && ! in_array( $object_id, $verified, true ) ) {
+					wc_square()->log( sprintf( 'Confirmed catalog object %s has no inventory history: its zero count is a phantom, so no stock was written and it leaves the retry list.', $object_id ) );
+					$resolved[] = $object_id;
 					continue;
 				}
 
