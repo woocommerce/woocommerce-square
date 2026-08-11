@@ -120,53 +120,38 @@ class Helper {
 
 		try {
 			foreach ( array_chunk( $catalog_object_ids, 100 ) as $chunk ) {
-				$remaining = array_flip( $chunk );
-				$cursor    = null;
 
-				// Results are paginated globally across the requested IDs (oldest first), so a
-				// single page can be exhausted by high-activity items before a quiet item's only
-				// record appears: the cursor must be followed or a real sellout is misread as a
-				// phantom.
-				do {
-					// No `types` request filter: the API rejects TRANSFER as a filter value, and
-					// filtering to the other two would misread an item whose only history is a
-					// transfer as never counted. All change types are fetched and matched below.
-					$response = wc_square()->get_api()->batch_retrieve_inventory_changes(
-						array(
-							'catalog_object_ids' => $chunk,
-							'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
-							'cursor'             => $cursor,
-						)
-					);
+				// First page for the whole chunk. When Square reports no further pages, every id
+				// missing from it is positively verified as having no history. When more pages
+				// exist, walking them all would page through the busiest item's entire history
+				// just to prove a quiet item empty, so unresolved ids are re-queried individually
+				// instead (a single id with no records answers in one page).
+				$page = self::fetch_inventory_changes_page( $chunk );
+				if ( null === $page ) {
+					return null;
+				}
 
-					$data = $response->get_data();
+				foreach ( $page['object_ids'] as $object_id ) {
+					$with_history[ $object_id ] = true;
+				}
 
-					if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
-						wc_square()->log( 'Could not verify inventory history for zero counts: unexpected API response.' );
+				$unresolved = array_diff( $chunk, array_keys( $with_history ) );
+
+				if ( empty( $unresolved ) || empty( $page['cursor'] ) ) {
+					continue;
+				}
+
+				foreach ( $unresolved as $object_id ) {
+					$single = self::fetch_inventory_changes_page( array( $object_id ) );
+					if ( null === $single ) {
 						return null;
 					}
-
-					if ( is_array( $data->getChanges() ) ) {
-						foreach ( $data->getChanges() as $change ) {
-							$object_id = null;
-
-							if ( $change->getPhysicalCount() ) {
-								$object_id = $change->getPhysicalCount()->getCatalogObjectId();
-							} elseif ( $change->getAdjustment() ) {
-								$object_id = $change->getAdjustment()->getCatalogObjectId();
-							} elseif ( $change->getTransfer() ) {
-								$object_id = $change->getTransfer()->getCatalogObjectId();
-							}
-
-							if ( $object_id ) {
-								$with_history[ $object_id ] = true;
-								unset( $remaining[ $object_id ] );
-							}
-						}
+					if ( ! empty( $single['object_ids'] ) ) {
+						$with_history[ $object_id ] = true;
 					}
-
-					$cursor = $data->getCursor();
-				} while ( $cursor && ! empty( $remaining ) );
+					// Empty first page for a single id means no history: pagination is oldest
+					// first per id, so any record would appear on the first page.
+				}
 			}
 		} catch ( \Exception $exception ) {
 			wc_square()->log( 'Could not verify inventory history for zero counts: ' . $exception->getMessage() );
@@ -174,6 +159,54 @@ class Helper {
 		}
 
 		return array_keys( $with_history );
+	}
+
+	/**
+	 * Fetches one page of inventory changes for the given catalog object ids.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string[] $catalog_object_ids ids to query
+	 * @return array|null { object_ids: string[] with a change on this page, cursor: string|null } or null on failure
+	 */
+	protected static function fetch_inventory_changes_page( array $catalog_object_ids ) {
+
+		$response = wc_square()->get_api()->batch_retrieve_inventory_changes(
+			array(
+				'catalog_object_ids' => $catalog_object_ids,
+				'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+			)
+		);
+
+		$data = $response->get_data();
+
+		if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
+			wc_square()->log( 'Could not verify inventory history for zero counts: unexpected API response.' );
+			return null;
+		}
+
+		$object_ids = array();
+
+		foreach ( is_array( $data->getChanges() ) ? $data->getChanges() : array() as $change ) {
+			$object_id = null;
+
+			if ( $change->getPhysicalCount() ) {
+				$object_id = $change->getPhysicalCount()->getCatalogObjectId();
+			} elseif ( $change->getAdjustment() ) {
+				$object_id = $change->getAdjustment()->getCatalogObjectId();
+			} elseif ( $change->getTransfer() ) {
+				$object_id = $change->getTransfer()->getCatalogObjectId();
+			}
+
+			if ( $object_id ) {
+				$object_ids[ $object_id ] = true;
+			}
+		}
+
+		return array(
+			'object_ids' => array_keys( $object_ids ),
+			'cursor'     => $data->getCursor(),
+		);
 	}
 
 
