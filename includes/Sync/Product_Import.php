@@ -320,6 +320,12 @@ class Product_Import extends Stepped_Job {
 		}
 		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable: fail this step like any other API failure so the cursor
+			// does not advance past an unverified zero.
+			throw new \Exception( 'Could not verify zero inventory counts against Square history; stock left unchanged until the next run.' );
+		}
+
 		foreach ( $objects as $catalog_object ) {
 
 			// all inventory should be tied to a variation, but check here just in case
