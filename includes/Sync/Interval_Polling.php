@@ -37,6 +37,10 @@ defined( 'ABSPATH' ) || exit;
  */
 class Interval_Polling extends Stepped_Job {
 
+
+	/** @var int consecutive polls that may hold the inventory watermark before it advances anyway */
+	const MAX_INVENTORY_WATERMARK_HOLDS = 3;
+
 	/**
 	 * Assigns the next steps needed for this sync job.
 	 *
@@ -530,9 +534,24 @@ class Interval_Polling extends Stepped_Job {
 			// watermark back makes the next poll read the same window again so a genuine sellout is
 			// not skipped permanently.
 			if ( $this->get_attr( 'hold_inventory_watermark', false ) ) {
+
 				$this->set_attr( 'hold_inventory_watermark', false );
-				wc_square()->log( 'Inventory watermark held back: a zero count in this window could not be verified, so the window is read again on the next poll.' );
+
+				// Holding the watermark makes the next poll read the same window again, but holding
+				// it through a long Square incident would grow that window on every poll. Allow a
+				// few consecutive holds and then move on: the merchant has already been alerted.
+				$holds = (int) get_option( 'wc_square_inventory_watermark_holds', 0 ) + 1;
+
+				if ( $holds >= self::MAX_INVENTORY_WATERMARK_HOLDS ) {
+					update_option( 'wc_square_inventory_watermark_holds', 0, false );
+					wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+					wc_square()->log( 'Zero counts stayed unverified across several polls; advancing the inventory watermark so the read window stops growing.' );
+				} else {
+					update_option( 'wc_square_inventory_watermark_holds', $holds, false );
+					wc_square()->log( sprintf( 'Inventory watermark held back (%1$d of %2$d): a zero count in this window could not be verified, so the window is read again on the next poll.', $holds, self::MAX_INVENTORY_WATERMARK_HOLDS ) );
+				}
 			} else {
+				update_option( 'wc_square_inventory_watermark_holds', 0, false );
 				wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
 			}
 
