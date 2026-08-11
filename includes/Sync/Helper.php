@@ -257,11 +257,23 @@ class Helper {
 			return true;
 		}
 
-		// A negative count is only reachable through real inventory movement (an item that was
-		// never counted reads exactly zero), so it is a proven sellout and does not need the
-		// history check. WooCommerce does not hold negative stock, so it lands on zero.
+		// A negative count can only come from real inventory movement, because an item that was
+		// never counted reads exactly zero, so it needs no history check. Square itself cannot hold
+		// a negative quantity (which is why the push side clamps at zero) but WooCommerce can, and a
+		// store that allows backorders uses it to record how deep it is oversold, so the value is
+		// written through rather than flattened. manage_stock is still left alone: only a positive
+		// count mirrors Square tracking onto that setting.
 		if ( $quantity < 0 ) {
-			$zero_verified = true;
+
+			if ( ! $product->get_manage_stock() ) {
+				$product->set_stock_status( 'outofstock' );
+
+				return true;
+			}
+
+			$product->set_stock_quantity( $quantity );
+
+			return true;
 		}
 
 		// Zero count: never change the product's manage_stock setting in either direction.
