@@ -427,7 +427,11 @@ class Product {
 			// sellout, and only real zeros may be written (SQUARE-145).
 			$zero_verified = false;
 			if ( 0.0 === (float) $stock ) {
-				$zero_verified = in_array( $square_id, Helper::get_catalog_objects_with_inventory_history( array( $square_id ) ), true );
+				$verified_ids  = Helper::get_catalog_objects_with_inventory_history( array( $square_id ) );
+				$zero_verified = is_array( $verified_ids ) && in_array( $square_id, $verified_ids, true );
+				if ( null === $verified_ids ) {
+					wc_square()->log( 'Could not verify the zero inventory count against Square history for product #' . $product->get_id() . '; stock left unchanged.' );
+				}
 			}
 
 			Helper::apply_square_inventory_count( $product, (float) $stock, (bool) $sold_out, $zero_verified );
@@ -505,6 +509,14 @@ class Product {
 				}
 			}
 			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+
+			if ( null === $verified_zero_ids ) {
+				// Verification unavailable: never throw on this path (it runs inside checkout via
+				// the add to cart refresh); treat every zero as unverified and let the next
+				// trigger retry naturally.
+				wc_square()->log( 'Could not verify zero inventory counts against Square history; zero stock writes skipped for this refresh.' );
+				$verified_zero_ids = array();
+			}
 
 			foreach ( $response->get_data()->getObjects() as $catalog_object ) {
 				$square_id               = $catalog_object->getId();
