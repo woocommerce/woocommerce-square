@@ -41,6 +41,9 @@ class Interval_Polling extends Stepped_Job {
 	/** @var int catalog objects re-checked per poll from the unverified zero count list */
 	const MAX_ZERO_COUNT_RETRIES_PER_POLL = 200;
 
+	/** @var int catalog object ids sent per inventory counts request while retrying */
+	const MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST = 100;
+
 	/**
 	 * Assigns the next steps needed for this sync job.
 	 *
@@ -419,17 +422,40 @@ class Interval_Polling extends Stepped_Job {
 		$pending = array_slice( $pending, 0, self::MAX_ZERO_COUNT_RETRIES_PER_POLL );
 
 		try {
-			$counts_response = wc_square()->get_api()->batch_retrieve_inventory_counts(
-				array(
-					'catalog_object_ids' => $pending,
-					'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
-					'states'             => array( 'IN_STOCK' ),
-				)
-			);
-
 			$counts = array();
-			foreach ( ( $counts_response->get_data() && is_array( $counts_response->get_data()->getCounts() ) ) ? $counts_response->get_data()->getCounts() : array() as $count ) {
-				$counts[ $count->getCatalogObjectId() ] = $count->getQuantity();
+
+			// The read has to be COMPLETE before a missing id can be read as "no count any more":
+			// an odd response or an unread second page would otherwise look like proof that the
+			// object is gone and would erase the very backlog this list exists to protect. Ids are
+			// chunked and every cursor is followed, and any response that is not the expected type
+			// abandons the pass with the list untouched.
+			foreach ( array_chunk( $pending, self::MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST ) as $chunk ) {
+
+				$cursor = null;
+
+				do {
+					$counts_response = wc_square()->get_api()->batch_retrieve_inventory_counts(
+						array(
+							'catalog_object_ids' => $chunk,
+							'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+							'states'             => array( 'IN_STOCK' ),
+							'cursor'             => $cursor,
+						)
+					);
+
+					$counts_data = $counts_response->get_data();
+
+					if ( ! $counts_data instanceof BatchRetrieveInventoryCountsResponse ) {
+						wc_square()->log( 'Skipped retrying unverified zero counts: the inventory counts response was missing or invalid.' );
+						return;
+					}
+
+					foreach ( is_array( $counts_data->getCounts() ) ? $counts_data->getCounts() : array() as $count ) {
+						$counts[ $count->getCatalogObjectId() ] = $count->getQuantity();
+					}
+
+					$cursor = $counts_data->getCursor();
+				} while ( $cursor );
 			}
 
 			$zero_ids = array();
