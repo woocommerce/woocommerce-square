@@ -342,7 +342,7 @@ class Interval_Polling extends Stepped_Job {
 				// skipped and the job can finish.
 				$verified_zero_ids = array();
 			} else {
-				$this->clear_unverified_zero_count_attempts();
+				$this->clear_unverified_zero_count_attempts( 'update_inventory_tracking' );
 			}
 
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
@@ -468,8 +468,9 @@ class Interval_Polling extends Stepped_Job {
 			}
 
 			$verified_zero_ids = array();
+
 		} else {
-			$this->clear_unverified_zero_count_attempts();
+			$this->clear_unverified_zero_count_attempts( 'update_inventory_counts' );
 		}
 
 		foreach ( $catalog_objects_inventory_stats as $catalog_object_id => $stats ) {
@@ -517,6 +518,7 @@ class Interval_Polling extends Stepped_Job {
 		if ( ! $cursor ) {
 			// When all the inventory counts are synced then set the last sync time to the start time that was stored
 			wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+
 			$this->complete_step( 'update_inventory_counts' );
 		}
 	}

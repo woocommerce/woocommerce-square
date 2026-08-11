@@ -2020,7 +2020,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$verified_zero_ids = array();
 		} else {
-			$this->clear_unverified_zero_count_attempts();
+			$this->clear_unverified_zero_count_attempts( 'pull_inventory' );
 		}
 
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {

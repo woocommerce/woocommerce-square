@@ -65,9 +65,12 @@ abstract class Stepped_Job extends Job {
 	 *
 	 * A zero count cannot be classified as a real sellout or as a never counted item without that
 	 * history, and writing it blind is the behavior SQUARE-145 fixed. The step therefore holds its
-	 * progress and retries on later cycles. Holding forever would keep a job alive without ever
-	 * finishing, so after a bounded number of attempts the step proceeds with no zero verified,
-	 * which skips only the zero writes, and records an alert so the outcome is never silent.
+	 * progress and is run again by the job loop. Those retries follow the job's own loopback timing,
+	 * so they are close together rather than spread over cycles: they cover a brief blip, not a long
+	 * outage. Holding forever would keep a job alive without ever finishing, so after a bounded
+	 * number of attempts the step proceeds with no zero verified, which skips only the zero writes,
+	 * and records an alert so the outcome is never silent. Steps that own a watermark should also
+	 * leave it alone on that path so the same window is read again later.
 	 *
 	 * @since x.x.x
 	 *
@@ -76,27 +79,28 @@ abstract class Stepped_Job extends Job {
 	 */
 	protected function should_retry_unverified_zero_counts( $step_name ) {
 
-		$attempts = (int) $this->get_attr( 'zero_verification_attempts', 0 );
+		$attr     = 'zero_verification_attempts_' . $step_name;
+		$attempts = (int) $this->get_attr( $attr, 0 );
 
 		if ( $attempts < self::MAX_ZERO_VERIFICATION_ATTEMPTS ) {
 
-			$this->set_attr( 'zero_verification_attempts', $attempts + 1 );
+			$this->set_attr( $attr, $attempts + 1 );
 
-			wc_square()->log( sprintf( 'Could not verify zero inventory counts during %1$s; holding progress and retrying (attempt %2$d).', $step_name, $attempts + 1 ) );
+			wc_square()->log( sprintf( 'Could not verify zero inventory counts during %1$s; holding this step and running it again (attempt %2$d of %3$d).', $step_name, $attempts + 1, self::MAX_ZERO_VERIFICATION_ATTEMPTS ) );
 
 			return true;
 		}
 
-		$this->set_attr( 'zero_verification_attempts', 0 );
+		$this->set_attr( $attr, 0 );
 
 		Records::set_record(
 			array(
 				'type'    => 'alert',
-				'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Stock will be updated on a later sync.', 'woocommerce-square' ),
+				'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Run the sync again once Square is responding normally.', 'woocommerce-square' ),
 			)
 		);
 
-		wc_square()->log( sprintf( 'Could not verify zero inventory counts during %s after several attempts; continuing without writing any zero quantity.', $step_name ) );
+		wc_square()->log( sprintf( 'Could not verify zero inventory counts during %s after %d attempts; continuing without writing any zero quantity.', $step_name, self::MAX_ZERO_VERIFICATION_ATTEMPTS ) );
 
 		return false;
 	}
@@ -107,10 +111,12 @@ abstract class Stepped_Job extends Job {
 	 *
 	 * @since x.x.x
 	 */
-	protected function clear_unverified_zero_count_attempts() {
+	protected function clear_unverified_zero_count_attempts( $step_name ) {
 
-		if ( $this->get_attr( 'zero_verification_attempts', 0 ) ) {
-			$this->set_attr( 'zero_verification_attempts', 0 );
+		$attr = 'zero_verification_attempts_' . $step_name;
+
+		if ( $this->get_attr( $attr, 0 ) ) {
+			$this->set_attr( $attr, 0 );
 		}
 	}
 

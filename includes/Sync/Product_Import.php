@@ -330,7 +330,7 @@ class Product_Import extends Stepped_Job {
 
 			$verified_zero_ids = array();
 		} else {
-			$this->clear_unverified_zero_count_attempts();
+			$this->clear_unverified_zero_count_attempts( 'import_inventory' );
 		}
 
 		foreach ( $objects as $catalog_object ) {
