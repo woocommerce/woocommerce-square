@@ -257,6 +257,13 @@ class Helper {
 			return true;
 		}
 
+		// A negative count is only reachable through real inventory movement (an item that was
+		// never counted reads exactly zero), so it is a proven sellout and does not need the
+		// history check. WooCommerce does not hold negative stock, so it lands on zero.
+		if ( $quantity < 0 ) {
+			$zero_verified = true;
+		}
+
 		// Zero count: never change the product's manage_stock setting in either direction.
 
 		if ( ! $product->get_manage_stock() ) {
