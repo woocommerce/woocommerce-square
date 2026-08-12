@@ -359,10 +359,19 @@ class Background_Job extends Background_Job_Handler {
 		}
 		set_transient( 'wc_square_admin_recovery_check', 1, 5 * MINUTE_IN_SECONDS );
 
-		// Run the full healthcheck, not only the recovery: it also prunes stale failed actions and
-		// re-enqueues the runner when jobs are queued with no scheduled action, so a recovery from
-		// a broken cron site is followed by the same queue restart checks the cron path gets.
-		$this->handle_sync_healthcheck();
+		// Deliberately NOT the full healthcheck. Its tail enqueues a job runner whenever the queue is
+		// non empty and Action Scheduler has nothing scheduled, and handle() takes the process lock
+		// without checking it first, so making every admin page load a third enqueue trigger would
+		// widen the window for two runners to process the same step and push the same objects twice.
+		// Recovery and housekeeping are safe here; the queue is only restarted when this call
+		// actually failed a stalled job, which is the case where nothing else will restart it.
+		$recovered = $this->maybe_recover_stuck_sync();
+
+		$this->cleanup_stale_failed_actions();
+
+		if ( $recovered && ! $this->is_queue_empty() && function_exists( 'as_has_scheduled_action' ) && ! as_has_scheduled_action( 'wc_square_job_runner' ) ) {
+			as_enqueue_async_action( 'wc_square_job_runner' );
+		}
 	}
 
 	/**
