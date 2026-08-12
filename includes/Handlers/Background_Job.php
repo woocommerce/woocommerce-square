@@ -402,7 +402,7 @@ class Background_Job extends Background_Job_Handler {
 
 		$this->cleanup_stale_failed_actions();
 
-		if ( $recovered && ! $this->is_queue_empty() && function_exists( 'as_has_scheduled_action' ) && ! as_has_scheduled_action( 'wc_square_job_runner' ) ) {
+		if ( $recovered && ! $this->is_queue_empty() && ! $this->has_pending_job_runner() ) {
 			as_enqueue_async_action( 'wc_square_job_runner' );
 		}
 	}
@@ -470,15 +470,23 @@ class Background_Job extends Background_Job_Handler {
 			return false;
 		}
 
-		// A runner action is mid flight. The process lock only lasts 60 seconds, so a single long
-		// step outlives it and would otherwise look abandoned; Action Scheduler's own record of a
-		// running action is the reliable signal that a worker is still on it.
-		if ( function_exists( 'as_get_scheduled_actions' ) && class_exists( 'ActionScheduler_Store' ) ) {
+		// A runner action was touched recently, so a worker is still on it. The process lock only
+		// lasts 60 seconds, so a single long step outlives it and would otherwise look abandoned.
+		//
+		// The recency bound is essential rather than cosmetic: an in progress row is only cleared by
+		// Action Scheduler's own cleaner, which runs from its queue runner, so on a site where Action
+		// Scheduler is not executing (the incident this recovery exists for) a worker killed mid
+		// action leaves that row in progress forever. Without the bound this guard would then block
+		// recovery permanently and rebuild the same deadlock in a new shape.
+		if ( function_exists( 'as_get_scheduled_actions' ) && function_exists( 'as_get_datetime_object' ) && class_exists( 'ActionScheduler_Store' ) ) {
 			$running = as_get_scheduled_actions(
 				array(
-					'hook'     => 'wc_square_job_runner',
-					'status'   => \ActionScheduler_Store::STATUS_RUNNING,
-					'per_page' => 1,
+					'hook'             => 'wc_square_job_runner',
+					'status'           => \ActionScheduler_Store::STATUS_RUNNING,
+					'modified'         => as_get_datetime_object( $threshold . ' seconds ago' ),
+					'modified_compare' => '>',
+					'per_page'         => 1,
+					'orderby'          => 'none',
 				),
 				'ids'
 			);
@@ -492,7 +500,9 @@ class Background_Job extends Background_Job_Handler {
 		// go quiet long enough for the threshold to pass, then resume on the visit that triggered
 		// this very check). Give the queue one grace window to make progress; recover only if the
 		// job is still stalled with the same queued action after that window.
-		if ( function_exists( 'as_next_scheduled_action' ) && false !== as_next_scheduled_action( 'wc_square_job_runner' ) ) {
+		// A pending action means the queue is waiting its turn rather than dead, so it earns a grace
+		// window. An in progress row does not count: see has_pending_job_runner().
+		if ( $this->has_pending_job_runner() ) {
 
 			/**
 			 * Filters how long a stalled sync job is given to resume when a job runner action is
@@ -559,6 +569,38 @@ class Background_Job extends Background_Job_Handler {
 		wc_square()->log( 'Auto-failed a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). The queue lock was released so the next sync can run.' );
 
 		return true;
+	}
+
+
+	/**
+	 * Checks whether a job runner action is waiting to run.
+	 *
+	 * Deliberately not as_has_scheduled_action() or as_next_scheduled_action(): both also report true
+	 * for an action that is in progress, and an in progress row can outlive its worker indefinitely
+	 * because only Action Scheduler's own cleaner clears it. Treating that as "the queue will run"
+	 * would both grant a dead queue a grace window and stop the queue ever being restarted.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return bool
+	 */
+	protected function has_pending_job_runner() {
+
+		if ( ! function_exists( 'as_get_scheduled_actions' ) || ! class_exists( 'ActionScheduler_Store' ) ) {
+			return false;
+		}
+
+		$pending = as_get_scheduled_actions(
+			array(
+				'hook'     => 'wc_square_job_runner',
+				'status'   => \ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 1,
+				'orderby'  => 'none',
+			),
+			'ids'
+		);
+
+		return ! empty( $pending );
 	}
 
 
