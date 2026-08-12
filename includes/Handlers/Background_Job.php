@@ -168,6 +168,11 @@ class Background_Job extends Background_Job_Handler {
 			$job->status                = 'processing';
 			$job->started_processing_at = current_time( 'mysql' );
 
+			// A new sync is now running, so the recovery notice has served its purpose. Clearing it
+			// here rather than on completion means a long sync does not keep showing a warning about
+			// the previous one for hours.
+			delete_option( 'wc_square_sync_auto_recovered_at' );
+
 			$this->update_job( $job );
 
 			// Re-read the row: update_job() returns the supplied object even when the underlying
@@ -221,7 +226,8 @@ class Background_Job extends Background_Job_Handler {
 	 */
 	public function job_complete( $job ) {
 
-		// A sync completed successfully, so clear any pending auto-recovery notice.
+		// Normally cleared when the sync started; repeated here for a job that was already running
+		// when this release was installed.
 		delete_option( 'wc_square_sync_auto_recovered_at' );
 
 		wc_square()->get_sync_handler()->set_last_synced_at();
