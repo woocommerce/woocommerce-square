@@ -425,15 +425,34 @@ class Background_Job extends Background_Job_Handler {
 		// A runner action is still queued: the queue may be paused, not dead (low traffic sites can
 		// go quiet long enough for the threshold to pass, then resume on the visit that triggered
 		// this very check). Give the queue one grace window to make progress; recover only if the
-		// job is still stalled with the same queued action after the grace period.
+		// job is still stalled with the same queued action after that window.
 		if ( function_exists( 'as_next_scheduled_action' ) && false !== as_next_scheduled_action( 'wc_square_job_runner' ) ) {
+
+			/**
+			 * Filters how long a stalled sync job is given to resume when a job runner action is
+			 * still queued, before it is treated as dead.
+			 *
+			 * A queued action means the queue may simply be paused rather than broken, and the
+			 * request that runs this check usually gives Action Scheduler its chance to run, so this
+			 * only needs to be long enough for that to happen. It is deliberately shorter than the
+			 * stall threshold: with both at their defaults a paused queue is left alone for 15
+			 * minutes and a genuinely dead one is failed after 20, not 30.
+			 *
+			 * @since x.x.x
+			 *
+			 * @param int $grace_period grace period in seconds (default a third of the stall threshold)
+			 */
+			$grace_period = max( MINUTE_IN_SECONDS, (int) apply_filters( 'wc_square_stuck_job_grace_period', (int) round( $threshold / 3 ) ) );
+
 			$grace_started = (int) get_option( 'wc_square_recovery_grace_at', 0 );
+
 			if ( ! $grace_started ) {
 				update_option( 'wc_square_recovery_grace_at', time(), false );
-				wc_square()->log( 'Stalled sync has a queued runner action; allowing a grace window before auto-failing.' );
+				wc_square()->log( sprintf( 'Stalled sync has a queued runner action; allowing %d seconds for the queue to resume before auto-failing.', $grace_period ) );
 				return;
 			}
-			if ( ( time() - $grace_started ) < $threshold ) {
+
+			if ( ( time() - $grace_started ) < $grace_period ) {
 				return;
 			}
 		}
