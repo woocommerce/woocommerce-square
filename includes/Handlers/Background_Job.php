@@ -455,7 +455,7 @@ class Background_Job extends Background_Job_Handler {
 		// Recorded so the admin notice can tell the merchant a stalled sync was stopped.
 		update_option( 'wc_square_sync_auto_recovered_at', time() );
 
-		wc_square()->log( 'Auto-recovered a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). The job was marked failed and the queue lock released.' );
+		wc_square()->log( 'Auto-failed a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). The queue lock was released so the next sync can run.' );
 	}
 
 	/**
