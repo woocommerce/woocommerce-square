@@ -168,18 +168,23 @@ class Background_Job extends Background_Job_Handler {
 			$job->status                = 'processing';
 			$job->started_processing_at = current_time( 'mysql' );
 
-			// A new sync is now running, so the recovery notice has served its purpose. Clearing it
-			// here rather than on completion means a long sync does not keep showing a warning about
-			// the previous one for hours.
-			delete_option( 'wc_square_sync_auto_recovered_at' );
+			// A sync the merchant started has taken over, so the recovery notice has served its
+			// purpose. Clearing it here rather than on completion means a long sync does not keep
+			// showing a warning about the previous one for hours. Interval poll jobs are excluded:
+			// they start on their own every few minutes and would dismiss the notice before anyone
+			// had a chance to read it.
+			if ( 'poll' !== ( $job->action ?? '' ) ) {
+				delete_option( 'wc_square_sync_auto_recovered_at' );
+			}
 
 			$this->update_job( $job );
 
-			// Re-read the row: update_job() returns the supplied object even when the underlying
-			// option no longer exists (e.g. the Clear Square Sync tool removed it concurrently),
-			// so only a fresh read can prove the job is still there.
-			$job = $this->get_job( $job->id );
-			if ( ! $job ) {
+			// Confirm the row still exists rather than trusting update_job(), which returns the
+			// supplied object even when the option has been removed concurrently (the Clear Square
+			// Sync tool). The object itself is deliberately NOT replaced with a fresh read: the
+			// shutdown handler registered in handle() holds this instance, and swapping it would
+			// leave that handler writing a stale snapshot after a fatal.
+			if ( ! $this->job_exists( $job->id ) ) {
 				return;
 			}
 		}
@@ -218,6 +223,30 @@ class Background_Job extends Background_Job_Handler {
 
 
 	/**
+	 * Checks whether a job row still exists.
+	 *
+	 * Used instead of re-reading the job, because callers hold an object that other code (including
+	 * the shutdown handler registered in handle()) keeps mutating, and replacing it would strand
+	 * those references.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $job_id job ID
+	 * @return bool
+	 */
+	protected function job_exists( $job_id ) {
+		global $wpdb;
+
+		if ( ! $job_id ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT option_id FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", $this->identifier . '_job_' . $job_id ) );
+	}
+
+
+	/**
 	 * Handles actions after a sync job is complete.
 	 *
 	 * @since 2.0.0
@@ -247,10 +276,14 @@ class Background_Job extends Background_Job_Handler {
 	 */
 	public function job_failed( $job ) {
 
+		$message = empty( $job->auto_failed )
+			? __( 'Sync failed. Please try again', 'woocommerce-square' )
+			: __( 'A sync stopped responding and was stopped automatically. Product data may be out of date, please start a new sync.', 'woocommerce-square' );
+
 		Records::set_record(
 			array(
 				'type'    => 'failed',
-				'message' => __( 'Sync failed. Please try again', 'woocommerce-square' ),
+				'message' => $message,
 			)
 		);
 
@@ -384,13 +417,19 @@ class Background_Job extends Background_Job_Handler {
 	 * processing. A flag is stored so the admin notice can prompt a re-run.
 	 *
 	 * @since x.x.x
+	 *
+	 * @return bool whether a stalled job was failed by this call
 	 */
 	protected function maybe_recover_stuck_sync() {
 
-		$job = $this->get_job();
+		// Ask for processing jobs specifically. get_job() returns the oldest queued OR processing row,
+		// so an older queued job would otherwise hide a newer stalled one from this check entirely.
+		$processing = $this->get_jobs( array( 'status' => 'processing' ) );
+		$job        = is_array( $processing ) ? reset( $processing ) : null;
 
 		if ( ! $job || ! isset( $job->status ) || 'processing' !== $job->status ) {
-			return;
+			$this->clear_recovery_grace();
+			return false;
 		}
 
 		/**
@@ -422,13 +461,31 @@ class Background_Job extends Background_Job_Handler {
 		};
 
 		if ( ! $is_stalled( $job ) ) {
-			delete_option( 'wc_square_recovery_grace_at' );
-			return;
+			$this->clear_recovery_grace();
+			return false;
 		}
 
 		// A live worker still holds the process lock: the job is progressing, not stuck. Leave it.
 		if ( $this->is_process_running() ) {
-			return;
+			return false;
+		}
+
+		// A runner action is mid flight. The process lock only lasts 60 seconds, so a single long
+		// step outlives it and would otherwise look abandoned; Action Scheduler's own record of a
+		// running action is the reliable signal that a worker is still on it.
+		if ( function_exists( 'as_get_scheduled_actions' ) && class_exists( 'ActionScheduler_Store' ) ) {
+			$running = as_get_scheduled_actions(
+				array(
+					'hook'     => 'wc_square_job_runner',
+					'status'   => \ActionScheduler_Store::STATUS_RUNNING,
+					'per_page' => 1,
+				),
+				'ids'
+			);
+
+			if ( ! empty( $running ) ) {
+				return false;
+			}
 		}
 
 		// A runner action is still queued: the queue may be paused, not dead (low traffic sites can
@@ -453,16 +510,28 @@ class Background_Job extends Background_Job_Handler {
 			 */
 			$grace_period = max( MINUTE_IN_SECONDS, (int) apply_filters( 'wc_square_stuck_job_grace_period', (int) round( $threshold / 3 ) ) );
 
-			$grace_started = (int) get_option( 'wc_square_recovery_grace_at', 0 );
+			// The grace marker is scoped to the job it was started for. A global timestamp could
+			// outlive its job (the Clear Square Sync tool, or a job that simply finished) and the next
+			// stall would then read an ancient timestamp, skip the grace window entirely, and fail a
+			// merely paused queue on first detection.
+			$grace         = (array) get_option( 'wc_square_recovery_grace', array() );
+			$grace_started = (int) ( $grace['at'] ?? 0 );
 
-			if ( ! $grace_started ) {
-				update_option( 'wc_square_recovery_grace_at', time(), false );
+			if ( ! $grace_started || ( $grace['job'] ?? '' ) !== $job->id ) {
+				update_option(
+					'wc_square_recovery_grace',
+					array(
+						'job' => $job->id,
+						'at'  => time(),
+					),
+					false
+				);
 				wc_square()->log( sprintf( 'Stalled sync has a queued runner action; allowing %d seconds for the queue to resume before auto-failing.', $grace_period ) );
-				return;
+				return false;
 			}
 
 			if ( ( time() - $grace_started ) < $grace_period ) {
-				return;
+				return false;
 			}
 		}
 
@@ -470,20 +539,39 @@ class Background_Job extends Background_Job_Handler {
 		// window since get_job() above, in which case we must not clobber it with a stale snapshot.
 		$job = $this->get_job( $job->id );
 		if ( ! $is_stalled( $job ) ) {
-			return;
+			$this->clear_recovery_grace();
+			return false;
 		}
 
 		// Recover: fail the stalled job and release the lock. Scheduled job_runner actions are
 		// deliberately left in place so any other sync job waiting in the queue keeps processing;
 		// the failed job no longer comes back from get_job(), so the next run picks up the rest.
+		// Flagged so job_failed() can record why this job failed instead of the generic message.
+		$job->auto_failed = true;
+
 		$this->fail_job( $job, __( 'Sync job stalled and was automatically marked as failed.', 'woocommerce-square' ) );
 		$this->unlock_process();
-		delete_option( 'wc_square_recovery_grace_at' );
+		$this->clear_recovery_grace();
 
 		// Recorded so the admin notice can tell the merchant a stalled sync was stopped.
 		update_option( 'wc_square_sync_auto_recovered_at', time() );
 
 		wc_square()->log( 'Auto-failed a stalled sync job (' . ( isset( $job->id ) ? $job->id : 'unknown' ) . '). The queue lock was released so the next sync can run.' );
+
+		return true;
+	}
+
+
+	/**
+	 * Clears the stalled sync grace marker.
+	 *
+	 * @since x.x.x
+	 */
+	protected function clear_recovery_grace() {
+
+		if ( get_option( 'wc_square_recovery_grace', false ) ) {
+			delete_option( 'wc_square_recovery_grace' );
+		}
 	}
 
 	/**
@@ -547,7 +635,12 @@ class Background_Job extends Background_Job_Handler {
 					);
 
 					foreach ( (array) $action_ids as $action_id ) {
-						$store->delete_action( $action_id );
+						try {
+							$store->delete_action( $action_id );
+						} catch ( \Exception $e ) {
+							// One undeletable action must not abandon the rest of the backlog for a day.
+							wc_square()->log( 'Could not delete failed action ' . $action_id . ': ' . $e->getMessage() );
+						}
 					}
 
 					// A short page means the backlog for this hook is exhausted.
