@@ -445,6 +445,12 @@ class Background_Job extends Background_Job_Handler {
 		 *
 		 * @since x.x.x
 		 *
+		 * Note when lowering this: Action Scheduler stamps a runner action's last attempt time once,
+		 * when the worker picks it up, and does not refresh it while the step runs. A threshold below
+		 * the longest single step therefore reads a live worker as stale, and with no pending action
+		 * to earn a grace window that job would be failed while it is still working. The 15 minute
+		 * default sits well above any step this plugin runs.
+		 *
 		 * @param int $threshold threshold in seconds (default 15 minutes)
 		 */
 		$threshold = (int) apply_filters( 'wc_square_stuck_job_threshold', 15 * MINUTE_IN_SECONDS );
