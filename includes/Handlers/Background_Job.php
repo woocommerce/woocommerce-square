@@ -424,7 +424,14 @@ class Background_Job extends Background_Job_Handler {
 
 		// Ask for processing jobs specifically. get_job() returns the oldest queued OR processing row,
 		// so an older queued job would otherwise hide a newer stalled one from this check entirely.
-		$processing = $this->get_jobs( array( 'status' => 'processing' ) );
+		// ASC because get_jobs() defaults to DESC and the job blocking the queue is the oldest one.
+		$processing = $this->get_jobs(
+			array(
+				'status'  => 'processing',
+				'order'   => 'ASC',
+				'orderby' => 'option_id',
+			)
+		);
 		$job        = is_array( $processing ) ? reset( $processing ) : null;
 
 		if ( ! $job || ! isset( $job->status ) || 'processing' !== $job->status ) {
