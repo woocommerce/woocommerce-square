@@ -109,6 +109,16 @@ class Manual_Synchronization extends Stepped_Job {
 			foreach ( $unsupported_product_ids as $matched_product_id ) {
 				$product = wc_get_product( $matched_product_id );
 				if ( ! $product instanceof \WC_Product ) {
+					Records::set_record(
+						array(
+							'type'    => 'alert',
+							'message' => sprintf(
+								/* translators: %1$s - Product ID. */
+								__( 'Product ID (%1$s) is excluded from sync as the product not found.', 'woocommerce-square' ),
+								$matched_product_id,
+							),
+						)
+					);
 					continue;
 				}
 
