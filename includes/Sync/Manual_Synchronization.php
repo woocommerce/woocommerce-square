@@ -108,7 +108,11 @@ class Manual_Synchronization extends Stepped_Job {
 
 			foreach ( $unsupported_product_ids as $matched_product_id ) {
 				$product = wc_get_product( $matched_product_id );
-				$type    = $product->get_type();
+				if ( ! $product instanceof \WC_Product ) {
+					continue;
+				}
+
+				$type = $product->get_type();
 
 				Records::set_record(
 					array(
@@ -1114,7 +1118,12 @@ class Manual_Synchronization extends Stepped_Job {
 					$object = $this->convert_to_catalog_object( $object );
 				}
 
-				$product                                  = wc_get_product( $product_id );
+				$product = wc_get_product( $product_id );
+
+				if ( ! $product instanceof \WC_Product ) {
+					continue;
+				}
+
 				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
 
 				$catalog_item = new Catalog_Item( $product, $is_delete_action );
