@@ -1105,11 +1105,18 @@ class Manual_Synchronization extends Stepped_Job {
 			'in_progress_upsert_catalog_objects',
 			array(
 				'staged_product_ids'                => array(),
+				'missing_product_ids'               => array(),
 				'unprocessed_upsert_response'       => null,
 				'mapped_client_item_ids'            => array(),
 				'processed_remote_catalog_item_ids' => array(),
 			)
 		);
+
+		// Product IDs that no longer resolve to a WC_Product (e.g. permanently deleted mid-sync).
+		// Tracked so they can be dropped from the unprocessed set below, otherwise they would be
+		// re-queued forever and the sync step would never complete. Restored from in-progress data
+		// so a resumed run (which skips the staging loop) still excludes them.
+		$missing_product_ids = $in_progress['missing_product_ids'] ?? array();
 
 		$upsert_response = null;
 		if ( ! empty( $in_progress['unprocessed_upsert_response'] ) ) {
@@ -1131,6 +1138,14 @@ class Manual_Synchronization extends Stepped_Job {
 				$product = wc_get_product( $product_id );
 
 				if ( ! $product instanceof \WC_Product ) {
+					// Product is gone (e.g. permanently deleted mid-sync). Mark it missing so it drops
+					// out of the unprocessed set and the step can complete rather than re-queueing it
+					// forever. Logged once per product (and not re-logged on a resumed run).
+					if ( ! in_array( $product_id, $missing_product_ids, true ) ) {
+						$missing_product_ids[] = $product_id;
+
+						wc_square()->log( 'Skipping product #' . $product_id . ' during upsert - it no longer exists (may have been deleted).' );
+					}
 					continue;
 				}
 
@@ -1147,6 +1162,18 @@ class Manual_Synchronization extends Stepped_Job {
 				} else {
 					break;
 				}
+			}
+
+			// If nothing could be staged (e.g. every product in this batch was deleted mid-sync),
+			// there is nothing to send to Square. Clear progress and return early so the missing IDs
+			// are excluded from unprocessed and the step can complete instead of looping on an empty
+			// upsert request.
+			if ( empty( $batches ) ) {
+				$this->set_attr( 'in_progress_upsert_catalog_objects', null );
+
+				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
+
+				return $result;
 			}
 
 			try {
@@ -1186,6 +1213,7 @@ class Manual_Synchronization extends Stepped_Job {
 			}
 
 			$in_progress['staged_product_ids']          = $staged_product_ids;
+			$in_progress['missing_product_ids']         = $missing_product_ids;
 			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $upsert_response, JSON_PRETTY_PRINT );
 			$this->set_attr( 'in_progress_upsert_catalog_objects', $in_progress );
 
@@ -1326,7 +1354,9 @@ class Manual_Synchronization extends Stepped_Job {
 		$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
 		$result['processed']   = $staged_product_ids;
-		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+		// Exclude missing products (deleted mid-sync) from unprocessed so callers do not re-queue
+		// them indefinitely, which would keep the sync step from ever completing.
+		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
 
 		return $result;
 	}
