@@ -38,9 +38,6 @@ defined( 'ABSPATH' ) || exit;
 class Helper {
 
 
-	/** @var int catalog objects held in the unverified zero count retry list */
-	const MAX_UNVERIFIED_ZERO_COUNTS = 1000;
-
 	/**
 	 * Maximum group narrowing passes before falling back to one request per unresolved id.
 	 *
@@ -326,89 +323,6 @@ class Helper {
 			'object_ids' => $returned,
 			'cursor'     => $data->getCursor(),
 		);
-	}
-
-
-	/**
-	 * Remembers catalog objects whose zero count could not be verified, for a later retry.
-	 *
-	 * Using the read window as the retry mechanism forces a choice between a window that grows on
-	 * every failed poll and a window that is eventually dropped, which would skip a genuine sellout
-	 * permanently. Remembering the specific objects avoids both: the watermark advances normally and
-	 * these objects are re-checked by id until they resolve.
-	 *
-	 * @since x.x.x
-	 *
-	 * @param string[] $catalog_object_ids objects whose zero count is still unverified
-	 */
-	public static function remember_unverified_zero_counts( $catalog_object_ids ) {
-
-		$catalog_object_ids = array_filter( (array) $catalog_object_ids );
-
-		if ( empty( $catalog_object_ids ) ) {
-			return;
-		}
-
-		$pending = (array) get_option( 'wc_square_unverified_zero_counts', array() );
-		$now     = time();
-
-		foreach ( $catalog_object_ids as $catalog_object_id ) {
-			if ( ! isset( $pending[ $catalog_object_id ] ) ) {
-				$pending[ $catalog_object_id ] = $now;
-			}
-		}
-
-		// Give up on anything that has sat here for a week. That is the one remaining window where a
-		// zero could be missed for good, and it is deliberately far longer than any plausible Square
-		// incident.
-		foreach ( $pending as $catalog_object_id => $first_seen ) {
-			if ( $now - (int) $first_seen > WEEK_IN_SECONDS ) {
-				unset( $pending[ $catalog_object_id ] );
-				wc_square()->log( 'Stopped waiting to verify the zero count for catalog object ' . $catalog_object_id . ': it has been pending for over a week.' );
-			}
-		}
-
-		// Keep the list bounded. Retries run oldest first, so the OLDEST entries are kept and the
-		// newest are dropped: evicting the oldest would keep discarding the entries being worked.
-		if ( count( $pending ) > self::MAX_UNVERIFIED_ZERO_COUNTS ) {
-			$dropped = count( $pending ) - self::MAX_UNVERIFIED_ZERO_COUNTS;
-			$pending = array_slice( $pending, 0, self::MAX_UNVERIFIED_ZERO_COUNTS, true );
-			wc_square()->log( sprintf( 'The unverified zero count list is full; %d newer entries were not kept.', $dropped ) );
-		}
-
-		update_option( 'wc_square_unverified_zero_counts', $pending, false );
-	}
-
-
-	/**
-	 * Gets the catalog object IDs waiting for their zero count to be verified.
-	 *
-	 * @since x.x.x
-	 *
-	 * @return string[]
-	 */
-	public static function get_unverified_zero_counts() {
-
-		return array_keys( (array) get_option( 'wc_square_unverified_zero_counts', array() ) );
-	}
-
-
-	/**
-	 * Forgets catalog objects whose zero count no longer needs a retry.
-	 *
-	 * @since x.x.x
-	 *
-	 * @param string[] $catalog_object_ids resolved objects
-	 */
-	public static function forget_unverified_zero_counts( $catalog_object_ids ) {
-
-		$pending = (array) get_option( 'wc_square_unverified_zero_counts', array() );
-
-		foreach ( (array) $catalog_object_ids as $catalog_object_id ) {
-			unset( $pending[ $catalog_object_id ] );
-		}
-
-		update_option( 'wc_square_unverified_zero_counts', $pending, false );
 	}
 
 
