@@ -5,7 +5,7 @@
  * Version: 5.4.3
  * Plugin URI: https://woocommerce.com/products/square/
  * Requires at least: 6.9
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * PHP tested up to: 8.4
  *

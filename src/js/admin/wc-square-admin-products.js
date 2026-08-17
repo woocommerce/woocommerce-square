@@ -67,7 +67,7 @@ jQuery( document ).ready( ( $ ) => {
 		// when clicking the quick edit button fetch the default Synced with Square checkbox
 		$( '#the-list' ).on( 'click', '.editinline', ( e ) => {
 			const $row = $( e.target ).closest( 'tr' );
-			const postID = $row.find( 'th.check-column input' ).val();
+			const postID = $row.find( '.check-column input' ).val();
 			const data = {
 				action: 'wc_square_get_quick_edit_product_details',
 				security: wc_square_admin_products.get_quick_edit_product_details_nonce,
