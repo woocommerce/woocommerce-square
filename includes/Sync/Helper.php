@@ -94,6 +94,40 @@ class Helper {
 	}
 
 	/**
+	 * Collects the catalog object ids whose count is zero.
+	 *
+	 * Callers hold counts in two shapes: a plain id to quantity map, and an id to stats map where the
+	 * quantity sits under a key. Both are accepted so the zero collection is written once.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $counts id keyed counts, values either a quantity or an array of stats
+	 * @param string|null $quantity_key key holding the quantity when values are arrays
+	 * @return string[] ids whose count is exactly zero
+	 */
+	public static function zero_count_object_ids( array $counts, $quantity_key = null ) {
+
+		$zero_object_ids = array();
+
+		foreach ( $counts as $object_id => $value ) {
+
+			if ( null !== $quantity_key ) {
+				if ( ! is_array( $value ) || ! isset( $value[ $quantity_key ] ) ) {
+					continue;
+				}
+				$value = $value[ $quantity_key ];
+			}
+
+			if ( 0.0 === (float) $value ) {
+				$zero_object_ids[] = $object_id;
+			}
+		}
+
+		return $zero_object_ids;
+	}
+
+
+	/**
 	 * Returns the subset of catalog object IDs that have real inventory history in Square.
 	 *
 	 * A tracked item that has never had a count recorded reports an IN_STOCK count of 0 that is
