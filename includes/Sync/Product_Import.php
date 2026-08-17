@@ -312,29 +312,13 @@ class Product_Import extends Stepped_Job {
 		// Verify zero counts against Square's inventory change history: a never-counted item
 		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
 		// (SQUARE-145).
-		$zero_object_ids = array();
-		foreach ( $inventory_hash as $object_id => $object_quantity ) {
-			if ( 0.0 === (float) $object_quantity ) {
-				$zero_object_ids[] = $object_id;
-			}
-		}
-		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+		$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'import_inventory', $zero_object_ids );
 
 		if ( null === $verified_zero_ids ) {
-
-			// Verification unavailable. Return WITHOUT advancing the import cursor so the step runs
-			// again; throwing here would fail the whole import for one transient API error.
-			if ( $this->should_retry_unverified_zero_counts( 'import_inventory' ) ) {
-				return;
-			}
-
-			$verified_zero_ids = array();
-
-			// Hand the unverified objects to the shared retry list so a later poll re-checks them by
-			// id rather than leaving them until Square touches them again.
-			Helper::remember_unverified_zero_counts( $zero_object_ids );
-		} else {
-			$this->clear_unverified_zero_count_attempts( 'import_inventory' );
+			// Verification unavailable and retries remain: return WITHOUT advancing the import cursor
+			// so the step runs again; throwing would fail the whole import for one transient error.
+			return;
 		}
 
 		foreach ( $objects as $catalog_object ) {

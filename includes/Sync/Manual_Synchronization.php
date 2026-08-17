@@ -1994,37 +1994,21 @@ class Manual_Synchronization extends Stepped_Job {
 
 		// Verify zero counts against Square's inventory change history: a never-counted item
 		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written.
-		$zero_object_ids = array();
-		foreach ( $catalog_objects_inventory_stats as $object_id => $stats ) {
-			if ( 0.0 === (float) $stats['quantity'] ) {
-				$zero_object_ids[] = $object_id;
-			}
-		}
-		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+		$zero_object_ids   = Helper::zero_count_object_ids( $catalog_objects_inventory_stats, 'quantity' );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'pull_inventory', $zero_object_ids );
 
 		if ( null === $verified_zero_ids ) {
 
-			// Verification unavailable. Return WITHOUT marking anything processed so the step runs
-			// again; throwing here would fail the whole sync for one transient API error. The queue
-			// attribute was already reduced by the batch slice above and these ids were never
+			// Verification unavailable and retries remain. Return WITHOUT marking anything processed
+			// so the step runs again; throwing would fail the whole sync for one transient error. The
+			// queue attribute was already reduced by the batch slice above and these ids were never
 			// marked processed, so put them back or the retry would skip the whole batch.
-			if ( $this->should_retry_unverified_zero_counts( 'pull_inventory' ) ) {
+			$this->set_attr(
+				'pull_inventory_variation_ids',
+				array_values( array_unique( array_merge( (array) $this->get_attr( 'pull_inventory_variation_ids', array() ), $catalog_object_ids ) ) )
+			);
 
-				$this->set_attr(
-					'pull_inventory_variation_ids',
-					array_values( array_unique( array_merge( (array) $this->get_attr( 'pull_inventory_variation_ids', array() ), $catalog_object_ids ) ) )
-				);
-
-				return;
-			}
-
-			$verified_zero_ids = array();
-
-			// Hand the unverified objects to the shared retry list so a later poll re-checks them by
-			// id: without this their zeros would only be revisited if Square touched them again.
-			Helper::remember_unverified_zero_counts( $zero_object_ids );
-		} else {
-			$this->clear_unverified_zero_count_attempts( 'pull_inventory' );
+			return;
 		}
 
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {

@@ -333,30 +333,13 @@ class Interval_Polling extends Stepped_Job {
 			// A zero IN_STOCK count is ambiguous: a real sellout and a never-counted new item look
 			// identical. Verify zeros against Square's inventory change history so phantom zeros
 			// from uncounted items are never written to WooCommerce (SQUARE-145).
-			$zero_object_ids = array();
-			foreach ( $inventory_hash as $object_id => $object_quantity ) {
-				if ( 0.0 === (float) $object_quantity ) {
-					$zero_object_ids[] = $object_id;
-				}
-			}
-			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+			$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+			$verified_zero_ids = $this->resolve_zero_count_verification( 'update_inventory_tracking', $zero_object_ids );
+
 			if ( null === $verified_zero_ids ) {
-
-				// Verification unavailable. Return WITHOUT advancing any progress marker so the
-				// step runs again, rather than throwing, which would fail the whole job.
-				if ( $this->should_retry_unverified_zero_counts( 'update_inventory_tracking' ) ) {
-					return;
-				}
-
-				// Attempts exhausted: proceed with no zero verified, so only the zero writes are
-				// skipped and the job can finish.
-				$verified_zero_ids = array();
-
-				// Remember the objects so they are re-checked by id on later polls: the watermark can
-				// then advance normally without this window being lost.
-				Helper::remember_unverified_zero_counts( $zero_object_ids );
-			} else {
-				$this->clear_unverified_zero_count_attempts( 'update_inventory_tracking' );
+				// Verification unavailable and retries remain: return WITHOUT advancing any progress
+				// marker so the step runs again, rather than throwing and failing the whole job.
+				return;
 			}
 
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
@@ -464,6 +447,15 @@ class Interval_Polling extends Stepped_Job {
 					}
 
 					foreach ( is_array( $counts_data->getCounts() ) ? $counts_data->getCounts() : array() as $count ) {
+
+						// Keep only what was asked for. Square drops the catalog object filter when
+						// none of the supplied ids still exists there, and a chunk of stale mappings
+						// is exactly that case, so an unfiltered answer would otherwise pull other
+						// products' counts into this retry pass.
+						if ( ! in_array( $count->getCatalogObjectId(), $chunk, true ) ) {
+							continue;
+						}
+
 						$counts[ $count->getCatalogObjectId() ] = $count->getQuantity();
 					}
 
@@ -471,12 +463,7 @@ class Interval_Polling extends Stepped_Job {
 				} while ( $cursor );
 			}
 
-			$zero_ids = array();
-			foreach ( $counts as $object_id => $quantity ) {
-				if ( 0.0 === (float) $quantity ) {
-					$zero_ids[] = $object_id;
-				}
-			}
+			$zero_ids = Helper::zero_count_object_ids( $counts );
 
 			$verified = Helper::get_catalog_objects_with_inventory_history( $zero_ids );
 
