@@ -61,6 +61,48 @@ abstract class Stepped_Job extends Job {
 
 
 	/**
+	 * Verifies which zero counts are real, applying this class's shared retry policy when Square
+	 * cannot be asked.
+	 *
+	 * Wraps the three parts every step repeated: verify the zeros, hold and retry a bounded number of
+	 * times when verification is unavailable, then proceed with nothing verified and hand the ids to
+	 * the retry list. Progress markers stay with the caller, because each step holds something
+	 * different (a cursor, a watermark, a queue attribute) and flattening that in here would silently
+	 * drop work.
+	 *
+	 * The return has three meanings:
+	 * - ids: verified, so write zeros for these ids only.
+	 * - empty array: nothing could be verified and the attempts are spent, so write no zeros and carry
+	 *   on; the ids are already on the retry list.
+	 * - null: verification is unavailable and the caller must hold its own progress and return so the
+	 *   step runs again.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name used for the attempt counters and messages
+	 * @param string[] $zero_object_ids catalog object ids reporting a zero count
+	 * @return string[]|null verified ids, or null when the caller should hold and retry
+	 */
+	protected function resolve_zero_count_verification( $step_name, array $zero_object_ids ) {
+
+		$verified = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+
+		if ( null !== $verified ) {
+			$this->clear_unverified_zero_count_attempts( $step_name );
+			return $verified;
+		}
+
+		if ( $this->should_retry_unverified_zero_counts( $step_name ) ) {
+			return null;
+		}
+
+		Helper::remember_unverified_zero_counts( $zero_object_ids );
+
+		return array();
+	}
+
+
+	/**
 	 * Decides how a step should react when Square's inventory history could not be read.
 	 *
 	 * A zero count cannot be classified as a real sellout or as a never counted item without that
