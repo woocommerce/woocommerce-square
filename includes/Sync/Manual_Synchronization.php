@@ -2000,7 +2000,9 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( null === $verified_zero_ids ) {
 
 			// Verification unavailable and retries remain. Return WITHOUT marking anything processed
-			// so the step runs again; throwing would fail the whole sync for one transient error. The
+			// so the step runs again; throwing would fail the whole sync for one transient error. Once
+			// the retries are spent the step proceeds writing no zeros and records an alert, and the
+			// interval poll picks those objects up again the next time Square reports a change. The
 			// queue attribute was already reduced by the batch slice above and these ids were never
 			// marked processed, so put them back or the retry would skip the whole batch.
 			$this->set_attr(

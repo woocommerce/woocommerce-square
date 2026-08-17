@@ -318,6 +318,7 @@ class Product_Import extends Stepped_Job {
 		if ( null === $verified_zero_ids ) {
 			// Verification unavailable and retries remain: return WITHOUT advancing the import cursor
 			// so the step runs again; throwing would fail the whole import for one transient error.
+			// Once the retries are spent the import proceeds writing no zeros and records an alert.
 			return;
 		}
 
