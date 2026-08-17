@@ -38,14 +38,8 @@ defined( 'ABSPATH' ) || exit;
 class Interval_Polling extends Stepped_Job {
 
 
-	/** @var int catalog objects re-checked per poll from the unverified zero count list */
-	const MAX_ZERO_COUNT_RETRIES_PER_POLL = 200;
 
-	/** @var int catalog object ids sent per inventory counts request while retrying */
-	const MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST = 100;
 
-	/** @var int pages read per chunk while retrying before the pass is abandoned */
-	const MAX_ZERO_COUNT_RETRY_PAGES = 20;
 
 	/**
 	 * Assigns the next steps needed for this sync job.
@@ -338,7 +332,9 @@ class Interval_Polling extends Stepped_Job {
 
 			if ( null === $verified_zero_ids ) {
 				// Verification unavailable and retries remain: return WITHOUT advancing any progress
-				// marker so the step runs again, rather than throwing and failing the whole job.
+				// marker so the step runs again, rather than throwing and failing the whole job. Once
+				// the retries are spent this step proceeds writing no zeros, and the counts step keeps
+				// the shared window in place so this window is read again on the next poll.
 				return;
 			}
 
@@ -386,141 +382,6 @@ class Interval_Polling extends Stepped_Job {
 			$this->complete_step( 'update_inventory_tracking' );
 		}
 	}
-
-	/**
-	 * Re-checks catalog objects whose zero count could not be verified on an earlier poll.
-	 *
-	 * These are looked up by id rather than by the read window, so a Square incident cannot make the
-	 * window grow and cannot cause a genuine sellout to be skipped permanently. Objects leave the
-	 * list as soon as they resolve, whether that means a zero was finally written, the count came
-	 * back positive, or the object no longer reports a count at all.
-	 *
-	 * @since x.x.x
-	 */
-	protected function retry_unverified_zero_counts() {
-
-		$pending = Helper::get_unverified_zero_counts();
-
-		if ( empty( $pending ) ) {
-			return;
-		}
-
-		$pending = array_slice( $pending, 0, self::MAX_ZERO_COUNT_RETRIES_PER_POLL );
-
-		try {
-			$counts = array();
-
-			// The read has to be COMPLETE before a missing id can be read as "no count any more":
-			// an odd response or an unread second page would otherwise look like proof that the
-			// object is gone and would erase the very backlog this list exists to protect. Ids are
-			// chunked and every cursor is followed, and any response that is not the expected type
-			// abandons the pass with the list untouched.
-			foreach ( array_chunk( $pending, self::MAX_ZERO_COUNT_RETRY_IDS_PER_REQUEST ) as $chunk ) {
-
-				$cursor = null;
-				$page   = 0;
-
-				do {
-
-					// A cursor that never advances would spin here inside a background job, so the
-					// pass is capped. Hitting the cap means the read is incomplete, which must not be
-					// mistaken for proof that the remaining ids are gone.
-					if ( ++$page > self::MAX_ZERO_COUNT_RETRY_PAGES ) {
-						wc_square()->log( 'Stopped retrying unverified zero counts: the inventory counts response kept paginating past the page limit.' );
-						return;
-					}
-
-					$counts_response = wc_square()->get_api()->batch_retrieve_inventory_counts(
-						array(
-							'catalog_object_ids' => $chunk,
-							'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
-							'states'             => array( 'IN_STOCK' ),
-							'cursor'             => $cursor,
-						)
-					);
-
-					$counts_data = $counts_response->get_data();
-
-					if ( ! $counts_data instanceof BatchRetrieveInventoryCountsResponse ) {
-						wc_square()->log( 'Skipped retrying unverified zero counts: the inventory counts response was missing or invalid.' );
-						return;
-					}
-
-					foreach ( is_array( $counts_data->getCounts() ) ? $counts_data->getCounts() : array() as $count ) {
-
-						// Keep only what was asked for. Square drops the catalog object filter when
-						// none of the supplied ids still exists there, and a chunk of stale mappings
-						// is exactly that case, so an unfiltered answer would otherwise pull other
-						// products' counts into this retry pass.
-						if ( ! in_array( $count->getCatalogObjectId(), $chunk, true ) ) {
-							continue;
-						}
-
-						$counts[ $count->getCatalogObjectId() ] = $count->getQuantity();
-					}
-
-					$cursor = $counts_data->getCursor();
-				} while ( $cursor );
-			}
-
-			$zero_ids = Helper::zero_count_object_ids( $counts );
-
-			$verified = Helper::get_catalog_objects_with_inventory_history( $zero_ids );
-
-			if ( null === $verified ) {
-				// Still unavailable: leave the list untouched and try again on the next poll.
-				return;
-			}
-
-			$tracking = Helper::get_catalog_objects_tracking_stats( $pending );
-			$resolved = array();
-
-			foreach ( $pending as $object_id ) {
-
-				// No count at all any more (item deleted or no longer tracked): nothing to retry.
-				if ( ! isset( $counts[ $object_id ] ) ) {
-					$resolved[] = $object_id;
-					continue;
-				}
-
-				$product = Product::get_product_by_square_variation_id( $object_id );
-
-				if ( ! $product instanceof \WC_Product || ! Product::is_synced_with_square( $product ) ) {
-					$resolved[] = $object_id;
-					continue;
-				}
-
-				$quantity = (float) $counts[ $object_id ];
-
-				// Past the check above there is no unresolved state left in this loop: the history
-				// lookup succeeded, so it is a positive verification of the whole zero set and an id
-				// missing from it is PROVEN to have no history. That is a phantom, the answer cannot
-				// change while the count stays at zero, and the correct action is to never write it.
-				// Leaving it pending would fill the list with entries that can never resolve, and
-				// because retries take the oldest first they would starve the genuine sellouts queued
-				// behind them.
-				if ( 0.0 === $quantity && ! in_array( $object_id, $verified, true ) ) {
-					wc_square()->log( sprintf( 'Confirmed catalog object %s has no inventory history: its zero count is a phantom, so no stock was written and it leaves the retry list.', $object_id ) );
-					$resolved[] = $object_id;
-					continue;
-				}
-
-				if ( Helper::apply_square_inventory_count( $product, $quantity, (bool) ( $tracking[ $object_id ]['sold_out'] ?? false ), true ) ) {
-					$product->save();
-				}
-
-				$resolved[] = $object_id;
-			}
-
-			if ( $resolved ) {
-				Helper::forget_unverified_zero_counts( $resolved );
-				wc_square()->log( sprintf( 'Resolved %d previously unverified zero counts by id.', count( $resolved ) ) );
-			}
-		} catch ( \Exception $exception ) {
-			wc_square()->log( 'Could not retry unverified zero counts: ' . $exception->getMessage() );
-		}
-	}
-
 
 	/**
 	 * Updates the inventory counts from the latest in Square.
@@ -636,15 +497,25 @@ class Interval_Polling extends Stepped_Job {
 		$this->set_attr( 'update_inventory_counts_count', $update_count + count( $catalog_objects_inventory_stats ) );
 
 		if ( ! $cursor ) {
-			// When all the inventory counts are synced then set the last sync time to the start time
-			// that was stored, unless a zero count in this window could not be verified: holding the
-			// watermark back makes the next poll read the same window again so a genuine sellout is
-			// not skipped permanently.
-			// Objects whose zero count could not be verified are retried by id, so the watermark can
-			// advance on schedule: the read window never grows and nothing is permanently skipped.
-			$this->retry_unverified_zero_counts();
 
-			wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+			// All counts in this window are processed, so the watermark may move to the start time
+			// stored above, with one exception: if a zero count in this window could not be verified
+			// after the retries, the window is left in place. Counts are read by updated_after, so the
+			// same window is read again on the next poll and those exact objects come back with it.
+			// Advancing here instead would skip a genuine sellout for good, because Square would not
+			// report that object again until something else changed it.
+			// Both inventory steps read this one watermark and only this step advances it, so a window
+			// either step could not verify has to stay put. Checking only this step's flag would let it
+			// move the window over objects the tracking step had to leave unverified.
+			if ( $this->zero_verification_exhausted( 'update_inventory_counts' )
+				|| $this->zero_verification_exhausted( 'update_inventory_tracking' ) ) {
+
+				wc_square()->log( 'Zero inventory counts in this window could not be verified against Square history; keeping the inventory sync window so the next poll reads it again.' );
+
+			} else {
+
+				wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+			}
 
 			$this->complete_step( 'update_inventory_counts' );
 		}
