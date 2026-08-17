@@ -292,8 +292,38 @@ class Helper {
 			}
 		}
 
+		$returned = array_keys( $object_ids );
+
+		// Square honors catalog_object_ids only while at least one of the supplied ids exists. When
+		// none of them exists it silently drops the filter and answers with the whole location's
+		// change history, so a response naming ids we did not ask about means exactly one thing:
+		// none of the ids in this request exist in Square any more (a stale local mapping).
+		//
+		// That is a conclusive answer, not an unknown. A catalog object that does not exist cannot
+		// have sold out, so report no history and no further pages: the caller then treats these ids
+		// as unverified zeros and leaves the products alone. Without this check the per id branch
+		// below would read the unrelated history as proof and write the zero, which is the very bug
+		// SQUARE-145 fixes, for exactly the products whose mappings are stale.
+		$unexpected = array_diff( $returned, $catalog_object_ids );
+
+		if ( ! empty( $unexpected ) ) {
+
+			wc_square()->log(
+				sprintf(
+					'Square ignored the catalog object filter for %1$d id(s), which means none of them exist there any more; treating them as having no inventory history. First id: %2$s',
+					count( $catalog_object_ids ),
+					reset( $catalog_object_ids )
+				)
+			);
+
+			return array(
+				'object_ids' => array(),
+				'cursor'     => null,
+			);
+		}
+
 		return array(
-			'object_ids' => array_keys( $object_ids ),
+			'object_ids' => $returned,
 			'cursor'     => $data->getCursor(),
 		);
 	}
