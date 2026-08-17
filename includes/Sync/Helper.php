@@ -42,6 +42,17 @@ class Helper {
 	const MAX_UNVERIFIED_ZERO_COUNTS = 1000;
 
 	/**
+	 * Maximum group narrowing passes before falling back to one request per unresolved id.
+	 *
+	 * Bounds the worst case: without it a page that resolves a single id each time would issue one
+	 * group request per id on top of the per id fallback.
+	 *
+	 * @since x.x.x
+	 * @var int
+	 */
+	const MAX_HISTORY_NARROWING_PASSES = 5;
+
+	/**
 	 * Get the inventory tracking value for the given catalog object ids.
 	 *
 	 * @param array $catalog_object_ids The catalog object ids.
@@ -164,7 +175,7 @@ class Helper {
 				// exist, walking them all would page through the busiest item's entire history
 				// just to prove a quiet item empty, so unresolved ids are re-queried individually
 				// instead (a single id with no records answers in one page).
-				$page = self::fetch_inventory_changes_page( $chunk );
+				$page = static::fetch_inventory_changes_page( $chunk );
 				if ( null === $page ) {
 					return null;
 				}
@@ -179,16 +190,56 @@ class Helper {
 					continue;
 				}
 
-				foreach ( $unresolved as $object_id ) {
-					$single = self::fetch_inventory_changes_page( array( $object_id ) );
+				// Re-ask for the unresolved ids as a group before falling back to one request each.
+				// A shared page holds the OLDEST changes across every id in it, so one busy id can
+				// fill the page and hide a quiet id's record; asking again with the busy ids removed
+				// usually settles the whole remainder in a single request, and settles it positively
+				// when the response comes back empty with no further pages.
+				$remaining = array_values( $unresolved );
+				$passes    = 0;
+
+				while ( ! empty( $remaining ) && $passes < self::MAX_HISTORY_NARROWING_PASSES ) {
+
+					++$passes;
+
+					$group = static::fetch_inventory_changes_page( $remaining );
+					if ( null === $group ) {
+						return null;
+					}
+
+					$before = count( $remaining );
+
+					foreach ( $group['object_ids'] as $object_id ) {
+						$with_history[ $object_id ] = true;
+					}
+
+					$remaining = array_values( array_diff( $remaining, array_keys( $with_history ) ) );
+
+					// No further pages, so every id still remaining has no history at all. That is a
+					// positive verification, not an unknown, and the loop is done.
+					if ( empty( $group['cursor'] ) ) {
+						$remaining = array();
+						break;
+					}
+
+					// More pages exist but this one named none of the remaining ids, so narrowing has
+					// stalled and another group request would return the same page.
+					if ( count( $remaining ) === $before ) {
+						break;
+					}
+				}
+
+				// Anything still unresolved is settled one id at a time, where an empty first page is
+				// conclusive: pagination is oldest first, so a single id with any record shows it there.
+				foreach ( $remaining as $object_id ) {
+					$single = static::fetch_inventory_changes_page( array( $object_id ) );
 					if ( null === $single ) {
 						return null;
 					}
-					if ( ! empty( $single['object_ids'] ) ) {
+					// Membership, not emptiness: a response is only proof for the id it actually names.
+					if ( in_array( $object_id, $single['object_ids'], true ) ) {
 						$with_history[ $object_id ] = true;
 					}
-					// Empty first page for a single id means no history: pagination is oldest
-					// first per id, so any record would appear on the first page.
 				}
 			}
 		} catch ( \Exception $exception ) {
