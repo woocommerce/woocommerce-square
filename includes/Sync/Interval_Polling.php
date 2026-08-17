@@ -584,28 +584,13 @@ class Interval_Polling extends Stepped_Job {
 
 		// Verify zero counts against Square's inventory change history: a never-counted item
 		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written.
-		$zero_object_ids = array();
-		foreach ( $catalog_objects_inventory_stats as $object_id => $stats ) {
-			if ( 0.0 === (float) $stats['quantity'] ) {
-				$zero_object_ids[] = $object_id;
-			}
-		}
-		$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+		$zero_object_ids   = Helper::zero_count_object_ids( $catalog_objects_inventory_stats, 'quantity' );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'update_inventory_counts', $zero_object_ids );
+
 		if ( null === $verified_zero_ids ) {
-
-			// Verification unavailable. Return WITHOUT advancing the cursor or the inventory
-			// watermark so the step runs again, rather than throwing and failing the job.
-			if ( $this->should_retry_unverified_zero_counts( 'update_inventory_counts' ) ) {
-				return;
-			}
-
-			$verified_zero_ids = array();
-
-			// Remember the objects so they are re-checked by id on later polls: the watermark can
-			// then advance normally without this window being lost.
-			Helper::remember_unverified_zero_counts( $zero_object_ids );
-		} else {
-			$this->clear_unverified_zero_count_attempts( 'update_inventory_counts' );
+			// Verification unavailable and retries remain: return WITHOUT advancing the cursor or the
+			// inventory watermark so the step runs again, rather than throwing and failing the job.
+			return;
 		}
 
 		foreach ( $catalog_objects_inventory_stats as $catalog_object_id => $stats ) {
