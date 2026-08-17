@@ -64,18 +64,16 @@ abstract class Stepped_Job extends Job {
 	 * Verifies which zero counts are real, applying this class's shared retry policy when Square
 	 * cannot be asked.
 	 *
-	 * Wraps the three parts every step repeated: verify the zeros, hold and retry a bounded number of
-	 * times when verification is unavailable, then proceed with nothing verified and hand the ids to
-	 * the retry list. Progress markers stay with the caller, because each step holds something
-	 * different (a cursor, a watermark, a queue attribute) and flattening that in here would silently
-	 * drop work.
+	 * Wraps the two parts every step repeated: verify the zeros, and hold and retry a bounded number
+	 * of times when verification is unavailable. Progress markers stay with the caller, because each
+	 * step holds something different (a cursor, a watermark, a queue attribute) and flattening that in
+	 * here would silently drop work.
 	 *
-	 * The return has three meanings:
-	 * - ids: verified, so write zeros for these ids only.
-	 * - empty array: nothing could be verified and the attempts are spent, so write no zeros and carry
-	 *   on; the ids are already on the retry list.
-	 * - null: verification is unavailable and the caller must hold its own progress and return so the
-	 *   step runs again.
+	 * The return says which zeros may be written, and null says the caller must hold its own progress
+	 * and return so the step runs again. An empty array is NOT a signal of failure: it also means the
+	 * question was asked successfully and none of those zeros is real. A caller that needs to know the
+	 * attempts ran out (to keep a watermark from advancing over a window it could not verify) must ask
+	 * zero_verification_exhausted() rather than infer it from an empty array.
 	 *
 	 * @since x.x.x
 	 *
@@ -88,6 +86,7 @@ abstract class Stepped_Job extends Job {
 		$verified = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
 		if ( null !== $verified ) {
+			$this->set_attr( 'zero_verification_exhausted_' . $step_name, false, false );
 			$this->clear_unverified_zero_count_attempts( $step_name );
 			return $verified;
 		}
@@ -96,9 +95,30 @@ abstract class Stepped_Job extends Job {
 			return null;
 		}
 
-		Helper::remember_unverified_zero_counts( $zero_object_ids );
+		// Attempts spent. Nothing is verified, so no zero may be written, and the caller is told so it
+		// can leave any watermark alone: re-reading the same window later is what stops a genuine
+		// sellout from being skipped permanently.
+		$this->set_attr( 'zero_verification_exhausted_' . $step_name, true, false );
 
 		return array();
+	}
+
+
+	/**
+	 * Whether the last verification attempt for a step ran out of retries without an answer.
+	 *
+	 * Steps that advance a watermark must not move it over a window whose zero counts they could not
+	 * verify, or a genuine sellout in that window is skipped for good. An empty verified list cannot
+	 * answer this, since it also means "asked, and none of them were real".
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name used for the attempt counters
+	 * @return bool
+	 */
+	protected function zero_verification_exhausted( $step_name ) {
+
+		return (bool) $this->get_attr( 'zero_verification_exhausted_' . $step_name, false );
 	}
 
 
