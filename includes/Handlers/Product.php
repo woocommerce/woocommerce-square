@@ -502,12 +502,7 @@ class Product {
 			// Verify zero counts against Square's inventory change history: a never-counted item
 			// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
 			// (SQUARE-145).
-			$zero_object_ids = array();
-			foreach ( $inventory_hash as $object_id => $object_quantity ) {
-				if ( 0.0 === (float) $object_quantity ) {
-					$zero_object_ids[] = $object_id;
-				}
-			}
+			$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
 			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
 			if ( null === $verified_zero_ids ) {
