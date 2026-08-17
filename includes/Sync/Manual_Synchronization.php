@@ -114,7 +114,7 @@ class Manual_Synchronization extends Stepped_Job {
 							'type'    => 'alert',
 							'message' => sprintf(
 								/* translators: %1$s - Product ID. */
-								__( 'Product ID (%1$s) is excluded from sync as the product not found.', 'woocommerce-square' ),
+								__( 'Product ID (%1$s) is excluded from sync because the product could not be found.', 'woocommerce-square' ),
 								$matched_product_id,
 							),
 						)
@@ -1353,7 +1353,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
-		$result['processed']   = $staged_product_ids;
+		$result['processed'] = $staged_product_ids;
 		// Exclude missing products (deleted mid-sync) from unprocessed so callers do not re-queue
 		// them indefinitely, which would keep the sync step from ever completing.
 		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
