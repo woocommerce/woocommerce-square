@@ -256,8 +256,12 @@ class Background_Job extends Background_Job_Handler {
 	public function job_complete( $job ) {
 
 		// Normally cleared when the sync started; repeated here for a job that was already running
-		// when this release was installed.
-		delete_option( 'wc_square_sync_auto_recovered_at' );
+		// when this release was installed. Interval polls are excluded for the same reason as at the
+		// start: they run on their own every few minutes and would dismiss the notice before anyone
+		// had a chance to read it.
+		if ( 'poll' !== ( $job->action ?? '' ) ) {
+			delete_option( 'wc_square_sync_auto_recovered_at' );
+		}
 
 		wc_square()->get_sync_handler()->set_last_synced_at();
 
