@@ -497,12 +497,12 @@ class Admin {
 			return;
 		}
 
-		// Once a sync has completed successfully after the recovery, the notice is no longer relevant.
-		$last_synced_at = (int) wc_square()->get_sync_handler()->get_last_synced_at();
-		if ( $last_synced_at >= $recovered_at ) {
-			delete_option( 'wc_square_sync_auto_recovered_at' );
-			return;
-		}
+		// The flag itself is the only signal used here. It is cleared when a sync the merchant started
+		// begins, and again when such a job completes, so there is nothing left to infer.
+		//
+		// It deliberately does NOT compare against the last synced timestamp: interval polling advances
+		// that every few minutes, so any comparison against it would dismiss this notice long before
+		// the merchant saw it, which is the same reason polls are excluded from both clearing paths.
 		?>
 		<div class="notice notice-warning is-dismissible">
 			<p>
