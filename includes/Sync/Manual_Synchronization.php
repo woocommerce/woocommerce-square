@@ -52,6 +52,9 @@ class Manual_Synchronization extends Stepped_Job {
 	/** @var int the limit for how many inventory changes can be made in a single request */
 	const BATCH_CHANGE_INVENTORY_LIMIT = 100;
 
+	/** @var int maximum per product fallback upserts attempted within one step cycle */
+	const MAX_ISOLATED_UPSERTS_PER_CYCLE = 20;
+
 	/**
 	 * Square error codes that mean "this object's own data is invalid", and nothing else.
 	 *
@@ -1194,6 +1197,8 @@ class Manual_Synchronization extends Stepped_Job {
 			'processed'   => array(),
 			'unprocessed' => $product_ids,
 		);
+		$isolated_fail_ids         = array();
+		$partial_error_detail      = '';
 
 		$in_progress = $this->get_attr(
 			'in_progress_upsert_catalog_objects',
@@ -1202,6 +1207,8 @@ class Manual_Synchronization extends Stepped_Job {
 				'unprocessed_upsert_response'       => null,
 				'mapped_client_item_ids'            => array(),
 				'processed_remote_catalog_item_ids' => array(),
+				'isolated_fail_ids'                 => array(),
+				'partial_error_detail'              => '',
 			)
 		);
 
@@ -1209,6 +1216,12 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! empty( $in_progress['unprocessed_upsert_response'] ) ) {
 			$staged_product_ids = $in_progress['staged_product_ids'] ?? array();
 			$upsert_response    = ApiHelper::getJsonHelper()->mapClass( json_decode( $in_progress['unprocessed_upsert_response'] ), 'Square\\Models\\BatchUpsertCatalogObjectsResponse' );
+
+			// Restored alongside staged_product_ids: without them a cycle resumed after the
+			// response was persisted would no longer recognise the already recorded skips and
+			// would raise a second alert and a second error count for every one of them.
+			$isolated_fail_ids    = (array) ( $in_progress['isolated_fail_ids'] ?? array() );
+			$partial_error_detail = (string) ( $in_progress['partial_error_detail'] ?? '' );
 		}
 
 		if ( empty( $upsert_response ) || ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
@@ -1222,25 +1235,103 @@ class Manual_Synchronization extends Stepped_Job {
 					$object = $this->convert_to_catalog_object( $object );
 				}
 
-				$product                                  = wc_get_product( $product_id );
-				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
+				$product = wc_get_product( $product_id );
 
-				$catalog_item = new Catalog_Item( $product, $is_delete_action );
-				$batch        = $catalog_item->get_batch( $object );
-				$object_count = $catalog_item->get_batch_object_count();
+				// Building the catalog payload can fail on a single product's local data (for
+				// example a product Catalog_Item rejects as invalid, or an object Woo_SOR refuses
+				// because it is not of type ITEM): record and skip that product instead of letting
+				// the exception end the whole sync (SQUARE-143 / SQUARE-31).
+				$refresh_requested_before = get_option( 'woocommerce_square_refresh_sync_cycle', false );
+
+				try {
+					if ( ! $product instanceof \WC_Product ) {
+						throw new \Exception( __( 'the product no longer exists locally', 'woocommerce-square' ) );
+					}
+
+					$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
+
+					$catalog_item = new Catalog_Item( $product, $is_delete_action );
+					$batch        = $catalog_item->get_batch( $object );
+					$object_count = $catalog_item->get_batch_object_count();
+				} catch ( \Exception $staging_exception ) {
+
+					// A failure that asked for the job to restart is never this product's fault.
+					// API::create_options_and_values() sets woocommerce_square_refresh_sync_cycle
+					// and clears the cached options data when Square rejects an item option, so
+					// that run() refetches the options and replays the cycle. Recording a skip here
+					// would strand a perfectly good product that the replay would have synced.
+					if ( get_option( 'woocommerce_square_refresh_sync_cycle', false ) !== $refresh_requested_before ) {
+						throw $staging_exception;
+					}
+
+					// get_batch() reaches the Square API for variable products (it creates item
+					// options), so a failure here is not necessarily this product's data. Only a
+					// plugin level validation error, which carries no Square error code, or a
+					// genuine data error may be turned into a skip.
+					if ( $this->has_square_error_code( $staging_exception )
+						&& 'isolatable' !== $this->classify_sync_error( $staging_exception ) ) {
+						throw $staging_exception;
+					}
+
+					$this->record_skipped_product( $product_id, $staging_exception->getMessage() );
+					$isolated_fail_ids[]  = $product_id;
+					$staged_product_ids[] = $product_id; // consumed, so the step queue advances past it
+					continue;
+				}
 
 				if ( $this->get_max_objects_total() >= $object_count + $total_object_count ) {
-					$batches[]            = $batch;
-					$total_object_count  += $object_count;
-					$staged_product_ids[] = $product_id;
+					// Keyed by product so the per product fallback can reuse the batch built here
+					// instead of building it a second time. Never rely on position: the skip
+					// branches below advance $staged_product_ids without adding a batch.
+					$batches[ $product_id ] = $batch;
+					$total_object_count    += $object_count;
+					$staged_product_ids[]   = $product_id;
+				} elseif ( empty( $batches ) ) {
+
+					// This single product alone exceeds the per request object limit, so no cycle
+					// will ever be able to stage it. Without this it is retried forever: nothing is
+					// staged, so nothing is reported as processed and the step repeats unchanged.
+					$this->record_skipped_product(
+						$product_id,
+						sprintf(
+							/* translators: Placeholders: %1$d - number of Square objects the product needs, %2$d - the per request limit */
+							__( 'it needs %1$d Square objects, more than the %2$d a single request allows', 'woocommerce-square' ),
+							$object_count,
+							$this->get_max_objects_total()
+						)
+					);
+					$isolated_fail_ids[]  = $product_id;
+					$staged_product_ids[] = $product_id; // consumed, so the step queue advances past it
+					continue;
+
 				} else {
 					break;
 				}
 			}
 
+			// Every product in this cycle was skipped while staging, so there is nothing to send.
+			// An empty request would be rejected and would turn a handled set of skips back into a
+			// failed job.
+			if ( empty( $batches ) ) {
+
+				wc_square()->log( 'Nothing left to upsert this cycle: all ' . count( $staged_product_ids ) . ' staged products were skipped.' );
+
+				// Persists this cycle's skip records counters along with clearing the resume state.
+				$this->set_attr( 'in_progress_upsert_catalog_objects', null );
+
+				$result['processed']   = $staged_product_ids;
+				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+
+				return $result;
+			}
+
+			// The SDK takes a plain list. Hashing that list rather than the product keyed map keeps
+			// the idempotency key identical to what this step has always produced.
+			$batch_list = array_values( $batches );
+
 			try {
 				$start           = microtime( true );
-				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batch_list ) ) . time() . '_upsert_products' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
 				if ( $new_products ) {
 					// Use the retry idempotency key if it exists.
@@ -1255,32 +1346,64 @@ class Manual_Synchronization extends Stepped_Job {
 					}
 				}
 
-				$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
+				$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batch_list );
 				$upsert_response = $response->get_data();
 			} catch ( \Exception $e ) {
-				$retry         = $this->get_attr( 'retry', 0 );
-				$error_message = $e->getMessage();
+				$retry          = $this->get_attr( 'retry', 0 );
+				$error_message  = $e->getMessage();
+				$classification = $this->classify_sync_error( $e );
 
 				// Retry the request if it was rate limited, and we are uploading new products. Retry up to 3 times.
-				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $new_products && $retry < 3 ) {
+				if ( 'rate_limited' === $classification && $new_products && $retry < 3 ) {
 					$this->set_attr( 'upsert_retry_idempotency_key', $idempotency_key );
 					$this->set_attr( 'upsert_retry_product_ids', $product_ids );
 				}
-				// Re-throw the exception to allow centralized error handling at the job level.
-				throw $e;
+
+				if ( 'isolatable' !== $classification ) {
+					// Rate limiting keeps the existing job level retry; auth errors fail the job.
+					throw $e;
+				}
+
+				// One bad product must not terminate the sync for every other product: retry the
+				// staged set one request per product, record and skip the failing ones, and let the
+				// step continue with whatever succeeded (SQUARE-143 / SQUARE-31). Products that
+				// already failed at the staging stage are excluded so they are not recorded twice,
+				// and only products the fallback actually attempted are consumed this cycle; the
+				// rest are staged again on the next cycle.
+				wc_square()->log( 'Batch upsert failed (' . $error_message . '); retrying the staged products individually.' );
+				$isolation          = $this->upsert_products_individually( $batches, array_values( array_diff( $staged_product_ids, $isolated_fail_ids ) ) );
+				$upsert_response    = $isolation['response'];
+				$staged_product_ids = array_values( array_unique( array_merge( $isolated_fail_ids, $isolation['done_ids'], $isolation['failed_ids'] ) ) );
+				$isolated_fail_ids  = array_values( array_unique( array_merge( $isolated_fail_ids, $isolation['failed_ids'] ) ) );
 			}
 
 			if ( ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
 				throw new \Exception( 'API response data is missing' );
 			}
 
+			// A response can be a 200 with partial failures: keep the error detail for the
+			// skipped product records below (Square does not always name the failing object).
+			// Every error is kept, not just the first: a single request carries several batches
+			// and Square does not say which batch an error belongs to, so attributing one error
+			// to every unreturned product would present a guess as the reason.
+			if ( is_array( $upsert_response->getErrors() ) && ! empty( $upsert_response->getErrors() ) ) {
+				$error_details = array();
+				foreach ( $upsert_response->getErrors() as $response_error ) {
+					$error_details[] = trim( ( $response_error->getCode() ? '[' . $response_error->getCode() . '] ' : '' ) . ( $response_error->getDetail() ?? '' ) );
+				}
+				$partial_error_detail = implode( ' | ', array_filter( array_unique( $error_details ) ) );
+			}
+
 			$in_progress['staged_product_ids']          = $staged_product_ids;
 			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $upsert_response, JSON_PRETTY_PRINT );
+			$in_progress['isolated_fail_ids']           = $isolated_fail_ids;
+			$in_progress['partial_error_detail']        = $partial_error_detail;
 			$this->set_attr( 'in_progress_upsert_catalog_objects', $in_progress );
 
 			$duration = number_format( microtime( true ) - $start, 2 );
 
-			wc_square()->log( 'Upserted ' . count( $upsert_response->getObjects() ) . ' objects in ' . $duration . 's' );
+			// getObjects() is null when every batch failed; that must not fatal the job.
+			wc_square()->log( 'Upserted ' . ( is_array( $upsert_response->getObjects() ) ? count( $upsert_response->getObjects() ) : 0 ) . ' objects in ' . $duration . 's' );
 		}
 
 		// update local square meta for newly upserted objects
@@ -1328,7 +1451,8 @@ class Manual_Synchronization extends Stepped_Job {
 		$start = microtime( true );
 
 		// loop through all returned objects and store their IDs to Woo products
-		foreach ( $upsert_response->getObjects() as $remote_catalog_item ) {
+		// (null when every batch failed; the skip records below still run)
+		foreach ( is_array( $upsert_response->getObjects() ) ? $upsert_response->getObjects() : array() as $remote_catalog_item ) {
 
 			$remote_item_id = $remote_catalog_item->getId();
 
@@ -1396,19 +1520,20 @@ class Manual_Synchronization extends Stepped_Job {
 
 		wc_square()->log( 'Stored Square data to ' . count( $staged_product_ids ) . ' products in ' . $duration . 's' );
 
-		// log any failed products
-		foreach ( array_diff( $staged_product_ids, $successful_product_ids ) as $product_id ) {
+		// log any failed products (isolation failures were already recorded with their reason)
+		foreach ( array_diff( $staged_product_ids, $successful_product_ids, $isolated_fail_ids ) as $product_id ) {
 
-			Records::set_record(
-				array(
-					'type'       => 'alert',
-					'product_id' => $product_id,
-					'message'    => sprintf(
-						/* translators: Placeholder: %s - product ID */
-						esc_html__( 'Product %s could not be updated in Square.', 'woocommerce-square' ),
-						'<a href="' . esc_url( get_edit_post_link( $product_id ) ) . '">' . $product_id . '</a>'
-					),
-				)
+			// Square names no product against these errors, so the reason is worded as the set of
+			// errors the request returned rather than as this product's own confirmed cause.
+			$this->record_skipped_product(
+				$product_id,
+				'' !== $partial_error_detail
+					? sprintf(
+						/* translators: Placeholder: %s - one or more error messages returned by Square */
+						__( 'Square did not return the product in the upsert response. Errors returned by the request: %s', 'woocommerce-square' ),
+						$partial_error_detail
+					)
+					: __( 'Square did not return the product in the upsert response', 'woocommerce-square' )
 			);
 		}
 
@@ -1608,6 +1733,116 @@ class Manual_Synchronization extends Stepped_Job {
 		// that skips many products would otherwise double that cost with a full job write per
 		// product. Both counters reach the option on the next persisting set_attr() in the cycle.
 		$this->set_attr( 'sync_error_count', (int) $this->get_attr( 'sync_error_count', 0 ) + 1, false );
+	}
+
+
+	/**
+	 * Upserts the staged products one request per product after a combined batch request failed.
+	 *
+	 * Square rejects a whole upsert when any object in it is invalid and does not always identify
+	 * the offender, so the reliable isolation is granularity: one request per product. Successful
+	 * responses are merged into a single synthesized response so the caller's post processing works
+	 * unchanged; failing products are recorded with their reason and skipped (SQUARE-143/31).
+	 *
+	 * The batches built by the staging loop are reused rather than rebuilt. Rebuilding would not be
+	 * free: Catalog_Item::get_batch() reaches Square to create item options for variable products,
+	 * so re-deriving a payload here would multiply the request count on the one path that only runs
+	 * because something already failed.
+	 *
+	 * @since x.x.x
+	 *
+	 * At most MAX_ISOLATED_UPSERTS_PER_CYCLE products are attempted per invocation so a huge
+	 * fallback cannot exhaust PHP's execution time inside one step cycle; unattempted products are
+	 * simply not consumed and are staged again on the next cycle. A rate limit mid loop stops the
+	 * slice: with partial progress the progress is kept, with none the exception bubbles so the
+	 * existing job level retry and backoff take over.
+	 *
+	 * @param \Square\Models\CatalogObjectBatch[] $batches product ID keyed batches already built by the staging loop
+	 * @param int[] $staged_product_ids the product IDs staged into the failed combined request
+	 * @return array { response: BatchUpsertCatalogObjectsResponse, done_ids: int[], failed_ids: int[] }
+	 */
+	protected function upsert_products_individually( array $batches, array $staged_product_ids ) {
+
+		$merged_objects  = array();
+		$merged_mappings = array();
+		$done_ids        = array();
+		$failed_ids      = array();
+		$attempted       = 0;
+
+		foreach ( $staged_product_ids as $product_id ) {
+
+			if ( self::MAX_ISOLATED_UPSERTS_PER_CYCLE <= $attempted ) {
+				break;
+			}
+
+			// Products that never made it into a batch were already recorded while staging.
+			if ( ! isset( $batches[ $product_id ] ) ) {
+				continue;
+			}
+
+			$batch = $batches[ $product_id ];
+
+			++$attempted;
+
+			try {
+				// Deterministic key (no timestamp): a retry with an unchanged body must reuse the
+				// same key or Square treats the temp ids as a brand new upsert and creates
+				// duplicate catalog items. The whole input is hashed so the key stays well inside
+				// Square's documented length limits regardless of job and product ID length.
+				$idempotency_key = wc_square()->get_idempotency_key( md5( $this->get_attr( 'id' ) . '_' . $product_id . '_' . serialize( $batch ) ) . '_isolated_upsert' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+
+				$response      = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, array( $batch ) );
+				$response_data = $response->get_data();
+
+				if ( ! $response_data instanceof BatchUpsertCatalogObjectsResponse ) {
+					throw new \Exception( 'API response data is missing' );
+				}
+
+				if ( is_array( $response_data->getObjects() ) ) {
+					$merged_objects = array_merge( $merged_objects, $response_data->getObjects() );
+				}
+				if ( is_array( $response_data->getIdMappings() ) ) {
+					$merged_mappings = array_merge( $merged_mappings, $response_data->getIdMappings() );
+				}
+				$done_ids[] = $product_id;
+			} catch ( \Exception $product_exception ) {
+
+				$classification = $this->classify_sync_error( $product_exception );
+
+				// Not this product's data: either nothing will succeed (auth, permissions) or the
+				// write may already have been applied (server error, timeout). Recording a skip
+				// would be wrong in both cases, so fail the job. The job level retry re-sends this
+				// product under the same deterministic key, which Square deduplicates.
+				if ( 'fatal' === $classification ) {
+					throw $product_exception;
+				}
+
+				// Rate limited mid slice: stop here. Progress made so far is kept and the
+				// remaining products are staged again next cycle; with no progress at all the
+				// exception bubbles to the job level retry and backoff.
+				if ( 'rate_limited' === $classification ) {
+					if ( empty( $done_ids ) && empty( $failed_ids ) ) {
+						throw $product_exception;
+					}
+					wc_square()->log( 'Rate limited during isolated upserts; pausing the fallback with ' . count( $done_ids ) . ' done, the rest resume next cycle.' );
+					break;
+				}
+
+				$failed_ids[] = $product_id;
+				$this->record_skipped_product( $product_id, $product_exception->getMessage() );
+				wc_square()->log( 'Isolated upsert failed for product #' . $product_id . ': ' . $product_exception->getMessage() );
+			}
+		}
+
+		$synthesized = new BatchUpsertCatalogObjectsResponse();
+		$synthesized->setObjects( $merged_objects );
+		$synthesized->setIdMappings( $merged_mappings );
+
+		return array(
+			'response'   => $synthesized,
+			'done_ids'   => $done_ids,
+			'failed_ids' => $failed_ids,
+		);
 	}
 
 
