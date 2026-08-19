@@ -471,40 +471,102 @@ class Manual_Synchronization extends Stepped_Job {
 			$batches[] = new \Square\Models\CatalogObjectBatch( array( $catalog_object ) );
 		}
 
-		foreach ( array_chunk( $batches, $this->get_max_objects_per_upsert() ) as $batch ) {
-			$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batch ) . $this->get_attr( 'id' ) ) . '_upsert_categories' );
-			$result          = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batch );
+		foreach ( array_chunk( $batches, $this->get_max_objects_per_upsert() ) as $chunk ) {
 
-			if ( ! $result->get_data() instanceof BatchUpsertCatalogObjectsResponse ) {
-				throw new \Exception( 'Response data is invalid' );
-			}
+			try {
+				$this->upsert_category_batches( $chunk, $reverse_map );
+				continue;
+			} catch ( \Exception $chunk_exception ) {
 
-			$id_mappings = $result->get_data()->getIdMappings(); // new entries to Square will return in the ID Mapping.
-
-			if ( ! empty( $id_mappings ) ) {
-				foreach ( $id_mappings as $id_mapping ) {
-					$client_object_id = $id_mapping->getClientObjectId();
-					$remote_object_id = $id_mapping->getObjectId();
-
-					if ( isset( $reverse_map[ $client_object_id ] ) ) {
-						$reverse_map[ $remote_object_id ] = $reverse_map[ $client_object_id ];
-						unset( $reverse_map[ $client_object_id ] );
-					}
+				if ( 'isolatable' !== $this->classify_sync_error( $chunk_exception ) ) {
+					throw $chunk_exception;
 				}
+
+				// Each batch holds exactly one category, so a failing chunk can be isolated by
+				// retrying every batch on its own: the broken category is recorded and skipped,
+				// the rest sync normally (SQUARE-143 / SQUARE-31).
+				wc_square()->log( 'Category chunk upsert failed (' . $chunk_exception->getMessage() . '); retrying each category individually.' );
 			}
 
-			foreach ( $result->get_data()->getObjects() as $upserted_category ) {
-				$id      = $upserted_category->getId();
-				$version = $upserted_category->getVersion();
+			foreach ( $chunk as $single_batch ) {
+				try {
+					$this->upsert_category_batches( array( $single_batch ), $reverse_map );
+				} catch ( \Exception $category_exception ) {
 
-				if ( isset( $reverse_map[ $id ] ) ) {
-					Category::update_mapping( $reverse_map[ $id ], $id, $version );
-					unset( $reverse_map[ $id ] );
+					// Only a data level error is the category's own fault; auth fails the job and
+					// a rate limit bubbles to the existing job level retry and backoff.
+					if ( 'isolatable' !== $this->classify_sync_error( $category_exception ) ) {
+						throw $category_exception;
+					}
+
+					$term_name = __( 'unknown category', 'woocommerce-square' );
+					$objects   = $single_batch->getObjects();
+					if ( is_array( $objects ) && isset( $objects[0] ) && $objects[0]->getCategoryData() ) {
+						$term_name = $objects[0]->getCategoryData()->getName();
+					}
+
+					Records::set_record(
+						array(
+							'type'    => 'alert',
+							'message' => sprintf(
+								/* translators: Placeholders: %1$s - category name, %2$s - failure reason */
+								esc_html__( 'Category "%1$s" was skipped so the sync could continue. Reason: %2$s', 'woocommerce-square' ),
+								esc_html( $term_name ),
+								esc_html( $category_exception->getMessage() )
+							),
+						)
+					);
+					// Deferred like record_skipped_product(); complete_step() below persists it.
+					$this->set_attr( 'sync_error_count', (int) $this->get_attr( 'sync_error_count', 0 ) + 1, false );
 				}
 			}
 		}
 
 		$this->complete_step( 'upsert_categories' );
+	}
+
+	/**
+	 * Sends a set of category batches to Square and applies the returned mappings.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\CatalogObjectBatch[] $category_batches batches to send (one category each)
+	 * @param array $reverse_map square id keyed map to local term ids, updated in place
+	 * @throws \Exception on API failure or invalid response
+	 */
+	protected function upsert_category_batches( array $category_batches, array &$reverse_map ) {
+
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $category_batches ) . $this->get_attr( 'id' ) ) . '_upsert_categories' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+		$result          = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $category_batches );
+
+		if ( ! $result->get_data() instanceof BatchUpsertCatalogObjectsResponse ) {
+			throw new \Exception( 'Response data is invalid' );
+		}
+
+		$id_mappings = $result->get_data()->getIdMappings(); // new entries to Square will return in the ID Mapping.
+
+		if ( ! empty( $id_mappings ) ) {
+			foreach ( $id_mappings as $id_mapping ) {
+				$client_object_id = $id_mapping->getClientObjectId();
+				$remote_object_id = $id_mapping->getObjectId();
+
+				if ( isset( $reverse_map[ $client_object_id ] ) ) {
+					$reverse_map[ $remote_object_id ] = $reverse_map[ $client_object_id ];
+					unset( $reverse_map[ $client_object_id ] );
+				}
+			}
+		}
+
+		// null when the request produced no objects; never fatal on it
+		foreach ( is_array( $result->get_data()->getObjects() ) ? $result->get_data()->getObjects() : array() as $upserted_category ) {
+			$id      = $upserted_category->getId();
+			$version = $upserted_category->getVersion();
+
+			if ( isset( $reverse_map[ $id ] ) ) {
+				Category::update_mapping( $reverse_map[ $id ], $id, $version );
+				unset( $reverse_map[ $id ] );
+			}
+		}
 	}
 
 	/**
