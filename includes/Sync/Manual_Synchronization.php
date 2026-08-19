@@ -1438,6 +1438,82 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
+	 * Records a product skipped by the sync, with the reason, and tracks the error counters.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id the skipped product ID
+	 * @param string $reason the failure reason (Square error message or local validation detail)
+	 */
+	protected function record_skipped_product( $product_id, $reason ) {
+
+		$product = $product_id ? wc_get_product( $product_id ) : false;
+		$label   = (string) $product_id;
+
+		if ( $product instanceof \WC_Product ) {
+			$label = $product->get_name();
+			if ( $product->get_sku() ) {
+				$label .= ' (SKU ' . $product->get_sku() . ')';
+			}
+		}
+
+		// A skip can be recorded with no product ID: push_inventory_changes_isolated() passes 0
+		// when Square names a catalog object that no local product claims any more. There is no
+		// subject to name in that case, so it gets its own sentence rather than being forced into
+		// the product one, which would read "Product unknown product was skipped".
+		if ( $product_id ) {
+
+			$edit_link = get_edit_post_link( $product_id );
+			$subject   = $edit_link
+				? '<a href="' . esc_url( $edit_link ) . '">' . esc_html( $label ) . '</a>'
+				: esc_html( $label );
+
+			$message = sprintf(
+				/* translators: Placeholders: %1$s - product name/SKU (possibly linked), %2$s - failure reason */
+				esc_html__( 'Product %1$s was skipped so the sync could continue. Reason: %2$s', 'woocommerce-square' ),
+				$subject,
+				esc_html( $reason )
+			);
+
+		} else {
+
+			$message = sprintf(
+				/* translators: Placeholder: %s - failure reason */
+				esc_html__( 'A Square item with no matching WooCommerce product was skipped so the sync could continue. Reason: %s', 'woocommerce-square' ),
+				esc_html( $reason )
+			);
+		}
+
+		Records::set_record(
+			array(
+				'type'       => 'alert',
+				'product_id' => $product_id,
+				'message'    => $message,
+			)
+		);
+
+		// Records retain only the most recent entries, so the log is the complete list a merchant
+		// or support can go back to after a sync that skipped more products than that.
+		wc_square()->log(
+			$product_id
+				? 'Skipped product #' . $product_id . ' (' . $label . '): ' . $reason
+				: 'Skipped a Square item with no matching WooCommerce product: ' . $reason
+		);
+
+		if ( $product_id ) {
+			$failed_ids   = (array) $this->get_attr( 'failed_product_ids', array() );
+			$failed_ids[] = (int) $product_id;
+			$this->set_attr( 'failed_product_ids', array_values( array_unique( $failed_ids ) ), false );
+		}
+
+		// Deferred write: Records::set_record() already wrote an option for this skip, and a step
+		// that skips many products would otherwise double that cost with a full job write per
+		// product. Both counters reach the option on the next persisting set_attr() in the cycle.
+		$this->set_attr( 'sync_error_count', (int) $this->get_attr( 'sync_error_count', 0 ) + 1, false );
+	}
+
+
+	/**
 	 * Converts object data to an instance of CatalogObject.
 	 *
 	 * @since 2.0.0
