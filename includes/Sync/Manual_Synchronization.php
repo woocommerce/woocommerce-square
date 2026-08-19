@@ -1359,6 +1359,42 @@ class Manual_Synchronization extends Stepped_Job {
 	}
 
 	/**
+	 * Completes the job, reporting a completed with errors outcome when products were skipped.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return \stdClass the job object
+	 */
+	protected function complete() {
+
+		$error_count = (int) $this->get_attr( 'sync_error_count', 0 );
+
+		if ( $error_count > 0 ) {
+
+			$this->set_attr( 'completed_with_errors', true, false );
+
+			$failed_ids = (array) $this->get_attr( 'failed_product_ids', array() );
+
+			// Only the most recent records are retained, so the notice must not promise an alert
+			// for every skipped product: a large sync evicts the earliest ones.
+			Records::set_record(
+				array(
+					'type'    => 'notice',
+					'message' => sprintf(
+						/* translators: Placeholders: %1$d - number of errors, %2$d - number of skipped products */
+						esc_html__( 'Sync completed with %1$d errors. %2$d products were skipped; the most recent alerts above give the product and reason for each, and the full list is in the Square logs.', 'woocommerce-square' ),
+						$error_count,
+						count( $failed_ids )
+					),
+				)
+			);
+		}
+
+		return parent::complete();
+	}
+
+
+	/**
 	 * Determines whether an exception message carries a Square API error code.
 	 *
 	 * Plugin level validation failures (an invalid product, a catalog object of the wrong type)
