@@ -52,6 +52,52 @@ class Manual_Synchronization extends Stepped_Job {
 	/** @var int the limit for how many inventory changes can be made in a single request */
 	const BATCH_CHANGE_INVENTORY_LIMIT = 100;
 
+	/**
+	 * Square error codes that mean "this object's own data is invalid", and nothing else.
+	 *
+	 * Skipping an object has to be opted into by a known data error, never assumed: anything not
+	 * listed here fails the job instead, because a server error, timeout or permission problem may
+	 * have applied the write already and re-sending would duplicate it in Square. Codes come from
+	 * \Square\Models\ErrorCode. Filterable via wc_square_isolatable_error_codes.
+	 *
+	 * Before removing a code from this list because it produced a bad skip: some codes are
+	 * deliberately listed here and narrowed by a second gate at the call site, because Square
+	 * reuses one code for both an object level problem and a job level one. Removing the code
+	 * disables the object level handling and does not fix the job level case.
+	 *
+	 * - NOT_FOUND is both a stale catalog mapping and a location that does not belong to the
+	 *   account. push_inventory_changes_isolated() drops nothing unless Square named an object
+	 *   present in the chunk.
+	 * - INVALID_VALUE is both bad product data and an item option name collision, which
+	 *   API::create_options_and_values() turns into a whole job replay. The staging catch in
+	 *   upsert_catalog_objects() snapshots woocommerce_square_refresh_sync_cycle and rethrows
+	 *   when it changed.
+	 *
+	 * @var string[]
+	 */
+	const ISOLATABLE_ERROR_CODES = array(
+		'BAD_REQUEST',
+		'MISSING_REQUIRED_PARAMETER',
+		'INCORRECT_TYPE',
+		'INVALID_VALUE',
+		'INVALID_ENUM_VALUE',
+		'INVALID_ARRAY_VALUE',
+		'INVALID_TIME',
+		'VALUE_EMPTY',
+		'VALUE_TOO_LONG',
+		'VALUE_TOO_SHORT',
+		'VALUE_TOO_LOW',
+		'VALUE_TOO_HIGH',
+		'VALUE_REGEX_MISMATCH',
+		'ARRAY_EMPTY',
+		'ARRAY_LENGTH_TOO_LONG',
+		'ARRAY_LENGTH_TOO_SHORT',
+		'UNPROCESSABLE_ENTITY',
+		'REQUEST_ENTITY_TOO_LARGE', // the combined request was too big; one object per request is the fix.
+		'NOT_FOUND',
+		'CONFLICT',
+	);
+
 	/** @var int max SKU-based lookups per push_inventory step to avoid rate limits */
 	const MAX_SKU_LOOKUPS_PER_PUSH_STEP = 20;
 
@@ -1311,6 +1357,85 @@ class Manual_Synchronization extends Stepped_Job {
 
 		return $result;
 	}
+
+	/**
+	 * Determines whether an exception message carries a Square API error code.
+	 *
+	 * Plugin level validation failures (an invalid product, a catalog object of the wrong type)
+	 * carry no code; anything Square rejected does, because
+	 * API::do_post_parse_response_validation() formats every error as "[CODE] detail".
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Exception $exception the caught exception
+	 * @return bool
+	 */
+	protected function has_square_error_code( \Exception $exception ) {
+
+		return (bool) preg_match( '/(^|\| )\[[A-Z][A-Z0-9_]*\]/', $exception->getMessage() );
+	}
+
+
+	/**
+	 * Classifies a sync exception to decide how the sync should react to it.
+	 *
+	 * - rate_limited: throttling, safe to retry the same request unchanged (existing behavior).
+	 * - isolatable: Square understood the request and rejected this object because its data is
+	 *   invalid. The same request will keep failing, so the object can be skipped and the sync can
+	 *   continue without it (SQUARE-143 / SQUARE-31).
+	 * - fatal: anything else. The write may or may not have been applied, so the job must fail
+	 *   loudly instead of isolating: re-sending the staged objects under fresh temporary IDs would
+	 *   create duplicate catalog items in Square.
+	 *
+	 * Skipping an object has to be opted into by a known data error, never assumed. A deny list
+	 * would classify server errors, timeouts and permission problems as bad product data.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Exception $exception the caught exception
+	 * @return string rate_limited|isolatable|fatal
+	 */
+	protected function classify_sync_error( \Exception $exception ) {
+
+		/**
+		 * Filters the Square error codes that allow one object to be skipped so the sync continues.
+		 *
+		 * Adding a code here makes the sync skip the offending product or category on that error
+		 * instead of failing the job. Only add codes that mean the object's own data is invalid:
+		 * on anything else the write may already have been applied, and retrying the objects
+		 * individually would create duplicates in Square.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param string[] $codes Square error codes treated as an object level data problem
+		 * @param \Exception $exception the exception being classified
+		 */
+		$isolatable_codes = (array) apply_filters( 'wc_square_isolatable_error_codes', self::ISOLATABLE_ERROR_CODES, $exception );
+
+		// API::do_post_parse_response_validation() builds the message as "[CODE] detail" per error,
+		// joined with " | ", so a code only ever appears at the start of a segment. Anchoring there
+		// keeps bracketed text inside a detail out of the classification, whether that is a JSON
+		// path Square wrote ("Value at `variations[0].sku`") or a merchant's own product name.
+		$codes = array();
+		foreach ( explode( ' | ', $exception->getMessage() ) as $segment ) {
+			if ( preg_match( '/^\[([A-Z][A-Z0-9_]*)\]/', trim( $segment ), $matches ) ) {
+				$codes[] = $matches[1];
+			}
+		}
+
+		if ( in_array( 'RATE_LIMITED', $codes, true ) ) {
+			return 'rate_limited';
+		}
+
+		// Every reported code must be a known data error before the object is skipped: a response
+		// mixing a data error with a server error may still have been partly applied.
+		if ( ! empty( $codes ) && ! array_diff( $codes, $isolatable_codes ) ) {
+			return 'isolatable';
+		}
+
+		return 'fatal';
+	}
+
 
 	/**
 	 * Converts object data to an instance of CatalogObject.
