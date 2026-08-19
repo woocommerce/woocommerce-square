@@ -2102,8 +2102,7 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! empty( $inventory_changes ) ) {
 
 			$inventory_changes = array_merge( ...$inventory_changes );
-			$idempotency_key   = wc_square()->get_idempotency_key( md5( serialize( $inventory_changes ) ) . '_change_inventory' );
-			$result            = wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
+			$this->push_inventory_changes_isolated( $inventory_changes );
 		}
 
 		$this->set_attr( 'inventory_push_product_ids', $product_ids );
@@ -2112,6 +2111,95 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( empty( $product_ids ) ) {
 
 			$this->complete_step( 'push_inventory' );
+		}
+	}
+
+	/**
+	 * Sends inventory changes to Square with per change isolation of dead catalog objects.
+	 *
+	 * A single change referencing a Square object that no longer exists (a stale local mapping
+	 * after a Square side catalog wipe) rejects the whole batch with NOT_FOUND, silently dropping
+	 * inventory for every other product in it. Square names the offending object in the error, so
+	 * the changes it names are removed, recorded, and the remainder is retried. Unattributable
+	 * failures skip only their own chunk and the sync continues (SQUARE-143 / SQUARE-31).
+	 *
+	 * The offending IDs are found by testing the chunk's own catalog object IDs against the error
+	 * text rather than by parsing an ID out of it. Square does not guarantee any particular
+	 * formatting and frequently quotes the JSON field path instead of the value, so parsing would
+	 * either extract a field name that matches nothing in the chunk, and drop up to 100 good
+	 * inventory updates, or extract nothing at all.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\InventoryChange[] $inventory_changes the changes to push
+	 */
+	protected function push_inventory_changes_isolated( array $inventory_changes ) {
+
+		foreach ( array_chunk( $inventory_changes, self::BATCH_CHANGE_INVENTORY_LIMIT ) as $chunk ) {
+
+			// Every round drops at least one change, so this terminates.
+			$attempts_left = count( $chunk ) + 1;
+
+			while ( ! empty( $chunk ) && $attempts_left > 0 ) {
+
+				--$attempts_left;
+
+				try {
+					$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $chunk ) ) . '_change_inventory' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+					wc_square()->get_api()->batch_change_inventory( $idempotency_key, $chunk );
+					break;
+				} catch ( \Exception $exception ) {
+
+					if ( 'isolatable' !== $this->classify_sync_error( $exception ) ) {
+						throw $exception;
+					}
+
+					$error_message = $exception->getMessage();
+
+					// Keep every change Square did not name, and drop all of the ones it did in a
+					// single round rather than one per round.
+					$remaining = array();
+					$dropped   = array();
+
+					foreach ( $chunk as $change ) {
+
+						$change_object_id = $change->getPhysicalCount() ? $change->getPhysicalCount()->getCatalogObjectId() : null;
+
+						if ( $change_object_id && false !== strpos( $error_message, $change_object_id ) ) {
+							$dropped[ $change_object_id ] = true;
+							continue;
+						}
+
+						$remaining[] = $change;
+					}
+
+					if ( empty( $dropped ) ) {
+						// Square named none of this chunk's objects, so nothing here is known to be
+						// at fault. NOT_FOUND for example is also what Square returns when the
+						// configured location does not belong to the account, which no amount of
+						// skipping fixes. Silently dropping up to a hundred inventory updates on a
+						// failure we cannot attribute would hide that, so fail loudly instead.
+						throw $exception;
+					}
+
+					foreach ( array_keys( $dropped ) as $dead_object_id ) {
+
+						$product    = Product::get_product_by_square_variation_id( $dead_object_id );
+						$product_id = $product instanceof \WC_Product ? $product->get_id() : 0;
+
+						$this->record_skipped_product(
+							$product_id,
+							sprintf(
+								/* translators: Placeholder: %s - Square catalog object ID */
+								__( 'its saved Square mapping (%s) is no longer usable in Square', 'woocommerce-square' ),
+								$dead_object_id
+							)
+						);
+					}
+
+					$chunk = $remaining;
+				}
+			}
 		}
 	}
 
