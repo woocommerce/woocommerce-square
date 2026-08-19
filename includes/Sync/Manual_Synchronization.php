@@ -1505,7 +1505,7 @@ class Manual_Synchronization extends Stepped_Job {
 			// If there is a local image which is different from the last uploaded image
 			// Or if the remote square image id has changed
 			if ( ( $local_image_id && $local_image_id !== $product->get_meta( '_square_uploaded_image_id' ) ) ||
-				( ! ( $original_square_image_ids[ $product_id ] && $original_square_image_ids[ $product_id ] === $product->get_meta( '_square_item_image_id' ) ) ) ) {
+				( ! ( ( $original_square_image_ids[ $product_id ] ?? '' ) && ( $original_square_image_ids[ $product_id ] ?? '' ) === $product->get_meta( '_square_item_image_id' ) ) ) ) {
 				// there is no batch image endpoint
 				$this->push_product_image( $product );
 
