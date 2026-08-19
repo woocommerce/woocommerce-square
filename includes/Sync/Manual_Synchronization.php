@@ -1034,6 +1034,13 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$result = $this->upsert_catalog_objects( $catalog_objects, true );
 
+		// Track products that no longer resolve to a WC_Product (deleted mid-sync). They are already
+		// recorded with a dedicated "excluded from sync" alert inside upsert_catalog_objects(), so
+		// accumulate them across batches and keep them out of the "could not be updated" report below
+		// - a deletion should not be surfaced as an update failure.
+		$missing_product_ids = array_values( array_unique( array_merge( $this->get_attr( 'upsert_missing_product_ids', array() ), $result['missing'] ?? array() ) ) );
+		$this->set_attr( 'upsert_missing_product_ids', $missing_product_ids );
+
 		// Push inventory inline immediately after each upsert batch when inventory sync is enabled.
 		// This ensures products don't sit in Square with zero inventory if the sync fails before
 		// the deferred push_inventory step runs. Only IDs whose inline push failed are queued for
@@ -1057,8 +1064,10 @@ class Manual_Synchronization extends Stepped_Job {
 		// if all products were processed, move on.
 		if ( empty( $updated_product_ids ) ) {
 			$all_product_ids = $this->get_attr( 'validated_product_ids', array() );
-			// at this point, log a failure for any products that weren't processed.
-			foreach ( array_diff( $all_product_ids, $processed_product_ids ) as $product_id ) {
+			// at this point, log a failure for any products that weren't processed. Products deleted
+			// mid-sync are excluded - they already have their own "excluded from sync" alert and were
+			// never processable, so reporting them as update failures would be misleading.
+			foreach ( array_diff( $all_product_ids, $processed_product_ids, $missing_product_ids ) as $product_id ) {
 				Records::set_record(
 					array(
 						'type'       => 'info',
@@ -1099,6 +1108,7 @@ class Manual_Synchronization extends Stepped_Job {
 		$result                    = array(
 			'processed'   => array(),
 			'unprocessed' => $product_ids,
+			'missing'     => array(),
 		);
 
 		$in_progress = $this->get_attr(
@@ -1140,11 +1150,24 @@ class Manual_Synchronization extends Stepped_Job {
 				if ( ! $product instanceof \WC_Product ) {
 					// Product is gone (e.g. permanently deleted mid-sync). Mark it missing so it drops
 					// out of the unprocessed set and the step can complete rather than re-queueing it
-					// forever. Logged once per product (and not re-logged on a resumed run).
+					// forever. Logged and recorded once per product (and not repeated on a resumed run).
 					if ( ! in_array( $product_id, $missing_product_ids, true ) ) {
 						$missing_product_ids[] = $product_id;
 
 						wc_square()->log( 'Skipping product #' . $product_id . ' during upsert - it no longer exists (may have been deleted).' );
+
+						// No product_id on the record: the post is gone, so a product-scoped record would
+						// render an empty edit link. Reuses the validate path's translation entry.
+						Records::set_record(
+							array(
+								'type'    => 'alert',
+								'message' => sprintf(
+									/* translators: %1$s - Product ID. */
+									__( 'Product ID (%1$s) is excluded from sync because the product could not be found.', 'woocommerce-square' ),
+									$product_id
+								),
+							)
+						);
 					}
 					continue;
 				}
@@ -1172,6 +1195,7 @@ class Manual_Synchronization extends Stepped_Job {
 				$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
 				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
+				$result['missing']     = $missing_product_ids;
 
 				return $result;
 			}
@@ -1355,8 +1379,10 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$result['processed'] = $staged_product_ids;
 		// Exclude missing products (deleted mid-sync) from unprocessed so callers do not re-queue
-		// them indefinitely, which would keep the sync step from ever completing.
+		// them indefinitely, which would keep the sync step from ever completing. They are also
+		// returned so callers can tell "deleted" apart from "failed to update".
 		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
+		$result['missing']     = $missing_product_ids;
 
 		return $result;
 	}
