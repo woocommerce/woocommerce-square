@@ -1102,7 +1102,6 @@ class Manual_Synchronization extends Stepped_Job {
 		$result                    = array(
 			'processed'   => array(),
 			'unprocessed' => $product_ids,
-			'missing'     => array(),
 		);
 
 		$in_progress = $this->get_attr(
@@ -1192,7 +1191,6 @@ class Manual_Synchronization extends Stepped_Job {
 				$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
 				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
-				$result['missing']     = $missing_product_ids;
 
 				return $result;
 			}
@@ -1375,10 +1373,9 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$result['processed'] = $staged_product_ids;
 		// Exclude missing products (deleted mid-sync) from unprocessed so callers do not re-queue
-		// them indefinitely, which would keep the sync step from ever completing. They are also
-		// returned so callers can tell "deleted" apart from "failed to update".
+		// them indefinitely, which would keep the sync step from ever completing. The IDs themselves
+		// are tracked in the upsert_missing_product_ids job attribute for callers that need them.
 		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
-		$result['missing']     = $missing_product_ids;
 
 		return $result;
 	}
