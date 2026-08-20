@@ -1034,13 +1034,6 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$result = $this->upsert_catalog_objects( $catalog_objects, true );
 
-		// Track products that no longer resolve to a WC_Product (deleted mid-sync). They are already
-		// recorded with a dedicated "excluded from sync" alert inside upsert_catalog_objects(), so
-		// accumulate them across batches and keep them out of the "could not be updated" report below
-		// - a deletion should not be surfaced as an update failure.
-		$missing_product_ids = array_values( array_unique( array_merge( $this->get_attr( 'upsert_missing_product_ids', array() ), $result['missing'] ?? array() ) ) );
-		$this->set_attr( 'upsert_missing_product_ids', $missing_product_ids );
-
 		// Push inventory inline immediately after each upsert batch when inventory sync is enabled.
 		// This ensures products don't sit in Square with zero inventory if the sync fails before
 		// the deferred push_inventory step runs. Only IDs whose inline push failed are queued for
@@ -1067,6 +1060,7 @@ class Manual_Synchronization extends Stepped_Job {
 			// at this point, log a failure for any products that weren't processed. Products deleted
 			// mid-sync are excluded - they already have their own "excluded from sync" alert and were
 			// never processable, so reporting them as update failures would be misleading.
+			$missing_product_ids = $this->get_attr( 'upsert_missing_product_ids', array() );
 			foreach ( array_diff( $all_product_ids, $processed_product_ids, $missing_product_ids ) as $product_id ) {
 				Records::set_record(
 					array(
@@ -1115,7 +1109,6 @@ class Manual_Synchronization extends Stepped_Job {
 			'in_progress_upsert_catalog_objects',
 			array(
 				'staged_product_ids'                => array(),
-				'missing_product_ids'               => array(),
 				'unprocessed_upsert_response'       => null,
 				'mapped_client_item_ids'            => array(),
 				'processed_remote_catalog_item_ids' => array(),
@@ -1123,10 +1116,11 @@ class Manual_Synchronization extends Stepped_Job {
 		);
 
 		// Product IDs that no longer resolve to a WC_Product (e.g. permanently deleted mid-sync).
-		// Tracked so they can be dropped from the unprocessed set below, otherwise they would be
-		// re-queued forever and the sync step would never complete. Restored from in-progress data
-		// so a resumed run (which skips the staging loop) still excludes them.
-		$missing_product_ids = $in_progress['missing_product_ids'] ?? array();
+		// Tracked in a job-level attribute so they can be dropped from the unprocessed set below,
+		// otherwise they would be re-queued forever and the sync step would never complete. The set
+		// is cumulative across batches, sync steps (update_matched_products, search_matched_products,
+		// upsert_new_products), retries, and resumed runs, so each product is handled exactly once.
+		$missing_product_ids = $this->get_attr( 'upsert_missing_product_ids', array() );
 
 		$upsert_response = null;
 		if ( ! empty( $in_progress['unprocessed_upsert_response'] ) ) {
@@ -1148,11 +1142,14 @@ class Manual_Synchronization extends Stepped_Job {
 				$product = wc_get_product( $product_id );
 
 				if ( ! $product instanceof \WC_Product ) {
-					// Product is gone (e.g. permanently deleted mid-sync). Mark it missing so it drops
-					// out of the unprocessed set and the step can complete rather than re-queueing it
-					// forever. Logged and recorded once per product (and not repeated on a resumed run).
+					// Product is gone (e.g. permanently deleted mid-sync). Record it in the job-level
+					// missing set so it drops out of the unprocessed set and the step can complete rather
+					// than re-queueing it forever. The set is persisted and cumulative, so the guard also
+					// ensures the log entry and merchant-facing alert fire exactly once per product per
+					// job even if it is encountered again in a later step, a retried batch, or a resume.
 					if ( ! in_array( $product_id, $missing_product_ids, true ) ) {
 						$missing_product_ids[] = $product_id;
+						$this->set_attr( 'upsert_missing_product_ids', $missing_product_ids );
 
 						wc_square()->log( 'Skipping product #' . $product_id . ' during upsert - it no longer exists (may have been deleted).' );
 
@@ -1237,7 +1234,6 @@ class Manual_Synchronization extends Stepped_Job {
 			}
 
 			$in_progress['staged_product_ids']          = $staged_product_ids;
-			$in_progress['missing_product_ids']         = $missing_product_ids;
 			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $upsert_response, JSON_PRETTY_PRINT );
 			$this->set_attr( 'in_progress_upsert_catalog_objects', $in_progress );
 
