@@ -2182,6 +2182,49 @@ class Manual_Synchronization extends Stepped_Job {
 	}
 
 	/**
+	 * Splits a failed inventory chunk into the objects Square named in the error and the rest.
+	 *
+	 * The chunk's own catalog object IDs are tested against the error text rather than parsing an
+	 * ID out of it. Square does not guarantee any particular formatting and frequently quotes the
+	 * JSON field path instead of the value, so parsing either extracts a field name that matches
+	 * nothing in the chunk, and discards up to a hundred good inventory updates, or extracts
+	 * nothing at all.
+	 *
+	 * An empty named set means the failure cannot be attributed to anything in this chunk. The
+	 * caller treats that as fatal, because the same code Square returns for a dead catalog object
+	 * is also what it returns for a location the account does not own.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\InventoryChange[] $chunk changes sent in the request that failed
+	 * @param string $error_message the message Square returned
+	 * @return array {named: string[], remaining: \Square\Models\InventoryChange[]}
+	 */
+	protected function partition_inventory_changes_by_error( array $chunk, $error_message ) {
+
+		$remaining = array();
+		$named     = array();
+
+		foreach ( $chunk as $change ) {
+
+			$change_object_id = $change->getPhysicalCount() ? $change->getPhysicalCount()->getCatalogObjectId() : null;
+
+			if ( $change_object_id && false !== strpos( $error_message, $change_object_id ) ) {
+				$named[ $change_object_id ] = true;
+				continue;
+			}
+
+			$remaining[] = $change;
+		}
+
+		return array(
+			'named'     => array_keys( $named ),
+			'remaining' => $remaining,
+		);
+	}
+
+
+	/**
 	 * Sends inventory changes to Square with per change isolation of dead catalog objects.
 	 *
 	 * A single change referencing a Square object that no longer exists (a stale local mapping
@@ -2230,20 +2273,9 @@ class Manual_Synchronization extends Stepped_Job {
 
 					// Keep every change Square did not name, and drop all of the ones it did in a
 					// single round rather than one per round.
-					$remaining = array();
-					$dropped   = array();
-
-					foreach ( $chunk as $change ) {
-
-						$change_object_id = $change->getPhysicalCount() ? $change->getPhysicalCount()->getCatalogObjectId() : null;
-
-						if ( $change_object_id && false !== strpos( $error_message, $change_object_id ) ) {
-							$dropped[ $change_object_id ] = true;
-							continue;
-						}
-
-						$remaining[] = $change;
-					}
+					$partition = $this->partition_inventory_changes_by_error( $chunk, $error_message );
+					$remaining = $partition['remaining'];
+					$dropped   = $partition['named'];
 
 					if ( empty( $dropped ) ) {
 						// Square named none of this chunk's objects, so nothing here is known to be
@@ -2254,7 +2286,7 @@ class Manual_Synchronization extends Stepped_Job {
 						throw $exception;
 					}
 
-					foreach ( array_keys( $dropped ) as $dead_object_id ) {
+					foreach ( $dropped as $dead_object_id ) {
 
 						$product    = Product::get_product_by_square_variation_id( $dead_object_id );
 						$product_id = $product instanceof \WC_Product ? $product->get_id() : 0;
