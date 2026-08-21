@@ -86,7 +86,7 @@ abstract class Stepped_Job extends Job {
 		$verified = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
 
 		if ( null !== $verified ) {
-			$this->set_attr( 'zero_verification_exhausted_' . $step_name, false, false );
+			$this->set_attr( 'zero_verification_exhausted_' . $step_name, false );
 			$this->clear_unverified_zero_count_attempts( $step_name );
 			return $verified;
 		}
@@ -98,7 +98,10 @@ abstract class Stepped_Job extends Job {
 		// Attempts spent. Nothing is verified, so no zero may be written, and the caller is told so it
 		// can leave any watermark alone: re-reading the same window later is what stops a genuine
 		// sellout from being skipped permanently.
-		$this->set_attr( 'zero_verification_exhausted_' . $step_name, true, false );
+		// Persisted immediately rather than relying on a later attribute write to flush it: the
+		// watermark guard reads this, and a step that returns before its next set_attr() would
+		// otherwise leave the flag only in memory.
+		$this->set_attr( 'zero_verification_exhausted_' . $step_name, true );
 
 		return array();
 	}
