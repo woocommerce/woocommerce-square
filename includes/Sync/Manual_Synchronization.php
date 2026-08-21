@@ -53,7 +53,10 @@ class Manual_Synchronization extends Stepped_Job {
 	const BATCH_CHANGE_INVENTORY_LIMIT = 100;
 
 	/** @var int maximum per product fallback upserts attempted within one step cycle */
-	const MAX_ISOLATED_UPSERTS_PER_CYCLE = 20;
+	const MAX_ISOLATED_UPSERTS_PER_CYCLE = 5;
+
+	/** @var int maximum rounds of dropping named objects from one inventory chunk before giving up */
+	const MAX_INVENTORY_ISOLATION_ROUNDS = 5;
 
 	/**
 	 * Square error codes that mean "this object's own data is invalid", and nothing else.
@@ -2201,8 +2204,11 @@ class Manual_Synchronization extends Stepped_Job {
 
 		foreach ( array_chunk( $inventory_changes, self::BATCH_CHANGE_INVENTORY_LIMIT ) as $chunk ) {
 
-			// A dropped dead object shrinks the chunk by one each round, so this terminates.
-			$attempts_left = count( $chunk ) + 1;
+			// Every round drops at least one change, so this terminates on its own. The round cap
+			// bounds the request count regardless: Square normally names every offending object in
+			// one response, so a chunk that needs more rounds than this is not behaving as expected
+			// and must not spend a whole step cycle discovering one object at a time.
+			$attempts_left = min( count( $chunk ) + 1, self::MAX_INVENTORY_ISOLATION_ROUNDS );
 
 			while ( ! empty( $chunk ) && $attempts_left > 0 ) {
 
@@ -2211,6 +2217,8 @@ class Manual_Synchronization extends Stepped_Job {
 				try {
 					$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $chunk ) ) . '_change_inventory' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 					wc_square()->get_api()->batch_change_inventory( $idempotency_key, $chunk );
+
+					$chunk = array(); // sent, so nothing in this chunk is left unaccounted for
 					break;
 				} catch ( \Exception $exception ) {
 
@@ -2265,6 +2273,16 @@ class Manual_Synchronization extends Stepped_Job {
 				}
 			}
 
+			// Rounds ran out with changes still unsent. Dropping them silently would lose real
+			// inventory updates for products Square never named as the problem, so fail loudly.
+			if ( ! empty( $chunk ) ) {
+				throw new \Exception(
+					esc_html(
+						'Gave up isolating inventory changes after ' . self::MAX_INVENTORY_ISOLATION_ROUNDS
+						. ' rounds with ' . count( $chunk ) . ' changes still unsent.'
+					)
+				);
+			}
 		}
 	}
 
