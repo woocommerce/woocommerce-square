@@ -1131,20 +1131,23 @@ class Manual_Synchronization extends Stepped_Job {
 			}
 
 			try {
-				$start           = microtime( true );
-				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $batches ) ) . time() . '_upsert_products' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				$start     = microtime( true );
+				$body_hash = md5( serialize( $batches ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
-				if ( $new_products ) {
-					// Use the retry idempotency key if it exists.
-					$retry_idempotency_key    = $this->get_attr( 'upsert_retry_idempotency_key', null );
-					$upsert_retry_product_ids = $this->get_attr( 'upsert_retry_product_ids', array() );
-					if ( ! empty( $retry_idempotency_key ) && ! empty( $upsert_retry_product_ids ) ) {
-						$idempotency_key = $retry_idempotency_key;
+				// Reuse the key stored by a rate-limited attempt only while the request body is
+				// unchanged; any body drift gets a fresh key or Square rejects the request with
+				// IDEMPOTENCY_KEY_REUSED. The body legitimately changes between attempts when
+				// temporary #category_* references resolve to real Square IDs after
+				// upsert_categories completes.
+				// Note: upsert_new_products() reads upsert_retry_product_ids before this method
+				// runs to rebuild the same batch, which is what makes an unchanged body possible.
+				$retry_idempotency_key = $this->get_attr( 'upsert_retry_idempotency_key', null );
+				$idempotency_key       = wc_square()->get_reusable_idempotency_key( $retry_idempotency_key, $body_hash, '_upsert_products' );
 
-						// Reset the retry idempotency key and product ids.
-						$this->set_attr( 'upsert_retry_idempotency_key', null );
-						$this->set_attr( 'upsert_retry_product_ids', null );
-					}
+				if ( ! empty( $retry_idempotency_key ) ) {
+					// Consumed either way; a later rate limit stores the key actually used.
+					$this->set_attr( 'upsert_retry_idempotency_key', null );
+					$this->set_attr( 'upsert_retry_product_ids', null );
 				}
 
 				$response        = wc_square()->get_api()->batch_upsert_catalog_objects( $idempotency_key, $batches );
@@ -1153,10 +1156,14 @@ class Manual_Synchronization extends Stepped_Job {
 				$retry         = $this->get_attr( 'retry', 0 );
 				$error_message = $e->getMessage();
 
-				// Retry the request if it was rate limited, and we are uploading new products. Retry up to 3 times.
-				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $new_products && $retry < 3 ) {
+				// Store the key used for this attempt so a rate-limited retry can reuse it while
+				// the request body is unchanged. Applies to every upsert path; the product ID
+				// snapshot is only needed to rebuild the batch for new products. Retry up to 3 times.
+				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $retry < 3 ) {
 					$this->set_attr( 'upsert_retry_idempotency_key', $idempotency_key );
-					$this->set_attr( 'upsert_retry_product_ids', $product_ids );
+					if ( $new_products ) {
+						$this->set_attr( 'upsert_retry_product_ids', $product_ids );
+					}
 				}
 				// Re-throw the exception to allow centralized error handling at the job level.
 				throw $e;
