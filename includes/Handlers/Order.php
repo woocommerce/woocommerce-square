@@ -396,10 +396,26 @@ class Order {
 
 		wc_square()->log( 'New order from other gateway inventory syncing..' );
 		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
-		wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
 
-		// Reset the staged inventory updates.
-		$this->products_to_sync = array();
+		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
+		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
+		// exception) must never bubble up - it would abort the payment flow mid transition and
+		// let the gateway mark an already paid order as failed. Log and continue instead; stock
+		// converges on the next successful sync.
+		try {
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
+					count( $inventory_adjustments ),
+					$exception->getMessage()
+				)
+			);
+		} finally {
+			// Always reset, or the shutdown hook re-attempts the same failing call in this request.
+			$this->products_to_sync = array();
+		}
 	}
 
 	/**
@@ -463,7 +479,21 @@ class Order {
 
 		wc_square()->log( 'Order from other gateway Refund inventory updates syncing..' );
 		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
-		wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+
+		// Same protection as the checkout path: a Square API failure during a refund of an order
+		// paid through another gateway must not abort the refund flow. Log and continue.
+		try {
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory sync failed for refund #%d of order #%d from other gateway (refund flow left untouched): %s',
+					$refund_id,
+					$order_id,
+					$exception->getMessage()
+				)
+			);
+		}
 	}
 
 	/**
