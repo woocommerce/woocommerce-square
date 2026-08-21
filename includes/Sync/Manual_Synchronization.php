@@ -1135,11 +1135,16 @@ class Manual_Synchronization extends Stepped_Job {
 		// This ensures products don't sit in Square with zero inventory if the sync fails before
 		// the deferred push_inventory step runs. Only IDs whose inline push failed are queued for
 		// the deferred step - successful pushes are not re-queued to avoid double-counting.
-		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() && ! empty( $result['processed'] ) ) {
-			$failed_inventory_ids       = $this->push_inventory_for_products( $result['processed'] );
+		// Skipped products are consumed but were not upserted, so they are excluded here: pushing
+		// inventory for one would write stock against a stale mapping for a product whose catalog
+		// data Square just rejected, and would risk a second alert for the same product.
+		$upserted_product_ids = array_values( array_diff( $result['processed'], $result['skipped'] ?? array() ) );
+
+		if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() && ! empty( $upserted_product_ids ) ) {
+			$failed_inventory_ids       = $this->push_inventory_for_products( $upserted_product_ids );
 			$inventory_push_product_ids = array_merge( $failed_inventory_ids, $inventory_push_product_ids );
 		} else {
-			$inventory_push_product_ids = array_merge( $result['processed'], $inventory_push_product_ids );
+			$inventory_push_product_ids = array_merge( $upserted_product_ids, $inventory_push_product_ids );
 		}
 		$this->set_attr( 'inventory_push_product_ids', $inventory_push_product_ids );
 
@@ -1196,6 +1201,7 @@ class Manual_Synchronization extends Stepped_Job {
 		$result                    = array(
 			'processed'   => array(),
 			'unprocessed' => $product_ids,
+			'skipped'     => array(),
 		);
 		$isolated_fail_ids         = array();
 		$partial_error_detail      = '';
@@ -1346,6 +1352,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$result['processed']   = $staged_product_ids;
 				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+				$result['skipped']     = $isolated_fail_ids;
 
 				return $result;
 			}
@@ -1588,8 +1595,12 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
+		// processed means consumed by this cycle, which includes the skipped products so the step
+		// queue advances past them. skipped is reported separately because a skipped product has no
+		// usable Square mapping from this cycle and must not be treated as successfully upserted.
 		$result['processed']   = $staged_product_ids;
 		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+		$result['skipped']     = $isolated_fail_ids;
 
 		return $result;
 	}
