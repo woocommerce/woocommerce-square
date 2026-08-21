@@ -1405,6 +1405,8 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$all_changes = array_merge( ...array_values( $inventory_changes ) );
 
+		$this->remember_pushed_inventory_objects( $all_changes );
+
 		// Chunk by the batch limit in case the set of products has many variations.
 		$chunks = array_chunk( $all_changes, self::BATCH_CHANGE_INVENTORY_LIMIT );
 
@@ -1574,6 +1576,7 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! empty( $inventory_changes ) ) {
 
 			$inventory_changes = array_merge( ...$inventory_changes );
+			$this->remember_pushed_inventory_objects( $inventory_changes );
 			$idempotency_key   = wc_square()->get_idempotency_key( md5( serialize( $inventory_changes ) ) . '_change_inventory' );
 			$result            = wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 		}
@@ -1887,6 +1890,45 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
+	 * Records the catalog objects whose inventory counts this job has pushed to Square.
+	 *
+	 * Used by pull_inventory() to avoid reading a count straight back after writing it. Square's
+	 * inventory is eventually consistent, so the read can still answer with the pre-push value, and
+	 * for an item that had never been counted it answers zero, which would undo the push.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\InventoryChange[] $inventory_changes changes that were pushed
+	 */
+	protected function remember_pushed_inventory_objects( array $inventory_changes ) {
+
+		$object_ids = array();
+
+		foreach ( $inventory_changes as $change ) {
+
+			if ( ! $change->getPhysicalCount() ) {
+				continue;
+			}
+
+			$object_id = $change->getPhysicalCount()->getCatalogObjectId();
+
+			if ( $object_id ) {
+				$object_ids[] = $object_id;
+			}
+		}
+
+		if ( ! $object_ids ) {
+			return;
+		}
+
+		$this->set_attr(
+			'pushed_inventory_variation_ids',
+			array_values( array_unique( array_merge( (array) $this->get_attr( 'pushed_inventory_variation_ids', array() ), $object_ids ) ) )
+		);
+	}
+
+
+	/**
 	 * Pulls the latest inventory counts for the variation IDs in `pull_inventory_variation_ids`.
 	 *
 	 * @since 2.0.2
@@ -1922,6 +1964,27 @@ class Manual_Synchronization extends Stepped_Job {
 
 			// remove IDs that have already been processed
 			$square_variation_ids = array_diff( $square_variation_ids, $processed_ids );
+
+			// Never read back a count this same job pushed. Square's inventory is eventually
+			// consistent, so a freshly pushed count can still answer with the previous value, or with
+			// zero for an item that had none before, and writing that back would undo the push. Only
+			// objects this job pushed are skipped; everything else, which is every product that
+			// already existed in Square, is still pulled.
+			$pushed_ids = (array) $this->get_attr( 'pushed_inventory_variation_ids', array() );
+
+			if ( $pushed_ids ) {
+				$skipped              = array_intersect( $square_variation_ids, $pushed_ids );
+				$square_variation_ids = array_values( array_diff( $square_variation_ids, $pushed_ids ) );
+
+				if ( $skipped ) {
+					$this->set_attr(
+						'processed_square_variation_ids',
+						array_values( array_unique( array_merge( $processed_ids, $skipped ) ) )
+					);
+
+					wc_square()->log( sprintf( 'Skipped pulling inventory for %d catalog object(s) this job just pushed.', count( $skipped ) ) );
+				}
+			}
 
 			if ( empty( $square_variation_ids ) ) {
 
@@ -2182,10 +2245,18 @@ class Manual_Synchronization extends Stepped_Job {
 				// only handle product inventory if enabled
 				if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
 					$next_steps[] = 'push_inventory';
-					// pull_inventory is intentionally NOT queued when WooCommerce is the system of
-					// record: it only re-read the counts this same job just pushed, and Square's
-					// eventual consistency meant a not-yet-propagated count could come back as 0
-					// and overwrite the stock pushed moments earlier (SQUARE-145).
+
+					// Inventory is always fetched from Square as well, so that sales made on other
+					// channels are reflected, and for a product that already exists in Square this
+					// pull is the only thing that syncs its inventory during a manual sync.
+					//
+					// What it must NOT do is read back the counts this same job just pushed: Square's
+					// inventory is eventually consistent, so a count that has not propagated yet
+					// comes back as zero and would overwrite the stock pushed moments earlier
+					// (SQUARE-145). Those objects are excluded by id in pull_inventory() instead of
+					// dropping the step, which would leave existing products without an inventory
+					// sync at all.
+					$next_steps[] = 'pull_inventory';
 				}
 			}
 		} elseif ( $this->is_system_of_record_square() ) {
