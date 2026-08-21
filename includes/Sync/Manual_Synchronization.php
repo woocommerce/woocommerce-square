@@ -519,6 +519,8 @@ class Manual_Synchronization extends Stepped_Job {
 							),
 						)
 					);
+					wc_square()->log( 'Skipped category "' . $term_name . '": ' . $category_exception->getMessage() );
+
 					// Deferred like record_skipped_product(); complete_step() below persists it.
 					$this->set_attr( 'sync_error_count', (int) $this->get_attr( 'sync_error_count', 0 ) + 1, false );
 				}
