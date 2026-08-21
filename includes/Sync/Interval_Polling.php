@@ -37,10 +37,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Interval_Polling extends Stepped_Job {
 
-
-
-
-
 	/**
 	 * Assigns the next steps needed for this sync job.
 	 *
