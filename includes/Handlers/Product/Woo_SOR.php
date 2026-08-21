@@ -449,15 +449,21 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					}
 				}
 
-				if ( ! $location_override ) {
+				// Out of stock needs an override, created if the item has none, because tracking is the
+				// only way to reach Square's sold out state. In stock only RELEASES tracking on an
+				// override that already exists: creating one purely to say "not tracked" would
+				// overwrite a merchant's own Square side tracking for an item WooCommerce does not
+				// manage, which is not ours to decide.
+				if ( ! $location_override && $is_out_of_stock ) {
 					$location_override = new \Square\Models\ItemVariationLocationOverrides();
 					$location_override->setLocationId( $configured_location );
 					$location_overrides[] = $location_override;
 				}
 
-				$location_override->setTrackInventory( $is_out_of_stock );
-
-				$variation_data->setLocationOverrides( $location_overrides );
+				if ( $location_override ) {
+					$location_override->setTrackInventory( $is_out_of_stock );
+					$variation_data->setLocationOverrides( $location_overrides );
+				}
 			}
 		}
 
