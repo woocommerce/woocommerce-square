@@ -131,24 +131,4 @@ class Error_Classification_Test extends WP_UnitTestCase {
 
 		$this->assertSame( 'isolatable', $this->call( 'classify_sync_error', new \Exception( '[SOME_NEW_CODE] nope' ) ) );
 	}
-
-	/**
-	 * @dataProvider provide_code_presence
-	 */
-	public function test_has_square_error_code( $message, $expected ) {
-		$this->assertSame( $expected, $this->call( 'has_square_error_code', new \Exception( $message ) ) );
-	}
-
-	public function provide_code_presence() {
-		return array(
-			array( '[BAD_REQUEST] nope', true ),
-			array( '[RATE_LIMITED] a | [BAD_REQUEST] b', true ),
-			array( 'Invalid product', false ),
-			array( 'Type of $catalog_object must be an ITEM', false ),
-			array( '', false ),
-			// A bracketed word mid detail is not a code.
-			array( '[BAD_REQUEST] Product "[UNAUTHORIZED] Widget" is invalid', true ),
-			array( 'Product "[UNAUTHORIZED] Widget" is invalid', false ),
-		);
-	}
 }

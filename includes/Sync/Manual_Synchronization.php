@@ -1237,22 +1237,48 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$product = wc_get_product( $product_id );
 
-				// Building the catalog payload can fail on a single product's local data (for
-				// example a product Catalog_Item rejects as invalid, or an object Woo_SOR refuses
-				// because it is not of type ITEM): record and skip that product instead of letting
-				// the exception end the whole sync (SQUARE-143 / SQUARE-31).
+				// Building the payload happens in two stages that differ in what a failure can mean,
+				// so they are caught separately rather than distinguished after the fact.
+				//
+				// Catalog_Item's constructor only validates local product data and never reaches
+				// Square, so a failure here is definitively this product's own problem. A product
+				// that no longer resolves also lands here, which keeps a deleted product a skip
+				// rather than a job failure.
+				try {
+					$catalog_item = new Catalog_Item( $product, $is_delete_action );
+				} catch ( \Exception $local_exception ) {
+					$this->record_skipped_product( $product_id, $local_exception->getMessage() );
+					$isolated_fail_ids[]  = $product_id;
+					$staged_product_ids[] = $product_id; // consumed, so the step queue advances past it
+					continue;
+				}
+
+				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
+
+				// get_batch() is not local work: for a variable product it reaches Square to look up
+				// and create item options, so a failure here can just as easily be infrastructure.
 				$refresh_requested_before = get_option( 'woocommerce_square_refresh_sync_cycle', false );
 
 				try {
-					if ( ! $product instanceof \WC_Product ) {
-						throw new \Exception( __( 'the product no longer exists locally', 'woocommerce-square' ) );
-					}
-
-					$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
-
-					$catalog_item = new Catalog_Item( $product, $is_delete_action );
 					$batch        = $catalog_item->get_batch( $object );
 					$object_count = $catalog_item->get_batch_object_count();
+
+				} catch ( \InvalidArgumentException $shape_exception ) {
+
+					// The payload builders reject an object of the wrong type with this specific
+					// exception, matching the guards in Handlers\Product. It is a local shape
+					// problem for this one product and never an API failure, so it is safe to skip
+					// even though it carries no Square error code.
+					//
+					// This is checked before the replay sentinel below on purpose: both shape guards
+					// run at the top of their builder, before any Square call, so a shape failure
+					// cannot coincide with a replay request. If a guard ever moves after an API call
+					// that assumption breaks and the sentinel has to be checked here too.
+					$this->record_skipped_product( $product_id, $shape_exception->getMessage() );
+					$isolated_fail_ids[]  = $product_id;
+					$staged_product_ids[] = $product_id; // consumed, so the step queue advances past it
+					continue;
+
 				} catch ( \Exception $staging_exception ) {
 
 					// A failure that asked for the job to restart is never this product's fault.
@@ -1264,12 +1290,11 @@ class Manual_Synchronization extends Stepped_Job {
 						throw $staging_exception;
 					}
 
-					// get_batch() reaches the Square API for variable products (it creates item
-					// options), so a failure here is not necessarily this product's data. Only a
-					// plugin level validation error, which carries no Square error code, or a
-					// genuine data error may be turned into a skip.
-					if ( $this->has_square_error_code( $staging_exception )
-						&& 'isolatable' !== $this->classify_sync_error( $staging_exception ) ) {
+					// Only a Square error naming this object's own data may become a skip. An
+					// exception carrying no Square error code that reaches this point is a transport
+					// failure from the option lookups above, not bad product data, so it must fail
+					// the job loudly instead of stranding a valid product.
+					if ( 'isolatable' !== $this->classify_sync_error( $staging_exception ) ) {
 						throw $staging_exception;
 					}
 
@@ -1520,21 +1545,45 @@ class Manual_Synchronization extends Stepped_Job {
 
 		wc_square()->log( 'Stored Square data to ' . count( $staged_product_ids ) . ' products in ' . $duration . 's' );
 
-		// log any failed products (isolation failures were already recorded with their reason)
-		foreach ( array_diff( $staged_product_ids, $successful_product_ids, $isolated_fail_ids ) as $product_id ) {
+		$unreturned_product_ids = array_values( array_diff( $staged_product_ids, $successful_product_ids, $isolated_fail_ids ) );
 
-			// Square names no product against these errors, so the reason is worded as the set of
-			// errors the request returned rather than as this product's own confirmed cause.
-			$this->record_skipped_product(
-				$product_id,
-				'' !== $partial_error_detail
-					? sprintf(
-						/* translators: Placeholder: %s - one or more error messages returned by Square */
-						__( 'Square did not return the product in the upsert response. Errors returned by the request: %s', 'woocommerce-square' ),
-						$partial_error_detail
-					)
-					: __( 'Square did not return the product in the upsert response', 'woocommerce-square' )
+		// A 200 response can still carry errors, and they get the same treatment as a thrown one:
+		// only a data error means these products are themselves at fault. On a server, auth or rate
+		// limit error the write may yet succeed, so those products must not be reported as skipped.
+		// They are left unconsumed instead, which retries them on the next cycle while the products
+		// this response did return keep the mappings they just earned. Re-throwing here would
+		// discard those mappings and re-send the successful products under a fresh key, creating
+		// duplicates in Square for anything newly created.
+		$partial_error_is_isolatable = '' === $partial_error_detail
+			|| 'isolatable' === $this->classify_sync_error( new \Exception( $partial_error_detail ) );
+
+		if ( ! empty( $unreturned_product_ids ) && ! $partial_error_is_isolatable ) {
+
+			wc_square()->log(
+				'Leaving ' . count( $unreturned_product_ids ) . ' products unprocessed for the next cycle: the upsert response'
+				. ' carried an error that is not the products\' own data (' . $partial_error_detail . ').'
 			);
+
+			$staged_product_ids = array_values( array_diff( $staged_product_ids, $unreturned_product_ids ) );
+
+		} else {
+
+			// log any failed products (isolation failures were already recorded with their reason)
+			foreach ( $unreturned_product_ids as $product_id ) {
+
+				// Square names no product against these errors, so the reason is worded as the set of
+				// errors the request returned rather than as this product's own confirmed cause.
+				$this->record_skipped_product(
+					$product_id,
+					'' !== $partial_error_detail
+						? sprintf(
+							/* translators: Placeholder: %s - one or more error messages returned by Square */
+							__( 'Square did not return the product in the upsert response. Errors returned by the request: %s', 'woocommerce-square' ),
+							$partial_error_detail
+						)
+						: __( 'Square did not return the product in the upsert response', 'woocommerce-square' )
+				);
+			}
 		}
 
 		$this->set_attr( 'in_progress_upsert_catalog_objects', null );
@@ -1578,24 +1627,6 @@ class Manual_Synchronization extends Stepped_Job {
 		}
 
 		return parent::complete();
-	}
-
-
-	/**
-	 * Determines whether an exception message carries a Square API error code.
-	 *
-	 * Plugin level validation failures (an invalid product, a catalog object of the wrong type)
-	 * carry no code; anything Square rejected does, because
-	 * API::do_post_parse_response_validation() formats every error as "[CODE] detail".
-	 *
-	 * @since x.x.x
-	 *
-	 * @param \Exception $exception the caught exception
-	 * @return bool
-	 */
-	protected function has_square_error_code( \Exception $exception ) {
-
-		return (bool) preg_match( '/(^|\| )\[[A-Z][A-Z0-9_]*\]/', $exception->getMessage() );
 	}
 
 
@@ -1798,6 +1829,21 @@ class Manual_Synchronization extends Stepped_Job {
 					throw new \Exception( 'API response data is missing' );
 				}
 
+				// A single product request can also answer 200 while carrying errors. Rethrowing
+				// them in the API layer's own "[CODE] detail" shape hands them to the catch below,
+				// so one policy decides the outcome and the merchant gets Square's actual reason
+				// rather than a generic "not returned in the response".
+				if ( is_array( $response_data->getErrors() ) && ! empty( $response_data->getErrors() ) ) {
+
+					$product_error_details = array();
+
+					foreach ( $response_data->getErrors() as $response_error ) {
+						$product_error_details[] = trim( ( $response_error->getCode() ? '[' . $response_error->getCode() . '] ' : '' ) . ( $response_error->getDetail() ?? '' ) );
+					}
+
+					throw new \Exception( esc_html( implode( ' | ', array_filter( array_unique( $product_error_details ) ) ) ) );
+				}
+
 				if ( is_array( $response_data->getObjects() ) ) {
 					$merged_objects = array_merge( $merged_objects, $response_data->getObjects() );
 				}
@@ -1809,22 +1855,27 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$classification = $this->classify_sync_error( $product_exception );
 
-				// Not this product's data: either nothing will succeed (auth, permissions) or the
-				// write may already have been applied (server error, timeout). Recording a skip
-				// would be wrong in both cases, so fail the job. The job level retry re-sends this
-				// product under the same deterministic key, which Square deduplicates.
-				if ( 'fatal' === $classification ) {
-					throw $product_exception;
-				}
+				// Anything that is not this product's own data ends the slice rather than marking a
+				// product skipped: a rate limit, an auth failure or a server error says nothing about
+				// the product, and on a server error the write may yet have landed.
+				//
+				// Progress already made is kept rather than discarded, so the products that did
+				// succeed get their Square IDs mapped instead of being re-sent from scratch. That is
+				// safe because each isolated request uses a key derived only from the job, the
+				// product and the body, so re-sending an unattempted or half applied product next
+				// cycle reuses the same key and Square deduplicates it. With no progress at all
+				// there is nothing worth keeping, so the exception bubbles to the job level retry
+				// and backoff, which is also what fails the job on an auth error.
+				if ( 'isolatable' !== $classification ) {
 
-				// Rate limited mid slice: stop here. Progress made so far is kept and the
-				// remaining products are staged again next cycle; with no progress at all the
-				// exception bubbles to the job level retry and backoff.
-				if ( 'rate_limited' === $classification ) {
 					if ( empty( $done_ids ) && empty( $failed_ids ) ) {
 						throw $product_exception;
 					}
-					wc_square()->log( 'Rate limited during isolated upserts; pausing the fallback with ' . count( $done_ids ) . ' done, the rest resume next cycle.' );
+
+					wc_square()->log(
+						'Stopping the isolated upsert fallback after a ' . $classification . ' error (' . $product_exception->getMessage() . '); '
+						. count( $done_ids ) . ' done, the rest resume next cycle.'
+					);
 					break;
 				}
 
@@ -2137,7 +2188,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		foreach ( array_chunk( $inventory_changes, self::BATCH_CHANGE_INVENTORY_LIMIT ) as $chunk ) {
 
-			// Every round drops at least one change, so this terminates.
+			// A dropped dead object shrinks the chunk by one each round, so this terminates.
 			$attempts_left = count( $chunk ) + 1;
 
 			while ( ! empty( $chunk ) && $attempts_left > 0 ) {
@@ -2200,6 +2251,7 @@ class Manual_Synchronization extends Stepped_Job {
 					$chunk = $remaining;
 				}
 			}
+
 		}
 	}
 
