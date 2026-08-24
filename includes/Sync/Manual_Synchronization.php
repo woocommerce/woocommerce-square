@@ -1576,9 +1576,11 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! empty( $inventory_changes ) ) {
 
 			$inventory_changes = array_merge( ...$inventory_changes );
-			$this->remember_pushed_inventory_objects( $inventory_changes );
 			$idempotency_key   = wc_square()->get_idempotency_key( md5( serialize( $inventory_changes ) ) . '_change_inventory' );
 			$result            = wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
+
+			// Recorded after the push so pull_inventory() can skip reading these counts straight back.
+			$this->remember_pushed_inventory_objects( $inventory_changes );
 		}
 
 		$this->set_attr( 'inventory_push_product_ids', $product_ids );
