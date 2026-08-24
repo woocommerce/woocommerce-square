@@ -347,7 +347,9 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 					$option_id       = '';
 					$option_value_id = '';
-					if ( isset( $options_data[ $options_ids[ $variation_index ] ] ) ) {
+					// $options_ids is short, or empty, whenever an option could not be created for this
+					// product. Guarding the index keeps that from emitting a warning per variation.
+					if ( isset( $options_ids[ $variation_index ], $options_data[ $options_ids[ $variation_index ] ] ) ) {
 						$option_id = $options_ids[ $variation_index ];
 
 						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
