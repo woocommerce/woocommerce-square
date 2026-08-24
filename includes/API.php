@@ -662,6 +662,31 @@ class API extends Base {
 	}
 
 	/**
+	 * Determines whether an option creation failure means the cached options data is stale.
+	 *
+	 * Only a rejection saying the option or its value already exists in Square is worth replaying
+	 * the job for, because that is the one cause a refetch of the options data resolves. The
+	 * message is matched rather than the error code, since Square answers both the stale cache case
+	 * and a permanently invalid payload with the same INVALID_VALUE and BAD_REQUEST codes.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $message the message Square returned
+	 * @return bool
+	 */
+	protected function is_stale_options_cache_error( $message ) {
+
+		foreach ( array( 'already exists', 'existing item option' ) as $needle ) {
+			if ( false !== stripos( $message, $needle ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
 	 * Create options and values in Square.
 	 *
 	 * @since 4.9.0
@@ -747,16 +772,27 @@ class API extends Base {
 
 		} catch ( \Exception $e ) {
 			/**
-			 * if we encounter an error, mostly it would be because Option or its Value
-			 * already exists in Square. In such case, we need to refetch the latest data
-			 * and restart the Runner Job using `woocommerce_square_refresh_sync_cycle` option.
-			 * This is required to reactivate `fetch_all_options` step to get the latest data.
+			 * Replaying the whole job only helps when Square rejected this because the option or
+			 * value already exists, which means the cached options data is stale: refetching it and
+			 * running the cycle again resolves it.
+			 *
+			 * Any other rejection is permanent. An option payload Square considers invalid, such as
+			 * a value with no name because a variation attribute has no values selected, fails
+			 * identically on every replay, so asking for one burns the retry budget and then fails
+			 * the whole sync over one product. Leaving the flag alone lets the caller's own error
+			 * handling skip that product and carry on.
 			 */
-			update_option( 'woocommerce_square_refresh_sync_cycle', true );
+			if ( $this->is_stale_options_cache_error( $e->getMessage() ) ) {
+				update_option( 'woocommerce_square_refresh_sync_cycle', true );
+
+				wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );
+			} else {
+				wc_square()->log( sprintf( 'Failed to create option in Square: %s. Not replaying the job: this does not indicate stale options data.', $e->getMessage() ) );
+			}
+
+			// Refetched next time round either way, since the cache may be incomplete.
 			delete_transient( 'wc_square_options_data' );
 
-			// Log the error and throw it.
-			wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );
 			throw $e;
 		}
 
