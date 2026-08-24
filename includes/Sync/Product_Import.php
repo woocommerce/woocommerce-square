@@ -309,6 +309,19 @@ class Product_Import extends Stepped_Job {
 			$inventory_hash[ $inventory_count->getCatalogObjectId() ] = $inventory_count->getQuantity();
 		}
 
+		// Verify zero counts against Square's inventory change history: a never-counted item
+		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
+		// (SQUARE-145).
+		$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'import_inventory', $zero_object_ids );
+
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable and retries remain: return WITHOUT advancing the import cursor
+			// so the step runs again; throwing would fail the whole import for one transient error.
+			// Once the retries are spent the import proceeds writing no zeros and records an alert.
+			return;
+		}
+
 		foreach ( $objects as $catalog_object ) {
 
 			// all inventory should be tied to a variation, but check here just in case
@@ -317,24 +330,37 @@ class Product_Import extends Stepped_Job {
 				$product = Product::get_product_by_square_variation_id( $catalog_object->getId() );
 
 				if ( $product && $product instanceof \WC_Product ) {
+
+					// No "Sync with Square" gate here on purpose: an import is started by the
+					// merchant, so it belongs with the explicit fetch action rather than with the
+					// automatic pulls SQUARE-359 gates. Products matched and updated during an
+					// import also never receive the synced flag (it is only set for newly imported
+					// products), so gating here would silently skip their inventory.
 					$inventory_data        = $catalog_objects_hash[ $catalog_object->getId() ] ?? array();
 					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
 
-					/* If catalog object is tracked and has a quantity > 0 set in Square. */
 					if ( $is_tracking_inventory && isset( $inventory_hash[ $catalog_object->getId() ] ) ) {
-						$product->set_stock_quantity( (float) $inventory_hash[ $catalog_object->getId() ] );
-						$product->set_manage_stock( true );
 
-						/* If the catalog object is tracked but the quantity in Square is set to 0. */
-					} elseif ( $is_tracking_inventory ) {
-						$product->set_stock_quantity( 0 );
-						$product->set_manage_stock( true );
+						$changed = Helper::apply_square_inventory_count(
+							$product,
+							(float) $inventory_hash[ $catalog_object->getId() ],
+							(bool) $sold_out,
+							in_array( $catalog_object->getId(), $verified_zero_ids, true )
+						);
 
-						/* If the catalog object is not tracked in Square at all. */
-					} else {
+						if ( ! $changed ) {
+							continue;
+						}
+					} elseif ( ! $is_tracking_inventory ) {
+
+						// Not tracked in Square: reflect availability only; manage_stock is
+						// merchant intent and is not changed here.
 						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-						$product->set_manage_stock( false );
+					} else {
+
+						// Tracked but no IN_STOCK count returned: "no information", never a zero.
+						continue;
 					}
 
 					$product->save();

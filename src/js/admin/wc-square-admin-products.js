@@ -415,10 +415,9 @@ jQuery( document ).ready( ( $ ) => {
 							syncInventory
 					);
 
-					$manageInput.on('click', () => {
-						return false;
-					});
-					$manageInput.css({ opacity: '0.5' });
+					// "Manage stock" stays editable. Square no longer switches it off during a sync, so
+					// this is how a merchant mirrors turning inventory tracking off in Square, and
+					// blocking the click would leave them no way to do it.
 
 					// disable stock status radios.
 					$stockStatusInput.css({ opacity: 0.5 });
@@ -528,10 +527,8 @@ jQuery( document ).ready( ( $ ) => {
 				if ( useSquare ) {
 					// disable stock management inputs
 					$variationStockInput.prop( 'readonly', true );
-					$variationManageInput.on('click', () => {
-						return false;
-					});
-					$variationManageInput.css( { opacity: '0.5' } );
+					// Editable for the same reason as simple products: mirroring a tracking off change
+					// made in Square is the merchant's own call.
 					$variationStockStatusField.css( { opacity: 0.5 } );
 					$variationStockStatusField.on('mousedown keydown change', () => { return false; });
 

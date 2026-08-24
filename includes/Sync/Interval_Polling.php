@@ -297,6 +297,13 @@ class Interval_Polling extends Stepped_Job {
 			$sold_out              = $inventory_data['sold_out'] ?? false;
 			$product               = Product::get_product_by_square_variation_id( $catalog_object_id );
 			if ( $product instanceof \WC_Product ) {
+				// Respect the per-product "Sync with Square" setting: the push side already honours
+				// it, and the automatic pull must too, or unticking/unlinking cannot stop Square
+				// from overwriting this product's stock.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					continue;
+				}
+
 				$manage_stock = $product->get_manage_stock();
 				$stock_status = $product->get_stock_status();
 				$out_of_stock = 'outofstock' === $stock_status;
@@ -310,8 +317,22 @@ class Interval_Polling extends Stepped_Job {
 		}
 
 		if ( ! empty( $catalog_objects_to_update ) ) {
-			// Catalog Inventory data.
+			// Catalog Inventory data (IN_STOCK counts only).
 			$inventory_hash = Helper::get_catalog_objects_inventory_stats( $catalog_objects_to_update );
+
+			// A zero IN_STOCK count is ambiguous: a real sellout and a never-counted new item look
+			// identical. Verify zeros against Square's inventory change history so phantom zeros
+			// from uncounted items are never written to WooCommerce (SQUARE-145).
+			$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+			$verified_zero_ids = $this->resolve_zero_count_verification( 'update_inventory_tracking', $zero_object_ids );
+
+			if ( null === $verified_zero_ids ) {
+				// Verification unavailable and retries remain: return WITHOUT advancing any progress
+				// marker so the step runs again, rather than throwing and failing the whole job. Once
+				// the retries are spent this step proceeds writing no zeros, and the counts step keeps
+				// the shared window in place so this window is read again on the next poll.
+				return;
+			}
 
 			foreach ( $catalog_objects_to_update as $catalog_object_id ) {
 				$product = Product::get_product_by_square_variation_id( $catalog_object_id );
@@ -320,20 +341,28 @@ class Interval_Polling extends Stepped_Job {
 					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
 
-					/* If catalog object is tracked and has a quantity > 0 set in Square. */
 					if ( $is_tracking_inventory && isset( $inventory_hash[ $catalog_object_id ] ) ) {
-						$product->set_stock_quantity( (float) $inventory_hash[ $catalog_object_id ] );
-						$product->set_manage_stock( true );
 
-						/* If the catalog object is tracked but the quantity in Square is set to 0. */
+						$changed = Helper::apply_square_inventory_count(
+							$product,
+							(float) $inventory_hash[ $catalog_object_id ],
+							(bool) $sold_out,
+							in_array( $catalog_object_id, $verified_zero_ids, true )
+						);
+
+						if ( ! $changed ) {
+							continue;
+						}
 					} elseif ( $is_tracking_inventory ) {
-						$product->set_stock_quantity( 0 );
-						$product->set_manage_stock( true );
 
-						/* If the catalog object is not tracked in Square at all. */
+						// Tracked in Square but no IN_STOCK count returned: that is "no information",
+						// never a zero. Leave the product untouched (SQUARE-145).
+						continue;
 					} else {
+
+						// Not tracked in Square: reflect availability only. The product's
+						// manage_stock setting is merchant intent and is not changed here.
 						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-						$product->set_manage_stock( false );
 					}
 
 					$product->save();
@@ -391,22 +420,18 @@ class Interval_Polling extends Stepped_Job {
 		$catalog_objects_inventory_stats = array();
 
 		foreach ( $response->get_counts() as $count ) {
-			// If catalog stats array already contains the catalog object marked as IN_STOCK, then continue.
-			if ( isset( $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] ) && $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ]['IN_STOCK'] ) {
+			// Only explicit IN_STOCK counts are usable data. Other states (SOLD, WASTE, ORDERED,
+			// RECEIVED_FROM_VENDOR, RESERVED, ...) are movements or purchase-order stages, not the
+			// available quantity - coercing them to zero is what wiped stock for purchase-order
+			// users (SQUARE-7) and for uncounted items (SQUARE-145). Ignore them.
+			if ( 'IN_STOCK' !== $count->getState() ) {
 				continue;
-				// Else if the catalog object is IN_STOCK, then mark IN_STOCK as true and set the quantity for later use.
-			} elseif ( 'IN_STOCK' === $count->getState() ) {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => true,
-					'quantity' => $count->getQuantity(),
-				);
-				// Else if the catalog object doesn't have an IN_STOCK status, then mark IN_STOCK as false and set the quantity as 0 for later use.
-			} else {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => false,
-					'quantity' => 0,
-				);
 			}
+
+			$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
+				'IN_STOCK' => true,
+				'quantity' => $count->getQuantity(),
+			);
 		}
 
 		// Get the inventory tracking for catalog objects.
@@ -414,22 +439,47 @@ class Interval_Polling extends Stepped_Job {
 			array_keys( $catalog_objects_inventory_stats )
 		);
 
+		// Verify zero counts against Square's inventory change history: a never-counted item
+		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written.
+		$zero_object_ids   = Helper::zero_count_object_ids( $catalog_objects_inventory_stats, 'quantity' );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'update_inventory_counts', $zero_object_ids );
+
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable and retries remain: return WITHOUT advancing the cursor or the
+			// inventory watermark so the step runs again, rather than throwing and failing the job.
+			return;
+		}
+
 		foreach ( $catalog_objects_inventory_stats as $catalog_object_id => $stats ) {
 
 			$product = Product::get_product_by_square_variation_id( $catalog_object_id );
 
 			// Square can return multiple "types" of counts, WooCommerce only distinguishes whether a product is in stock or not
 			if ( $product instanceof \WC_Product ) {
+				// Respect the per-product "Sync with Square" setting on the pull side as well.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					continue;
+				}
+
 				$inventory_data        = $catalog_objects_tracking_stats[ $catalog_object_id ] ?? array();
 				$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 				$sold_out              = $inventory_data['sold_out'] ?? false;
 
 				if ( $is_tracking_inventory ) {
-					$product->set_manage_stock( true );
-					$product->set_stock_quantity( $stats['quantity'] );
+					$changed = Helper::apply_square_inventory_count(
+						$product,
+						(float) $stats['quantity'],
+						(bool) $sold_out,
+						in_array( $catalog_object_id, $verified_zero_ids, true )
+					);
+
+					if ( ! $changed ) {
+						continue;
+					}
 				} else {
+					// Not tracked in Square: reflect availability only; manage_stock is merchant
+					// intent and is not changed here.
 					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-					$product->set_manage_stock( false );
 				}
 
 				$product->save();
@@ -443,8 +493,26 @@ class Interval_Polling extends Stepped_Job {
 		$this->set_attr( 'update_inventory_counts_count', $update_count + count( $catalog_objects_inventory_stats ) );
 
 		if ( ! $cursor ) {
-			// When all the inventory counts are synced then set the last sync time to the start time that was stored
-			wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+
+			// All counts in this window are processed, so the watermark may move to the start time
+			// stored above, with one exception: if a zero count in this window could not be verified
+			// after the retries, the window is left in place. Counts are read by updated_after, so the
+			// same window is read again on the next poll and those exact objects come back with it.
+			// Advancing here instead would skip a genuine sellout for good, because Square would not
+			// report that object again until something else changed it.
+			// Both inventory steps read this one watermark and only this step advances it, so a window
+			// either step could not verify has to stay put. Checking only this step's flag would let it
+			// move the window over objects the tracking step had to leave unverified.
+			if ( $this->zero_verification_exhausted( 'update_inventory_counts' )
+				|| $this->zero_verification_exhausted( 'update_inventory_tracking' ) ) {
+
+				wc_square()->log( 'Zero inventory counts in this window could not be verified against Square history; keeping the inventory sync window so the next poll reads it again.' );
+
+			} else {
+
+				wc_square()->get_sync_handler()->set_inventory_last_synced_at( $last_sync_timestamp );
+			}
+
 			$this->complete_step( 'update_inventory_counts' );
 		}
 	}

@@ -35,6 +35,10 @@ defined( 'ABSPATH' ) || exit;
 abstract class Stepped_Job extends Job {
 
 
+	/** @var int attempts a step makes to verify zero counts before it proceeds without them */
+	const MAX_ZERO_VERIFICATION_ATTEMPTS = 3;
+
+
 	/**
 	 * Executes the next step of this job.
 	 *
@@ -53,6 +57,141 @@ abstract class Stepped_Job extends Job {
 		$this->do_next_step();
 
 		return $this->job;
+	}
+
+
+	/**
+	 * Verifies which zero counts are real, applying this class's shared retry policy when Square
+	 * cannot be asked.
+	 *
+	 * Wraps the two parts every step repeated: verify the zeros, and hold and retry a bounded number
+	 * of times when verification is unavailable. Progress markers stay with the caller, because each
+	 * step holds something different (a cursor, a watermark, a queue attribute) and flattening that in
+	 * here would silently drop work.
+	 *
+	 * The return says which zeros may be written, and null says the caller must hold its own progress
+	 * and return so the step runs again. An empty array is NOT a signal of failure: it also means the
+	 * question was asked successfully and none of those zeros is real. A caller that needs to know the
+	 * attempts ran out (to keep a watermark from advancing over a window it could not verify) must ask
+	 * zero_verification_exhausted() rather than infer it from an empty array.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name used for the attempt counters and messages
+	 * @param string[] $zero_object_ids catalog object ids reporting a zero count
+	 * @return string[]|null verified ids, or null when the caller should hold and retry
+	 */
+	protected function resolve_zero_count_verification( $step_name, array $zero_object_ids ) {
+
+		$verified = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+
+		if ( null !== $verified ) {
+			$this->set_attr( 'zero_verification_exhausted_' . $step_name, false );
+			$this->clear_unverified_zero_count_attempts( $step_name );
+			return $verified;
+		}
+
+		if ( $this->should_retry_unverified_zero_counts( $step_name ) ) {
+			return null;
+		}
+
+		// Attempts spent. Nothing is verified, so no zero may be written, and the caller is told so it
+		// can leave any watermark alone: re-reading the same window later is what stops a genuine
+		// sellout from being skipped permanently.
+		// Persisted immediately rather than relying on a later attribute write to flush it: the
+		// watermark guard reads this, and a step that returns before its next set_attr() would
+		// otherwise leave the flag only in memory.
+		$this->set_attr( 'zero_verification_exhausted_' . $step_name, true );
+
+		return array();
+	}
+
+
+	/**
+	 * Whether the last verification attempt for a step ran out of retries without an answer.
+	 *
+	 * Steps that advance a watermark must not move it over a window whose zero counts they could not
+	 * verify, or a genuine sellout in that window is skipped for good. An empty verified list cannot
+	 * answer this, since it also means "asked, and none of them were real".
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name used for the attempt counters
+	 * @return bool
+	 */
+	protected function zero_verification_exhausted( $step_name ) {
+
+		return (bool) $this->get_attr( 'zero_verification_exhausted_' . $step_name, false );
+	}
+
+
+	/**
+	 * Decides how a step should react when Square's inventory history could not be read.
+	 *
+	 * A zero count cannot be classified as a real sellout or as a never counted item without that
+	 * history, and writing it blind is the behavior SQUARE-145 fixed. The step therefore holds its
+	 * progress and is run again by the job loop. Those retries follow the job's own loopback timing,
+	 * so they are close together rather than spread over cycles: they cover a brief blip, not a long
+	 * outage. Holding forever would keep a job alive without ever finishing, so after a bounded
+	 * number of attempts the step proceeds with no zero verified, which skips only the zero writes,
+	 * and records an alert so the outcome is never silent. Steps that own a watermark should also
+	 * leave it alone on that path so the same window is read again later.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $step_name step name for the log and record messages
+	 * @return bool true when the caller should stop and retry later, false when it should proceed
+	 */
+	protected function should_retry_unverified_zero_counts( $step_name ) {
+
+		$attr     = 'zero_verification_attempts_' . $step_name;
+		$attempts = (int) $this->get_attr( $attr, 0 );
+
+		if ( $attempts < self::MAX_ZERO_VERIFICATION_ATTEMPTS ) {
+
+			$this->set_attr( $attr, $attempts + 1 );
+
+			wc_square()->log( sprintf( 'Could not verify zero inventory counts during %1$s; holding this step and running it again (attempt %2$d of %3$d).', $step_name, $attempts + 1, self::MAX_ZERO_VERIFICATION_ATTEMPTS ) );
+
+			return true;
+		}
+
+		$this->set_attr( $attr, 0 );
+
+		// One alert per job AND at most one per window across jobs: interval polling creates a fresh
+		// job every cycle, so a job attribute alone would still add a record on every poll during a
+		// sustained outage and push other records out of the capped list.
+		if ( ! $this->get_attr( 'zero_verification_alert_recorded', false ) && ! get_transient( 'wc_square_zero_verification_alerted' ) ) {
+
+			$this->set_attr( 'zero_verification_alert_recorded', true );
+			set_transient( 'wc_square_zero_verification_alerted', 1, 6 * HOUR_IN_SECONDS );
+
+			Records::set_record(
+				array(
+					'type'    => 'alert',
+					'message' => esc_html__( 'Square could not confirm which products are genuinely sold out, so their stock was left unchanged and the sync continued. Run the sync again once Square is responding normally.', 'woocommerce-square' ),
+				)
+			);
+		}
+
+		wc_square()->log( sprintf( 'Could not verify zero inventory counts during %s after %d attempts; continuing without writing any zero quantity.', $step_name, self::MAX_ZERO_VERIFICATION_ATTEMPTS ) );
+
+		return false;
+	}
+
+
+	/**
+	 * Clears the unverified zero count retry counter after a successful verification.
+	 *
+	 * @since x.x.x
+	 */
+	protected function clear_unverified_zero_count_attempts( $step_name ) {
+
+		$attr = 'zero_verification_attempts_' . $step_name;
+
+		if ( $this->get_attr( $attr, 0 ) ) {
+			$this->set_attr( $attr, 0 );
+		}
 	}
 
 
@@ -331,5 +470,4 @@ abstract class Stepped_Job extends Job {
 
 		return $update_data;
 	}
-
 }
