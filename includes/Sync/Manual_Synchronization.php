@@ -2182,6 +2182,13 @@ class Manual_Synchronization extends Stepped_Job {
 		$result     = wc_square()->get_api()->retrieve_options_data( $cursor );
 		$new_cursor = isset( $result[2] ) ? $result[2] : null;
 
+		// Keep the options this page returned. The API layer accumulates them across pages now, and
+		// recording the running count here is what makes a truncated read visible in the log instead
+		// of surfacing later as Square rejecting an option it already has.
+		if ( isset( $result[1] ) && is_array( $result[1] ) ) {
+			$this->set_attr( 'fetch_options_data_count', count( $result[1] ) );
+		}
+
 		$this->set_attr( 'fetch_options_data_cursor', $new_cursor );
 
 		if ( empty( $new_cursor ) ) {

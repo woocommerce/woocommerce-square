@@ -42,6 +42,17 @@ defined( 'ABSPATH' ) || exit;
 class API extends Base {
 
 
+	/**
+	 * Holds item option pages while the catalogue is still being walked.
+	 *
+	 * Kept apart from `wc_square_options_data`, which means "every option, fully read". Writing
+	 * partial pages under that name would make the next call return early with an incomplete cache.
+	 *
+	 * @since x.x.x
+	 * @var string
+	 */
+	const OPTIONS_DATA_PARTIAL_TRANSIENT = 'wc_square_options_data_partial';
+
 	/** catalog request type */
 	const REQUEST_TYPE_CATALOG = 'catalog';
 
@@ -629,6 +640,18 @@ class API extends Base {
 			$options_data = array();
 		}
 
+		// Carry earlier pages forward. The finished cache is only written once the cursor is
+		// exhausted, because the early return above would otherwise hand back a half built cache and
+		// re-emit the same cursor forever. So pages accumulate under their own key, and without this
+		// every page starts from nothing and only the last one survives.
+		if ( $cursor ) {
+			$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+			if ( is_array( $partial ) ) {
+				$options_data = $partial + $options_data;
+			}
+		}
+
 		$response = $this->list_catalog( $cursor, array( 'ITEM_OPTION' ) );
 
 		if ( ! $response->get_data() instanceof ListCatalogResponse ) {
@@ -654,8 +677,13 @@ class API extends Base {
 		}
 
 		$cursor = $response->get_data()->getCursor();
-		if ( ! $cursor ) {
+		if ( $cursor ) {
+			// More pages to come, so keep what has been read so far somewhere the early return
+			// cannot mistake for a finished cache.
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $options_data, HOUR_IN_SECONDS );
+		} else {
 			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
 		}
 
 		return array( $response, $options_data, $cursor );
