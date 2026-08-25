@@ -194,4 +194,69 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 		);
 		$this->assertArrayHasKey( 'OPT_UNRELATED', $cached, 'Writing one option back must not drop the rest of the cache.' );
 	}
+
+	/**
+	 * The write back must not reach for the catalogue itself. The old shape called
+	 * retrieve_options_data() here, which on a large account meant an unlooped read.
+	 */
+	public function test_write_back_does_not_read_the_catalogue() {
+		$created = Scripted_API::make_option( 'NEW_OPT', 'Colour', array( 'VAL_GREEN' => 'Green' ) );
+
+		$this->api->register_catalog_object( 'NEW_OPT', $created )->set_upsert_object_id( 'NEW_OPT' );
+
+		$this->api->create_options_and_values( false, 'Colour', array( 'Green' ) );
+
+		$this->assertSame( array(), $this->api->list_catalog_cursors );
+	}
+
+	/**
+	 * While a paginated read is in flight the partial cache is the authoritative one, so the
+	 * new option belongs there and the finished cache must be left untouched.
+	 */
+	public function test_created_option_joins_an_in_flight_partial_read() {
+		set_transient(
+			API::OPTIONS_DATA_PARTIAL_TRANSIENT,
+			array(
+				'OPT_PAGE_ONE' => array(
+					'name'      => 'Page one',
+					'values'    => array(),
+					'value_ids' => array(),
+				),
+			),
+			DAY_IN_SECONDS
+		);
+
+		$created = Scripted_API::make_option( 'NEW_OPT', 'Colour', array( 'VAL_GREEN' => 'Green' ) );
+
+		$this->api->register_catalog_object( 'NEW_OPT', $created )->set_upsert_object_id( 'NEW_OPT' );
+
+		$this->api->create_options_and_values( false, 'Colour', array( 'Green' ) );
+
+		$partial = get_transient( API::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+		$this->assertSame( array( 'OPT_PAGE_ONE', 'NEW_OPT' ), array_keys( $partial ) );
+		$this->assertSame( 'Colour', $partial['NEW_OPT']['name'] );
+		$this->assertSame(
+			array( 'OPT_UNRELATED' ),
+			array_keys( get_transient( 'wc_square_options_data' ) ),
+			'A read in flight owns the data, so the finished cache must not be touched.'
+		);
+	}
+
+	/**
+	 * With no cache to extend there is nothing to merge into, and a set built from one option
+	 * must not be published as a finished catalogue.
+	 */
+	public function test_created_option_is_not_published_when_no_cache_exists() {
+		delete_transient( 'wc_square_options_data' );
+
+		$created = Scripted_API::make_option( 'NEW_OPT', 'Colour', array( 'VAL_GREEN' => 'Green' ) );
+
+		$this->api->register_catalog_object( 'NEW_OPT', $created )->set_upsert_object_id( 'NEW_OPT' );
+
+		$this->api->create_options_and_values( false, 'Colour', array( 'Green' ) );
+
+		$this->assertFalse( get_transient( 'wc_square_options_data' ) );
+		$this->assertFalse( get_transient( API::OPTIONS_DATA_PARTIAL_TRANSIENT ) );
+	}
 }

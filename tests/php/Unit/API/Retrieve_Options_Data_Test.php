@@ -243,4 +243,29 @@ class Retrieve_Options_Data_Test extends WP_UnitTestCase {
 		$this->assertSame( array( 'OPT_A', 'OPT_B' ), array_keys( $finished ) );
 		$this->assertArrayNotHasKey( 'OPT_OLD', $finished );
 	}
+
+	/**
+	 * The partial cache has to outlive the walk it protects, or a job left sitting in the queue
+	 * resumes from nothing and truncates in silence.
+	 */
+	public function test_partial_cache_lives_as_long_as_the_finished_cache() {
+		if ( wp_using_ext_object_cache() ) {
+			$this->markTestSkipped( 'Transient expiries are not readable through an external object cache.' );
+		}
+
+		$this->api->queue_catalog_pages(
+			array(
+				array(
+					'objects' => array( Scripted_API::make_option( 'OPT_A', 'Colour' ) ),
+					'cursor'  => 'CURSOR_2',
+				),
+			)
+		);
+
+		$this->api->retrieve_options_data();
+
+		$timeout = (int) get_option( '_transient_timeout_' . API::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+		$this->assertGreaterThan( time() + HOUR_IN_SECONDS, $timeout );
+	}
 }
