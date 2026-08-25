@@ -437,9 +437,15 @@ class Product {
 			Helper::apply_square_inventory_count( $product, (float) $stock, (bool) $sold_out, $zero_verified );
 		} elseif ( ! $is_inventory_tracking ) {
 
-			// Not tracked in Square: reflect availability only; manage_stock is merchant intent
-			// and is not changed here.
+			// Not tracked in Square: reflect availability. Whether stock management follows depends on
+			// who owns the setting. Under WooCommerce SOR it is merchant intent and is left alone, so a
+			// Square side toggle cannot silently invert the system of record. Under Square SOR the
+			// authority is reversed, so tracking off is mirrored onto the product.
 			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
+
+			if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+				$product->set_manage_stock( false );
+			}
 		}
 		// Tracked but no IN_STOCK count returned: "no information", never a zero.
 
