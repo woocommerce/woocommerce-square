@@ -308,8 +308,17 @@ class Interval_Polling extends Stepped_Job {
 				$stock_status = $product->get_stock_status();
 				$out_of_stock = 'outofstock' === $stock_status;
 
-				// If Inventory tracking is the same as the product's manage stock setting and sold_old value same, skip.
-				if ( (bool) $is_tracking_inventory === (bool) $manage_stock && (bool) $sold_out === (bool) $out_of_stock ) {
+				// Nothing to do when the product already agrees with Square.
+				//
+				// Tracking is only worth comparing against manage_stock where the poll can still
+				// change it, which is Square SOR. Under WooCommerce SOR the poll leaves manage_stock
+				// alone, so a product tracked off in Square with Manage stock on in WooCommerce would
+				// never satisfy that comparison and would be saved on every poll for ever. There,
+				// availability is the only thing the poll writes, so it is the only thing to compare.
+				$square_owns_stock_setting = wc_square()->get_settings_handler()->is_system_of_record_square();
+				$tracking_already_matches  = ! $square_owns_stock_setting || (bool) $is_tracking_inventory === (bool) $manage_stock;
+
+				if ( $tracking_already_matches && (bool) $sold_out === (bool) $out_of_stock ) {
 					continue;
 				}
 				$catalog_objects_to_update[] = $catalog_object_id;
