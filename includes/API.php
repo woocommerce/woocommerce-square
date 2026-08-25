@@ -687,7 +687,10 @@ class API extends Base {
 			foreach ( $square_existing_option_objects as $option_object ) {
 				$square_existing_option_values[] = $option_object->getItemOptionValueData()->getName();
 			}
-			$attribute_option_values = array_diff( $attribute_option_values, $square_existing_option_values );
+			// Compared without case for the same reason the option name is: Square rejects a value
+			// whose name differs from an existing one only by case, so a case sensitive diff would
+			// ask for a value that can never be created.
+			$attribute_option_values = array_udiff( $attribute_option_values, $square_existing_option_values, 'strcasecmp' );
 		} else {
 			// Initialize the option object with a temp ID prefixed with #.
 			$option = new \Square\Models\CatalogObject( 'ITEM_OPTION', '' );
