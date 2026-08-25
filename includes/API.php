@@ -836,6 +836,10 @@ class API extends Base {
 			 */
 			update_option( 'woocommerce_square_refresh_sync_cycle', true );
 			delete_transient( 'wc_square_options_data' );
+			// Cleared alongside the finished cache. A walk abandoned by this reset has no reader
+			// left, and leaving its pages behind would only give the writes below somewhere stale
+			// to land until the next walk overwrites it.
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
 
 			// Log the error and throw it.
 			wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );
