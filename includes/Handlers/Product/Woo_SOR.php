@@ -131,7 +131,10 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					// if yes, use the relative Square ID.
 					$option_id = false;
 					foreach ( $options_data as $transient_option_id => $option_data_transient ) {
-						if ( $option_data_transient['name'] === $attribute_name ) {
+						// Square treats Item Option names as case insensitive and rejects a create whose
+						// name differs from an existing one only by case, so match the same way and
+						// reuse what Square already has.
+						if ( 0 === strcasecmp( (string) $option_data_transient['name'], (string) $attribute_name ) ) {
 							$option_id = $transient_option_id;
 							break;
 						}
@@ -353,7 +356,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$option_id = $options_ids[ $variation_index ];
 
 						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
-							if ( $value_name === $attribute_value ) {
+							if ( 0 === strcasecmp( (string) $value_name, (string) $attribute_value ) ) {
 								$option_value_id = $value_id;
 								break;
 							}
@@ -389,7 +392,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						// Get the Square ID of the attribute value.
 						$updated_option_values = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 						foreach ( $updated_option_values as $option_value ) {
-							if ( $option_value->getItemOptionValueData()->getName() === $attribute_value ) {
+							if ( 0 === strcasecmp( (string) $option_value->getItemOptionValueData()->getName(), (string) $attribute_value ) ) {
 								$option_value_id = $option_value->getId();
 								break;
 							}
