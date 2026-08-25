@@ -2093,9 +2093,14 @@ class Manual_Synchronization extends Stepped_Job {
 					}
 				} elseif ( ! $is_tracking_inventory ) {
 
-					// Not tracked in Square: reflect availability only; manage_stock is merchant
-					// intent and is not changed here.
+					// Not tracked in Square: reflect availability. Stock management follows only when
+					// Square owns the setting; under WooCommerce SOR it is merchant intent and is
+					// left alone, so a Square side toggle cannot silently invert the system of record.
 					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
+
+					if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+						$product->set_manage_stock( false );
+					}
 					$product->save();
 				}
 				// Tracked in Square but no IN_STOCK count returned: "no information", never a
