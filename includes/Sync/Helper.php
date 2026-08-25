@@ -349,21 +349,41 @@ class Helper {
 
 		$quantity = (float) $quantity;
 
-		// A variation inheriting stock management reports the string 'parent': its quantity and
-		// availability are governed by the parent's pooled stock, a quantity written to it is
-		// invisible (reads come from the parent) and a stock status write is overridden by the
-		// pool. A per-variation Square count, positive or zero, is not applicable data here; the
-		// pool is merchant intent and one variation's count must not alter stock shared by its
-		// siblings or convert the variation to its own management.
+		// A variation inheriting stock management reports the string 'parent': its quantity is
+		// governed by the parent's pooled stock, so a quantity written to it is invisible until the
+		// variation manages its own stock, and a stock status write is overridden by the pool.
+		//
+		// Who owns that decision depends on the system of record. Under WooCommerce SOR the pool is
+		// merchant intent, so a per-variation Square count is not applicable data and is skipped.
+		// Under Square SOR the authority is reversed: a positive count is applied and the variation
+		// takes over its own stock, which is what the plugin did before this changeset.
+		//
+		// A zero or negative count is skipped in both modes. Those are the counts that wiped stock
+		// (SQUARE-145), and writing one into a pool would move stock shared with sibling variations
+		// on the strength of a single variation's reading.
 		if ( 'parent' === $product->get_manage_stock() ) {
+
+			$square_is_system_of_record = wc_square()->get_settings_handler()->is_system_of_record_square();
+
+			if ( ! $square_is_system_of_record || $quantity <= 0 ) {
+				wc_square()->log(
+					sprintf(
+						'Skipped writing a stock quantity to variation #%1$d: its stock is managed by the parent product pool%2$s.',
+						$product->get_id(),
+						$square_is_system_of_record ? ' and the count was not positive' : ''
+					)
+				);
+
+				return false;
+			}
+
 			wc_square()->log(
 				sprintf(
-					'Skipped writing a stock quantity to variation #%d: its stock is managed by the parent product pool.',
-					$product->get_id()
+					'Variation #%1$d inherits parent stock, but Square is the system of record and reports %2$s in stock, so the variation now manages its own stock.',
+					$product->get_id(),
+					$quantity
 				)
 			);
-
-			return false;
 		}
 
 		if ( $quantity > 0 ) {
