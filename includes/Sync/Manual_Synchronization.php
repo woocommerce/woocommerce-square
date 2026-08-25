@@ -1971,7 +1971,6 @@ class Manual_Synchronization extends Stepped_Job {
 			// remove IDs that have already been processed
 			$square_variation_ids = array_diff( $square_variation_ids, $processed_ids );
 
-
 			if ( empty( $square_variation_ids ) ) {
 
 				$this->complete_step( 'pull_inventory' );
