@@ -692,6 +692,47 @@ class API extends Base {
 	}
 
 	/**
+	 * Records one item option in whichever options cache is authoritative right now.
+	 *
+	 * Callers here hold a single option they just read or created, not a walked catalogue. The
+	 * cache they must not touch is the finished one: building it from an unlooped read would pass
+	 * off the first page of a paginated catalogue as the whole of it, for a day. So a read still
+	 * in flight owns the data and the option joins its partial cache; otherwise the option is
+	 * folded into a finished cache that already exists. With neither, there is nothing to extend
+	 * and the next full read is left to build it.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $option_id   Square item option ID.
+	 * @param array  $option_data Cache entry for the option.
+	 * @return void
+	 */
+	public function cache_option_data( $option_id, array $option_data ) {
+
+		if ( ! $option_id ) {
+			return;
+		}
+
+		$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+		if ( is_array( $partial ) ) {
+			$partial[ $option_id ] = $option_data;
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $partial, DAY_IN_SECONDS );
+
+			return;
+		}
+
+		$options_data = get_transient( 'wc_square_options_data' );
+
+		if ( ! is_array( $options_data ) ) {
+			return;
+		}
+
+		$options_data[ $option_id ] = $option_data;
+		set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+	}
+
+	/**
 	 * Create options and values in Square.
 	 *
 	 * @since 4.9.0
@@ -777,15 +818,14 @@ class API extends Base {
 				$option_values[]    = $option_value->getItemOptionValueData()->getName();
 			}
 
-			$result       = $this->retrieve_options_data();
-			$options_data = isset( $result[1] ) ? $result[1] : array();
-
-			$options_data[ $option_id ] = array(
-				'name'      => $attribute_name,
-				'values'    => $option_values,
-				'value_ids' => array_combine( $option_value_ids, $option_values ),
+			$this->cache_option_data(
+				$option_id,
+				array(
+					'name'      => $attribute_name,
+					'values'    => $option_values,
+					'value_ids' => array_combine( $option_value_ids, $option_values ),
+				)
 			);
-			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 
 		} catch ( \Exception $e ) {
 			/**

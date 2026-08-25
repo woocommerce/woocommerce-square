@@ -93,6 +93,7 @@ class Product_Import extends Stepped_Job {
 		$result     = wc_square()->get_api()->retrieve_options_data( $cursor );
 		$new_cursor = isset( $result[2] ) ? $result[2] : null;
 
+
 		if ( ! empty( $new_cursor ) ) {
 			$this->set_attr( 'fetch_options_data_cursor', $new_cursor );
 		} else {
@@ -771,7 +772,10 @@ class Product_Import extends Stepped_Job {
 					'value_ids' => $option_value_ids,
 				);
 
-				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+				// Handed to the API layer rather than written straight to the finished cache: the
+				// read above never walks the cursor, so its set can be the first page of a
+				// paginated catalogue and must not be published as the whole of it.
+				wc_square()->get_api()->cache_option_data( $option_id, $options_data[ $option_id ] );
 			}
 
 			$attributes[] = array(
@@ -868,7 +872,9 @@ class Product_Import extends Stepped_Job {
 					'values'    => $option_values,
 					'value_ids' => array_combine( $option_value_ids, $option_values ),
 				);
-				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+
+				// Same reason as above: an unlooped read must not publish under the finished cache.
+				wc_square()->get_api()->cache_option_data( $option_id, $options_data[ $option_id ] );
 			}
 
 			// Filter option values to only include those actually used by variations.
