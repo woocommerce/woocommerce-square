@@ -679,8 +679,10 @@ class API extends Base {
 		$cursor = $response->get_data()->getCursor();
 		if ( $cursor ) {
 			// More pages to come, so keep what has been read so far somewhere the early return
-			// cannot mistake for a finished cache.
-			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $options_data, HOUR_IN_SECONDS );
+			// cannot mistake for a finished cache. Given the same lifetime as the finished cache so
+			// a walk left sitting in the queue cannot come back to a vanished partial and resume
+			// from nothing, which would truncate it in silence.
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $options_data, DAY_IN_SECONDS );
 		} else {
 			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
