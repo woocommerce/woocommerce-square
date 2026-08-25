@@ -93,6 +93,22 @@ class Product_Import extends Stepped_Job {
 		$result     = wc_square()->get_api()->retrieve_options_data( $cursor );
 		$new_cursor = isset( $result[2] ) ? $result[2] : null;
 
+		// Logged per page, not just at the end, so a read that stops short is visible here as a
+		// count that never reaches the number of options Square holds. Without it a truncated read
+		// only surfaces much later, as Square rejecting an option it already has.
+		if ( isset( $result[1] ) && is_array( $result[1] ) ) {
+			$option_count = count( $result[1] );
+
+			$this->set_attr( 'fetch_options_data_count', $option_count );
+
+			wc_square()->log(
+				sprintf(
+					'Fetched item options from Square: %1$d accumulated, %2$s.',
+					$option_count,
+					empty( $new_cursor ) ? 'read complete' : 'more pages to follow'
+				)
+			);
+		}
 
 		if ( ! empty( $new_cursor ) ) {
 			$this->set_attr( 'fetch_options_data_cursor', $new_cursor );
