@@ -692,14 +692,12 @@ class API extends Base {
 	}
 
 	/**
-	 * Records one item option in whichever options cache is authoritative right now.
+	 * Folds one item option into the finished options cache.
 	 *
-	 * Callers here hold a single option they just read or created, not a walked catalogue. The
-	 * cache they must not touch is the finished one: building it from an unlooped read would pass
-	 * off the first page of a paginated catalogue as the whole of it, for a day. So a read still
-	 * in flight owns the data and the option joins its partial cache; otherwise the option is
-	 * folded into a finished cache that already exists. With neither, there is nothing to extend
-	 * and the next full read is left to build it.
+	 * Callers here hold a single option they just read or created, not a walked catalogue, so the
+	 * cache is only ever extended, never built: writing one from an unlooped read would pass off
+	 * the first page of a paginated catalogue as the whole of it, for a day. With no cache to
+	 * extend there is nothing to do and the next full read is left to build it.
 	 *
 	 * @since x.x.x
 	 *
@@ -710,15 +708,6 @@ class API extends Base {
 	public function cache_option_data( $option_id, array $option_data ) {
 
 		if ( ! $option_id ) {
-			return;
-		}
-
-		$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
-
-		if ( is_array( $partial ) ) {
-			$partial[ $option_id ] = $option_data;
-			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $partial, DAY_IN_SECONDS );
-
 			return;
 		}
 

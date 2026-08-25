@@ -210,10 +210,11 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * While a paginated read is in flight the partial cache is the authoritative one, so the
-	 * new option belongs there and the finished cache must be left untouched.
+	 * A partial left behind by an unlooped read has no reader: every caller of the write back runs
+	 * after the options step has emptied the cursor, so a walk can never be in flight here. The
+	 * write belongs to the finished cache and the leftover is not to be touched.
 	 */
-	public function test_created_option_joins_an_in_flight_partial_read() {
+	public function test_created_option_ignores_a_leftover_partial_read() {
 		set_transient(
 			API::OPTIONS_DATA_PARTIAL_TRANSIENT,
 			array(
@@ -232,14 +233,14 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 
 		$this->api->create_options_and_values( false, 'Colour', array( 'Green' ) );
 
-		$partial = get_transient( API::OPTIONS_DATA_PARTIAL_TRANSIENT );
+		$finished = get_transient( 'wc_square_options_data' );
 
-		$this->assertSame( array( 'OPT_PAGE_ONE', 'NEW_OPT' ), array_keys( $partial ) );
-		$this->assertSame( 'Colour', $partial['NEW_OPT']['name'] );
+		$this->assertSame( array( 'OPT_UNRELATED', 'NEW_OPT' ), array_keys( $finished ) );
+		$this->assertSame( 'Colour', $finished['NEW_OPT']['name'] );
 		$this->assertSame(
-			array( 'OPT_UNRELATED' ),
-			array_keys( get_transient( 'wc_square_options_data' ) ),
-			'A read in flight owns the data, so the finished cache must not be touched.'
+			array( 'OPT_PAGE_ONE' ),
+			array_keys( get_transient( API::OPTIONS_DATA_PARTIAL_TRANSIENT ) ),
+			'A leftover partial belongs to an abandoned walk, so it must be left alone.'
 		);
 	}
 
