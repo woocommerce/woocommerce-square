@@ -42,6 +42,17 @@ defined( 'ABSPATH' ) || exit;
 class API extends Base {
 
 
+	/**
+	 * Holds item option pages while the catalogue is still being walked.
+	 *
+	 * Kept apart from `wc_square_options_data`, which means "every option, fully read". Writing
+	 * partial pages under that name would make the next call return early with an incomplete cache.
+	 *
+	 * @since x.x.x
+	 * @var string
+	 */
+	const OPTIONS_DATA_PARTIAL_TRANSIENT = 'wc_square_options_data_partial';
+
 	/** catalog request type */
 	const REQUEST_TYPE_CATALOG = 'catalog';
 
@@ -629,6 +640,18 @@ class API extends Base {
 			$options_data = array();
 		}
 
+		// Carry earlier pages forward. The finished cache is only written once the cursor is
+		// exhausted, because the early return above would otherwise hand back a half built cache and
+		// re-emit the same cursor forever. So pages accumulate under their own key, and without this
+		// every page starts from nothing and only the last one survives.
+		if ( $cursor ) {
+			$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+			if ( is_array( $partial ) ) {
+				$options_data = $partial + $options_data;
+			}
+		}
+
 		$response = $this->list_catalog( $cursor, array( 'ITEM_OPTION' ) );
 
 		if ( ! $response->get_data() instanceof ListCatalogResponse ) {
@@ -654,8 +677,15 @@ class API extends Base {
 		}
 
 		$cursor = $response->get_data()->getCursor();
-		if ( ! $cursor ) {
+		if ( $cursor ) {
+			// More pages to come, so keep what has been read so far somewhere the early return
+			// cannot mistake for a finished cache. Given the same lifetime as the finished cache so
+			// a walk left sitting in the queue cannot come back to a vanished partial and resume
+			// from nothing, which would truncate it in silence.
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $options_data, DAY_IN_SECONDS );
+		} else {
 			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
 		}
 
 		return array( $response, $options_data, $cursor );
@@ -685,6 +715,47 @@ class API extends Base {
 		return false;
 	}
 
+
+	/**
+	 * Records one item option in whichever options cache is authoritative right now.
+	 *
+	 * Callers here hold a single option they just read or created, not a walked catalogue. The
+	 * cache they must not touch is the finished one: building it from an unlooped read would pass
+	 * off the first page of a paginated catalogue as the whole of it, for a day. So a read still
+	 * in flight owns the data and the option joins its partial cache; otherwise the option is
+	 * folded into a finished cache that already exists. With neither, there is nothing to extend
+	 * and the next full read is left to build it.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $option_id   Square item option ID.
+	 * @param array  $option_data Cache entry for the option.
+	 * @return void
+	 */
+	public function cache_option_data( $option_id, array $option_data ) {
+
+		if ( ! $option_id ) {
+			return;
+		}
+
+		$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+		if ( is_array( $partial ) ) {
+			$partial[ $option_id ] = $option_data;
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $partial, DAY_IN_SECONDS );
+
+			return;
+		}
+
+		$options_data = get_transient( 'wc_square_options_data' );
+
+		if ( ! is_array( $options_data ) ) {
+			return;
+		}
+
+		$options_data[ $option_id ] = $option_data;
+		set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+	}
 
 	/**
 	 * Create options and values in Square.
@@ -772,15 +843,14 @@ class API extends Base {
 				$option_values[]    = $option_value->getItemOptionValueData()->getName();
 			}
 
-			$result       = $this->retrieve_options_data();
-			$options_data = isset( $result[1] ) ? $result[1] : array();
-
-			$options_data[ $option_id ] = array(
-				'name'      => $attribute_name,
-				'values'    => $option_values,
-				'value_ids' => array_combine( $option_value_ids, $option_values ),
+			$this->cache_option_data(
+				$option_id,
+				array(
+					'name'      => $attribute_name,
+					'values'    => $option_values,
+					'value_ids' => array_combine( $option_value_ids, $option_values ),
+				)
 			);
-			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 
 		} catch ( \Exception $e ) {
 			/**
@@ -804,6 +874,10 @@ class API extends Base {
 
 			// Refetched next time round either way, since the cache may be incomplete.
 			delete_transient( 'wc_square_options_data' );
+			// Cleared alongside the finished cache. A walk abandoned by this reset has no reader
+			// left, and leaving its pages behind would only give the writes below somewhere stale
+			// to land until the next walk overwrites it.
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
 
 			throw $e;
 		}

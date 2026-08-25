@@ -348,14 +348,15 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_name[] = $attribute_value;
 					}
 
-					$option_id       = '';
+					// Taken from the option the parent product just created or reused, not from the
+					// cache, because the cache can legitimately not know about it yet: an unlooped
+					// read on a paginated catalogue leaves the new option in the partial cache only.
+					// Carrying the ID regardless means the create below takes the retrieve path and
+					// reuses that option, instead of asking Square for one it already has.
+					$option_id       = isset( $options_ids[ $variation_index ] ) ? $options_ids[ $variation_index ] : '';
 					$option_value_id = '';
-					// $options_ids is short, or empty, whenever an option could not be created for this
-					// product. Guarding the index keeps that from emitting a warning per variation.
-					if ( isset( $options_ids[ $variation_index ], $options_data[ $options_ids[ $variation_index ] ] ) ) {
-						$option_id = $options_ids[ $variation_index ];
-
-						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
+					if ( isset( $options_data[ $option_id ] ) ) {
+						foreach ( $options_data[ $option_id ]['value_ids'] as $value_id => $value_name ) {
 							if ( 0 === strcasecmp( (string) $value_name, (string) $attribute_value ) ) {
 								$option_value_id = $value_id;
 								break;
