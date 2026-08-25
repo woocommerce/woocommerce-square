@@ -140,8 +140,12 @@ class WooCommerce_Square_Loader {
 		// autoload plugin and vendor files
 		$loader = require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
-		// register plugin namespace with autoloader
-		$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		// register plugin namespace with autoloader.
+		// `require_once` hands back `true` rather than the ClassLoader when something booted the
+		// autoloader first, which is what a test runner does, so there is nothing to extend then.
+		if ( is_object( $loader ) && method_exists( $loader, 'addPsr4' ) ) {
+			$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		}
 
 		require_once plugin_dir_path( __FILE__ ) . 'includes/Functions.php';
 
