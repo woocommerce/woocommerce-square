@@ -1405,7 +1405,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$all_changes = array_merge( ...array_values( $inventory_changes ) );
 
-		$this->remember_pushed_inventory_objects( $all_changes );
+		$this->exclude_pushed_objects_from_inventory_pull( $all_changes );
 
 		// Chunk by the batch limit in case the set of products has many variations.
 		$chunks = array_chunk( $all_changes, self::BATCH_CHANGE_INVENTORY_LIMIT );
@@ -1580,7 +1580,7 @@ class Manual_Synchronization extends Stepped_Job {
 			$result            = wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 
 			// Recorded after the push so pull_inventory() can skip reading these counts straight back.
-			$this->remember_pushed_inventory_objects( $inventory_changes );
+			$this->exclude_pushed_objects_from_inventory_pull( $inventory_changes );
 		}
 
 		$this->set_attr( 'inventory_push_product_ids', $product_ids );
@@ -1892,17 +1892,18 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
-	 * Records the catalog objects whose inventory counts this job has pushed to Square.
+	 * Drops the catalog objects whose counts this job just pushed from the inventory pull queue.
 	 *
-	 * Used by pull_inventory() to avoid reading a count straight back after writing it. Square's
-	 * inventory is eventually consistent, so the read can still answer with the pre-push value, and
-	 * for an item that had never been counted it answers zero, which would undo the push.
+	 * Square's inventory is eventually consistent, so reading a count straight back after writing it
+	 * can answer with the pre-push value, and for an item that had never been counted it answers zero,
+	 * which would undo the push. Both push sites run before pull_inventory in the step order, so
+	 * removing the ids here is enough and needs no second attribute.
 	 *
 	 * @since x.x.x
 	 *
 	 * @param \Square\Models\InventoryChange[] $inventory_changes changes that were pushed
 	 */
-	protected function remember_pushed_inventory_objects( array $inventory_changes ) {
+	protected function exclude_pushed_objects_from_inventory_pull( array $inventory_changes ) {
 
 		$object_ids = array();
 
@@ -1923,10 +1924,13 @@ class Manual_Synchronization extends Stepped_Job {
 			return;
 		}
 
-		$this->set_attr(
-			'pushed_inventory_variation_ids',
-			array_values( array_unique( array_merge( (array) $this->get_attr( 'pushed_inventory_variation_ids', array() ), $object_ids ) ) )
-		);
+		$queued = (array) $this->get_attr( 'pull_inventory_variation_ids', array() );
+		$kept   = array_values( array_diff( $queued, $object_ids ) );
+
+		if ( count( $kept ) !== count( $queued ) ) {
+			$this->set_attr( 'pull_inventory_variation_ids', $kept );
+			wc_square()->log( sprintf( 'Removed %d catalog object(s) from the inventory pull queue because this job just pushed their counts.', count( $queued ) - count( $kept ) ) );
+		}
 	}
 
 
@@ -1967,26 +1971,6 @@ class Manual_Synchronization extends Stepped_Job {
 			// remove IDs that have already been processed
 			$square_variation_ids = array_diff( $square_variation_ids, $processed_ids );
 
-			// Never read back a count this same job pushed. Square's inventory is eventually
-			// consistent, so a freshly pushed count can still answer with the previous value, or with
-			// zero for an item that had none before, and writing that back would undo the push. Only
-			// objects this job pushed are skipped; everything else, which is every product that
-			// already existed in Square, is still pulled.
-			$pushed_ids = (array) $this->get_attr( 'pushed_inventory_variation_ids', array() );
-
-			if ( $pushed_ids ) {
-				$skipped              = array_intersect( $square_variation_ids, $pushed_ids );
-				$square_variation_ids = array_values( array_diff( $square_variation_ids, $pushed_ids ) );
-
-				if ( $skipped ) {
-					$this->set_attr(
-						'processed_square_variation_ids',
-						array_values( array_unique( array_merge( $processed_ids, $skipped ) ) )
-					);
-
-					wc_square()->log( sprintf( 'Skipped pulling inventory for %d catalog object(s) this job just pushed.', count( $skipped ) ) );
-				}
-			}
 
 			if ( empty( $square_variation_ids ) ) {
 
