@@ -2188,8 +2188,6 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( isset( $result[1] ) && is_array( $result[1] ) ) {
 			$option_count = count( $result[1] );
 
-			$this->set_attr( 'fetch_options_data_count', $option_count );
-
 			wc_square()->log(
 				sprintf(
 					'Fetched item options from Square: %1$d accumulated, %2$s.',
