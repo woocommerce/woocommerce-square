@@ -677,8 +677,17 @@ class API extends Base {
 
 		if ( $option_id ) {
 			$response = $this->retrieve_catalog_object( $option_id );
-			$option   = $response->get_data()->getObject();
+			$option   = $response->get_data() ? $response->get_data()->getObject() : null;
 
+			// A cached option ID can name an object Square no longer has, or one that is not an
+			// item option at all. Treat that as no match and fall through to the create path,
+			// rather than calling setValues() on a null item option and taking the sync down.
+			if ( ! $option || 'ITEM_OPTION' !== $option->getType() || ! $option->getItemOptionData() ) {
+				$option_id = false;
+			}
+		}
+
+		if ( $option_id ) {
 			// Filter out the existing option values from the attribute values.
 			$square_existing_option_objects = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 			$options_value_data             = $square_existing_option_objects;
