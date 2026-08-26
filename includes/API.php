@@ -48,6 +48,14 @@ class API extends Base {
 	 * Kept apart from `wc_square_options_data`, which means "every option, fully read". Writing
 	 * partial pages under that name would make the next call return early with an incomplete cache.
 	 *
+	 * One key is shared by every walk, which is only safe because the background job runner takes
+	 * the oldest queued or processing job on every tick and runs a single step of it
+	 * (`WP_Background_Job_Handler::get_job()`, `ORDER BY option_id ASC LIMIT 1`). A job therefore
+	 * holds the runner for the whole of its walk, and no second job can interleave a step that
+	 * starts a competing read. If job selection ever gains priority ordering or parallel runners,
+	 * two walks could overwrite each other's pages here and promote a silently truncated cache,
+	 * which is the very failure this class of bug is about. Make the key per job before that lands.
+	 *
 	 * @since x.x.x
 	 * @var string
 	 */
@@ -717,14 +725,12 @@ class API extends Base {
 
 
 	/**
-	 * Records one item option in whichever options cache is authoritative right now.
+	 * Folds one item option into the finished options cache.
 	 *
-	 * Callers here hold a single option they just read or created, not a walked catalogue. The
-	 * cache they must not touch is the finished one: building it from an unlooped read would pass
-	 * off the first page of a paginated catalogue as the whole of it, for a day. So a read still
-	 * in flight owns the data and the option joins its partial cache; otherwise the option is
-	 * folded into a finished cache that already exists. With neither, there is nothing to extend
-	 * and the next full read is left to build it.
+	 * Callers here hold a single option they just read or created, not a walked catalogue, so the
+	 * cache is only ever extended, never built: writing one from an unlooped read would pass off
+	 * the first page of a paginated catalogue as the whole of it, for a day. With no cache to
+	 * extend there is nothing to do and the next full read is left to build it.
 	 *
 	 * @since x.x.x
 	 *
@@ -735,15 +741,6 @@ class API extends Base {
 	public function cache_option_data( $option_id, array $option_data ) {
 
 		if ( ! $option_id ) {
-			return;
-		}
-
-		$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
-
-		if ( is_array( $partial ) ) {
-			$partial[ $option_id ] = $option_data;
-			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $partial, DAY_IN_SECONDS );
-
 			return;
 		}
 
@@ -772,8 +769,27 @@ class API extends Base {
 		$options_value_data = array();
 
 		if ( $option_id ) {
-			$response = $this->retrieve_catalog_object( $option_id );
-			$option   = $response->get_data() ? $response->get_data()->getObject() : null;
+			$option = null;
+
+			try {
+				$response = $this->retrieve_catalog_object( $option_id );
+				$option   = $response->get_data() ? $response->get_data()->getObject() : null;
+			} catch ( \Exception $e ) {
+				// Square answers a deleted or unknown ID with NOT_FOUND, and the response validator
+				// turns that into an exception before any data comes back, so the null check below
+				// never gets the chance to see it. Without this the whole method gives up on a
+				// stale cached ID, no refresh flag is set, and every sync fails the same way until
+				// the cache expires a day later.
+				//
+				// Narrowed to that one code deliberately, and matched in the bracketed form
+				// do_post_parse_response_validation() emits so it cannot be tripped by another
+				// error quoting those words in its detail text. Reading a RATE_LIMITED or an auth
+				// failure as "no such option" would create a duplicate of an option Square still
+				// holds, and would swallow the rate limit the job runner needs in order to back off.
+				if ( false === strpos( $e->getMessage(), '[NOT_FOUND]' ) ) {
+					throw $e;
+				}
+			}
 
 			// A cached option ID can name an object Square no longer has, or one that is not an
 			// item option at all. Treat that as no match and fall through to the create path,
@@ -827,8 +843,25 @@ class API extends Base {
 
 			$id_mappings = $new_option->get_data()->getIdMappings();
 
-			if ( isset( $id_mappings[0] ) ) {
-				$option_id = $id_mappings[0]->getObjectId();
+			// Resolved on the create path only, and never positionally. The upsert reports a mapping
+			// for every object it created, so when an option that already existed merely gained a
+			// value, the first row is that new ITEM_OPTION_VAL and the option has no row at all.
+			// Index 0 therefore hands back a value ID, which travels on into the item's item_options
+			// and kills the following sync with "An existing Item Option has name X". On the reuse
+			// path $option_id is already the real ID Square gave us, so the mappings add nothing and
+			// must not be allowed to overwrite it.
+			if ( ! $option_id ) {
+				// The option went up under the temp ID set above, and that is the client ID Square
+				// echoes back alongside the real one. It is empty only when no attribute name was
+				// supplied, and there is nothing to correlate on then: guessing a row is the bug.
+				$client_option_id = $option->getId();
+
+				foreach ( (array) $id_mappings as $id_mapping ) {
+					if ( $client_option_id && $client_option_id === $id_mapping->getClientObjectId() ) {
+						$option_id = $id_mapping->getObjectId();
+						break;
+					}
+				}
 			}
 
 			$response = $this->retrieve_catalog_object( $option_id );

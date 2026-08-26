@@ -67,6 +67,20 @@ class Scripted_API extends \WooCommerce\Square\API {
 	private $upsert_object_id = null;
 
 	/**
+	 * Extra ID mappings the upsert reports ahead of the option's own, as Square does for values.
+	 *
+	 * @var array
+	 */
+	private $upsert_id_mappings = array();
+
+	/**
+	 * Exception every retrieve_catalog_object() call raises, or null to behave normally.
+	 *
+	 * @var \Exception|null
+	 */
+	private $retrieve_exception = null;
+
+	/**
 	 * Skips the parent constructor so no Square client is ever built.
 	 */
 	public function __construct() {} // phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Deliberately replaces the parent constructor.
@@ -104,6 +118,34 @@ class Scripted_API extends \WooCommerce\Square\API {
 	 */
 	public function set_upsert_object_id( $object_id ) {
 		$this->upsert_object_id = $object_id;
+
+		return $this;
+	}
+
+	/**
+	 * Queues mappings reported BEFORE the option's own, standing in for created option values.
+	 *
+	 * Square returns a mapping per created object with no guaranteed ordering, and an option that
+	 * already existed gets no mapping at all. That is the shape that makes a positional read of the
+	 * mappings return a value ID where the caller expected an option ID.
+	 *
+	 * @param array $mappings List of arrays with `client_object_id` and `object_id` keys.
+	 * @return self
+	 */
+	public function set_upsert_id_mappings( array $mappings ) {
+		$this->upsert_id_mappings = $mappings;
+
+		return $this;
+	}
+
+	/**
+	 * Makes every retrieve fail, so a test can prove which failures are not treated as a miss.
+	 *
+	 * @param \Exception $exception Exception to raise.
+	 * @return self
+	 */
+	public function set_retrieve_exception( \Exception $exception ) {
+		$this->retrieve_exception = $exception;
 
 		return $this;
 	}
@@ -165,18 +207,29 @@ class Scripted_API extends \WooCommerce\Square\API {
 	}
 
 	/**
-	 * Returns a registered object, or a response with no data at all.
+	 * Returns a registered object, or throws the way Square does for an ID it does not hold.
+	 *
+	 * Handing back an empty response for an unknown ID is what this double used to do, and it is
+	 * why a fatal in production passed as a green test: the real call runs the response through the
+	 * error validator, which throws on NOT_FOUND before any data is returned. A double that is
+	 * gentler than the API it stands in for cannot pin the behaviour that matters.
 	 *
 	 * @param string   $object_id               Square object ID.
 	 * @param bool     $include_related_objects Unused.
 	 * @param int|null $object_version          Unused.
 	 * @return Catalog
+	 * @throws \Exception When the object is unknown, or when a failure has been scripted.
 	 */
 	public function retrieve_catalog_object( $object_id, $include_related_objects = false, $object_version = null ) {
 		$this->retrieved_object_ids[] = $object_id;
 
+		if ( $this->retrieve_exception ) {
+			throw $this->retrieve_exception;
+		}
+
 		if ( ! isset( $this->catalog_objects[ $object_id ] ) ) {
-			return new Catalog( null );
+			// Matches the shape API::do_post_parse_response_validation() builds: "[CODE] detail".
+			throw new \Exception( '[NOT_FOUND] Object not found.' );
 		}
 
 		$data = new RetrieveCatalogObjectResponse();
@@ -186,7 +239,11 @@ class Scripted_API extends \WooCommerce\Square\API {
 	}
 
 	/**
-	 * Records the upserted object and reports the configured ID mapping.
+	 * Records the upserted object and reports the configured ID mappings.
+	 *
+	 * Any mappings queued through set_upsert_id_mappings() come first, so a test can reproduce
+	 * Square putting a created value ahead of the option. The option's own mapping is keyed on the
+	 * client ID it was actually sent under, which is what the real API echoes back.
 	 *
 	 * @param string        $idempotency_key Unused.
 	 * @param CatalogObject $catalog_object  Object being upserted.
@@ -195,12 +252,27 @@ class Scripted_API extends \WooCommerce\Square\API {
 	public function upsert_catalog_object( $idempotency_key, $catalog_object ) {
 		$this->upserted_objects[] = $catalog_object;
 
-		$data = new BatchUpsertCatalogObjectsResponse();
+		$data     = new BatchUpsertCatalogObjectsResponse();
+		$mappings = array();
+
+		foreach ( $this->upsert_id_mappings as $queued_mapping ) {
+			$mapping = new CatalogIdMapping();
+			$mapping->setClientObjectId( isset( $queued_mapping['client_object_id'] ) ? $queued_mapping['client_object_id'] : null );
+			$mapping->setObjectId( isset( $queued_mapping['object_id'] ) ? $queued_mapping['object_id'] : null );
+
+			$mappings[] = $mapping;
+		}
 
 		if ( null !== $this->upsert_object_id ) {
 			$mapping = new CatalogIdMapping();
+			$mapping->setClientObjectId( $catalog_object->getId() );
 			$mapping->setObjectId( $this->upsert_object_id );
-			$data->setIdMappings( array( $mapping ) );
+
+			$mappings[] = $mapping;
+		}
+
+		if ( $mappings ) {
+			$data->setIdMappings( $mappings );
 		}
 
 		return new Catalog( $data );

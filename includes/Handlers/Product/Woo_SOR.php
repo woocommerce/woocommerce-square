@@ -348,6 +348,14 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_name[] = $attribute_value;
 					}
 
+					// Remembered so a case insensitive match below can correct this entry in place.
+					// Square builds a variation's name out of its own option value names and then
+					// refuses to let that name be edited for as long as the variation uses item
+					// options. A name carrying Woo's casing against values bound to Square's is
+					// therefore accepted on the create and rejected on every update after it, with
+					// no refresh flag and no self heal, so the product stays unsyncable for good.
+					$variation_name_index = count( $variation_name ) - 1;
+
 					// Taken from the option the parent product just created or reused, not from the
 					// cache, because the cache can legitimately not know about it yet: an unlooped
 					// read on a paginated catalogue leaves the new option in the partial cache only.
@@ -359,6 +367,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						foreach ( $options_data[ $option_id ]['value_ids'] as $value_id => $value_name ) {
 							if ( 0 === strcasecmp( (string) $value_name, (string) $attribute_value ) ) {
 								$option_value_id = $value_id;
+								// Square's spelling of the value wins, because that is the value
+								// the ID above points at and the one Square will name the variation
+								// from. Byte identical whenever the casing already agrees, so
+								// nothing that was already in sync gets renamed.
+								$variation_name[ $variation_name_index ] = $value_name;
 								break;
 							}
 						}
@@ -395,6 +408,9 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						foreach ( $updated_option_values as $option_value ) {
 							if ( 0 === strcasecmp( (string) $option_value->getItemOptionValueData()->getName(), (string) $attribute_value ) ) {
 								$option_value_id = $option_value->getId();
+								// Same rule as the cache path above: follow the bound value's own
+								// name, not the Woo attribute's.
+								$variation_name[ $variation_name_index ] = $option_value->getItemOptionValueData()->getName();
 								break;
 							}
 						}
