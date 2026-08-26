@@ -818,8 +818,25 @@ class API extends Base {
 
 			$id_mappings = $new_option->get_data()->getIdMappings();
 
-			if ( isset( $id_mappings[0] ) ) {
-				$option_id = $id_mappings[0]->getObjectId();
+			// Resolved on the create path only, and never positionally. The upsert reports a mapping
+			// for every object it created, so when an option that already existed merely gained a
+			// value, the first row is that new ITEM_OPTION_VAL and the option has no row at all.
+			// Index 0 therefore hands back a value ID, which travels on into the item's item_options
+			// and kills the following sync with "An existing Item Option has name X". On the reuse
+			// path $option_id is already the real ID Square gave us, so the mappings add nothing and
+			// must not be allowed to overwrite it.
+			if ( ! $option_id ) {
+				// The option went up under the temp ID set above, and that is the client ID Square
+				// echoes back alongside the real one. It is empty only when no attribute name was
+				// supplied, and there is nothing to correlate on then: guessing a row is the bug.
+				$client_option_id = $option->getId();
+
+				foreach ( (array) $id_mappings as $id_mapping ) {
+					if ( $client_option_id && $client_option_id === $id_mapping->getClientObjectId() ) {
+						$option_id = $id_mapping->getObjectId();
+						break;
+					}
+				}
 			}
 
 			$response = $this->retrieve_catalog_object( $option_id );

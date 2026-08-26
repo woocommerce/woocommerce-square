@@ -113,6 +113,9 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 	/**
 	 * A cached ID naming an object Square no longer holds used to call setValues() on a null
 	 * item option and take the whole sync down with a fatal.
+	 *
+	 * The retrieve throws NOT_FOUND here rather than answering emptily, which is what Square
+	 * really does, so this now exercises the catch rather than the null check.
 	 */
 	public function test_unresolvable_option_id_falls_through_to_the_create_path() {
 		$created = Scripted_API::make_option( 'NEW_OPT', 'Colour', array( 'VAL_NEW' => 'Green' ) );
@@ -126,6 +129,31 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 		$this->assertSame( array( 'Green' ), $this->upserted_value_names( $this->api->upserted_objects[0] ) );
 		$this->assertSame( 'NEW_OPT', $option->getId() );
 		$this->assertSame( array( 'DELETED_OPT', 'NEW_OPT' ), $this->api->retrieved_object_ids );
+	}
+
+	/**
+	 * The other half of the missing object handling: only NOT_FOUND means "no such option".
+	 *
+	 * A rate limit or an auth failure is a temporary condition on an option that probably still
+	 * exists. Swallowing it would create a second option under a name Square already has, which is
+	 * the exact error this whole change exists to stop, and would hide the RATE_LIMITED string the
+	 * job runner matches on to back off and retry.
+	 */
+	public function test_a_non_missing_failure_is_not_treated_as_a_missing_option() {
+		$this->api->set_retrieve_exception( new \Exception( '[RATE_LIMITED] Too many requests' ) );
+
+		$threw = false;
+
+		try {
+			$this->api->create_options_and_values( 'OPT_COLOUR', 'Colour', array( 'Red' ) );
+		} catch ( \Exception $e ) {
+			$threw = true;
+			$this->assertStringContainsString( 'RATE_LIMITED', $e->getMessage(), 'The rate limit must reach the caller intact.' );
+		}
+
+		$this->assertTrue( $threw, 'A rate limited retrieve must not be reported as success.' );
+		$this->assertSame( array(), $this->api->upserted_objects, 'A transient failure must never create a duplicate option.' );
+		$this->assertFalse( get_option( 'woocommerce_square_refresh_sync_cycle' ), 'The retrieve sits outside the reset handler, so no sync reset is expected.' );
 	}
 
 	/**
@@ -161,6 +189,64 @@ class Create_Options_And_Values_Test extends WP_UnitTestCase {
 		$this->api->create_options_and_values( 'HOLLOW_OPT', 'Colour', array( 'Green' ) );
 
 		$this->assertSame( '#Colour', $this->api->upserted_objects[0]->getId() );
+	}
+
+	/**
+	 * Adding a value to an option Square already holds must still return the OPTION's ID.
+	 *
+	 * The upsert reports a mapping for the value it just created and none for the option, which
+	 * already existed, so reading the mappings positionally returned that value ID. It then went
+	 * into the item's item_options, the variation loop found no value beneath it, and the next sync
+	 * died with "An existing Item Option has name". Case insensitive matching sends far more stores
+	 * down this reuse path, which is what turned a latent bug into a common one.
+	 */
+	public function test_adding_a_value_to_an_existing_option_returns_the_option_id() {
+		$existing = Scripted_API::make_option( 'OPT_COLOUR', 'color', array( 'VAL_RED' => 'red' ) );
+
+		$this->api->register_catalog_object( 'OPT_COLOUR', $existing )
+			->set_upsert_id_mappings(
+				array(
+					array(
+						'client_object_id' => '#color_Blue',
+						'object_id'        => 'VAL_BLUE',
+					),
+				)
+			)
+			->set_upsert_object_id( null );
+
+		$option = $this->api->create_options_and_values( 'OPT_COLOUR', 'color', array( 'red', 'Blue' ) );
+
+		$this->assertSame( 'OPT_COLOUR', $option->getId(), 'The option ID must survive an upsert that only created a value.' );
+		$this->assertSame( array( 'OPT_COLOUR', 'OPT_COLOUR' ), $this->api->retrieved_object_ids, 'A value ID must never be retrieved in place of the option.' );
+
+		$cached = get_transient( 'wc_square_options_data' );
+
+		$this->assertArrayHasKey( 'OPT_COLOUR', $cached );
+		$this->assertArrayNotHasKey( 'VAL_BLUE', $cached, 'A value ID must never be cached as though it were an option.' );
+	}
+
+	/**
+	 * On the create path the option does have a mapping, but Square need not report it first.
+	 */
+	public function test_create_path_takes_the_option_mapping_not_the_first_one() {
+		$created = Scripted_API::make_option( 'NEW_OPT', 'Colour', array( 'VAL_GREEN' => 'Green' ) );
+
+		$this->api->register_catalog_object( 'NEW_OPT', $created )
+			->set_upsert_id_mappings(
+				array(
+					array(
+						'client_object_id' => '#Colour_Green',
+						'object_id'        => 'VAL_GREEN',
+					),
+				)
+			)
+			->set_upsert_object_id( 'NEW_OPT' );
+
+		$option = $this->api->create_options_and_values( false, 'Colour', array( 'Green' ) );
+
+		$this->assertSame( 'NEW_OPT', $option->getId(), 'The option must be resolved by the temp ID it was sent under.' );
+		$this->assertSame( array( 'NEW_OPT' ), $this->api->retrieved_object_ids );
+		$this->assertArrayHasKey( 'NEW_OPT', get_transient( 'wc_square_options_data' ) );
 	}
 
 	/**
