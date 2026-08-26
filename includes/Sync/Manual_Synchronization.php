@@ -160,7 +160,21 @@ class Manual_Synchronization extends Stepped_Job {
 
 			foreach ( $unsupported_product_ids as $matched_product_id ) {
 				$product = wc_get_product( $matched_product_id );
-				$type    = $product->get_type();
+				if ( ! $product instanceof \WC_Product ) {
+					Records::set_record(
+						array(
+							'type'    => 'alert',
+							'message' => sprintf(
+								/* translators: %1$s - Product ID. */
+								__( 'Product ID (%1$s) is excluded from sync because the product could not be found.', 'woocommerce-square' ),
+								$matched_product_id,
+							),
+						)
+					);
+					continue;
+				}
+
+				$type = $product->get_type();
 
 				Records::set_record(
 					array(
@@ -1164,8 +1178,11 @@ class Manual_Synchronization extends Stepped_Job {
 		// if all products were processed, move on.
 		if ( empty( $updated_product_ids ) ) {
 			$all_product_ids = $this->get_attr( 'validated_product_ids', array() );
-			// at this point, log a failure for any products that weren't processed.
-			foreach ( array_diff( $all_product_ids, $processed_product_ids ) as $product_id ) {
+			// at this point, log a failure for any products that weren't processed. Products deleted
+			// mid-sync are excluded - they already have their own "excluded from sync" alert and were
+			// never processable, so reporting them as update failures would be misleading.
+			$missing_product_ids = $this->get_attr( 'upsert_missing_product_ids', array() );
+			foreach ( array_diff( $all_product_ids, $processed_product_ids, $missing_product_ids ) as $product_id ) {
 				Records::set_record(
 					array(
 						'type'       => 'info',
@@ -1223,6 +1240,13 @@ class Manual_Synchronization extends Stepped_Job {
 			)
 		);
 
+		// Product IDs that no longer resolve to a WC_Product (e.g. permanently deleted mid-sync).
+		// Tracked in a job-level attribute so they can be dropped from the unprocessed set below,
+		// otherwise they would be re-queued forever and the sync step would never complete. The set
+		// is cumulative across batches, sync steps (update_matched_products, search_matched_products,
+		// upsert_new_products), retries, and resumed runs, so each product is handled exactly once.
+		$missing_product_ids = $this->get_attr( 'upsert_missing_product_ids', array() );
+
 		$upsert_response = null;
 		if ( ! empty( $in_progress['unprocessed_upsert_response'] ) ) {
 			$staged_product_ids = $in_progress['staged_product_ids'] ?? array();
@@ -1248,6 +1272,34 @@ class Manual_Synchronization extends Stepped_Job {
 
 				$product = wc_get_product( $product_id );
 
+				if ( ! $product instanceof \WC_Product ) {
+					// Product is gone (e.g. permanently deleted mid-sync). Record it in the job-level
+					// missing set so it drops out of the unprocessed set and the step can complete rather
+					// than re-queueing it forever. The set is persisted and cumulative, so the guard also
+					// ensures the log entry and merchant-facing alert fire exactly once per product per
+					// job even if it is encountered again in a later step, a retried batch, or a resume.
+					if ( ! in_array( $product_id, $missing_product_ids, true ) ) {
+						$missing_product_ids[] = $product_id;
+						$this->set_attr( 'upsert_missing_product_ids', $missing_product_ids );
+
+						wc_square()->log( 'Skipping product #' . $product_id . ' during upsert - it no longer exists (may have been deleted).' );
+
+						// No product_id on the record: the post is gone, so a product-scoped record would
+						// render an empty edit link. Reuses the validate path's translation entry.
+						Records::set_record(
+							array(
+								'type'    => 'alert',
+								'message' => sprintf(
+									/* translators: %1$s - Product ID. */
+									__( 'Product ID (%1$s) is excluded from sync because the product could not be found.', 'woocommerce-square' ),
+									$product_id
+								),
+							)
+						);
+					}
+					continue;
+				}
+
 				// Building the payload happens in two stages that differ in what a failure can mean,
 				// so they are caught separately rather than distinguished after the fact.
 				//
@@ -1262,7 +1314,7 @@ class Manual_Synchronization extends Stepped_Job {
 					$isolated_fail_ids[]  = $product_id;
 					$staged_product_ids[] = $product_id; // consumed, so the step queue advances past it
 					continue;
-				}
+				}					
 
 				$original_square_image_ids[ $product_id ] = $product->get_meta( '_square_item_image_id' );
 
@@ -1356,7 +1408,7 @@ class Manual_Synchronization extends Stepped_Job {
 				$this->set_attr( 'in_progress_upsert_catalog_objects', null );
 
 				$result['processed']   = $staged_product_ids;
-				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+				$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
 				$result['skipped']     = $isolated_fail_ids;
 
 				return $result;
@@ -1611,7 +1663,10 @@ class Manual_Synchronization extends Stepped_Job {
 		// queue advances past them. skipped is reported separately because a skipped product has no
 		// usable Square mapping from this cycle and must not be treated as successfully upserted.
 		$result['processed']   = $staged_product_ids;
-		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids );
+		// Exclude missing products (deleted mid-sync) from unprocessed so callers do not re-queue
+		// them indefinitely, which would keep the sync step from ever completing. The IDs themselves
+		// are tracked in the upsert_missing_product_ids job attribute for callers that need them.
+		$result['unprocessed'] = array_diff( $product_ids, $staged_product_ids, $missing_product_ids );
 		$result['skipped']     = $isolated_fail_ids;
 
 		return $result;
