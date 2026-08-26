@@ -48,6 +48,14 @@ class API extends Base {
 	 * Kept apart from `wc_square_options_data`, which means "every option, fully read". Writing
 	 * partial pages under that name would make the next call return early with an incomplete cache.
 	 *
+	 * One key is shared by every walk, which is only safe because the background job runner takes
+	 * the oldest queued or processing job on every tick and runs a single step of it
+	 * (`WP_Background_Job_Handler::get_job()`, `ORDER BY option_id ASC LIMIT 1`). A job therefore
+	 * holds the runner for the whole of its walk, and no second job can interleave a step that
+	 * starts a competing read. If job selection ever gains priority ordering or parallel runners,
+	 * two walks could overwrite each other's pages here and promote a silently truncated cache,
+	 * which is the very failure this class of bug is about. Make the key per job before that lands.
+	 *
 	 * @since x.x.x
 	 * @var string
 	 */
@@ -736,8 +744,27 @@ class API extends Base {
 		$options_value_data = array();
 
 		if ( $option_id ) {
-			$response = $this->retrieve_catalog_object( $option_id );
-			$option   = $response->get_data() ? $response->get_data()->getObject() : null;
+			$option = null;
+
+			try {
+				$response = $this->retrieve_catalog_object( $option_id );
+				$option   = $response->get_data() ? $response->get_data()->getObject() : null;
+			} catch ( \Exception $e ) {
+				// Square answers a deleted or unknown ID with NOT_FOUND, and the response validator
+				// turns that into an exception before any data comes back, so the null check below
+				// never gets the chance to see it. Without this the whole method gives up on a
+				// stale cached ID, no refresh flag is set, and every sync fails the same way until
+				// the cache expires a day later.
+				//
+				// Narrowed to that one code deliberately, and matched in the bracketed form
+				// do_post_parse_response_validation() emits so it cannot be tripped by another
+				// error quoting those words in its detail text. Reading a RATE_LIMITED or an auth
+				// failure as "no such option" would create a duplicate of an option Square still
+				// holds, and would swallow the rate limit the job runner needs in order to back off.
+				if ( false === strpos( $e->getMessage(), '[NOT_FOUND]' ) ) {
+					throw $e;
+				}
+			}
 
 			// A cached option ID can name an object Square no longer has, or one that is not an
 			// item option at all. Treat that as no match and fall through to the create path,
