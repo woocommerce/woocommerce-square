@@ -12,13 +12,13 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Prepare PHP
-        uses: woocommerce/grow/prepare-php@da5279aa4d76745ef32970e49b5ef7903a3b457a # v2.2.2
+        uses: woocommerce/grow/prepare-php@a81d3fca0166a02a4c25953d250d80d3612db4b8 # actions-v3
         with:
           tools: cs2pr
           install-deps: no
 
       - name: Prepare node
-        uses: woocommerce/grow/prepare-node@da5279aa4d76745ef32970e49b5ef7903a3b457a # v2.2.2
+        uses: woocommerce/grow/prepare-node@a81d3fca0166a02a4c25953d250d80d3612db4b8 # actions-v3
         with:
           node-version-file: ".nvmrc"
           ignore-scripts: "no"
