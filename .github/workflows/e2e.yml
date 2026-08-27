@@ -14,6 +14,7 @@ jobs:
   e2e:
     if: "${{ ( github.event_name == 'pull_request' ) ||  github.event_name == 'push' }}"
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
