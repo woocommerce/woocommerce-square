@@ -131,7 +131,10 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					// if yes, use the relative Square ID.
 					$option_id = false;
 					foreach ( $options_data as $transient_option_id => $option_data_transient ) {
-						if ( $option_data_transient['name'] === $attribute_name ) {
+						// Square treats Item Option names as case insensitive and rejects a create whose
+						// name differs from an existing one only by case, so match the same way and
+						// reuse what Square already has.
+						if ( 0 === strcasecmp( (string) $option_data_transient['name'], (string) $attribute_name ) ) {
 							$option_id = $transient_option_id;
 							break;
 						}
@@ -345,16 +348,30 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_name[] = $attribute_value;
 					}
 
-					$option_id       = '';
-					$option_value_id = '';
-					// $options_ids is short, or empty, whenever an option could not be created for this
-					// product. Guarding the index keeps that from emitting a warning per variation.
-					if ( isset( $options_ids[ $variation_index ], $options_data[ $options_ids[ $variation_index ] ] ) ) {
-						$option_id = $options_ids[ $variation_index ];
+					// Remembered so a case insensitive match below can correct this entry in place.
+					// Square builds a variation's name out of its own option value names and then
+					// refuses to let that name be edited for as long as the variation uses item
+					// options. A name carrying Woo's casing against values bound to Square's is
+					// therefore accepted on the create and rejected on every update after it, with
+					// no refresh flag and no self heal, so the product stays unsyncable for good.
+					$variation_name_index = count( $variation_name ) - 1;
 
-						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
-							if ( $value_name === $attribute_value ) {
+					// Taken from the option the parent product just created or reused, not from the
+					// cache, because the cache can legitimately not know about it yet: an unlooped
+					// read on a paginated catalogue leaves the new option in the partial cache only.
+					// Carrying the ID regardless means the create below takes the retrieve path and
+					// reuses that option, instead of asking Square for one it already has.
+					$option_id       = isset( $options_ids[ $variation_index ] ) ? $options_ids[ $variation_index ] : '';
+					$option_value_id = '';
+					if ( isset( $options_data[ $option_id ] ) ) {
+						foreach ( $options_data[ $option_id ]['value_ids'] as $value_id => $value_name ) {
+							if ( 0 === strcasecmp( (string) $value_name, (string) $attribute_value ) ) {
 								$option_value_id = $value_id;
+								// Square's spelling of the value wins, because that is the value
+								// the ID above points at and the one Square will name the variation
+								// from. Byte identical whenever the casing already agrees, so
+								// nothing that was already in sync gets renamed.
+								$variation_name[ $variation_name_index ] = $value_name;
 								break;
 							}
 						}
@@ -389,8 +406,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						// Get the Square ID of the attribute value.
 						$updated_option_values = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 						foreach ( $updated_option_values as $option_value ) {
-							if ( $option_value->getItemOptionValueData()->getName() === $attribute_value ) {
+							if ( 0 === strcasecmp( (string) $option_value->getItemOptionValueData()->getName(), (string) $attribute_value ) ) {
 								$option_value_id = $option_value->getId();
+								// Same rule as the cache path above: follow the bound value's own
+								// name, not the Woo attribute's.
+								$variation_name[ $variation_name_index ] = $option_value->getItemOptionValueData()->getName();
 								break;
 							}
 						}
