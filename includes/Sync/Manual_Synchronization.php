@@ -81,7 +81,7 @@ class Manual_Synchronization extends Stepped_Job {
 			delete_option( 'woocommerce_square_refresh_sync_cycle' );
 		}
 
-		parent::run();
+		return parent::run();
 	}
 
 	/**
