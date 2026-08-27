@@ -415,10 +415,24 @@ jQuery( document ).ready( ( $ ) => {
 							syncInventory
 					);
 
-					$manageInput.on('click', () => {
-						return false;
-					});
-					$manageInput.css({ opacity: '0.5' });
+					// "Manage stock" stays editable when WooCommerce owns stock: Square no longer
+					// switches it off during a sync, so this is how a merchant mirrors turning
+					// inventory tracking off in Square, and blocking the click would leave them no
+					// way to do it.
+					//
+					// Under Square as the system of record the sync does own the setting and mirrors
+					// Square's tracking flag on every pull, so an edit here would be reverted by the
+					// next sync with no explanation. Block it instead of allowing that.
+					//
+					// Interaction is blocked rather than the input disabled on purpose: a disabled
+					// checkbox posts nothing, so the next save of the product would switch stock
+					// management off entirely.
+					if ( wc_square_admin_products.is_square_sor ) {
+						$manageInput.on( 'mousedown keydown click', () => {
+							return false;
+						} );
+						$manageInput.css( { opacity: '0.5' } );
+					}
 
 					// disable stock status radios.
 					$stockStatusInput.css({ opacity: 0.5 });
@@ -497,7 +511,7 @@ jQuery( document ).ready( ( $ ) => {
 				$( '.sync-stock-from-square' ).remove();
 				$stockInput.prop( 'readonly', false );
 				$manageDesc.html( manageDescOriginal );
-				$manageInput.off( 'click' );
+				$manageInput.off( 'mousedown keydown click' );
 				$manageInput.css( { opacity: 1 } );
 				$manageInput.prop( 'checked', manageStockOriginal );
 				$stockStatusInput.css({ opacity: 1 });
@@ -528,10 +542,20 @@ jQuery( document ).ready( ( $ ) => {
 				if ( useSquare ) {
 					// disable stock management inputs
 					$variationStockInput.prop( 'readonly', true );
-					$variationManageInput.on('click', () => {
-						return false;
-					});
-					$variationManageInput.css( { opacity: '0.5' } );
+
+					// Editable under WooCommerce SOR for the same reason as simple products:
+					// mirroring a tracking off change made in Square is the merchant's own call.
+					// Under Square SOR the pull mirrors Square's tracking flag onto this setting, so
+					// an edit here would be reverted by the next sync. Blocked rather than disabled,
+					// because a disabled checkbox posts nothing and the next save would switch stock
+					// management off.
+					if ( wc_square_admin_products.is_square_sor ) {
+						$variationManageInput.on( 'mousedown keydown click', () => {
+							return false;
+						} );
+						$variationManageInput.css( { opacity: '0.5' } );
+					}
+
 					$variationStockStatusField.css( { opacity: 0.5 } );
 					$variationStockStatusField.on('mousedown keydown change', () => { return false; });
 
@@ -619,7 +643,7 @@ jQuery( document ).ready( ( $ ) => {
 				} else {
 					// restore WooCommerce stock when user chooses to disable Sync with Square checkbox.
 					$variationStockInput.prop( 'readonly', false );
-					$variationManageInput.off( 'click' );
+					$variationManageInput.off( 'mousedown keydown click' );
 					$variationManageInput.css( { opacity: 1 } );
 					$variationManageInput.next( '.description' ).remove();
 					$variationStockStatusField.css( { opacity: 1 } );

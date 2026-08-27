@@ -416,24 +416,56 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			$location_overrides = $variation_data->getLocationOverrides();
 
 			/*
-			 * Only update track_inventory if it's not set.
+			 * Only update the base track_inventory if it's not set.
 			 * This will only update inventory tracking on new variations.
 			 * inventory tracking will remain the same for existing variations.
 			 */
 			if ( is_null( $track_inventory ) && is_null( $location_overrides ) ) {
 				$variation_data->setTrackInventory( $product->get_manage_stock() );
+			}
 
-				// If the product is not managing stock and is out of stock, set it as sold out.
-				if ( ! $product->get_manage_stock() && 'outofstock' === $product->get_stock_status() ) {
-					$configured_location = wc_square()->get_settings_handler()->get_location_id();
-					$location_override   = new \Square\Models\ItemVariationLocationOverrides();
+			/*
+			 * For products that do not manage stock in WooCommerce, the configured location's
+			 * tracking override always follows the current WooCommerce availability:
+			 *
+			 * - out of stock: tracking on. Square's sold_out flag is read-only and only becomes
+			 *   true through a tracked count of zero, so tracking (plus the explicit zero count
+			 *   pushed by the inventory step) is the only API way to mark the item sold out.
+			 * - in stock: tracking off, which is the sellable state for an untracked item. This
+			 *   also clears the sold-out state when a product comes back in stock; previously the
+			 *   override was only ever written for new variations, so a product that went out of
+			 *   stock once stayed sold out in Square forever.
+			 *
+			 * The override is merged into any existing overrides so location price overrides are
+			 * preserved.
+			 */
+			if ( ! $product->get_manage_stock() ) {
+				$configured_location = wc_square()->get_settings_handler()->get_location_id();
+				$is_out_of_stock     = 'outofstock' === $product->get_stock_status();
+
+				$location_overrides = is_array( $location_overrides ) ? $location_overrides : array();
+				$location_override  = null;
+
+				foreach ( $location_overrides as $existing_override ) {
+					if ( $existing_override->getLocationId() === $configured_location ) {
+						$location_override = $existing_override;
+						break;
+					}
+				}
+
+				// Out of stock needs an override, created if the item has none, because tracking is the
+				// only way to reach Square's sold out state. In stock only RELEASES tracking on an
+				// override that already exists: creating one purely to say "not tracked" would
+				// overwrite a merchant's own Square side tracking for an item WooCommerce does not
+				// manage, which is not ours to decide.
+				if ( ! $location_override && $is_out_of_stock ) {
+					$location_override = new \Square\Models\ItemVariationLocationOverrides();
 					$location_override->setLocationId( $configured_location );
-					// We need to set track_inventory to true to be able to set sold_out to true, without it will be ignored.
-					$location_override->setTrackInventory( true );
-					$location_override->setSoldOut( true );
-					$location_overrides = array( $location_override );
+					$location_overrides[] = $location_override;
+				}
 
-					// Set the location overrides.
+				if ( $location_override ) {
+					$location_override->setTrackInventory( $is_out_of_stock );
 					$variation_data->setLocationOverrides( $location_overrides );
 				}
 			}

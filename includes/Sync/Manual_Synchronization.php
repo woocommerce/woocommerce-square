@@ -2016,6 +2016,8 @@ class Manual_Synchronization extends Stepped_Job {
 
 		$all_changes = array_merge( ...array_values( $inventory_changes ) );
 
+		$this->exclude_pushed_objects_from_inventory_pull( $all_changes );
+
 		// Chunk by the batch limit in case the set of products has many variations.
 		$chunks = array_chunk( $all_changes, self::BATCH_CHANGE_INVENTORY_LIMIT );
 
@@ -2077,16 +2079,19 @@ class Manual_Synchronization extends Stepped_Job {
 			foreach ( $product->get_children() as $child_id ) {
 
 				$child = wc_get_product( $child_id );
-				if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+				if ( ! $child instanceof \WC_Product ) {
 					continue;
 				}
 
+				// The count builder decides per product state: managed -> real quantity (skipping
+				// unresolved quantities), unmanaged out of stock -> explicit zero to mark the item
+				// sold out, unmanaged in stock -> nothing.
 				$change = Product::get_inventory_change_physical_count_type( $child );
 				if ( $change ) {
 					$changes[] = $change;
 				}
 			}
-		} elseif ( $product->get_manage_stock() ) {
+		} else {
 
 			$change = Product::get_inventory_change_physical_count_type( $product );
 			if ( $change ) {
@@ -2127,7 +2132,7 @@ class Manual_Synchronization extends Stepped_Job {
 					foreach ( $product->get_children() as $child_id ) {
 
 						$child = wc_get_product( $child_id );
-						if ( ! $child instanceof \WC_Product || ! $child->get_manage_stock() ) {
+						if ( ! $child instanceof \WC_Product ) {
 							continue;
 						}
 
@@ -2143,8 +2148,11 @@ class Manual_Synchronization extends Stepped_Job {
 						}
 					}
 				} else {
-					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost after timeout).
-					if ( ! $square_variation_id && $product->get_sku() && $product->get_manage_stock() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
+					// Simple product: try SKU-based lookup if unmapped but synced (e.g. mapping lost
+					// after timeout). Not gated on manage_stock: the push matrix decides what an
+					// unmanaged product pushes (an explicit zero when out of stock), so it needs its
+					// mapping restored too.
+					if ( ! $square_variation_id && $product->get_sku() && $sku_lookups_this_step < self::MAX_SKU_LOOKUPS_PER_PUSH_STEP ) {
 						++$sku_lookups_this_step;
 						$square_variation_id = Product::get_square_variation_id_by_sku( $product->get_sku(), $product_id, true );
 					}
@@ -2153,7 +2161,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 						$inventory_change = Product::get_inventory_change_physical_count_type( $product );
 
-						if ( $inventory_change && $product->get_manage_stock() ) {
+						if ( $inventory_change ) {
 							$product_inventory_changes[] = $inventory_change;
 						}
 					}
@@ -2179,7 +2187,14 @@ class Manual_Synchronization extends Stepped_Job {
 		if ( ! empty( $inventory_changes ) ) {
 
 			$inventory_changes = array_merge( ...$inventory_changes );
+			// The isolating helper owns the request and the idempotency key, so only the pull side
+			// exclusion is carried over from the inventory zeroing work.
 			$this->push_inventory_changes_isolated( $inventory_changes );
+
+			// Recorded after the push so pull_inventory() can skip reading these counts straight back.
+			// Note: isolation can drop individual changes that Square rejected, and those are still
+			// excluded here, so a rejected count is not corrected by the next pull either.
+			$this->exclude_pushed_objects_from_inventory_pull( $inventory_changes );
 		}
 
 		$this->set_attr( 'inventory_push_product_ids', $product_ids );
@@ -2628,6 +2643,49 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
+	 * Drops the catalog objects whose counts this job just pushed from the inventory pull queue.
+	 *
+	 * Square's inventory is eventually consistent, so reading a count straight back after writing it
+	 * can answer with the pre-push value, and for an item that had never been counted it answers zero,
+	 * which would undo the push. Both push sites run before pull_inventory in the step order, so
+	 * removing the ids here is enough and needs no second attribute.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\InventoryChange[] $inventory_changes changes that were pushed
+	 */
+	protected function exclude_pushed_objects_from_inventory_pull( array $inventory_changes ) {
+
+		$object_ids = array();
+
+		foreach ( $inventory_changes as $change ) {
+
+			if ( ! $change->getPhysicalCount() ) {
+				continue;
+			}
+
+			$object_id = $change->getPhysicalCount()->getCatalogObjectId();
+
+			if ( $object_id ) {
+				$object_ids[] = $object_id;
+			}
+		}
+
+		if ( ! $object_ids ) {
+			return;
+		}
+
+		$queued = (array) $this->get_attr( 'pull_inventory_variation_ids', array() );
+		$kept   = array_values( array_diff( $queued, $object_ids ) );
+
+		if ( count( $kept ) !== count( $queued ) ) {
+			$this->set_attr( 'pull_inventory_variation_ids', $kept );
+			wc_square()->log( sprintf( 'Removed %d catalog object(s) from the inventory pull queue because this job just pushed their counts.', count( $queued ) - count( $kept ) ) );
+		}
+	}
+
+
+	/**
 	 * Pulls the latest inventory counts for the variation IDs in `pull_inventory_variation_ids`.
 	 *
 	 * @since 2.0.2
@@ -2719,25 +2777,40 @@ class Manual_Synchronization extends Stepped_Job {
 		$catalog_objects_inventory_stats = array();
 
 		foreach ( $response_counts as $count ) {
-			// If catalog stats array already contains the catalog object marked as IN_STOCK, then continue.
-			if ( isset( $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] ) && $catalog_objects_inventory_stats[ $count->getCatalogObjectId() ]['IN_STOCK'] ) {
+			// Only explicit IN_STOCK counts are usable data; other states are movements or
+			// purchase-order stages, and coercing them to zero wiped stock (SQUARE-7, SQUARE-145).
+			if ( 'IN_STOCK' !== $count->getState() ) {
 				continue;
-				// Else if the catalog object is IN_STOCK, then mark IN_STOCK as true and set the quantity for later use.
-			} elseif ( 'IN_STOCK' === $count->getState() ) {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => true,
-					'quantity' => $count->getQuantity(),
-				);
-				// Else if the catalog object doesn't have an IN_STOCK status, then mark IN_STOCK as false and set the quantity as 0 for later use.
-			} else {
-				$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
-					'IN_STOCK' => false,
-					'quantity' => 0,
-				);
 			}
+
+			$catalog_objects_inventory_stats[ $count->getCatalogObjectId() ] = array(
+				'IN_STOCK' => true,
+				'quantity' => $count->getQuantity(),
+			);
 		}
 
 		$catalog_objects_tracking_stats = Helper::get_catalog_objects_tracking_stats( $catalog_object_ids );
+
+		// Verify zero counts against Square's inventory change history: a never-counted item
+		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written.
+		$zero_object_ids   = Helper::zero_count_object_ids( $catalog_objects_inventory_stats, 'quantity' );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'pull_inventory', $zero_object_ids );
+
+		if ( null === $verified_zero_ids ) {
+
+			// Verification unavailable and retries remain. Return WITHOUT marking anything processed
+			// so the step runs again; throwing would fail the whole sync for one transient error. Once
+			// the retries are spent the step proceeds writing no zeros and records an alert, and the
+			// interval poll picks those objects up again the next time Square reports a change. The
+			// queue attribute was already reduced by the batch slice above and these ids were never
+			// marked processed, so put them back or the retry would skip the whole batch.
+			$this->set_attr(
+				'pull_inventory_variation_ids',
+				array_values( array_unique( array_merge( (array) $this->get_attr( 'pull_inventory_variation_ids', array() ), $catalog_object_ids ) ) )
+			);
+
+			return;
+		}
 
 		foreach ( $catalog_objects_tracking_stats as $catalog_object_id => $inventory_data ) {
 			$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
@@ -2751,23 +2824,38 @@ class Manual_Synchronization extends Stepped_Job {
 
 			if ( $product instanceof \WC_Product ) {
 
-				/* If catalog object is tracked and has a quantity > 0 set in Square. */
-				if ( $is_tracking_inventory && isset( $catalog_objects_inventory_stats[ $catalog_object_id ] ) ) {
-					$product->set_stock_quantity( (float) $catalog_objects_inventory_stats[ $catalog_object_id ]['quantity'] );
-					$product->set_manage_stock( true );
-
-					/* If the catalog object is tracked but the quantity in Square is set to 0. */
-				} elseif ( $is_tracking_inventory ) {
-					$product->set_stock_quantity( 0 );
-					$product->set_manage_stock( true );
-
-					/* If the catalog object is not tracked in Square at all. */
-				} else {
-					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-					$product->set_manage_stock( false );
+				// Respect the per-product "Sync with Square" setting on the pull side as well.
+				if ( ! Product::is_synced_with_square( $product ) ) {
+					$in_progress['processed_variation_ids'][] = $catalog_object_id;
+					continue;
 				}
 
-				$product->save();
+				if ( $is_tracking_inventory && isset( $catalog_objects_inventory_stats[ $catalog_object_id ] ) ) {
+
+					$changed = Helper::apply_square_inventory_count(
+						$product,
+						(float) $catalog_objects_inventory_stats[ $catalog_object_id ]['quantity'],
+						(bool) $sold_out,
+						in_array( $catalog_object_id, $verified_zero_ids, true )
+					);
+
+					if ( $changed ) {
+						$product->save();
+					}
+				} elseif ( ! $is_tracking_inventory ) {
+
+					// Not tracked in Square: reflect availability. Stock management follows only when
+					// Square owns the setting; under WooCommerce SOR it is merchant intent and is
+					// left alone, so a Square side toggle cannot silently invert the system of record.
+					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
+
+					if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+						$product->set_manage_stock( false );
+					}
+					$product->save();
+				}
+				// Tracked in Square but no IN_STOCK count returned: "no information", never a
+				// zero (SQUARE-145). The product is left untouched.
 
 				$in_progress['processed_variation_ids'][] = $catalog_object_id;
 			} else {
@@ -2898,6 +2986,17 @@ class Manual_Synchronization extends Stepped_Job {
 				// only handle product inventory if enabled
 				if ( wc_square()->get_settings_handler()->is_inventory_sync_enabled() ) {
 					$next_steps[] = 'push_inventory';
+
+					// Inventory is always fetched from Square as well, so that sales made on other
+					// channels are reflected, and for a product that already exists in Square this
+					// pull is the only thing that syncs its inventory during a manual sync.
+					//
+					// What it must NOT do is read back the counts this same job just pushed: Square's
+					// inventory is eventually consistent, so a count that has not propagated yet
+					// comes back as zero and would overwrite the stock pushed moments earlier
+					// (SQUARE-145). Those objects are excluded by id in pull_inventory() instead of
+					// dropping the step, which would leave existing products without an inventory
+					// sync at all.
 					$next_steps[] = 'pull_inventory';
 				}
 			}
