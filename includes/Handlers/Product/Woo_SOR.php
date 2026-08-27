@@ -35,12 +35,13 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	 * @param CatalogObject $catalog_object Square SDK catalog object
 	 * @param \WC_Product $product WooCommerce product
 	 * @return CatalogObject
-	 * @throws \Exception
+	 * @throws \InvalidArgumentException when the catalog object is not an ITEM
+	 * @throws \Exception on Square API failures while resolving item options
 	 */
 	public static function update_catalog_item( CatalogObject $catalog_object, \WC_Product $product ) {
 
 		if ( 'ITEM' !== $catalog_object->getType() || ! $catalog_object->getItemData() ) {
-			throw new \Exception( 'Type of $catalog_object must be an ITEM' );
+			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM' );
 		}
 
 		// ensure the product meta is persisted
@@ -261,12 +262,13 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	 * @param array         $options_ids    Array of options IDs
 	 *
 	 * @return CatalogObject
-	 * @throws \Exception
+	 * @throws \InvalidArgumentException when the catalog object is not an ITEM_VARIATION
+	 * @throws \Exception on Square API failures while resolving item options
 	 */
 	public static function update_catalog_variation( CatalogObject $catalog_object, \WC_Product $product, $options_ids = array() ) {
 
 		if ( 'ITEM_VARIATION' !== $catalog_object->getType() || ! $catalog_object->getItemVariationData() ) {
-			throw new \Exception( 'Type of $catalog_object must be an ITEM_VARIATION' );
+			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM_VARIATION' );
 		}
 
 		// ensure the variation meta is persisted
@@ -345,7 +347,9 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 					$option_id       = '';
 					$option_value_id = '';
-					if ( isset( $options_data[ $options_ids[ $variation_index ] ] ) ) {
+					// $options_ids is short, or empty, whenever an option could not be created for this
+					// product. Guarding the index keeps that from emitting a warning per variation.
+					if ( isset( $options_ids[ $variation_index ], $options_data[ $options_ids[ $variation_index ] ] ) ) {
 						$option_id = $options_ids[ $variation_index ];
 
 						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
