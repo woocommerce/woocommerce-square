@@ -1421,7 +1421,7 @@ class Manual_Synchronization extends Stepped_Job {
 
 			try {
 				$start     = microtime( true );
-				$body_hash = md5( serialize( $batches ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				$body_hash = md5( serialize( $batch_list ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
 				// Reuse the key stored by a rate-limited attempt only while the request body is
 				// unchanged; any body drift gets a fresh key or Square rejects the request with
