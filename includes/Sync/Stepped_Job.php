@@ -75,7 +75,7 @@ abstract class Stepped_Job extends Job {
 	 * attempts ran out (to keep a watermark from advancing over a window it could not verify) must ask
 	 * zero_verification_exhausted() rather than infer it from an empty array.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name used for the attempt counters and messages
 	 * @param string[] $zero_object_ids catalog object ids reporting a zero count
@@ -114,7 +114,7 @@ abstract class Stepped_Job extends Job {
 	 * verify, or a genuine sellout in that window is skipped for good. An empty verified list cannot
 	 * answer this, since it also means "asked, and none of them were real".
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name used for the attempt counters
 	 * @return bool
@@ -137,7 +137,7 @@ abstract class Stepped_Job extends Job {
 	 * and records an alert so the outcome is never silent. Steps that own a watermark should also
 	 * leave it alone on that path so the same window is read again later.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name for the log and record messages
 	 * @return bool true when the caller should stop and retry later, false when it should proceed
@@ -183,7 +183,7 @@ abstract class Stepped_Job extends Job {
 	/**
 	 * Clears the unverified zero count retry counter after a successful verification.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 */
 	protected function clear_unverified_zero_count_attempts( $step_name ) {
 

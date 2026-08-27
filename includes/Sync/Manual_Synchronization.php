@@ -550,7 +550,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Sends a set of category batches to Square and applies the returned mappings.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \Square\Models\CatalogObjectBatch[] $category_batches batches to send (one category each)
 	 * @param array $reverse_map square id keyed map to local term ids, updated in place
@@ -1680,7 +1680,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Completes the job, reporting a completed with errors outcome when products were skipped.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @return \stdClass the job object
 	 */
@@ -1727,7 +1727,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * Skipping an object has to be opted into by a known data error, never assumed. A deny list
 	 * would classify server errors, timeouts and permission problems as bad product data.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \Exception $exception the caught exception
 	 * @return string rate_limited|isolatable|fatal
@@ -1742,7 +1742,7 @@ class Manual_Synchronization extends Stepped_Job {
 		 * on anything else the write may already have been applied, and retrying the objects
 		 * individually would create duplicates in Square.
 		 *
-		 * @since x.x.x
+		 * @since 5.5.0
 		 *
 		 * @param string[] $codes Square error codes treated as an object level data problem
 		 * @param \Exception $exception the exception being classified
@@ -1777,7 +1777,7 @@ class Manual_Synchronization extends Stepped_Job {
 	/**
 	 * Records a product skipped by the sync, with the reason, and tracks the error counters.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param int $product_id the skipped product ID
 	 * @param string $reason the failure reason (Square error message or local validation detail)
@@ -1863,7 +1863,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * so re-deriving a payload here would multiply the request count on the one path that only runs
 	 * because something already failed.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * At most MAX_ISOLATED_UPSERTS_PER_CYCLE products are attempted per invocation so a huge
 	 * fallback cannot exhaust PHP's execution time inside one step cycle; unattempted products are
@@ -2276,7 +2276,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * caller treats that as fatal, because the same code Square returns for a dead catalog object
 	 * is also what it returns for a location the account does not own.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \Square\Models\InventoryChange[] $chunk changes sent in the request that failed
 	 * @param string $error_message the message Square returned
@@ -2321,7 +2321,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * either extract a field name that matches nothing in the chunk, and drop up to 100 good
 	 * inventory updates, or extract nothing at all.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \Square\Models\InventoryChange[] $inventory_changes the changes to push
 	 */
@@ -2707,7 +2707,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * which would undo the push. Both push sites run before pull_inventory in the step order, so
 	 * removing the ids here is enough and needs no second attribute.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \Square\Models\InventoryChange[] $inventory_changes changes that were pushed
 	 */

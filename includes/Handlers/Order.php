@@ -378,7 +378,7 @@ class Order {
 	 * decide when to send an absolute count instead. An unavailable answer returns an empty list, so
 	 * the caller keeps the existing adjustment behaviour rather than guessing.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param int[] $product_ids WooCommerce product IDs.
 	 * @return string[] catalog object IDs with no inventory history.

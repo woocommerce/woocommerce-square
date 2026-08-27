@@ -56,7 +56,7 @@ class API extends Base {
 	 * two walks could overwrite each other's pages here and promote a silently truncated cache,
 	 * which is the very failure this class of bug is about. Make the key per job before that lands.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 * @var string
 	 */
 	const OPTIONS_DATA_PARTIAL_TRANSIENT = 'wc_square_options_data_partial';
@@ -707,7 +707,7 @@ class API extends Base {
 	 * message is matched rather than the error code, since Square answers both the stale cache case
 	 * and a permanently invalid payload with the same INVALID_VALUE and BAD_REQUEST codes.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $message the message Square returned
 	 * @return bool
@@ -732,7 +732,7 @@ class API extends Base {
 	 * the first page of a paginated catalogue as the whole of it, for a day. With no cache to
 	 * extend there is nothing to do and the next full read is left to build it.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $option_id   Square item option ID.
 	 * @param array  $option_data Cache entry for the option.

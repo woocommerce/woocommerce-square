@@ -478,7 +478,7 @@ class Admin {
 	 * merchant knows a stuck sync was stopped and can start a new one.
 	 * Clears itself once a sync completes successfully after the recovery.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @return void
 	 */
