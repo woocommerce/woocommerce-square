@@ -141,7 +141,25 @@ class WooCommerce_Square_Loader {
 		$loader = require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		// register plugin namespace with autoloader
-		$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		if ( is_object( $loader ) && method_exists( $loader, 'addPsr4' ) ) {
+			$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		} else {
+			// require_once returns true rather than the ClassLoader when something loaded the same
+			// autoloader first, which is what happens under PHPUnit. Register the namespace directly
+			// so the plugin still resolves its own classes instead of fataling here.
+			spl_autoload_register(
+				static function ( $class_name ) {
+					$prefix = 'WooCommerce\\Square\\';
+					if ( 0 !== strncmp( $class_name, $prefix, strlen( $prefix ) ) ) {
+						return;
+					}
+					$file = __DIR__ . '/includes/' . str_replace( '\\', '/', substr( $class_name, strlen( $prefix ) ) ) . '.php';
+					if ( file_exists( $file ) ) {
+						require_once $file;
+					}
+				}
+			);
+		}
 
 		require_once plugin_dir_path( __FILE__ ) . 'includes/Functions.php';
 
