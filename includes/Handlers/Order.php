@@ -27,6 +27,7 @@ use WooCommerce\Square\Framework\PaymentGateway\Payment_Gateway;
 use WooCommerce\Square\Framework\Square_Helper;
 use WooCommerce\Square\Plugin;
 use WooCommerce\Square\Handlers\Product;
+use WooCommerce\Square\Sync\Helper;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -370,9 +371,55 @@ class Order {
 	 *
 	 * @since 2.0.8
 	 */
+	/**
+	 * Returns the Square catalog objects for these products that Square has never counted.
+	 *
+	 * A relative adjustment is only meaningful once Square holds a count, so callers use this to
+	 * decide when to send an absolute count instead. An unavailable answer returns an empty list, so
+	 * the caller keeps the existing adjustment behaviour rather than guessing.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int[] $product_ids WooCommerce product IDs.
+	 * @return string[] catalog object IDs with no inventory history.
+	 */
+	private static function get_objects_without_inventory_history( array $product_ids ) {
+
+		$square_ids = array();
+
+		foreach ( $product_ids as $product_id ) {
+			$square_id = Product::get_square_item_variation_id( $product_id, false );
+
+			if ( $square_id ) {
+				$square_ids[] = $square_id;
+			}
+		}
+
+		if ( ! $square_ids ) {
+			return array();
+		}
+
+		$with_history = Helper::get_catalog_objects_with_inventory_history( $square_ids );
+
+		if ( null === $with_history ) {
+			return array();
+		}
+
+		return array_values( array_diff( $square_ids, $with_history ) );
+	}
+
+
 	public function maybe_sync_staged_inventory_updates() {
 
 		$inventory_adjustments = array();
+
+		// An order sends a relative adjustment, which assumes Square already holds a count for the
+		// item. When it does not, and the merchant enabled inventory sync after the item was created,
+		// the delta becomes Square's whole count and the two sides drift apart immediately: a sale of
+		// one leaves WooCommerce at 19 and Square at -1. For those objects send WooCommerce's current
+		// quantity as an absolute count instead, which establishes the baseline; every later order can
+		// then adjust from it normally.
+		$never_counted = self::get_objects_without_inventory_history( array_keys( $this->products_to_sync ) );
 
 		foreach ( $this->products_to_sync as $product_id => $adjustment ) {
 
@@ -381,7 +428,13 @@ class Order {
 				continue;
 			}
 
-			$inventory_adjustment = Product::get_inventory_change_adjustment_type( $product, $adjustment );
+			$square_id = Product::get_square_item_variation_id( $product_id, false );
+
+			if ( $square_id && in_array( $square_id, $never_counted, true ) ) {
+				$inventory_adjustment = Product::get_inventory_change_physical_count_type( $product );
+			} else {
+				$inventory_adjustment = Product::get_inventory_change_adjustment_type( $product, $adjustment );
+			}
 
 			if ( empty( $inventory_adjustment ) ) {
 				continue;
@@ -396,10 +449,26 @@ class Order {
 
 		wc_square()->log( 'New order from other gateway inventory syncing..' );
 		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
-		wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
 
-		// Reset the staged inventory updates.
-		$this->products_to_sync = array();
+		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
+		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
+		// exception) must never bubble up - it would abort the payment flow mid transition and
+		// let the gateway mark an already paid order as failed. Log and continue instead; stock
+		// converges on the next successful sync.
+		try {
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
+					count( $inventory_adjustments ),
+					$exception->getMessage()
+				)
+			);
+		} finally {
+			// Always reset, or the shutdown hook re-attempts the same failing call in this request.
+			$this->products_to_sync = array();
+		}
 	}
 
 	/**
@@ -463,7 +532,21 @@ class Order {
 
 		wc_square()->log( 'Order from other gateway Refund inventory updates syncing..' );
 		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
-		wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+
+		// Same protection as the checkout path: a Square API failure during a refund of an order
+		// paid through another gateway must not abort the refund flow. Log and continue.
+		try {
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+		} catch ( \Exception $exception ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory sync failed for refund #%d of order #%d from other gateway (refund flow left untouched): %s',
+					$refund_id,
+					$order_id,
+					$exception->getMessage()
+				)
+			);
+		}
 	}
 
 	/**

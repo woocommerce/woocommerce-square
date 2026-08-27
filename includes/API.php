@@ -42,6 +42,25 @@ defined( 'ABSPATH' ) || exit;
 class API extends Base {
 
 
+	/**
+	 * Holds item option pages while the catalogue is still being walked.
+	 *
+	 * Kept apart from `wc_square_options_data`, which means "every option, fully read". Writing
+	 * partial pages under that name would make the next call return early with an incomplete cache.
+	 *
+	 * One key is shared by every walk, which is only safe because the background job runner takes
+	 * the oldest queued or processing job on every tick and runs a single step of it
+	 * (`WP_Background_Job_Handler::get_job()`, `ORDER BY option_id ASC LIMIT 1`). A job therefore
+	 * holds the runner for the whole of its walk, and no second job can interleave a step that
+	 * starts a competing read. If job selection ever gains priority ordering or parallel runners,
+	 * two walks could overwrite each other's pages here and promote a silently truncated cache,
+	 * which is the very failure this class of bug is about. Make the key per job before that lands.
+	 *
+	 * @since x.x.x
+	 * @var string
+	 */
+	const OPTIONS_DATA_PARTIAL_TRANSIENT = 'wc_square_options_data_partial';
+
 	/** catalog request type */
 	const REQUEST_TYPE_CATALOG = 'catalog';
 
@@ -629,6 +648,18 @@ class API extends Base {
 			$options_data = array();
 		}
 
+		// Carry earlier pages forward. The finished cache is only written once the cursor is
+		// exhausted, because the early return above would otherwise hand back a half built cache and
+		// re-emit the same cursor forever. So pages accumulate under their own key, and without this
+		// every page starts from nothing and only the last one survives.
+		if ( $cursor ) {
+			$partial = get_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
+			if ( is_array( $partial ) ) {
+				$options_data = $partial + $options_data;
+			}
+		}
+
 		$response = $this->list_catalog( $cursor, array( 'ITEM_OPTION' ) );
 
 		if ( ! $response->get_data() instanceof ListCatalogResponse ) {
@@ -654,11 +685,73 @@ class API extends Base {
 		}
 
 		$cursor = $response->get_data()->getCursor();
-		if ( ! $cursor ) {
+		if ( $cursor ) {
+			// More pages to come, so keep what has been read so far somewhere the early return
+			// cannot mistake for a finished cache. Given the same lifetime as the finished cache so
+			// a walk left sitting in the queue cannot come back to a vanished partial and resume
+			// from nothing, which would truncate it in silence.
+			set_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT, $options_data, DAY_IN_SECONDS );
+		} else {
 			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
 		}
 
 		return array( $response, $options_data, $cursor );
+	}
+
+	/**
+	 * Determines whether an option creation failure means the cached options data is stale.
+	 *
+	 * Only a rejection saying the option or its value already exists in Square is worth replaying
+	 * the job for, because that is the one cause a refetch of the options data resolves. The
+	 * message is matched rather than the error code, since Square answers both the stale cache case
+	 * and a permanently invalid payload with the same INVALID_VALUE and BAD_REQUEST codes.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $message the message Square returned
+	 * @return bool
+	 */
+	protected function is_stale_options_cache_error( $message ) {
+
+		foreach ( array( 'already exists', 'existing item option' ) as $needle ) {
+			if ( false !== stripos( $message, $needle ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * Folds one item option into the finished options cache.
+	 *
+	 * Callers here hold a single option they just read or created, not a walked catalogue, so the
+	 * cache is only ever extended, never built: writing one from an unlooped read would pass off
+	 * the first page of a paginated catalogue as the whole of it, for a day. With no cache to
+	 * extend there is nothing to do and the next full read is left to build it.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $option_id   Square item option ID.
+	 * @param array  $option_data Cache entry for the option.
+	 * @return void
+	 */
+	public function cache_option_data( $option_id, array $option_data ) {
+
+		if ( ! $option_id ) {
+			return;
+		}
+
+		$options_data = get_transient( 'wc_square_options_data' );
+
+		if ( ! is_array( $options_data ) ) {
+			return;
+		}
+
+		$options_data[ $option_id ] = $option_data;
+		set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 	}
 
 	/**
@@ -676,9 +769,37 @@ class API extends Base {
 		$options_value_data = array();
 
 		if ( $option_id ) {
-			$response = $this->retrieve_catalog_object( $option_id );
-			$option   = $response->get_data()->getObject();
+			$option = null;
 
+			try {
+				$response = $this->retrieve_catalog_object( $option_id );
+				$option   = $response->get_data() ? $response->get_data()->getObject() : null;
+			} catch ( \Exception $e ) {
+				// Square answers a deleted or unknown ID with NOT_FOUND, and the response validator
+				// turns that into an exception before any data comes back, so the null check below
+				// never gets the chance to see it. Without this the whole method gives up on a
+				// stale cached ID, no refresh flag is set, and every sync fails the same way until
+				// the cache expires a day later.
+				//
+				// Narrowed to that one code deliberately, and matched in the bracketed form
+				// do_post_parse_response_validation() emits so it cannot be tripped by another
+				// error quoting those words in its detail text. Reading a RATE_LIMITED or an auth
+				// failure as "no such option" would create a duplicate of an option Square still
+				// holds, and would swallow the rate limit the job runner needs in order to back off.
+				if ( false === strpos( $e->getMessage(), '[NOT_FOUND]' ) ) {
+					throw $e;
+				}
+			}
+
+			// A cached option ID can name an object Square no longer has, or one that is not an
+			// item option at all. Treat that as no match and fall through to the create path,
+			// rather than calling setValues() on a null item option and taking the sync down.
+			if ( ! $option || 'ITEM_OPTION' !== $option->getType() || ! $option->getItemOptionData() ) {
+				$option_id = false;
+			}
+		}
+
+		if ( $option_id ) {
 			// Filter out the existing option values from the attribute values.
 			$square_existing_option_objects = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 			$options_value_data             = $square_existing_option_objects;
@@ -687,7 +808,10 @@ class API extends Base {
 			foreach ( $square_existing_option_objects as $option_object ) {
 				$square_existing_option_values[] = $option_object->getItemOptionValueData()->getName();
 			}
-			$attribute_option_values = array_diff( $attribute_option_values, $square_existing_option_values );
+			// Compared without case for the same reason the option name is: Square rejects a value
+			// whose name differs from an existing one only by case, so a case sensitive diff would
+			// ask for a value that can never be created.
+			$attribute_option_values = array_udiff( $attribute_option_values, $square_existing_option_values, 'strcasecmp' );
 		} else {
 			// Initialize the option object with a temp ID prefixed with #.
 			$option = new \Square\Models\CatalogObject( 'ITEM_OPTION', '' );
@@ -719,8 +843,25 @@ class API extends Base {
 
 			$id_mappings = $new_option->get_data()->getIdMappings();
 
-			if ( isset( $id_mappings[0] ) ) {
-				$option_id = $id_mappings[0]->getObjectId();
+			// Resolved on the create path only, and never positionally. The upsert reports a mapping
+			// for every object it created, so when an option that already existed merely gained a
+			// value, the first row is that new ITEM_OPTION_VAL and the option has no row at all.
+			// Index 0 therefore hands back a value ID, which travels on into the item's item_options
+			// and kills the following sync with "An existing Item Option has name X". On the reuse
+			// path $option_id is already the real ID Square gave us, so the mappings add nothing and
+			// must not be allowed to overwrite it.
+			if ( ! $option_id ) {
+				// The option went up under the temp ID set above, and that is the client ID Square
+				// echoes back alongside the real one. It is empty only when no attribute name was
+				// supplied, and there is nothing to correlate on then: guessing a row is the bug.
+				$client_option_id = $option->getId();
+
+				foreach ( (array) $id_mappings as $id_mapping ) {
+					if ( $client_option_id && $client_option_id === $id_mapping->getClientObjectId() ) {
+						$option_id = $id_mapping->getObjectId();
+						break;
+					}
+				}
 			}
 
 			$response = $this->retrieve_catalog_object( $option_id );
@@ -735,28 +876,42 @@ class API extends Base {
 				$option_values[]    = $option_value->getItemOptionValueData()->getName();
 			}
 
-			$result       = $this->retrieve_options_data();
-			$options_data = isset( $result[1] ) ? $result[1] : array();
-
-			$options_data[ $option_id ] = array(
-				'name'      => $attribute_name,
-				'values'    => $option_values,
-				'value_ids' => array_combine( $option_value_ids, $option_values ),
+			$this->cache_option_data(
+				$option_id,
+				array(
+					'name'      => $attribute_name,
+					'values'    => $option_values,
+					'value_ids' => array_combine( $option_value_ids, $option_values ),
+				)
 			);
-			set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
 
 		} catch ( \Exception $e ) {
 			/**
-			 * if we encounter an error, mostly it would be because Option or its Value
-			 * already exists in Square. In such case, we need to refetch the latest data
-			 * and restart the Runner Job using `woocommerce_square_refresh_sync_cycle` option.
-			 * This is required to reactivate `fetch_all_options` step to get the latest data.
+			 * Replaying the whole job only helps when Square rejected this because the option or
+			 * value already exists, which means the cached options data is stale: refetching it and
+			 * running the cycle again resolves it.
+			 *
+			 * Any other rejection is permanent. An option payload Square considers invalid, such as
+			 * a value with no name because a variation attribute has no values selected, fails
+			 * identically on every replay, so asking for one burns the retry budget and then fails
+			 * the whole sync over one product. Leaving the flag alone lets the caller's own error
+			 * handling skip that product and carry on.
 			 */
-			update_option( 'woocommerce_square_refresh_sync_cycle', true );
-			delete_transient( 'wc_square_options_data' );
+			if ( $this->is_stale_options_cache_error( $e->getMessage() ) ) {
+				update_option( 'woocommerce_square_refresh_sync_cycle', true );
 
-			// Log the error and throw it.
-			wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );
+				wc_square()->log( sprintf( 'Resetting the Sync Job. Failed to create option in Square: %s. The system will refetch latest Options from Square.', $e->getMessage() ) );
+			} else {
+				wc_square()->log( sprintf( 'Failed to create option in Square: %s. Not replaying the job: this does not indicate stale options data.', $e->getMessage() ) );
+			}
+
+			// Refetched next time round either way, since the cache may be incomplete.
+			delete_transient( 'wc_square_options_data' );
+			// Cleared alongside the finished cache. A walk abandoned by this reset has no reader
+			// left, and leaving its pages behind would only give the writes below somewhere stale
+			// to land until the next walk overwrites it.
+			delete_transient( self::OPTIONS_DATA_PARTIAL_TRANSIENT );
+
 			throw $e;
 		}
 
