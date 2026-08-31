@@ -229,7 +229,7 @@ class Background_Job extends Background_Job_Handler {
 	 * the shutdown handler registered in handle()) keeps mutating, and replacing it would strand
 	 * those references.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $job_id job ID
 	 * @return bool
@@ -383,7 +383,7 @@ class Background_Job extends Background_Job_Handler {
 	 * site still exercises, so use them as a fallback trigger. Throttled to once per five minutes
 	 * and restricted to users who can manage WooCommerce.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 */
 	public function maybe_recover_stuck_sync_from_admin() {
 
@@ -420,7 +420,7 @@ class Background_Job extends Background_Job_Handler {
 	 * scheduled wc_square_job_runner actions are left alone so other queued sync jobs keep
 	 * processing. A flag is stored so the admin notice can prompt a re-run.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @return bool whether a stalled job was failed by this call
 	 */
@@ -447,7 +447,7 @@ class Background_Job extends Background_Job_Handler {
 		 * Filters how long (in seconds) a sync job may sit in "processing" without any step activity
 		 * before it is treated as stalled and automatically recovered.
 		 *
-		 * @since x.x.x
+		 * @since 5.5.0
 		 *
 		 * Note when lowering this: Action Scheduler stamps a runner action's last attempt time once,
 		 * when the worker picks it up, and does not refresh it while the step runs. A threshold below
@@ -531,7 +531,7 @@ class Background_Job extends Background_Job_Handler {
 			 * stall threshold: with both at their defaults a paused queue is left alone for 15
 			 * minutes and a genuinely dead one is failed after 20, not 30.
 			 *
-			 * @since x.x.x
+			 * @since 5.5.0
 			 *
 			 * @param int $grace_period grace period in seconds (default a third of the stall threshold)
 			 */
@@ -597,7 +597,7 @@ class Background_Job extends Background_Job_Handler {
 	 * because only Action Scheduler's own cleaner clears it. Treating that as "the queue will run"
 	 * would both grant a dead queue a grace window and stop the queue ever being restarted.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @return bool
 	 */
@@ -624,7 +624,7 @@ class Background_Job extends Background_Job_Handler {
 	/**
 	 * Clears the stalled sync grace marker.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 */
 	protected function clear_recovery_grace() {
 
@@ -640,7 +640,7 @@ class Background_Job extends Background_Job_Handler {
 	 * state and older than a filterable retention window. Never touches pending or in-progress
 	 * actions, and does not change Action Scheduler's own timeout handling.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 */
 	protected function cleanup_stale_failed_actions() {
 
@@ -657,7 +657,7 @@ class Background_Job extends Background_Job_Handler {
 		/**
 		 * Filters how many days a failed Square action is retained before automatic cleanup.
 		 *
-		 * @since x.x.x
+		 * @since 5.5.0
 		 *
 		 * @param int $days retention in days (default 30)
 		 */
@@ -672,7 +672,7 @@ class Background_Job extends Background_Job_Handler {
 			/**
 			 * Filters how many failed actions are deleted per cleanup batch.
 			 *
-			 * @since x.x.x
+			 * @since 5.5.0
 			 *
 			 * @param int $batch_size actions per batch (default 200)
 			 */

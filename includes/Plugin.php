@@ -684,7 +684,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * `wc_square_idempotency_key` filter strips the input suffix. Callers must treat
 	 * null as "no match" and generate a fresh key.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $idempotency_key full idempotency key as returned by get_idempotency_key()
 	 * @return string|null 32-character md5 body hash, or null if not parseable
@@ -719,7 +719,7 @@ class Plugin extends Payment_Gateway_Plugin {
 	 * with a different body (Square rejects it with IDEMPOTENCY_KEY_REUSED). The previous
 	 * key embeds the hash of the body it was created for, so body equality decides reuse.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string|null $previous_key key stored by an earlier failed attempt, if any
 	 * @param string $body_hash md5 hash of the serialized current request body
