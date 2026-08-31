@@ -72,7 +72,7 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 
 == Changelog ==
 
-= 5.5.0 - 2026-08-27 =
+= 5.5.0 - 2026-08-31 =
 * Fix - Prevent product sync from getting stuck when a product set to sync with Square is deleted.
 * Fix - Automatically detect and recover a background sync job stuck in processing, unblock the sync queue, show an admin notice prompting a re run, and prune old failed scheduler actions.
 * Fix - Skip products that Square rejects during a sync instead of failing the whole sync, and report the name, SKU and reason for each skipped product.
