@@ -784,6 +784,23 @@ class Settings extends \WC_Settings_API {
 
 
 	/**
+	 * Gets the URL of the Square Web Payments SDK (square.js) for the current
+	 * environment. Shared so the checkout gateways and the settings preview all
+	 * load the same CDN URL from one place.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string
+	 */
+	public function get_square_js_url() {
+
+		return $this->is_sandbox()
+			? 'https://sandbox.web.squarecdn.com/v1/square.js'
+			: 'https://web.squarecdn.com/v1/square.js';
+	}
+
+
+	/**
 	 * Determines if debug logging is enabled.
 	 *
 	 * @since 2.0.0

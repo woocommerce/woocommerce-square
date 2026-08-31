@@ -113,6 +113,39 @@ class Payments_Square_Hub {
 	}
 
 	/**
+	 * Redirects modern Square hub URLs to the legacy Square settings tab.
+	 *
+	 * Only hooked when the modern-settings path is inactive (WC < 11.0 or the
+	 * feature flag is off). In that state the hub section is not registered, so
+	 * ?tab=checkout&section=square renders an empty screen. Any such request
+	 * (including specific square-tab sub-tabs) is sent to the legacy Square tab.
+	 *
+	 * @since x.x.x
+	 */
+	public static function redirect_modern_hub_to_legacy(): void {
+		// Never redirect AJAX requests or users who cannot manage WooCommerce.
+		if ( wp_doing_ajax() || ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
+			return;
+		}
+
+		if ( ! self::is_square_payments_hub() ) {
+			return;
+		}
+
+		// nosemgrep audit.php.wp.security.xss.query-arg
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page' => 'wc-settings',
+					'tab'  => Plugin::PLUGIN_ID,
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
 	 * Returns the URL for the Square hub (or a specific sub-tab).
 	 *
 	 * @since x.x.x

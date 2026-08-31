@@ -100,6 +100,10 @@ class Admin {
 					return $pages;
 				}
 			);
+
+			// Redirect modern-hub URLs (?tab=checkout&section=square) to the legacy
+			// Square tab so links to the redesigned screens don't hit an empty section.
+			add_action( 'admin_init', array( Admin\Payments_Square_Hub::class, 'redirect_modern_hub_to_legacy' ) );
 		}
 
 		// load admin scripts.
