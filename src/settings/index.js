@@ -86,6 +86,9 @@ registerSettingsExtension( {
 		// screen, so a field that comes back keeps the merchant's prior choice.
 		enable_inventory_sync: ( { values } ) => isProductSyncActive( values ),
 		sync_interval: ( { values } ) => isProductSyncActive( values ),
+		// The manual import heading and its button are one sub-section.
+		square_import_products_header: ( { values } ) =>
+			isProductSyncActive( values ),
 		square_import_products: ( { values } ) => isProductSyncActive( values ),
 		// These two only ever applied when Square is the system of record.
 		override_product_images: ( { values } ) =>
