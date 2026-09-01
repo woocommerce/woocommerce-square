@@ -14,8 +14,33 @@ const GENERAL_FIELDS = new Set( [
 	'sandbox_token',
 ] );
 
+// Payments & Transactions tab fields that live in the main Square settings
+// option. Routed to the settings endpoint like GENERAL_FIELDS, but kept
+// separate because they must not trigger the credentials-change page reload.
+const PT_SETTINGS_FIELDS = new Set( [ 'enable_customer_decline_messages' ] );
+
 // Cash App "Customize" sub-page fields routed to the Cash App endpoint.
 const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
+
+// Payments & Transactions tab Cash App fields. Keys are the SDK field ids
+// (namespaced to avoid colliding with the Credit Card fields on the same
+// page); values are the REST param names on the Cash App controller.
+const CASH_APP_TRANSACTION_FIELDS = {
+	cashapp_title: 'title',
+	cashapp_description: 'description',
+	cashapp_transaction_type: 'transaction_type',
+};
+
+// Payments & Transactions tab Credit Card fields, mapped to the REST param
+// names on the payment_settings (Credit Card gateway) controller.
+const CREDIT_CARD_FIELDS = {
+	cc_title: 'title',
+	cc_description: 'description',
+	cc_transaction_type: 'transaction_type',
+	cc_charge_virtual_orders: 'charge_virtual_orders',
+	cc_enable_paid_capture: 'enable_paid_capture',
+	cc_tokenization: 'tokenization',
+};
 
 // Digital wallet "Customize" fields routed to the Credit Card gateway option
 // via the payment_settings controller. Keys are the SDK field ids; the field id
@@ -55,6 +80,13 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 		if ( ! payloads[ endpoint ] ) {
 			payloads[ endpoint ] = {};
 		}
+		// Native SDK checkboxes emit booleans, but every Square option store
+		// persists WooCommerce-style 'yes'/'no' strings and is read back with
+		// strict 'yes' comparisons on the legacy pages. Normalise here so a
+		// checkbox saved from the modern UI stays legible to the legacy code.
+		if ( typeof val === 'boolean' ) {
+			val = val ? 'yes' : 'no';
+		}
 		payloads[ endpoint ][ key ] = val;
 	};
 
@@ -63,12 +95,16 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	const gatewayPuts = [];
 
 	for ( const [ key, val ] of Object.entries( changedValues ) ) {
-		if ( GENERAL_FIELDS.has( key ) ) {
+		if ( GENERAL_FIELDS.has( key ) || PT_SETTINGS_FIELDS.has( key ) ) {
 			add( ENDPOINTS.settings, key, val );
 		} else if ( CASH_APP_FIELDS.has( key ) ) {
 			add( ENDPOINTS.cashApp, key, val );
+		} else if ( key in CASH_APP_TRANSACTION_FIELDS ) {
+			add( ENDPOINTS.cashApp, CASH_APP_TRANSACTION_FIELDS[ key ], val );
 		} else if ( key in DIGITAL_WALLET_FIELDS ) {
 			add( ENDPOINTS.paymentSettings, DIGITAL_WALLET_FIELDS[ key ], val );
+		} else if ( key in CREDIT_CARD_FIELDS ) {
+			add( ENDPOINTS.paymentSettings, CREDIT_CARD_FIELDS[ key ], val );
 		} else if ( key in GATEWAY_ENABLE_FIELDS ) {
 			gatewayPuts.push( {
 				id: GATEWAY_ENABLE_FIELDS[ key ],
