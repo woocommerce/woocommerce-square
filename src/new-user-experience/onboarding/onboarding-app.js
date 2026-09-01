@@ -232,8 +232,10 @@ export const OnboardingApp = () => {
 									recordEvent(
 										ONBOARDING_TRACK_EVENTS.SAVE_DIGITAL_WALLET_SETTINGS,
 										{
-											digital_wallets_hide_button_options:
-												paymentGatewaySettings.digital_wallets_hide_button_options,
+											digital_wallets_google_pay_enabled:
+												paymentGatewaySettings.digital_wallets_google_pay_enabled,
+											digital_wallets_apple_pay_enabled:
+												paymentGatewaySettings.digital_wallets_apple_pay_enabled,
 										}
 									);
 									setStep( 'payment-complete' );

@@ -179,7 +179,7 @@ jQuery( document ).ready( ( $ ) => {
 				this.googlePay
 					.attach( '#wc-square-google-pay', {
 						buttonSizeMode: 'fill',
-						buttonType: 'long',
+						buttonType: this.args.google_pay_type || 'long',
 						buttonColor: this.args.google_pay_color,
 					} )
 					.then( () => {

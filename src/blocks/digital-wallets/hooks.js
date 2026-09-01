@@ -133,7 +133,8 @@ export function useGooglePay( payments, paymentRequest ) {
 					.attach( googlePayRef.current, {
 						buttonColor: getSquareServerData().googlePayColor,
 						buttonSizeMode: 'fill',
-						buttonType: 'long',
+						buttonType:
+							getSquareServerData().googlePayType || 'long',
 					} )
 					.then( () => {
 						// Append 'opens in a new window' to the aria-label of the Google Pay button.

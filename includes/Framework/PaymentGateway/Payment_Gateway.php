@@ -239,7 +239,19 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string configuration option: whether digital wallets is enabled. */
 	protected $enable_digital_wallets;
 
-	/** @var string configuration option: button type: Buy Now | Donate | No Text. */
+	/** @var string configuration option: whether Google Pay is enabled. */
+	protected $digital_wallets_google_pay_enabled;
+
+	/** @var string configuration option: whether Apple Pay is enabled. */
+	protected $digital_wallets_apple_pay_enabled;
+
+	/** @var string configuration option: Google Pay button type (long|short). */
+	protected $digital_wallets_google_pay_button_type;
+
+	/** @var string configuration option: Apple Pay button type (buy|donate|plain). */
+	protected $digital_wallets_apple_pay_button_type;
+
+	/** @var string configuration option: legacy shared button type (superseded by apple pay button type). */
 	protected $digital_wallets_button_type;
 
 	/** @var string configuration option: button color for Apply Pay. */
@@ -248,7 +260,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	/** @var string configuration option: button color for Google Pay. */
 	protected $digital_wallets_google_pay_button_color;
 
-	/** @var array configuration option: list of buttons that are hidden on the front end. */
+	/** @var array configuration option: list of buttons that are hidden on the front end (superseded). */
 	protected $digital_wallets_hide_button_options;
 
 	/** @var string configuration option: whether gift cards is enabled. */

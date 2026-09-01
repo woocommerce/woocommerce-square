@@ -28,7 +28,9 @@ test.beforeAll( 'Setup', async ( { baseURL } ) => {
 test( 'Verify the Digital Wallet Button type and color settings @general', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
 	await page.getByTestId( 'digital-wallet-gateway-toggle-field' ).check();
+	await page.getByTestId( 'digital-wallet-google-pay-enabled-field' ).check();
 	await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ).selectOption( { value: 'black' } );
+	await page.getByTestId( 'digital-wallet-google-pay-button-type-field' ).selectOption( { value: 'long' } );
 	await savePaymentGatewaySettings( page );
 
 	await page.goto( '/simple-product/' );
@@ -36,6 +38,7 @@ test( 'Verify the Digital Wallet Button type and color settings @general', async
 
 	await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=checkout&section=square_credit_card' );
 	await page.getByTestId( 'digital-wallet-gateway-toggle-field' ).check();
+	await page.getByTestId( 'digital-wallet-google-pay-enabled-field' ).check();
 	await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ).selectOption( { value: 'white' } );
 	await savePaymentGatewaySettings( page );
 
