@@ -236,6 +236,13 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ?? '' ) );
 		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ?? '' ) );
 
+		// Reschedule the background sync when the interval changed. The legacy
+		// screen gets this from the woocommerce_settings_api_sanitized_fields_square
+		// filter, which never fires on the REST path, so it has to be done here.
+		// Called before the option is written because it compares the incoming
+		// values against the stored ones.
+		wc_square()->get_settings_handler()->maybe_change_sync_interval( $settings );
+
 		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
 		// Need to reload the new settings as the settings are cached
