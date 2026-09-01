@@ -137,6 +137,31 @@
 	margin: 0;
 }
 
+/* A payment method locked by a disabled dependency (digital wallets while the
+   Credit/debit card gateway is off) is greyed out so it no longer reads as
+   independently toggleable, and its note makes the row taller than the others,
+   so the row top-aligns to keep the icon and toggle on the title line. */
+.wc-square-payment-methods-list__row--locked {
+	align-items: flex-start;
+}
+
+.wc-square-payment-methods-list__row--locked .wc-square-payment-methods-list__row-icon,
+.wc-square-payment-methods-list__row--locked .wc-square-payment-methods-list__row-title,
+.wc-square-payment-methods-list__row--locked .wc-square-payment-methods-list__row-description,
+.wc-square-payment-methods-list__row--locked .wc-square-payment-methods-list__row-actions {
+	opacity: 0.5;
+}
+
+/* The dependency note keeps full contrast so the explanation stays readable. */
+.wc-square-payment-methods-list__row-note {
+	font-size: 12px;
+	color: #1e1e1e;
+	background: #fcf9e8;
+	border-left: 3px solid #dba617;
+	padding: 6px 8px;
+	margin: 8px 0 0;
+}
+
 .wc-square-payment-methods-list__row-actions {
 	display: flex;
 	flex-direction: row;
