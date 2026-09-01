@@ -33,17 +33,20 @@ const normalise = ( value ) => {
  * button is disabled while the form has unsaved changes, because the import runs
  * against the stored settings, not the ones on screen.
  *
+ * The heading and the explanation above the button come from the preceding
+ * square/section-header field, per the Figma design, so this renders the button
+ * and its result states only.
+ *
  * The legacy "View Progress" link is intentionally not rendered: it points at
  * the sync records screen (?tab=square&section=update), which the modern hub
  * redirects away from. The legacy component already supports this via its
  * showViewProgressButton prop.
  *
  * @param {Object} props
- * @param {Object} props.field         SDK field descriptor (id + label).
  * @param {Object} props.values        All current form values.
  * @param {Object} props.initialValues Form values as first rendered.
  */
-export default function ImportProducts( { field, values, initialValues } ) {
+export default function ImportProducts( { values, initialValues } ) {
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ isImporting, setIsImporting ] = useState( false );
 	const [ updateDuringImport, setUpdateDuringImport ] = useState( false );
@@ -55,18 +58,6 @@ export default function ImportProducts( { field, values, initialValues } ) {
 			normalise( values[ key ] ) !==
 			normalise( ( initialValues || {} )[ key ] )
 	);
-
-	const isSquare = values?.system_of_record === 'square';
-
-	const description = isSquare
-		? __(
-				'Use this to bring new products from Square into WooCommerce. This is different from "Sync Now" which only updates products that are already synced.',
-				'woocommerce-square'
-		  )
-		: __(
-				'Use this to bring products from Square into WooCommerce.',
-				'woocommerce-square'
-		  );
 
 	const runImport = async () => {
 		setIsImporting( true );
@@ -109,10 +100,6 @@ export default function ImportProducts( { field, values, initialValues } ) {
 
 	return (
 		<div className="wc-square-import-products">
-			<span className="wc-square-import-products__label">
-				{ field?.label ?? '' }
-			</span>
-
 			{ ! notice && (
 				<Button
 					variant="secondary"
@@ -121,15 +108,11 @@ export default function ImportProducts( { field, values, initialValues } ) {
 					onClick={ () => setIsOpen( true ) }
 				>
 					{ __(
-						'Import all Products from Square',
+						'Import all products to WooCommerce',
 						'woocommerce-square'
 					) }
 				</Button>
 			) }
-
-			<p className="wc-square-import-products__description">
-				{ description }
-			</p>
 
 			{ isDirty && (
 				<p className="wc-square-import-products__hint">
