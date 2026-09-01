@@ -270,3 +270,68 @@
 .wc-square-cashapp-preview__logo {
 	flex-shrink: 0;
 }
+
+/* Synchronize Square tab ------------------------------------------------- */
+
+/* Inventory synchronization toggle. The help text sits under the checkbox and
+   matches the native checkbox `help` rendering, since the copy has to be picked
+   client-side from the current system of record. */
+.wc-square-sync-inventory__description {
+	color: #757575;
+	font-size: 13px;
+	line-height: 20px;
+	margin: 4px 0 0 24px;
+}
+
+.wc-square-sync-inventory__description p {
+	margin: 0;
+}
+
+/* Manual product import action. Mirrors the SDK field label + help styling so
+   the action reads as one more row in the card. */
+.wc-square-import-products__label {
+	color: #757575;
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	line-height: 16px;
+	margin: 0 0 8px;
+	text-transform: uppercase;
+}
+
+.wc-square-import-products__description,
+.wc-square-import-products__hint,
+.wc-square-import-products__notice,
+.wc-square-import-products__error {
+	font-size: 13px;
+	line-height: 20px;
+	margin: 8px 0 0;
+}
+
+.wc-square-import-products__description,
+.wc-square-import-products__hint {
+	color: #757575;
+}
+
+.wc-square-import-products__notice {
+	color: #1e1e1e;
+	background: #f0f6fc;
+	border-left: 3px solid #3858e9;
+	padding: 8px 12px;
+}
+
+.wc-square-import-products__error {
+	color: #1e1e1e;
+	background: #fcf0f1;
+	border-left: 3px solid #d63638;
+	padding: 8px 12px;
+}
+
+/* Import confirmation modal. */
+.wc-square-import-modal__actions {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	margin-top: 24px;
+}
