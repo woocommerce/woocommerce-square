@@ -273,34 +273,9 @@
 
 /* Synchronize Square tab ------------------------------------------------- */
 
-/* Inventory synchronization toggle. The help text sits under the checkbox and
-   matches the native checkbox `help` rendering, since the copy has to be picked
-   client-side from the current system of record. */
-.wc-square-sync-inventory__description {
-	color: #757575;
-	font-size: 13px;
-	line-height: 20px;
-	margin: 4px 0 0 24px;
-}
-
-.wc-square-sync-inventory__description p {
-	margin: 0;
-}
-
-/* Manual product import action. Mirrors the SDK field label + help styling so
-   the action reads as one more row in the card. */
-.wc-square-import-products__label {
-	color: #757575;
-	display: block;
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.2px;
-	line-height: 16px;
-	margin: 0 0 8px;
-	text-transform: uppercase;
-}
-
-.wc-square-import-products__description,
+/* Manual product import action. The heading and the explanation above the
+   button are rendered by the preceding square/section-header field, so only the
+   button and its result states are styled here. */
 .wc-square-import-products__hint,
 .wc-square-import-products__notice,
 .wc-square-import-products__error {
@@ -309,7 +284,6 @@
 	margin: 8px 0 0;
 }
 
-.wc-square-import-products__description,
 .wc-square-import-products__hint {
 	color: #757575;
 }
