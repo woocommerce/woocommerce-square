@@ -7,7 +7,6 @@ import DigitalWalletToggle from './payment-methods/digital-wallet-toggle';
 import HiddenField from './payment-methods/hidden-field';
 import CashAppButtonPreview from './cash-app/button-preview';
 import DigitalWalletPreview from './digital-wallets/preview';
-import SyncInventoryToggle from './synchronize/sync-inventory-toggle';
 import ImportProducts from './synchronize/import-products';
 import squareSaveHandler from './save-handler';
 
@@ -60,7 +59,6 @@ registerSettingsExtension( {
 		'square/hidden-field': HiddenField,
 		'square/cash-app-button-preview': CashAppButtonPreview,
 		'square/digital-wallet-preview': DigitalWalletPreview,
-		'square/sync-inventory-toggle': SyncInventoryToggle,
 		'square/import-products': ImportProducts,
 	},
 	fieldVisibility: {
