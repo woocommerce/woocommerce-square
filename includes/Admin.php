@@ -88,16 +88,19 @@ class Admin {
 	 */
 	private function add_hooks() {
 
-		// add the settings page.
-		add_filter(
-			'woocommerce_get_settings_pages',
-			function ( $pages ) {
-
-				$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
-
-				return $pages;
-			}
-		);
+		if ( $this->get_plugin()->is_modern_settings_path_active() ) {
+			// Modern path: hub under WooCommerce > Settings > Payments > Square.
+			Admin\Payments_Square_Hub::init();
+		} else {
+			// Legacy path: top-level WooCommerce > Settings > Square tab.
+			add_filter(
+				'woocommerce_get_settings_pages',
+				function ( $pages ) {
+					$pages[] = new Admin\Settings_Page( $this->get_plugin()->get_settings_handler() );
+					return $pages;
+				}
+			);
+		}
 
 		// load admin scripts.
 		add_action(
@@ -173,112 +176,151 @@ class Admin {
 				)
 			);
 		} elseif ( $this->get_plugin()->is_plugin_settings() ) {
-			wp_enqueue_style(
-				'wc-square-admin',
-				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',
-				array(),
-				Plugin::VERSION
-			);
+			$is_modern_square_hub = $this->get_plugin()->is_modern_settings_path_active()
+				&& Admin\Payments_Square_Hub::is_square_payments_hub();
 
-			wp_enqueue_media();
+			if ( ! $is_modern_square_hub ) {
+				wp_enqueue_style(
+					'wc-square-admin',
+					$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin.css',
+					array(),
+					Plugin::VERSION
+				);
 
-			wp_enqueue_script(
-				'wc-square-admin-settings',
-				$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-settings.js',
-				array( 'jquery', 'jquery-blockui', 'backbone', 'wc-backbone-modal' ),
-				Plugin::VERSION,
-				true
-			);
+				wp_enqueue_media();
 
-			$sync_job = $this->get_plugin()->get_sync_handler()->get_job_in_progress();
+				wp_enqueue_script(
+					'wc-square-admin-settings',
+					$this->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-admin-settings.js',
+					array( 'jquery', 'jquery-blockui', 'backbone', 'wc-backbone-modal' ),
+					Plugin::VERSION,
+					true
+				);
 
-			if ( $sync_job ) {
-				$existing_sync_id = $sync_job->id;
-			} else {
-				$existing_sync_id = false;
-			}
+				$sync_job = $this->get_plugin()->get_sync_handler()->get_job_in_progress();
 
-			wp_localize_script(
-				'wc-square-admin-settings',
-				'wc_square_admin_settings',
-				array(
-					'ajax_url'                          => admin_url( 'admin-ajax.php' ),
-					'is_product_sync_enabled'           => $this->get_plugin()->get_settings_handler()->is_product_sync_enabled(),
-					'is_woocommerce_sor'                => $this->get_plugin()->get_settings_handler()->is_system_of_record_woocommerce(),
-					'is_square_sor'                     => $this->get_plugin()->get_settings_handler()->is_system_of_record_square(),
-					'is_inventory_sync_enabled'         => $this->get_plugin()->get_settings_handler()->is_inventory_sync_enabled(),
-					'is_sandbox'                        => $this->get_plugin()->get_settings_handler()->is_sandbox(),
-					'existing_sync_job_id'              => $existing_sync_id,
-					'import_products_from_square'       => wp_create_nonce( 'import-products-from-square' ),
-					'sync_products_with_square'         => wp_create_nonce( 'sync-products-with-square' ),
-					'get_sync_with_square_status_nonce' => wp_create_nonce( 'get-sync-with-square-status' ),
-					'handle_sync_with_square_records'   => wp_create_nonce( 'handle-sync-with-square-records' ),
-					'i18n'                              => array(
-						'resolved'                   => __( 'Resolved', 'woocommerce-square' ),
-						'no_records_found'           => __( 'No records found', 'woocommerce-square' ),
-						'skipped'                    => __( 'Skipped', 'woocommerce-square' ),
-						'updated'                    => __( 'Updated', 'woocommerce-square' ),
-						'imported'                   => __( 'Imported', 'woocommerce-square' ),
-						'sync_inventory_label'       => array(
-							'square'      => __( 'Enable to fetch inventory changes from Square', 'woocommerce-square' ),
-							'woocommerce' => __( 'Enable to push inventory changes to Square', 'woocommerce-square' ),
-						),
-						'sync_inventory_description' => array(
-							'square'      => __( 'Inventory is fetched from Square periodically and updated in WooCommerce', 'woocommerce-square' ),
-							'woocommerce' => sprintf(
-								/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag */
-								__( 'Inventory is %1$salways fetched from Square%2$s periodically to account for sales from other channels.', 'woocommerce-square' ),
-								'<strong>',
-								'</strong>'
+				if ( $sync_job ) {
+					$existing_sync_id = $sync_job->id;
+				} else {
+					$existing_sync_id = false;
+				}
+
+				wp_localize_script(
+					'wc-square-admin-settings',
+					'wc_square_admin_settings',
+					array(
+						'ajax_url'                        => admin_url( 'admin-ajax.php' ),
+						'is_product_sync_enabled'         => $this->get_plugin()->get_settings_handler()->is_product_sync_enabled(),
+						'is_woocommerce_sor'              => $this->get_plugin()->get_settings_handler()->is_system_of_record_woocommerce(),
+						'is_square_sor'                   => $this->get_plugin()->get_settings_handler()->is_system_of_record_square(),
+						'is_inventory_sync_enabled'       => $this->get_plugin()->get_settings_handler()->is_inventory_sync_enabled(),
+						'is_sandbox'                      => $this->get_plugin()->get_settings_handler()->is_sandbox(),
+						'existing_sync_job_id'            => $existing_sync_id,
+						'import_products_from_square'     => wp_create_nonce( 'import-products-from-square' ),
+						'sync_products_with_square'       => wp_create_nonce( 'sync-products-with-square' ),
+						'get_sync_with_square_status_nonce' => wp_create_nonce( 'get-sync-with-square-status' ),
+						'handle_sync_with_square_records' => wp_create_nonce( 'handle-sync-with-square-records' ),
+						'i18n'                            => array(
+							'resolved'                   => __( 'Resolved', 'woocommerce-square' ),
+							'no_records_found'           => __( 'No records found', 'woocommerce-square' ),
+							'skipped'                    => __( 'Skipped', 'woocommerce-square' ),
+							'updated'                    => __( 'Updated', 'woocommerce-square' ),
+							'imported'                   => __( 'Imported', 'woocommerce-square' ),
+							'sync_inventory_label'       => array(
+								'square'      => __( 'Enable to fetch inventory changes from Square', 'woocommerce-square' ),
+								'woocommerce' => __( 'Enable to push inventory changes to Square', 'woocommerce-square' ),
+							),
+							'sync_inventory_description' => array(
+								'square'      => __( 'Inventory is fetched from Square periodically and updated in WooCommerce', 'woocommerce-square' ),
+								'woocommerce' => sprintf(
+									/* translators: Placeholders: %1$s - <strong> tag, %2$s - </strong> tag */
+									__( 'Inventory is %1$salways fetched from Square%2$s periodically to account for sales from other channels.', 'woocommerce-square' ),
+									'<strong>',
+									'</strong>'
+								),
 							),
 						),
-					),
-				)
-			);
-
-			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/settings.asset.php';
-
-			if ( ! file_exists( $asset_file ) ) {
-				return;
+					)
+				);
 			}
 
-			$asset = include $asset_file;
+			if ( $this->get_plugin()->is_modern_settings_path_active() ) {
+				// Modern path: register the SDK extension bundle so the SDK can enqueue it
+				// via Square_Modern_Settings_Page::get_script_handles().
+				$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/square-settings.asset.php';
+				if ( file_exists( $asset_file ) ) {
+					$asset = include $asset_file;
+					wp_register_script(
+						'woocommerce-square-settings',
+						WC_SQUARE_PLUGIN_URL . 'build/square-settings.js',
+						$asset['dependencies'],
+						$asset['version'],
+						array( 'in_footer' => true )
+					);
 
-			wp_enqueue_script(
-				'woocommerce-square-settings-js',
-				WC_SQUARE_PLUGIN_URL . 'build/settings.js',
-				$asset['dependencies'],
-				$asset['version'],
-				array(
-					'in_footer' => true,
-				)
-			);
+					if ( $is_modern_square_hub ) {
+						// Version the stylesheet by its own build hash so CSS-only
+						// changes bust the cache (the square-settings.js hash above
+						// does not change when only modern-hub.css changes).
+						$style_asset_file = WC_SQUARE_PLUGIN_PATH . 'build/modern-hub.asset.php';
+						$style_version    = file_exists( $style_asset_file )
+							? ( include $style_asset_file )['version']
+							: $asset['version'];
 
-			$gift_card_placeholder_url = Products::get_gift_card_default_placeholder_url();
+						wp_enqueue_style(
+							'woocommerce-square-modern-hub',
+							WC_SQUARE_PLUGIN_URL . 'build/modern-hub.css',
+							array(),
+							$style_version
+						);
+					}
+				}
+			} elseif ( ! $is_modern_square_hub ) {
+				// Legacy path: enqueue the standalone React settings app.
+				$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/settings.asset.php';
 
-			if ( empty( $gift_card_placeholder_url ) ) {
-				$gift_card_placeholder_url = WC_SQUARE_PLUGIN_URL . 'build/images/gift-card-featured-image.png';
+				if ( ! file_exists( $asset_file ) ) {
+					return;
+				}
+
+				$asset = include $asset_file;
+
+				wp_enqueue_script(
+					'woocommerce-square-settings-js',
+					WC_SQUARE_PLUGIN_URL . 'build/settings.js',
+					$asset['dependencies'],
+					$asset['version'],
+					array(
+						'in_footer' => true,
+					)
+				);
+
+				$gift_card_placeholder_url = Products::get_gift_card_default_placeholder_url();
+
+				if ( empty( $gift_card_placeholder_url ) ) {
+					$gift_card_placeholder_url = WC_SQUARE_PLUGIN_URL . 'build/images/gift-card-featured-image.png';
+				}
+
+				wp_localize_script(
+					'woocommerce-square-settings-js',
+					'wcSquareSettings',
+					array(
+						'nonce'            => wp_create_nonce( 'wc_square_settings' ),
+						'homeUrl'          => home_url(),
+						'adminUrl'         => admin_url(),
+						'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+						'depsCheck'        => $this->get_plugin()->get_dependency_handler()->meets_php_dependencies(),
+						'gcPlaceholderUrl' => esc_url( $gift_card_placeholder_url ),
+					)
+				);
+
+				wp_enqueue_style(
+					'woocommerce-square-settings-css',
+					WC_SQUARE_PLUGIN_URL . 'build/settings.css',
+					array(),
+					$asset['version'],
+				);
 			}
-
-			wp_localize_script(
-				'woocommerce-square-settings-js',
-				'wcSquareSettings',
-				array(
-					'nonce'            => wp_create_nonce( 'wc_square_settings' ),
-					'homeUrl'          => home_url(),
-					'adminUrl'         => admin_url(),
-					'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
-					'depsCheck'        => $this->get_plugin()->get_dependency_handler()->meets_php_dependencies(),
-					'gcPlaceholderUrl' => esc_url( $gift_card_placeholder_url ),
-				)
-			);
-
-			wp_enqueue_style(
-				'woocommerce-square-settings-css',
-				WC_SQUARE_PLUGIN_URL . 'build/settings.css',
-				array(),
-				$asset['version'],
-			);
 		} elseif ( 'woocommerce_page_woocommerce-square-onboarding' === $hook ) {
 			$asset_file = WC_SQUARE_PLUGIN_PATH . 'build/onboarding.asset.php';
 
@@ -328,7 +370,6 @@ class Admin {
 
 		wp_enqueue_style( 'wp-components' );
 	}
-
 
 	/**
 	 * Gets a list of variable product types.
