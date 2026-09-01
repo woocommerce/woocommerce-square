@@ -583,11 +583,18 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		/**
 		 * Returns the field groups for the Synchronize Square tab.
 		 *
-		 * Mirrors the legacy "Configure Sync Settings" and "Square Discount Codes"
-		 * sections (src/new-user-experience/modules/configure-sync/index.js and
-		 * settings-app.js): the same option keys, defaults, select options and
-		 * copy, restyled onto the modern hub. Like the legacy page, nothing is
-		 * rendered until the store is connected.
+		 * Structure, order and copy follow the approved Figma design
+		 * (CONTEXT-FILES/FIGMA-Screenshots/--10.png). Behaviour is unchanged from
+		 * the legacy screen (src/new-user-experience/modules/configure-sync/index.js
+		 * and settings-app.js): the same option keys, defaults, select option values
+		 * and visibility rules. Like the legacy page, nothing is rendered until the
+		 * store is connected.
+		 *
+		 * Two sub-sections drawn in the Figma design are deliberately left out:
+		 *   - "Debug mode" / "Log synchronization messages" belongs to the logging
+		 *     refactor in SQUARE-295, which SQUARE-281 excluded for the same reason.
+		 *   - "Update and sync records" is on hold: the sync records screen has no
+		 *     reachable home under the modern hub yet.
 		 *
 		 * @since x.x.x
 		 *
@@ -608,21 +615,26 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			return array(
 				'square_sync_section'           => array(
 					'id'          => 'square_sync_section',
-					'title'       => __( 'Configure Sync Settings', 'woocommerce-square' ),
-					'description' => __( 'Choose how you want your product data to flow between WooCommerce and Square to keep your inventory and listings perfectly aligned. Select from the options below to best match your business operations:', 'woocommerce-square' ),
+					'title'       => __( 'Inventory synchronization', 'woocommerce-square' ),
+					'description' => __( 'Choose how you want your product data to flow between WooCommerce and Square to keep your inventory and listings aligned.', 'woocommerce-square' ),
 					'actions'     => array(),
 					'order'       => 0,
 					'fields'      => array(
+						array(
+							'id'          => 'enable_inventory_sync',
+							'label'       => __( 'Enable inventory synchronization', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'When this setting is enabled, inventory is periodically fetched from Square and updated in WooCommerce.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['enable_inventory_sync'] ?? 'no' ) ),
+						),
 						array(
 							'id'          => 'system_of_record',
 							'label'       => __( 'Where the products are managed', 'woocommerce-square' ),
 							'type'        => 'select',
 							'description' => sprintf(
-								/* translators: %1$s and %2$s are placeholders for the link to the documentation, %3$s and %4$s are placeholders for the link to the support forum */
-								__( "Choose the origin for updates to synced products. Inventory in Square is always checked for adjustments when sync is enabled. %1\$sLearn more%2\$s about choosing a system of record or %3\$screate a ticket%4\$s if you're experiencing technical issues.", 'woocommerce-square' ),
+								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+								__( 'Choose the official source of product and inventory data. %1$sLearn more about choosing a system of record ↗%2$s', 'woocommerce-square' ),
 								'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank" rel="noopener">',
-								'</a>',
-								'<a href="https://wordpress.org/support/plugin/woocommerce-square/" target="_blank" rel="noopener">',
 								'</a>'
 							),
 							'value'       => $system_of_record,
@@ -642,20 +654,10 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							),
 						),
 						array(
-							'id'        => 'enable_inventory_sync',
-							'label'     => __( 'Enable inventory synchronization', 'woocommerce-square' ),
-							'type'      => 'checkbox',
-							// The legacy help text differs by system of record, and the
-							// system of record changes live in the form, so the copy
-							// cannot be baked into the schema here.
-							'component' => 'square/sync-inventory-toggle',
-							'value'     => wc_bool_to_string( wc_string_to_bool( $settings['enable_inventory_sync'] ?? 'no' ) ),
-						),
-						array(
 							'id'          => 'override_product_images',
 							'label'       => __( 'Use Square product images', 'woocommerce-square' ),
 							'type'        => 'checkbox',
-							'description' => __( 'Product images that have been updated in Square will also be updated within WooCommerce during a sync.', 'woocommerce-square' ),
+							'description' => __( 'Square product images will be used instead of those specified in WooCommerce.', 'woocommerce-square' ),
 							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['override_product_images'] ?? 'no' ) ),
 						),
 						array(
@@ -669,13 +671,23 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'id'          => 'sync_interval',
 							'label'       => __( 'How often to sync', 'woocommerce-square' ),
 							'type'        => 'select',
-							'description' => __( 'Frequency for how regularly WooCommerce will sync products with Square.', 'woocommerce-square' ),
+							'description' => __( 'How regularly Square will be synced with WooCommerce.', 'woocommerce-square' ),
 							'value'       => $sync_interval,
 							'options'     => $this->get_sync_interval_options(),
 						),
 						array(
+							'id'          => 'square_import_products_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Manually import products', 'woocommerce-square' ),
+							'description' => __( 'You can manually import products to WooCommerce by clicking this button.', 'woocommerce-square' ),
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+						array(
 							'id'          => 'square_import_products',
-							'label'       => __( 'Manually Import Products', 'woocommerce-square' ),
+							'label'       => '',
 							'type'        => 'text',
 							'component'   => 'square/import-products',
 							'is_option'   => false,
@@ -687,16 +699,17 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 				),
 				'square_order_sync_section'     => array(
 					'id'          => 'square_order_sync_section',
-					'title'       => __( 'Order Synchronization', 'woocommerce-square' ),
-					'description' => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.', 'woocommerce-square' ),
+					'title'       => __( 'Order synchronization', 'woocommerce-square' ),
+					'description' => __( 'Changing the status of a WooCommerce order on your Square dashboard will change the status of that order in WooCommerce.', 'woocommerce-square' ),
 					'actions'     => array(),
 					'order'       => 1,
 					'fields'      => array(
 						array(
-							'id'    => 'enable_order_fulfillment_sync',
-							'label' => __( 'Enable bidirectional order fulfillment sync', 'woocommerce-square' ),
-							'type'  => 'checkbox',
-							'value' => wc_bool_to_string( wc_string_to_bool( $settings['enable_order_fulfillment_sync'] ?? 'no' ) ),
+							'id'          => 'enable_order_fulfillment_sync',
+							'label'       => __( 'Allow order fulfillment status syncing', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['enable_order_fulfillment_sync'] ?? 'no' ) ),
 						),
 					),
 				),
