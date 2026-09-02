@@ -122,6 +122,10 @@ class Products {
 		add_action( 'woocommerce_product_bulk_edit_save', array( $this, 'set_synced_with_square' ) );
 		add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'process_post_data' ) );
 
+		// add custom columns to product list page
+		add_filter( 'manage_edit-product_columns', array( $this, 'add_product_list_columns' ), 10 );
+		add_action( 'manage_product_posts_custom_column', array( $this, 'render_product_list_columns' ), 10, 2 );
+
 		// export product sync status.
 		add_filter( 'woocommerce_product_export_column_names', array( $this, 'add_sync_status_to_column' ) );
 		add_filter( 'woocommerce_product_export_product_default_columns', array( $this, 'add_sync_status_to_column' ) );
@@ -295,6 +299,97 @@ class Products {
 		return $query_vars;
 	}
 
+
+	/**
+	 * Adds custom columns to the product list page.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $columns Array of column names
+	 * @return array Modified array of column names
+	 */
+	public function add_product_list_columns( $columns ) {
+		// Insert the new columns before the "date" column
+		$new_columns = array();
+
+		foreach ( $columns as $key => $value ) {
+			if ( 'date' === $key ) {
+				$new_columns['wc_square_sync_status'] = __( 'Sync Status', 'woocommerce-square' );
+			}
+			$new_columns[ $key ] = $value;
+		}
+
+		return $new_columns;
+	}
+
+	/**
+	 * Renders the content for custom columns in the product list page.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $column_name The name of the column to display
+	 * @param int    $post_id     The post ID
+	 */
+	public function render_product_list_columns( $column_name, $post_id ) {
+		if ( 'wc_square_sync_status' !== $column_name ) {
+			return;
+		}
+
+		$product = wc_get_product( $post_id );
+		if ( ! $product ) {
+			return;
+		}
+
+		$is_synced_with_square = Product::is_synced_with_square( $product );
+		$can_sync_with_square  = Product::can_sync_with_square( $product );
+
+		// Get the failed records for the product.
+		$unresolved_records = Records::get_records(
+			array(
+				'product' => $post_id,
+				'type'    => array( 'alert', 'notice' ),
+				'orderby' => 'date',
+				'sort'    => 'DESC',
+				'limit'   => 1,
+			)
+		);
+		$unresolved_records = reset( $unresolved_records );
+
+		if ( 'wc_square_sync_status' === $column_name ) {
+			if ( $can_sync_with_square || $is_synced_with_square ) {
+				if ( $is_synced_with_square ) {
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'synced' ) ),
+						esc_html( __( 'Synced', 'woocommerce-square' ) )
+					);
+					return;
+				}
+
+				if ( ! empty( $unresolved_records ) ) {
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'failed-to-sync' ) ),
+						esc_html( __( 'Failed to Sync', 'woocommerce-square' ) )
+					);
+					return;
+				}
+
+				if ( empty( $unresolved_records ) && $can_sync_with_square && ! $is_synced_with_square ) {
+					printf(
+						'<mark class="%s"><span>%s</span></mark>',
+						esc_attr( sanitize_html_class( 'to-sync' ) ),
+						esc_html( __( 'Ready to Sync', 'woocommerce-square' ) )
+					);
+					return;
+				}
+			}
+		}
+	}
 
 	/**
 	 * Adds general product data options to a product metabox.
