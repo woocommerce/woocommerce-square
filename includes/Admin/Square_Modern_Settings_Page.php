@@ -97,12 +97,21 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @param string $section Unused.
 		 */
 		public function get_save_adapter( string $section ): string {
+			$active_tab = Payments_Square_Hub::get_active_tab();
+
+			// The Synchronize tab renders its fields only once the store is
+			// connected, matching the legacy page. With nothing on screen there is
+			// nothing to save, so the Save button stays off.
+			if ( Payments_Square_Hub::TAB_SYNCHRONIZE === $active_tab ) {
+				return wc_square()->get_settings_handler()->is_connected() ? 'custom' : 'none';
+			}
+
 			$editable_tabs = array(
 				Payments_Square_Hub::TAB_GENERAL,
 				Payments_Square_Hub::TAB_PAYMENT_METHODS,
 			);
 
-			return in_array( Payments_Square_Hub::get_active_tab(), $editable_tabs, true )
+			return in_array( $active_tab, $editable_tabs, true )
 				? 'custom'
 				: 'none';
 		}
@@ -120,6 +129,8 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					return $this->get_general_tab_groups();
 				case Payments_Square_Hub::TAB_PAYMENT_METHODS:
 					return $this->get_payment_methods_tab_groups();
+				case Payments_Square_Hub::TAB_SYNCHRONIZE:
+					return $this->get_synchronize_tab_groups();
 				default:
 					return array();
 			}
@@ -567,6 +578,195 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 					),
 				),
 			);
+		}
+
+		/**
+		 * Returns the field groups for the Synchronize Square tab.
+		 *
+		 * Structure, order and copy follow the approved Figma design
+		 * (CONTEXT-FILES/FIGMA-Screenshots/--10.png). Behaviour is unchanged from
+		 * the legacy screen (src/new-user-experience/modules/configure-sync/index.js
+		 * and settings-app.js): the same option keys, defaults, select option values
+		 * and visibility rules. Like the legacy page, nothing is rendered until the
+		 * store is connected.
+		 *
+		 * Two sub-sections drawn in the Figma design are deliberately left out:
+		 *   - "Debug mode" / "Log synchronization messages" belongs to the logging
+		 *     refactor in SQUARE-295, which SQUARE-281 excluded for the same reason.
+		 *   - "Update and sync records" is on hold: the sync records screen has no
+		 *     reachable home under the modern hub yet.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<string, array>
+		 */
+		private function get_synchronize_tab_groups(): array {
+			if ( ! wc_square()->get_settings_handler()->is_connected() ) {
+				return array();
+			}
+
+			$settings = (array) get_option( Rest\WC_REST_Square_Settings_Controller::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
+
+			// Both selects fall back when the key is missing OR stored empty, so the
+			// dropdown never renders blank on a store that has not configured sync yet.
+			$system_of_record = ! empty( $settings['system_of_record'] ) ? (string) $settings['system_of_record'] : 'disabled';
+			$sync_interval    = ! empty( $settings['sync_interval'] ) ? (string) $settings['sync_interval'] : '0.25';
+
+			return array(
+				'square_sync_section'           => array(
+					'id'          => 'square_sync_section',
+					'title'       => __( 'Inventory synchronization', 'woocommerce-square' ),
+					'description' => __( 'Choose how you want your product data to flow between WooCommerce and Square to keep your inventory and listings aligned.', 'woocommerce-square' ),
+					'actions'     => array(),
+					'order'       => 0,
+					'fields'      => array(
+						array(
+							'id'          => 'enable_inventory_sync',
+							'label'       => __( 'Enable inventory synchronization', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'When this setting is enabled, inventory is periodically fetched from Square and updated in WooCommerce.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['enable_inventory_sync'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'system_of_record',
+							'label'       => __( 'Where the products are managed', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => sprintf(
+								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
+								__( 'Choose the official source of product and inventory data. %1$sLearn more about choosing a system of record ↗%2$s', 'woocommerce-square' ),
+								'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank" rel="noopener">',
+								'</a>'
+							),
+							'value'       => $system_of_record,
+							'options'     => array(
+								array(
+									'value' => 'disabled',
+									'label' => __( 'Disabled', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'square',
+									'label' => __( 'Square', 'woocommerce-square' ),
+								),
+								array(
+									'value' => 'woocommerce',
+									'label' => __( 'WooCommerce', 'woocommerce-square' ),
+								),
+							),
+						),
+						array(
+							'id'          => 'override_product_images',
+							'label'       => __( 'Use Square product images', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'Square product images will be used instead of those specified in WooCommerce.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['override_product_images'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'hide_missing_products',
+							'label'       => __( 'Hide missing products', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'Products not found in Square will be hidden in the WooCommerce product catalog.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['hide_missing_products'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'sync_interval',
+							'label'       => __( 'How often to sync', 'woocommerce-square' ),
+							'type'        => 'select',
+							'description' => __( 'How regularly Square will be synced with WooCommerce.', 'woocommerce-square' ),
+							'value'       => $sync_interval,
+							'options'     => $this->get_sync_interval_options(),
+						),
+						array(
+							'id'          => 'square_import_products_header',
+							'type'        => 'text',
+							'component'   => 'square/section-header',
+							'is_option'   => false,
+							'label'       => __( 'Manually import products', 'woocommerce-square' ),
+							'description' => __( 'You can manually import products to WooCommerce by clicking this button.', 'woocommerce-square' ),
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+						array(
+							'id'          => 'square_import_products',
+							'label'       => '',
+							'type'        => 'text',
+							'component'   => 'square/import-products',
+							'is_option'   => false,
+							'description' => '',
+							'value'       => '',
+							'save'        => array( 'adapter' => 'none' ),
+						),
+					),
+				),
+				'square_order_sync_section'     => array(
+					'id'          => 'square_order_sync_section',
+					'title'       => __( 'Order synchronization', 'woocommerce-square' ),
+					'description' => __( 'Changing the status of a WooCommerce order on your Square dashboard will change the status of that order in WooCommerce.', 'woocommerce-square' ),
+					'actions'     => array(),
+					'order'       => 1,
+					'fields'      => array(
+						array(
+							'id'          => 'enable_order_fulfillment_sync',
+							'label'       => __( 'Allow order fulfillment status syncing', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'Enable bidirectional fulfillment synchronization between WooCommerce and Square orders. This will sync fulfillment status changes from Square back to WooCommerce and include fulfillment data when creating new orders.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $settings['enable_order_fulfillment_sync'] ?? 'no' ) ),
+						),
+					),
+				),
+				'square_discount_codes_section' => array(
+					'id'          => 'square_discount_codes_section',
+					'title'       => __( 'Square Discount Codes', 'woocommerce-square' ),
+					'description' => __( 'Allow customers to apply Square Discount Codes. When disabled, only WooCommerce coupons are processed.', 'woocommerce-square' ),
+					'actions'     => array(),
+					'order'       => 2,
+					'fields'      => array(
+						array(
+							'id'    => 'enable_square_discount_codes',
+							'label' => __( 'Process Square Discount Codes at checkout', 'woocommerce-square' ),
+							'type'  => 'checkbox',
+							// Absent key means enabled: the option predates the setting
+							// and both the REST controller and Coupon_Utility default it
+							// to 'yes'.
+							'value' => wc_bool_to_string( wc_string_to_bool( $settings['enable_square_discount_codes'] ?? 'yes' ) ),
+						),
+					),
+				),
+			);
+		}
+
+		/**
+		 * Returns the Sync interval select options.
+		 *
+		 * Values are hours (fractional below one hour) and match the legacy
+		 * settings screen exactly, so a stored interval keeps its meaning.
+		 *
+		 * @since x.x.x
+		 *
+		 * @return array<int, array{value: string, label: string}>
+		 */
+		private function get_sync_interval_options(): array {
+			$intervals = array(
+				'0.25' => __( '15 minutes', 'woocommerce-square' ),
+				'0.5'  => __( '30 minutes', 'woocommerce-square' ),
+				'0.75' => __( '45 minutes', 'woocommerce-square' ),
+				'1'    => __( '1 hour', 'woocommerce-square' ),
+				'2'    => __( '2 hours', 'woocommerce-square' ),
+				'3'    => __( '3 hours', 'woocommerce-square' ),
+				'6'    => __( '6 hours', 'woocommerce-square' ),
+				'8'    => __( '8 hours', 'woocommerce-square' ),
+				'12'   => __( '12 hours', 'woocommerce-square' ),
+				'24'   => __( '24 hours', 'woocommerce-square' ),
+			);
+
+			$options = array();
+			foreach ( $intervals as $value => $label ) {
+				$options[] = array(
+					'value' => (string) $value,
+					'label' => $label,
+				);
+			}
+
+			return $options;
 		}
 
 		/**
