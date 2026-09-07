@@ -19,6 +19,8 @@
  *
  * Modified by WooCommerce on 03 January 2022.
  */
+
+defined( 'ABSPATH' ) || exit;
 ?>
 
 <div id="wc_payment_gateway_<?php echo esc_attr( $plugin_id ); ?>_user_settings" class="sv_wc_payment_gateway_user_settings woocommerce">
