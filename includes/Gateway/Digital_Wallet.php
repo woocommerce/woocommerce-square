@@ -259,7 +259,7 @@ class Digital_Wallet {
 		 *
 		 * @param array $default_required_fields The default required fields for the checkout.
 		 */
-		$default_required_fields = apply_filters( 'wc_square_digital_wallet_default_required_fields', $default_required_fields );
+		$default_required_fields = (array) apply_filters( 'wc_square_digital_wallet_default_required_fields', $default_required_fields );
 
 		$fields = WC()->checkout()->get_checkout_fields();
 		$fields = array_merge(
