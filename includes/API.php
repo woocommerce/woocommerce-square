@@ -1204,7 +1204,7 @@ class API extends Base {
 
 				$this->get_plugin()->get_connection_handler()->refresh_connection();
 
-				$failure_value = get_option( 'wc_square_refresh_failed', 'yes' );
+				$failure_value = get_option( 'wc_square_refresh_failed', false );
 
 				if ( empty( $failure_value ) ) {
 					// Successfully refreshed on the last attempt
