@@ -621,6 +621,19 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 			$cc       = (array) get_option( Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 			$cash_app = (array) get_option( Rest\WC_REST_Square_Cash_App_Settings_Controller::SQUARE_CASH_APP_SETTINGS_OPTION_NAME, array() );
 
+			// Title and description fall back to the gateway defaults when they
+			// have never been saved, so the tab shows what checkout is actually
+			// using rather than an empty field. These mirror the legacy screen's
+			// defaults (CREDIT_CARD_DEFAULT_STATE / CASH_APP_DEFAULT_STATE) and
+			// each gateway's own get_default_title() / get_default_description().
+			// The gateway getters are deliberately not used here: get_title() runs
+			// the woocommerce_gateway_title filter, so a third party could change
+			// what this form shows and then have it saved back.
+			$cc_title_default       = __( 'Credit Card', 'woocommerce-square' );
+			$cc_description_default = __( 'Pay securely using your credit card.', 'woocommerce-square' );
+			$cash_app_title_default = __( 'Cash App Pay', 'woocommerce-square' );
+			$cash_app_desc_default  = __( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
+
 			$cash_app_enabled = wc_string_to_bool( $cash_app['enabled'] ?? 'no' );
 
 			$transaction_type_description = __( 'Select how transactions should be processed. Charge submits all transactions for settlement, Authorization simply authorizes the order total for capture later.', 'woocommerce-square' );
@@ -639,7 +652,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'type'        => 'text',
 							'component'   => 'square/text-counted',
 							'description' => __( 'The value in the credit card title field of a customer\'s statement.', 'woocommerce-square' ),
-							'value'       => $cc['title'] ?? __( 'Credit Card', 'woocommerce-square' ),
+							'value'       => $cc['title'] ?? $cc_title_default,
 							'maxLength'   => 22,
 						),
 						array(
@@ -648,7 +661,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'type'        => 'text',
 							'component'   => 'square/textarea-counted',
 							'description' => __( 'The value in the description field of a customer\'s statement.', 'woocommerce-square' ),
-							'value'       => $cc['description'] ?? '',
+							'value'       => $cc['description'] ?? $cc_description_default,
 							'maxLength'   => 100,
 						),
 						array(
@@ -713,7 +726,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'type'        => 'text',
 							'component'   => 'square/text-counted',
 							'description' => __( 'The value in the Cash App Pay title field of a customer\'s statement.', 'woocommerce-square' ),
-							'value'       => $cash_app['title'] ?? __( 'Cash App Pay', 'woocommerce-square' ),
+							'value'       => $cash_app['title'] ?? $cash_app_title_default,
 							'maxLength'   => 22,
 						),
 						array(
@@ -722,7 +735,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'type'        => 'text',
 							'component'   => 'square/textarea-counted',
 							'description' => __( 'The value in the description field of a customer\'s statement.', 'woocommerce-square' ),
-							'value'       => $cash_app['description'] ?? '',
+							'value'       => $cash_app['description'] ?? $cash_app_desc_default,
 							'maxLength'   => 100,
 						),
 						array(
