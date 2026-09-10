@@ -11,6 +11,7 @@
 export default function TextCounted( { field, value, onChange } ) {
 	const max = field?.maxLength ?? 0;
 	const current = ( value ?? '' ).length;
+	const helpId = `wc-square-field-${ field.id }-help`;
 
 	return (
 		<div className="wc-square-text-counted">
@@ -29,6 +30,9 @@ export default function TextCounted( { field, value, onChange } ) {
 					type="text"
 					value={ value ?? '' }
 					maxLength={ max || undefined }
+					// Tie the visible help text to the input so screen readers
+					// announce it on focus, the way the SDK's native fields do.
+					aria-describedby={ field?.description ? helpId : undefined }
 					onChange={ ( e ) => onChange( e.target.value ) }
 				/>
 				{ !! max && (
@@ -38,7 +42,7 @@ export default function TextCounted( { field, value, onChange } ) {
 				) }
 			</div>
 			{ field?.description && (
-				<p className="wc-square-text-counted__help">
+				<p className="wc-square-text-counted__help" id={ helpId }>
 					{ field.description }
 				</p>
 			) }

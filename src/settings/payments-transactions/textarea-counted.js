@@ -11,6 +11,7 @@
 export default function TextareaCounted( { field, value, onChange } ) {
 	const max = field?.maxLength ?? 0;
 	const current = ( value ?? '' ).length;
+	const helpId = `wc-square-field-${ field.id }-help`;
 
 	return (
 		<div className="wc-square-text-counted">
@@ -29,6 +30,10 @@ export default function TextareaCounted( { field, value, onChange } ) {
 					rows={ 3 }
 					value={ value ?? '' }
 					maxLength={ max || undefined }
+					// Tie the visible help text to the control so screen
+					// readers announce it on focus, as the SDK's native
+					// fields do.
+					aria-describedby={ field?.description ? helpId : undefined }
 					onChange={ ( e ) => onChange( e.target.value ) }
 				/>
 				{ !! max && (
@@ -38,7 +43,7 @@ export default function TextareaCounted( { field, value, onChange } ) {
 				) }
 			</div>
 			{ field?.description && (
-				<p className="wc-square-text-counted__help">
+				<p className="wc-square-text-counted__help" id={ helpId }>
 					{ field.description }
 				</p>
 			) }
