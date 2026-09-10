@@ -316,12 +316,6 @@
 	box-shadow: 0 0 0 1px #2271b1;
 }
 
-.wc-square-text-counted__input--textarea {
-	min-height: 64px;
-	resize: vertical;
-	font-family: inherit;
-}
-
 .wc-square-text-counted__counter {
 	position: absolute;
 	top: 50%;
@@ -330,12 +324,6 @@
 	font-size: 12px;
 	color: #757575;
 	pointer-events: none;
-}
-
-.wc-square-text-counted__counter--textarea {
-	top: auto;
-	bottom: 8px;
-	transform: none;
 }
 
 .wc-square-text-counted__help {

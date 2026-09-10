@@ -8,7 +8,6 @@ import HiddenField from './payment-methods/hidden-field';
 import CashAppButtonPreview from './cash-app/button-preview';
 import DigitalWalletPreview from './digital-wallets/preview';
 import TextCounted from './payments-transactions/text-counted';
-import TextareaCounted from './payments-transactions/textarea-counted';
 import SubHeader from './payments-transactions/sub-header';
 import squareSaveHandler from './save-handler';
 
@@ -49,7 +48,6 @@ registerSettingsExtension( {
 		'square/cash-app-button-preview': CashAppButtonPreview,
 		'square/digital-wallet-preview': DigitalWalletPreview,
 		'square/text-counted': TextCounted,
-		'square/textarea-counted': TextareaCounted,
 		'square/sub-header': SubHeader,
 	},
 	fieldVisibility: {
