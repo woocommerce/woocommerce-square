@@ -14,6 +14,40 @@ const GENERAL_FIELDS = new Set( [
 	'sandbox_token',
 ] );
 
+// Synchronize Square tab fields. They live in the same `wc_square_settings`
+// option as the General tab fields, but they are kept in their own set on
+// purpose: GENERAL_FIELDS doubles as the "reload the page after saving" trigger
+// (the Business location list has to be refetched) and a sync save must not
+// reload.
+const SYNC_FIELDS = new Set( [
+	'system_of_record',
+	'enable_inventory_sync',
+	'override_product_images',
+	'hide_missing_products',
+	'sync_interval',
+	'enable_order_fulfillment_sync',
+	'enable_square_discount_codes',
+] );
+
+// Fields backed by an SDK checkbox. The native checkbox emits a boolean, while
+// the stored option and every legacy `'yes' === ...` check expect a string.
+const BOOLEAN_FIELDS = new Set( [
+	'enable_inventory_sync',
+	'override_product_images',
+	'hide_missing_products',
+	'enable_order_fulfillment_sync',
+	'enable_square_discount_codes',
+] );
+
+/**
+ * Converts an SDK checkbox value to the 'yes'/'no' string the option stores.
+ *
+ * @param {*} value Raw form value.
+ * @return {string} 'yes' or 'no'.
+ */
+const toYesNo = ( value ) =>
+	value === true || value === 'yes' || value === '1' ? 'yes' : 'no';
+
 // Cash App "Customize" sub-page fields routed to the Cash App endpoint.
 const CASH_APP_FIELDS = new Set( [ 'button_theme', 'button_shape' ] );
 
@@ -65,6 +99,12 @@ export default async function squareSaveHandler( { values, changedValues } ) {
 	for ( const [ key, val ] of Object.entries( changedValues ) ) {
 		if ( GENERAL_FIELDS.has( key ) ) {
 			add( ENDPOINTS.settings, key, val );
+		} else if ( SYNC_FIELDS.has( key ) ) {
+			add(
+				ENDPOINTS.settings,
+				key,
+				BOOLEAN_FIELDS.has( key ) ? toYesNo( val ) : val
+			);
 		} else if ( CASH_APP_FIELDS.has( key ) ) {
 			add( ENDPOINTS.cashApp, key, val );
 		} else if ( key in DIGITAL_WALLET_FIELDS ) {
