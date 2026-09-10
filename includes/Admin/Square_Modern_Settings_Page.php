@@ -617,9 +617,9 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		 * @return array<string, array>
 		 */
 		private function get_payments_transactions_tab_groups(): array {
-			$settings = (array) get_option( 'wc_square_settings', array() );
-			$cc       = (array) get_option( 'woocommerce_square_credit_card_settings', array() );
-			$cash_app = (array) get_option( 'woocommerce_square_cash_app_pay_settings', array() );
+			$settings = (array) get_option( Rest\WC_REST_Square_Settings_Controller::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
+			$cc       = (array) get_option( Rest\WC_REST_Square_Credit_Card_Payment_Settings_Controller::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
+			$cash_app = (array) get_option( Rest\WC_REST_Square_Cash_App_Settings_Controller::SQUARE_CASH_APP_SETTINGS_OPTION_NAME, array() );
 
 			$cash_app_enabled = wc_string_to_bool( $cash_app['enabled'] ?? 'no' );
 
