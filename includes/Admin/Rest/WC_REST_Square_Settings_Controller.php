@@ -220,6 +220,10 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		// (e.g. the modern-settings SDK save handler) don't wipe unrelated keys.
 		$settings = (array) get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
 
+		// Capture the stored interval before the request overwrites it, so the
+		// reschedule below can tell whether it actually changed.
+		$previous_sync_interval = $settings['sync_interval'] ?? '';
+
 		foreach ( $this->allowed_params as $index => $key ) {
 			if ( in_array( $key, $keys_to_skip, true ) ) {
 				continue;
@@ -242,6 +246,8 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		// and won't refresh until the next page load.
 		wc_square()->get_settings_handler()->init_settings();
 
+		$this->maybe_reschedule_sync( $previous_sync_interval, $settings['sync_interval'] ?? '' );
+
 		// Propagate the sandbox token into the encrypted access-token store so the
 		// connection registers in sandbox mode. Use the merged value (stored or
 		// just-submitted) — switching INTO sandbox must apply the stored token even
@@ -256,5 +262,44 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Reschedules the recurring product sync when the interval changed.
+	 *
+	 * Mirrors Settings::maybe_change_sync_interval(), which only ever runs on the
+	 * legacy form-post path: it is hooked to woocommerce_settings_api_sanitized_fields_square,
+	 * which never fires for a REST save. Without this, saving a new interval stores
+	 * the value but leaves the scheduled action on its old cadence.
+	 *
+	 * Must be called AFTER the option is written and the settings handler has been
+	 * re-initialised, because Sync::schedule_sync() reads the interval back through
+	 * Settings::get_sync_interval(); calling it earlier reschedules with the stale
+	 * in-memory value and the replacement action inherits the old cadence.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $previous_interval Interval stored before this request.
+	 * @param string $new_interval      Interval stored after this request.
+	 * @return void
+	 */
+	private function maybe_reschedule_sync( string $previous_interval, string $new_interval ) {
+		// A filter owns the interval, so the stored value is not what is scheduled.
+		if ( has_filter( 'wc_square_sync_interval' ) ) {
+			return;
+		}
+
+		// Same bail as the legacy path: nothing to compare when either side is empty.
+		if ( '' === $previous_interval || '' === $new_interval ) {
+			return;
+		}
+
+		if ( $previous_interval === $new_interval ) {
+			return;
+		}
+
+		$sync = wc_square()->get_sync_handler();
+		$sh   = wc_square()->get_settings_handler();
+		wc_square()->get_sync_handler()->schedule_sync( true );
 	}
 }
