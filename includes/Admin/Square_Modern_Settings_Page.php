@@ -686,14 +686,18 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'save'        => array( 'adapter' => 'none' ),
 						),
 						array(
-							'id'          => 'square_import_products',
-							'label'       => '',
-							'type'        => 'text',
-							'component'   => 'square/import-products',
-							'is_option'   => false,
-							'description' => '',
-							'value'       => '',
-							'save'        => array( 'adapter' => 'none' ),
+							'id'             => 'square_import_products',
+							'label'          => '',
+							'type'           => 'text',
+							'component'      => 'square/import-products',
+							'is_option'      => false,
+							'description'    => '',
+							'value'          => '',
+							// The import job sends the connected location to Square, so
+							// without one it would report a successful start and then
+							// fail. The legacy screen gates the action the same way.
+							'location_ready' => (bool) wc_square()->get_settings_handler()->get_location_id(),
+							'save'           => array( 'adapter' => 'none' ),
 						),
 					),
 				),

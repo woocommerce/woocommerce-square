@@ -42,11 +42,17 @@ const normalise = ( value ) => {
  * redirects away from. The legacy component already supports this via its
  * showViewProgressButton prop.
  *
+ * The action also needs a connected Square location: the import job sends it to
+ * Square, so without one the request would report a successful start and then
+ * fail. The legacy screen gates the button on the same condition.
+ *
  * @param {Object} props
+ * @param {Object} props.field         Field config (carries location_ready).
  * @param {Object} props.values        All current form values.
  * @param {Object} props.initialValues Form values as first rendered.
  */
-export default function ImportProducts( { values, initialValues } ) {
+export default function ImportProducts( { field, values, initialValues } ) {
+	const locationReady = field?.location_ready !== false;
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ isImporting, setIsImporting ] = useState( false );
 	const [ updateDuringImport, setUpdateDuringImport ] = useState( false );
@@ -104,7 +110,7 @@ export default function ImportProducts( { values, initialValues } ) {
 				<Button
 					variant="secondary"
 					className="wc-square-import-products__button"
-					disabled={ isDirty }
+					disabled={ isDirty || ! locationReady }
 					onClick={ () => setIsOpen( true ) }
 				>
 					{ __(
@@ -118,6 +124,15 @@ export default function ImportProducts( { values, initialValues } ) {
 				<p className="wc-square-import-products__hint">
 					{ __(
 						'You have made changes to the settings. Please save the changes to enable the button.',
+						'woocommerce-square'
+					) }
+				</p>
+			) }
+
+			{ ! isDirty && ! locationReady && (
+				<p className="wc-square-import-products__hint">
+					{ __(
+						'Select a business location on the General tab to import products.',
 						'woocommerce-square'
 					) }
 				</p>
