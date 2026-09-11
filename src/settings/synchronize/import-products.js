@@ -124,11 +124,18 @@ export default function ImportProducts( { values, initialValues } ) {
 			) }
 
 			{ notice && (
-				<p className="wc-square-import-products__notice">{ notice }</p>
+				// The import starts asynchronously after the modal closes, so the
+				// result has to be announced: a status for success, an alert for
+				// failure, otherwise assistive technology reports nothing at all.
+				<p className="wc-square-import-products__notice" role="status">
+					{ notice }
+				</p>
 			) }
 
 			{ error && (
-				<p className="wc-square-import-products__error">{ error }</p>
+				<p className="wc-square-import-products__error" role="alert">
+					{ error }
+				</p>
 			) }
 
 			{ isOpen && (
