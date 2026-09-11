@@ -160,7 +160,7 @@ export default function ImportProducts( { values, initialValues } ) {
 								'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.',
 								'woocommerce-square'
 							),
-							'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank" rel="noopener">',
+							'<a href="https://woocommerce.com/document/woocommerce-square/sync-settings/#import-products" target="_blank" rel="noopener">',
 							'</a>'
 						) }
 					</RawHTML>

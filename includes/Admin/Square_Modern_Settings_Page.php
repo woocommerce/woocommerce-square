@@ -634,7 +634,7 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'description' => sprintf(
 								/* translators: %1$s opening anchor tag, %2$s closing anchor tag */
 								__( 'Choose the official source of product and inventory data. %1$sLearn more about choosing a system of record ↗%2$s', 'woocommerce-square' ),
-								'<a href="https://woocommerce.com/document/woocommerce-square/#section-8" target="_blank" rel="noopener">',
+								'<a href="https://woocommerce.com/document/woocommerce-square/sync-settings/#sync-settings" target="_blank" rel="noopener">',
 								'</a>'
 							),
 							'value'       => $system_of_record,
