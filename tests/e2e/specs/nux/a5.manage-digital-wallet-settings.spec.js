@@ -7,9 +7,9 @@ test( 'Can configure digital wallet settings via Onboarding @general', async ( {
 
 	await page.getByTestId( 'digital-wallet-settings-button' ).click();
 
-	// Transaction type: authorization
-	await page.getByTestId( 'digital-wallet-gatewaybutton-type-field' ).selectOption( { label: 'No Text' } );
+	await page.getByTestId( 'digital-wallet-apple-pay-button-type-field' ).selectOption( { label: 'No Text' } );
 	await page.getByTestId( 'digital-wallet-gatewayapple-pay-button-color-field' ).selectOption( { label: 'White with outline' } );
+	await page.getByTestId( 'digital-wallet-google-pay-button-type-field' ).selectOption( { label: 'Google Pay (icon only)' } );
 	await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ).selectOption( { label: 'White' } );
 
 	// save settings.
@@ -18,7 +18,8 @@ test( 'Can configure digital wallet settings via Onboarding @general', async ( {
 	await page.reload();
 
 	await page.getByTestId( 'digital-wallet-settings-button' ).click();
-	await expect( await page.getByTestId( 'digital-wallet-gatewaybutton-type-field' ) ).toHaveValue( 'plain' );
+	await expect( await page.getByTestId( 'digital-wallet-apple-pay-button-type-field' ) ).toHaveValue( 'plain' );
 	await expect( await page.getByTestId( 'digital-wallet-gatewayapple-pay-button-color-field' ) ).toHaveValue( 'white-outline' );
+	await expect( await page.getByTestId( 'digital-wallet-google-pay-button-type-field' ) ).toHaveValue( 'short' );
 	await expect( await page.getByTestId( 'digital-wallet-gatewaygoogle-pay-button-color-field' ) ).toHaveValue( 'white' );
 } );

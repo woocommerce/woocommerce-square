@@ -135,7 +135,7 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 						'sanitize_callback' => '',
 					),
 					'digital_wallets_button_type'         => array(
-						'description'       => __( 'This setting only applies to the Apple Pay button. When Google Pay is available, the Google Pay button will always have the "Buy with" button text.', 'woocommerce-square' ),
+						'description'       => __( 'Legacy Apple Pay button label. Prefer digital_wallets_apple_pay_button_type.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'sanitize_callback' => '',
 					),
@@ -150,7 +150,7 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 						'sanitize_callback' => '',
 					),
 					'digital_wallets_hide_button_options' => array(
-						'description'       => __( 'Array of digital wallet buttons to hide', 'woocommerce-square' ),
+						'description'       => __( 'Legacy list of digital wallet buttons to hide. Prefer the per-wallet enabled flags.', 'woocommerce-square' ),
 						'type'              => 'array',
 						'sanitize_callback' => '',
 					),
@@ -167,13 +167,13 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 						'sanitize_callback' => 'sanitize_key',
 					),
 					'digital_wallets_google_pay_button_type' => array(
-						'description'       => __( 'Button label for the Google Pay button.', 'woocommerce-square' ),
+						'description'       => __( 'Google Pay button label. Accepted values: long (Buy with Google Pay) or short (icon only).', 'woocommerce-square' ),
 						'type'              => 'string',
 						'enum'              => array( 'long', 'short' ),
 						'sanitize_callback' => 'sanitize_key',
 					),
 					'digital_wallets_apple_pay_button_type' => array(
-						'description'       => __( 'Button label for the Apple Pay button.', 'woocommerce-square' ),
+						'description'       => __( 'Apple Pay button label. Accepted values: buy, donate, or plain.', 'woocommerce-square' ),
 						'type'              => 'string',
 						'enum'              => array( 'buy', 'donate', 'plain' ),
 						'sanitize_callback' => 'sanitize_key',
@@ -214,7 +214,72 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
+		$settings = $this->normalize_digital_wallet_settings( $settings );
+
 		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
 		wp_send_json_success();
+	}
+
+	/**
+	 * Keeps per-wallet digital wallet keys and superseded legacy keys in sync.
+	 *
+	 * New keys are canonical. When they are present, the legacy shared button type
+	 * and hide-list are dual-written so any remaining readers stay consistent.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param array $settings Credit card gateway settings.
+	 * @return array
+	 */
+	private function normalize_digital_wallet_settings( array $settings ) {
+		$google_enabled = $settings['digital_wallets_google_pay_enabled'] ?? null;
+		$apple_enabled  = $settings['digital_wallets_apple_pay_enabled'] ?? null;
+
+		$hide_options_existing = isset( $settings['digital_wallets_hide_button_options'] ) && is_array( $settings['digital_wallets_hide_button_options'] )
+			? $settings['digital_wallets_hide_button_options']
+			: array();
+
+		if ( null !== $google_enabled || null !== $apple_enabled ) {
+			$hide_options = array();
+
+			$google_is_hidden = null !== $google_enabled ? ( 'no' === $google_enabled ) : in_array( 'google', $hide_options_existing, true );
+			$apple_is_hidden  = null !== $apple_enabled ? ( 'no' === $apple_enabled ) : in_array( 'apple', $hide_options_existing, true );
+
+			if ( $google_is_hidden ) {
+				$hide_options[] = 'google';
+			}
+
+			if ( $apple_is_hidden ) {
+				$hide_options[] = 'apple';
+			}
+
+			$settings['digital_wallets_hide_button_options'] = $hide_options;
+		}
+
+		if ( ! empty( $settings['digital_wallets_apple_pay_button_type'] ) ) {
+			$settings['digital_wallets_button_type'] = $settings['digital_wallets_apple_pay_button_type'];
+		} elseif ( ! empty( $settings['digital_wallets_button_type'] ) && empty( $settings['digital_wallets_apple_pay_button_type'] ) ) {
+			$settings['digital_wallets_apple_pay_button_type'] = $settings['digital_wallets_button_type'];
+		}
+
+		if ( empty( $settings['digital_wallets_google_pay_button_type'] ) ) {
+			$settings['digital_wallets_google_pay_button_type'] = 'long';
+		}
+
+		$allowed_google_types = array( 'long', 'short' );
+		if ( ! in_array( $settings['digital_wallets_google_pay_button_type'], $allowed_google_types, true ) ) {
+			$settings['digital_wallets_google_pay_button_type'] = 'long';
+		}
+
+		$allowed_apple_types = array( 'buy', 'donate', 'plain' );
+		if (
+			! empty( $settings['digital_wallets_apple_pay_button_type'] )
+			&& ! in_array( $settings['digital_wallets_apple_pay_button_type'], $allowed_apple_types, true )
+		) {
+			$settings['digital_wallets_apple_pay_button_type'] = 'buy';
+			$settings['digital_wallets_button_type']           = 'buy';
+		}
+
+		return $settings;
 	}
 }

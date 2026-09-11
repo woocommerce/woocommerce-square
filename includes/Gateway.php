@@ -865,30 +865,22 @@ class Gateway extends Payment_Gateway_Direct {
 			'label'       => esc_html__( 'Enable digital wallets', 'woocommerce-square' ),
 		);
 
-		$form_fields['digital_wallets_button_type'] = array(
-			'title'       => esc_html__( 'Button Type', 'woocommerce-square' ),
-			'description' => esc_html__( 'This setting only applies to the Apple Pay button. When Google Pay is available, the Google Pay button will always have the "Buy with" button text.', 'woocommerce-square' ),
-			'desc_tip'    => esc_html__( 'Select which text is displayed on the digital wallet buttons.', 'woocommerce-square' ),
-			'type'        => 'select',
-			'default'     => 'buy',
-			'class'       => 'wc-enhanced-select wc-square-digital-wallet-options',
-			'options'     => array(
-				'buy'    => 'Buy Now',
-				'donate' => 'Donate',
-				'plain'  => 'No Text',
-			),
+		$form_fields['digital_wallets_google_pay_enabled'] = array(
+			'title'   => esc_html__( 'Google Pay', 'woocommerce-square' ),
+			'type'    => 'checkbox',
+			'default' => 'yes',
+			'label'   => esc_html__( 'Enable Google Pay', 'woocommerce-square' ),
+			'class'   => 'wc-square-digital-wallet-options',
 		);
 
-		$form_fields['digital_wallets_apple_pay_button_color'] = array(
-			'title'    => esc_html__( 'Apple Pay Button Color', 'woocommerce-square' ),
-			'desc_tip' => esc_html__( 'Select the color of the Apple Pay button.', 'woocommerce-square' ),
-			'type'     => 'select',
-			'default'  => 'black',
-			'class'    => 'wc-enhanced-select wc-square-digital-wallet-options',
-			'options'  => array(
-				'black'         => 'Black',
-				'white'         => 'White',
-				'white-outline' => 'White with outline',
+		$form_fields['digital_wallets_google_pay_button_type'] = array(
+			'title'   => esc_html__( 'Google Pay Button Label', 'woocommerce-square' ),
+			'type'    => 'select',
+			'default' => 'long',
+			'class'   => 'wc-enhanced-select wc-square-digital-wallet-options',
+			'options' => array(
+				'long'  => esc_html__( 'Buy with Google Pay', 'woocommerce-square' ),
+				'short' => esc_html__( 'Google Pay (icon only)', 'woocommerce-square' ),
 			),
 		);
 
@@ -899,20 +891,41 @@ class Gateway extends Payment_Gateway_Direct {
 			'default'  => 'black',
 			'class'    => 'wc-enhanced-select wc-square-digital-wallet-options',
 			'options'  => array(
-				'black' => 'Black',
-				'white' => 'White',
+				'black' => esc_html__( 'Black', 'woocommerce-square' ),
+				'white' => esc_html__( 'White', 'woocommerce-square' ),
 			),
 		);
 
-		$form_fields['digital_wallets_hide_button_options'] = array(
-			'title'    => esc_html__( 'Hide Digital Wallet Buttons', 'woocommerce-square' ),
-			'desc_tip' => esc_html__( 'Select any digital wallet buttons you don\'t want to be displayed on your store.', 'woocommerce-square' ),
-			'type'     => 'multiselect',
-			'default'  => '',
+		$form_fields['digital_wallets_apple_pay_enabled'] = array(
+			'title'   => esc_html__( 'Apple Pay', 'woocommerce-square' ),
+			'type'    => 'checkbox',
+			'default' => 'yes',
+			'label'   => esc_html__( 'Enable Apple Pay', 'woocommerce-square' ),
+			'class'   => 'wc-square-digital-wallet-options',
+		);
+
+		$form_fields['digital_wallets_apple_pay_button_type'] = array(
+			'title'   => esc_html__( 'Apple Pay Button Label', 'woocommerce-square' ),
+			'type'    => 'select',
+			'default' => 'buy',
+			'class'   => 'wc-enhanced-select wc-square-digital-wallet-options',
+			'options' => array(
+				'buy'    => esc_html__( 'Buy Now', 'woocommerce-square' ),
+				'donate' => esc_html__( 'Donate', 'woocommerce-square' ),
+				'plain'  => esc_html__( 'No Text', 'woocommerce-square' ),
+			),
+		);
+
+		$form_fields['digital_wallets_apple_pay_button_color'] = array(
+			'title'    => esc_html__( 'Apple Pay Button Color', 'woocommerce-square' ),
+			'desc_tip' => esc_html__( 'Select the color of the Apple Pay button.', 'woocommerce-square' ),
+			'type'     => 'select',
+			'default'  => 'black',
 			'class'    => 'wc-enhanced-select wc-square-digital-wallet-options',
 			'options'  => array(
-				'apple'  => 'Apple Pay',
-				'google' => 'Google Pay',
+				'black'         => esc_html__( 'Black', 'woocommerce-square' ),
+				'white'         => esc_html__( 'White', 'woocommerce-square' ),
+				'white-outline' => esc_html__( 'White with outline', 'woocommerce-square' ),
 			),
 		);
 

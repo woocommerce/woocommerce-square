@@ -153,7 +153,8 @@ class Digital_Wallet {
 				'hide_button_options'      => $this->get_hidden_button_options(),
 				'google_pay_color'         => $this->gateway->get_option( 'digital_wallets_google_pay_button_color', 'black' ),
 				'apple_pay_color'          => $this->gateway->get_option( 'digital_wallets_apple_pay_button_color', 'black' ),
-				'apple_pay_type'           => $this->gateway->get_option( 'digital_wallets_button_type', 'buy' ),
+				'apple_pay_type'           => $this->get_apple_pay_button_type(),
+				'google_pay_type'          => $this->get_google_pay_button_type(),
 				'buy_with_gpay_text'       => __( 'Buy with GPay', 'woocommerce-square' ),
 				'opens_in_new_window_text' => __( 'opens in a new window', 'woocommerce-square' ),
 				'is_pay_for_order_page'    => is_checkout() && is_wc_endpoint_url( 'order-pay' ),
@@ -177,8 +178,8 @@ class Digital_Wallet {
 	 */
 	public function admin_notices() {
 
-		// Apple Pay notices - Only shown when digital wallets are enabled and Apple isn't in list of hidden button options
-		if ( ! in_array( 'apple', $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ), true ) ) {
+		// Apple Pay notices - Only shown when digital wallets are enabled and Apple Pay is enabled.
+		if ( $this->is_apple_pay_enabled() ) {
 			$apple_pay_verification_file_location = $this->apple_pay_verification_file_location();
 
 			// Verification file is missing
@@ -283,7 +284,7 @@ class Digital_Wallet {
 		}
 
 		$apple_pay_classes  = $google_pay_classes = array( 'wc-square-wallet-buttons' );
-		$button_type        = $this->gateway->get_option( 'digital_wallets_button_type', 'buy' );
+		$button_type        = $this->get_apple_pay_button_type();
 		$apple_button_style = $this->gateway->get_option( 'digital_wallets_apple_pay_button_color', 'black' );
 
 		// set button text
@@ -1108,9 +1109,8 @@ class Digital_Wallet {
 			return;
 		}
 
-		// when settings are being saved, make sure we use the latest values from POST data to check if Apple isn't one of the hidden wallet options
-		$hidden_wallet_options = ! isset( $_POST['woocommerce_square_credit_card_enable_digital_wallets'] ) ? $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ) : ( ! empty( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ? wc_clean( wp_unslash( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ) : array() ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( in_array( 'apple', $hidden_wallet_options, true ) ) {
+		// Skip domain registration when Apple Pay is disabled for the store.
+		if ( ! $this->is_apple_pay_enabled() ) {
 			return;
 		}
 
@@ -1263,17 +1263,101 @@ class Digital_Wallet {
 	}
 
 	/**
-	 * Returns a list of hidden digital wallet options
+	 * Whether Google Pay is enabled for digital wallets.
 	 *
+	 * Prefers the per-wallet enable key; falls back to the superseded hide-list.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	public function is_google_pay_enabled() {
+		$enabled = $this->gateway->get_option( 'digital_wallets_google_pay_enabled', null );
+
+		if ( null !== $enabled && '' !== $enabled ) {
+			return 'yes' === $enabled;
+		}
+
+		$hidden_options = $this->gateway->get_option( 'digital_wallets_hide_button_options', array() );
+
+		return ! is_array( $hidden_options ) || ! in_array( 'google', $hidden_options, true );
+	}
+
+	/**
+	 * Whether Apple Pay is enabled for digital wallets.
+	 *
+	 * Prefers the per-wallet enable key; falls back to the superseded hide-list.
+	 *
+	 * @since x.x.x
+	 * @return bool
+	 */
+	public function is_apple_pay_enabled() {
+		$enabled = $this->gateway->get_option( 'digital_wallets_apple_pay_enabled', null );
+
+		if ( null !== $enabled && '' !== $enabled ) {
+			return 'yes' === $enabled;
+		}
+
+		$hidden_options = $this->gateway->get_option( 'digital_wallets_hide_button_options', array() );
+
+		return ! is_array( $hidden_options ) || ! in_array( 'apple', $hidden_options, true );
+	}
+
+	/**
+	 * Returns the Apple Pay button type (buy / donate / plain).
+	 *
+	 * Prefers the per-wallet key; falls back to the shared legacy button type.
+	 *
+	 * @since x.x.x
+	 * @return string
+	 */
+	public function get_apple_pay_button_type() {
+		$type = $this->gateway->get_option( 'digital_wallets_apple_pay_button_type', null );
+
+		if ( null === $type || '' === $type ) {
+			$type = $this->gateway->get_option( 'digital_wallets_button_type', 'buy' );
+		}
+
+		$allowed = array( 'buy', 'donate', 'plain' );
+
+		return in_array( $type, $allowed, true ) ? $type : 'buy';
+	}
+
+	/**
+	 * Returns the Google Pay button type (long / short).
+	 *
+	 * The Square Web Payments SDK only accepts these two values.
+	 *
+	 * @since x.x.x
+	 * @return string
+	 */
+	public function get_google_pay_button_type() {
+		$type    = $this->gateway->get_option( 'digital_wallets_google_pay_button_type', 'long' );
+		$allowed = array( 'long', 'short' );
+
+		return in_array( $type, $allowed, true ) ? $type : 'long';
+	}
+
+	/**
+	 * Returns a list of hidden digital wallet options.
+	 *
+	 * Derived from the per-wallet enable flags (with hide-list fallback).
 	 * If Apple Pay domain hasn't been registered, force Apple Pay to be hidden.
 	 *
 	 * @since 2.3
 	 * @return array
 	 */
 	public function get_hidden_button_options() {
-		$hidden_options = $this->gateway->get_option( 'digital_wallets_hide_button_options', array() );
+		$hidden_options = array();
 
-		if ( ( ! is_array( $hidden_options ) || ! in_array( 'apple', $hidden_options, true ) ) && 'no' === $this->gateway->get_option( 'apple_pay_domain_registered', 'no' ) ) {
+		if ( ! $this->is_google_pay_enabled() ) {
+			$hidden_options[] = 'google';
+		}
+
+		if ( ! $this->is_apple_pay_enabled() ) {
+			$hidden_options[] = 'apple';
+		}
+
+		if ( ! in_array( 'apple', $hidden_options, true ) && 'no' === $this->gateway->get_option( 'apple_pay_domain_registered', 'no' ) ) {
 			$hidden_options[] = 'apple';
 		}
 
@@ -1448,7 +1532,7 @@ class Digital_Wallet {
 	 * @return int|mixed
 	 */
 	public function get_option_is_apple_pay_enabled( $value ) {
-		if ( $this->is_digital_wallet_enabled() && ! in_array( 'apple', $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ), true ) ) {
+		if ( $this->is_digital_wallet_enabled() && $this->is_apple_pay_enabled() ) {
 			$value = wp_rand( 1, 2 );
 		}
 
