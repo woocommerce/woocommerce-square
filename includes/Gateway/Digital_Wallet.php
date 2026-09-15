@@ -1162,14 +1162,15 @@ class Digital_Wallet {
 	private function register_apple_pay_domain() {
 		$access_token = $this->gateway->get_plugin()->get_settings_handler()->get_access_token();
 		$is_sandbox   = $this->gateway->get_plugin()->get_settings_handler()->is_sandbox();
-		// Derived from the stored site URL rather than the Host header, which is supplied by the request.
-		$site_host   = wp_parse_url( get_site_url(), PHP_URL_HOST );
-		$domain_name = is_string( $site_host ) ? $site_host : '';
+		// Derived from the stored home URL rather than the Host header, which is supplied by the request.
+		// This matches the domain passed to Apple Pay merchant validation.
+		$home_host   = wp_parse_url( home_url(), PHP_URL_HOST );
+		$domain_name = is_string( $home_host ) ? $home_host : '';
 
 		$this->gateway->update_option( 'apple_pay_domain_registration_attempted', 'yes' );
 
 		if ( empty( $domain_name ) ) {
-			throw new \Exception( 'Unable to verify domain with Apple Pay - no domain found in the site URL.' );
+			throw new \Exception( 'Unable to verify domain with Apple Pay - no domain found in the home URL.' );
 		}
 
 		if ( empty( $access_token ) ) {
