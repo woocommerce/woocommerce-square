@@ -55,12 +55,24 @@ export const usePaymentProcessing = (
 			};
 
 			if ( square.current?.token ) {
-				const { paymentTokenNonce } = getSquareServerData();
-				const __response = await fetch(
-					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
-				);
-				const { success, data: token } = await __response.json();
-				const savedCardToken = success ? token : '';
+				let savedCardToken = '';
+
+				try {
+					const { paymentTokenNonce } = getSquareServerData();
+					const __response = await fetch(
+						`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
+					);
+
+					const { success, data: token } = await __response.json();
+					savedCardToken = success ? token : '';
+
+					if ( ! savedCardToken ) {
+						// The saved card could not be looked up, so there is nothing to tokenize.
+						handleErrors( null, paymentData );
+					}
+				} catch ( error ) {
+					handleErrors( [ error ], paymentData );
+				}
 
 				if ( savedCardToken ) {
 					const tokenizeSavedCardResponse = await tokenizeSavedCard(
@@ -80,9 +92,6 @@ export const usePaymentProcessing = (
 							paymentData
 						);
 					}
-				} else {
-					// The saved card could not be looked up, so there is nothing to tokenize.
-					handleErrors( null, paymentData );
 				}
 			} else {
 				let createNonceResponse;
