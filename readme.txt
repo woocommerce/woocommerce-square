@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 5.5.0
+Stable tag: 5.5.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,10 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.5.1 - 2026-09-21 =
+* Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
+* Fix - The domain registered with Square for Apple Pay is now based on the Site Address setting.
 
 = 5.5.0 - 2026-08-31 =
 * Fix - Prevent product sync from getting stuck when a product set to sync with Square is deleted.

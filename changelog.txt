@@ -1,5 +1,9 @@
 *** WooCommerce Square Changelog ***
 
+= 5.5.1 - 2026-09-21 =
+* Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
+* Fix - The domain registered with Square for Apple Pay is now based on the Site Address setting.
+
 = 5.5.0 - 2026-08-31 =
 * Fix - Prevent product sync from getting stuck when a product set to sync with Square is deleted.
 * Fix - Automatically detect and recover a background sync job stuck in processing, unblock the sync queue, show an admin notice prompting a re run, and prune old failed scheduler actions.
