@@ -594,6 +594,34 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 		}
 
 		/**
+		 * Returns a gateway's own default title or description.
+		 *
+		 * Asks the gateway for the default instead of repeating those strings
+		 * here, so there is one copy of them. The gateways expose the defaults
+		 * through get_default_title() / get_default_description(); their
+		 * get_title() / get_description() are not used because those return the
+		 * saved value when there is one and, for gateways that do not override
+		 * WooCommerce core, run the woocommerce_gateway_title/description filters,
+		 * which would let a third party change what this form shows and have that
+		 * filtered value saved back as the real setting.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param \WC_Payment_Gateway|false|null $gateway Gateway instance.
+		 * @param string                         $key     Either 'title' or 'description'.
+		 * @return string Default value, empty string when unavailable.
+		 */
+		private function get_gateway_field_default( $gateway, string $key ): string {
+			$method = 'title' === $key ? 'get_default_title' : 'get_default_description';
+
+			if ( ! $gateway instanceof \WC_Payment_Gateway || ! method_exists( $gateway, $method ) ) {
+				return '';
+			}
+
+			return (string) $gateway->$method();
+		}
+
+		/**
 		 * Returns the field groups for the Payments & Transactions tab.
 		 *
 		 * Migrates the transaction-handling fields that previously lived on the
@@ -623,16 +651,14 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 
 			// Title and description fall back to the gateway defaults when they
 			// have never been saved, so the tab shows what checkout is actually
-			// using rather than an empty field. These mirror the legacy screen's
-			// defaults (CREDIT_CARD_DEFAULT_STATE / CASH_APP_DEFAULT_STATE) and
-			// each gateway's own get_default_title() / get_default_description().
-			// The gateway getters are deliberately not used here: get_title() runs
-			// the woocommerce_gateway_title filter, so a third party could change
-			// what this form shows and then have it saved back.
-			$cc_title_default       = __( 'Credit Card', 'woocommerce-square' );
-			$cc_description_default = __( 'Pay securely using your credit card.', 'woocommerce-square' );
-			$cash_app_title_default = __( 'Cash App Pay', 'woocommerce-square' );
-			$cash_app_desc_default  = __( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
+			// using rather than an empty field. The defaults come from the
+			// gateways themselves rather than being repeated here.
+			$cc_gateway             = wc_square()->get_gateway( \WooCommerce\Square\Plugin::GATEWAY_ID );
+			$cash_app_gateway       = wc_square()->get_gateway( \WooCommerce\Square\Plugin::CASH_APP_PAY_GATEWAY_ID );
+			$cc_title_default       = $this->get_gateway_field_default( $cc_gateway, 'title' );
+			$cc_description_default = $this->get_gateway_field_default( $cc_gateway, 'description' );
+			$cash_app_title_default = $this->get_gateway_field_default( $cash_app_gateway, 'title' );
+			$cash_app_desc_default  = $this->get_gateway_field_default( $cash_app_gateway, 'description' );
 
 			$cash_app_enabled = wc_string_to_bool( $cash_app['enabled'] ?? 'no' );
 
