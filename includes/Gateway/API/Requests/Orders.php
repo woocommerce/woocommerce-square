@@ -277,8 +277,24 @@ class Orders extends API\Request {
 		$fulfillment->setUid( wc_square()->get_idempotency_key( '', false ) );
 
 		// Determine fulfillment type based on shipping method.
-		$shipping_methods = $order->get_shipping_methods();
-		$fulfillment_type = empty( $shipping_methods ) ? FulfillmentType::PICKUP : FulfillmentType::SHIPMENT;
+		$shipping_methods        = $order->get_shipping_methods();
+		$has_non_pickup_shipping = false;
+		$shipment_method         = null;
+
+		foreach ( $shipping_methods as $shipping_method ) {
+			if ( ! $shipping_method instanceof \WC_Order_Item_Shipping ) {
+				continue;
+			}
+
+			if ( ! $this->is_local_pickup_method( $shipping_method ) ) {
+				$has_non_pickup_shipping = true;
+				$shipment_method         = $shipping_method;
+				break;
+			}
+		}
+
+		// Treat orders as shipment only when a non-local pickup shipping rate is present.
+		$fulfillment_type = $has_non_pickup_shipping ? FulfillmentType::SHIPMENT : FulfillmentType::PICKUP;
 		$fulfillment->setType( $fulfillment_type );
 
 		// Add fulfillment details based on type.
@@ -302,10 +318,9 @@ class Orders extends API\Request {
 
 			$shipment_details->setRecipient( $recipient );
 
-			// Add shipping method as carrier if available.
-			foreach ( $shipping_methods as $shipping_method ) {
-				$shipment_details->setCarrier( $shipping_method->get_method_title() );
-				break; // Use first shipping method.
+			// Use a non-pickup method title as carrier to avoid labeling shipment as local pickup.
+			if ( $shipment_method instanceof \WC_Order_Item_Shipping ) {
+				$shipment_details->setCarrier( $shipment_method->get_method_title() );
 			}
 
 			$fulfillment->setShipmentDetails( $shipment_details );
@@ -429,6 +444,12 @@ class Orders extends API\Request {
 				continue;
 			}
 
+			// Skip local pickup methods only when they have no cost, so that any
+			// non-zero pickup charge is still represented in the Square order.
+			if ( $this->is_local_pickup_method( $item ) && 0.0 === (float) $item->get_total() ) {
+				continue;
+			}
+
 			$line_items[] = $item;
 		}
 
@@ -453,7 +474,6 @@ class Orders extends API\Request {
 			if ( ! $item instanceof \WC_Order_Item_Shipping ) {
 				continue;
 			}
-
 			$total = (float) $item->get_total();
 			if ( $total <= 0 ) {
 				continue;
@@ -499,6 +519,17 @@ class Orders extends API\Request {
 		}
 
 		return $service_charges;
+	}
+
+	/**
+	 * Determines whether a shipping method is WooCommerce local pickup.
+	 *
+	 * @param mixed $shipping_method Shipping method candidate.
+	 * @return bool
+	 */
+	protected function is_local_pickup_method( $shipping_method ) {
+		return $shipping_method instanceof \WC_Order_Item_Shipping
+			&& 'local_pickup' === $shipping_method->get_method_id();
 	}
 
 
