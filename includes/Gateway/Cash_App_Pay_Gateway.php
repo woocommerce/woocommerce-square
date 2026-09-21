@@ -239,7 +239,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @since 4.5.0
 	 * @return string payment method title to show on checkout
 	 */
-	protected function get_default_title() {
+	public function get_default_title() {
 		return esc_html__( 'Cash App Pay', 'woocommerce-square' );
 	}
 
@@ -264,7 +264,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 	 * @since 4.5.0
 	 * @return string payment method description to show on checkout
 	 */
-	protected function get_default_description() {
+	public function get_default_description() {
 		return esc_html__( 'Pay securely using Cash App Pay.', 'woocommerce-square' );
 	}
 
