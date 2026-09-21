@@ -298,8 +298,6 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			return;
 		}
 
-		$sync = wc_square()->get_sync_handler();
-		$sh   = wc_square()->get_settings_handler();
 		wc_square()->get_sync_handler()->schedule_sync( true );
 	}
 }
