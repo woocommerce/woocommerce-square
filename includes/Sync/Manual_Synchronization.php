@@ -659,6 +659,11 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$this->set_attr( 'processed_product_ids', array_merge( $result['processed'], $processed_product_ids ) );
 
+			// These products already exist in Square, so they never reach upsert_new_products() and
+			// their quantity would otherwise never be pushed. Products Square skipped are left out:
+			// it rejected their catalog data, so their mapping may be stale.
+			$this->queue_products_for_inventory_push( array_diff( $result['processed'], $result['skipped'] ?? array() ) );
+
 			// any products that were staged but not processed, push to the matched array to try next time
 			$matched_product_ids = $this->get_attr( 'matched_product_ids', array() );
 			$this->set_attr( 'matched_product_ids', array_merge( $result['unprocessed'], $matched_product_ids ) );
@@ -829,6 +834,10 @@ class Manual_Synchronization extends Stepped_Job {
 
 			$processed_product_ids = array_merge( $result['processed'], $processed_product_ids );
 			$this->set_attr( 'processed_product_ids', $processed_product_ids );
+
+			// Matched by a catalog search rather than by stored meta, same reasoning as in
+			// update_matched_products().
+			$this->queue_products_for_inventory_push( array_diff( $result['processed'], $result['skipped'] ?? array() ) );
 
 			if ( ! empty( $result['unprocessed'] ) ) {
 
@@ -2037,6 +2046,32 @@ class Manual_Synchronization extends Stepped_Job {
 
 
 	/**
+	 * Queues products for the deferred inventory push step.
+	 *
+	 * Only upsert_new_products() wrote this list, so a sync pushed quantities for the products it
+	 * created and for nothing else. Products that already exist in Square are handled by the matched
+	 * steps, which create nothing, so this is the only way their quantity reaches push_inventory().
+	 * What each product then sends is still decided by the count builder.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int[] $product_ids WooCommerce product IDs to queue
+	 */
+	protected function queue_products_for_inventory_push( array $product_ids ) {
+
+		// Jobs that will not run the push step, a deletion or a store with inventory sync off, would
+		// only carry a list nothing reads.
+		if ( empty( $product_ids ) || ! in_array( 'push_inventory', (array) $this->get_next_steps(), true ) ) {
+			return;
+		}
+
+		$queued = $this->get_attr( 'inventory_push_product_ids', array() );
+
+		$this->set_attr( 'inventory_push_product_ids', array_values( array_unique( array_merge( $queued, $product_ids ) ) ) );
+	}
+
+
+	/**
 	 * Pushes WooCommerce inventory to Square for a specific set of product IDs.
 	 *
 	 * Called inline after each upsert_new_products batch so that newly created Square catalog
@@ -3045,8 +3080,8 @@ class Manual_Synchronization extends Stepped_Job {
 					$next_steps[] = 'push_inventory';
 
 					// Inventory is always fetched from Square as well, so that sales made on other
-					// channels are reflected, and for a product that already exists in Square this
-					// pull is the only thing that syncs its inventory during a manual sync.
+					// channels are reflected for anything this job did not push a count for, such as
+					// a product whose stock WooCommerce does not manage.
 					//
 					// What it must NOT do is read back the counts this same job just pushed: Square's
 					// inventory is eventually consistent, so a count that has not propagated yet
