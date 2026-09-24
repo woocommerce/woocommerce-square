@@ -248,10 +248,20 @@ class Digital_Wallet {
 			'shipping_city',
 			'shipping_state',
 			'shipping_postcode',
+			'shipping_phone',
 			'order_comments',
 			'account_username',
 			'account_password',
 		);
+
+		/**
+		 * Filter the default required fields for the checkout.
+		 *
+		 * @since x.x.x
+		 *
+		 * @param array $default_required_fields The default required fields for the checkout.
+		 */
+		$default_required_fields = (array) apply_filters( 'wc_square_digital_wallet_default_required_fields', $default_required_fields );
 
 		$fields = WC()->checkout()->get_checkout_fields();
 		$fields = array_merge(
