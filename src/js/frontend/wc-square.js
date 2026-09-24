@@ -51,6 +51,12 @@ jQuery( document ).ready( ( $ ) => {
 				args.is_change_payment_method_request;
 			this.metrics = {};
 
+			// Whether a payment form build is currently in flight.
+			this.settingUp = false;
+
+			// Whether a checkout update landed while a build was in flight.
+			this.pending_refresh = false;
+
 			if ( $( 'form.checkout' ).length ) {
 				this.form = $( 'form.checkout' );
 				this.handle_checkout_page();
@@ -200,6 +206,14 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since 2.0.0
 		 */
 		set_payment_fields() {
+			// A build is already in flight. `this.payment_form` isn't assigned until it settles, so
+			// carrying on here would skip the guards below and attach a second card to the container.
+			// Queue a single refresh instead - it's flushed once the build completes.
+			if ( this.settingUp ) {
+				this.pending_refresh = true;
+				return;
+			}
+
 			if ( this.payment_form ) {
 				// Don't re-initialize the payment form if it's already been initialized and exist in DOM.
 				if (
@@ -215,10 +229,13 @@ jQuery( document ).ready( ( $ ) => {
 
 				// Destroy the payment form and re-initialize it.
 				this.log( 'Destroying payment form' );
-				this.payment_form.destroy().then( () => {
-					this.log( 'Re-building payment form' );
-					this.initializeCard( this.payments );
-				} );
+
+				const previous_payment_form = this.payment_form;
+
+				// Drop the reference before awaiting, so a checkout update landing mid-destroy
+				// can't tear the same form down twice.
+				this.payment_form = null;
+				this.rebuild_payment_form( previous_payment_form );
 				return;
 			}
 
@@ -231,27 +248,75 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
+		 * Tears down the current payment form and builds a fresh one in its place.
+		 *
+		 * @param {Object} previous_payment_form The payment form to destroy.
+		 */
+		async rebuild_payment_form( previous_payment_form ) {
+			// Flag the rebuild synchronously so a checkout update arriving before the teardown
+			// resolves is queued rather than starting a competing build.
+			this.settingUp = true;
+
+			try {
+				await previous_payment_form.destroy();
+				this.log( 'Re-building payment form' );
+			} catch ( error ) {
+				this.log( 'Could not destroy the payment form: ' + error, 'error' );
+			}
+
+			// Build regardless of how the teardown went - the customer still needs a card field.
+			// `initializeCard()` keeps the flag raised and clears it when the build settles.
+			this.initializeCard( this.payments );
+		}
+
+		/**
 		 * Initialises the Credit Card field with defaults (if any)
 		 *
 		 * @param {object} payments The Square payment object.
 		 */
-		initializeCard( payments ) {
+		async initializeCard( payments ) {
+			// Flag the build synchronously - `payments.card()` and `card.attach()` are both async,
+			// and `this.payment_form` stays unset until they resolve.
+			this.settingUp = true;
+
 			let defaultPostalCode = $( '#billing_postcode' ).val();
 			defaultPostalCode = defaultPostalCode || '';
 
-			payments.card( {
-				postalCode: defaultPostalCode, // Default postal code value.
-			} ).then( ( card ) => {
-				if ( ! document.getElementById( 'wc-square-credit-card-container' ) ) {
-					this.end( 'initialize_payment_form', true );
-					return;
-				}
+			try {
+				const card = await payments.card( {
+					postalCode: defaultPostalCode, // Default postal code value.
+				} );
 
-				card.attach( '#wc-square-credit-card-container' );
-				this.payment_form = card;
-				this.log( 'Payment form loaded' );
-				this.end( 'initialize_payment_form' );
-			} );
+				const container = document.getElementById( 'wc-square-credit-card-container' );
+
+				if ( ! container ) {
+					await card.destroy();
+					this.end( 'initialize_payment_form', true );
+				} else {
+					// The container is rendered empty server-side, so anything inside it was left
+					// behind by an earlier attach. Clear it rather than mounting a second card alongside.
+					$( container ).empty();
+
+					// Await the attach so `this.payment_form` is only exposed once the card is
+					// mounted and ready to tokenize.
+					await card.attach( '#wc-square-credit-card-container' );
+
+					this.payment_form = card;
+					this.log( 'Payment form loaded' );
+					this.end( 'initialize_payment_form' );
+				}
+			} catch ( error ) {
+				this.log( 'Could not build the payment form: ' + error, 'error' );
+				this.end( 'initialize_payment_form', true );
+			} finally {
+				this.settingUp = false;
+
+				// Apply any checkout update that was queued while the form was building.
+				if ( this.pending_refresh ) {
+					this.pending_refresh = false;
+					this.set_payment_fields();
+				}
+			}
 		}
 
 		/**
