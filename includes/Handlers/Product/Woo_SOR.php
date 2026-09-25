@@ -35,12 +35,13 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	 * @param CatalogObject $catalog_object Square SDK catalog object
 	 * @param \WC_Product $product WooCommerce product
 	 * @return CatalogObject
-	 * @throws \Exception
+	 * @throws \InvalidArgumentException when the catalog object is not an ITEM
+	 * @throws \Exception on Square API failures while resolving item options
 	 */
 	public static function update_catalog_item( CatalogObject $catalog_object, \WC_Product $product ) {
 
 		if ( 'ITEM' !== $catalog_object->getType() || ! $catalog_object->getItemData() ) {
-			throw new \Exception( 'Type of $catalog_object must be an ITEM' );
+			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM' );
 		}
 
 		// ensure the product meta is persisted
@@ -130,7 +131,10 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 					// if yes, use the relative Square ID.
 					$option_id = false;
 					foreach ( $options_data as $transient_option_id => $option_data_transient ) {
-						if ( $option_data_transient['name'] === $attribute_name ) {
+						// Square treats Item Option names as case insensitive and rejects a create whose
+						// name differs from an existing one only by case, so match the same way and
+						// reuse what Square already has.
+						if ( 0 === strcasecmp( (string) $option_data_transient['name'], (string) $attribute_name ) ) {
 							$option_id = $transient_option_id;
 							break;
 						}
@@ -261,12 +265,13 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 	 * @param array         $options_ids    Array of options IDs
 	 *
 	 * @return CatalogObject
-	 * @throws \Exception
+	 * @throws \InvalidArgumentException when the catalog object is not an ITEM_VARIATION
+	 * @throws \Exception on Square API failures while resolving item options
 	 */
 	public static function update_catalog_variation( CatalogObject $catalog_object, \WC_Product $product, $options_ids = array() ) {
 
 		if ( 'ITEM_VARIATION' !== $catalog_object->getType() || ! $catalog_object->getItemVariationData() ) {
-			throw new \Exception( 'Type of $catalog_object must be an ITEM_VARIATION' );
+			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM_VARIATION' );
 		}
 
 		// ensure the variation meta is persisted
@@ -343,14 +348,30 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						$variation_name[] = $attribute_value;
 					}
 
-					$option_id       = '';
-					$option_value_id = '';
-					if ( isset( $options_data[ $options_ids[ $variation_index ] ] ) ) {
-						$option_id = $options_ids[ $variation_index ];
+					// Remembered so a case insensitive match below can correct this entry in place.
+					// Square builds a variation's name out of its own option value names and then
+					// refuses to let that name be edited for as long as the variation uses item
+					// options. A name carrying Woo's casing against values bound to Square's is
+					// therefore accepted on the create and rejected on every update after it, with
+					// no refresh flag and no self heal, so the product stays unsyncable for good.
+					$variation_name_index = count( $variation_name ) - 1;
 
-						foreach ( $options_data[ $options_ids[ $variation_index ] ]['value_ids'] as $value_id => $value_name ) {
-							if ( $value_name === $attribute_value ) {
+					// Taken from the option the parent product just created or reused, not from the
+					// cache, because the cache can legitimately not know about it yet: an unlooped
+					// read on a paginated catalogue leaves the new option in the partial cache only.
+					// Carrying the ID regardless means the create below takes the retrieve path and
+					// reuses that option, instead of asking Square for one it already has.
+					$option_id       = isset( $options_ids[ $variation_index ] ) ? $options_ids[ $variation_index ] : '';
+					$option_value_id = '';
+					if ( isset( $options_data[ $option_id ] ) ) {
+						foreach ( $options_data[ $option_id ]['value_ids'] as $value_id => $value_name ) {
+							if ( 0 === strcasecmp( (string) $value_name, (string) $attribute_value ) ) {
 								$option_value_id = $value_id;
+								// Square's spelling of the value wins, because that is the value
+								// the ID above points at and the one Square will name the variation
+								// from. Byte identical whenever the casing already agrees, so
+								// nothing that was already in sync gets renamed.
+								$variation_name[ $variation_name_index ] = $value_name;
 								break;
 							}
 						}
@@ -385,8 +406,11 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 						// Get the Square ID of the attribute value.
 						$updated_option_values = $option->getItemOptionData() ? $option->getItemOptionData()->getValues() : array();
 						foreach ( $updated_option_values as $option_value ) {
-							if ( $option_value->getItemOptionValueData()->getName() === $attribute_value ) {
+							if ( 0 === strcasecmp( (string) $option_value->getItemOptionValueData()->getName(), (string) $attribute_value ) ) {
 								$option_value_id = $option_value->getId();
+								// Same rule as the cache path above: follow the bound value's own
+								// name, not the Woo attribute's.
+								$variation_name[ $variation_name_index ] = $option_value->getItemOptionValueData()->getName();
 								break;
 							}
 						}
@@ -412,24 +436,56 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 			$location_overrides = $variation_data->getLocationOverrides();
 
 			/*
-			 * Only update track_inventory if it's not set.
+			 * Only update the base track_inventory if it's not set.
 			 * This will only update inventory tracking on new variations.
 			 * inventory tracking will remain the same for existing variations.
 			 */
 			if ( is_null( $track_inventory ) && is_null( $location_overrides ) ) {
 				$variation_data->setTrackInventory( $product->get_manage_stock() );
+			}
 
-				// If the product is not managing stock and is out of stock, set it as sold out.
-				if ( ! $product->get_manage_stock() && 'outofstock' === $product->get_stock_status() ) {
-					$configured_location = wc_square()->get_settings_handler()->get_location_id();
-					$location_override   = new \Square\Models\ItemVariationLocationOverrides();
+			/*
+			 * For products that do not manage stock in WooCommerce, the configured location's
+			 * tracking override always follows the current WooCommerce availability:
+			 *
+			 * - out of stock: tracking on. Square's sold_out flag is read-only and only becomes
+			 *   true through a tracked count of zero, so tracking (plus the explicit zero count
+			 *   pushed by the inventory step) is the only API way to mark the item sold out.
+			 * - in stock: tracking off, which is the sellable state for an untracked item. This
+			 *   also clears the sold-out state when a product comes back in stock; previously the
+			 *   override was only ever written for new variations, so a product that went out of
+			 *   stock once stayed sold out in Square forever.
+			 *
+			 * The override is merged into any existing overrides so location price overrides are
+			 * preserved.
+			 */
+			if ( ! $product->get_manage_stock() ) {
+				$configured_location = wc_square()->get_settings_handler()->get_location_id();
+				$is_out_of_stock     = 'outofstock' === $product->get_stock_status();
+
+				$location_overrides = is_array( $location_overrides ) ? $location_overrides : array();
+				$location_override  = null;
+
+				foreach ( $location_overrides as $existing_override ) {
+					if ( $existing_override->getLocationId() === $configured_location ) {
+						$location_override = $existing_override;
+						break;
+					}
+				}
+
+				// Out of stock needs an override, created if the item has none, because tracking is the
+				// only way to reach Square's sold out state. In stock only RELEASES tracking on an
+				// override that already exists: creating one purely to say "not tracked" would
+				// overwrite a merchant's own Square side tracking for an item WooCommerce does not
+				// manage, which is not ours to decide.
+				if ( ! $location_override && $is_out_of_stock ) {
+					$location_override = new \Square\Models\ItemVariationLocationOverrides();
 					$location_override->setLocationId( $configured_location );
-					// We need to set track_inventory to true to be able to set sold_out to true, without it will be ignored.
-					$location_override->setTrackInventory( true );
-					$location_override->setSoldOut( true );
-					$location_overrides = array( $location_override );
+					$location_overrides[] = $location_override;
+				}
 
-					// Set the location overrides.
+				if ( $location_override ) {
+					$location_override->setTrackInventory( $is_out_of_stock );
 					$variation_data->setLocationOverrides( $location_overrides );
 				}
 			}

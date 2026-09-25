@@ -111,6 +111,7 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		// Step 9: Update the order state and fulfillment states to completed using API.
 		await page.goto('/wp-admin/admin.php?page=wc-status&tab=action-scheduler&status=pending');
 		if (squareOrderId && process.env.SQUARE_ACCESS_TOKEN) {
+			await page.waitForTimeout( 2000 );
 			try {
 				// To update the order state, Square API requires the 'version' field in the order object.
 				// All fulfillments must have a state of COMPLETED, CANCELED, or FAILED before the order can be completed.
@@ -172,6 +173,7 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		// Step 10: Run the Square sync action.
 		if (squareOrderId) {
 			try {
+				await page.waitForTimeout( 2000 );
 				await runScheduledAction(page, 'wc_square_sync_orders');
 				console.log('Successfully ran Square sync action');
 			} catch (error) {
@@ -180,10 +182,20 @@ test.describe('Order Sync and Fulfillment Tests @sync', () => {
 		}
 
 		// Step 11: Verify the order status is completed.
-		await gotoOrderEditPage( page, orderId );
-		const updatedOrderStatus = await page.locator('#order_status').inputValue();
-		expect(updatedOrderStatus).toBe('wc-completed');
-		console.log(`Order status is (expected: wc-completed): ${updatedOrderStatus}`);
+		let count = 0;
+		let updatedOrderStatus = null;
+		while ( updatedOrderStatus !== 'wc-completed' && count < 5 ) {
+			await page.waitForTimeout( 1000 );
+			await gotoOrderEditPage( page, orderId );
+			updatedOrderStatus = await page
+				.locator( '#order_status' )
+				.inputValue();
+			count++;
+		}
+		expect( updatedOrderStatus ).toBe( 'wc-completed' );
+		console.log(
+			`Order status is (expected: wc-completed): ${ updatedOrderStatus }`
+		);
 
 		console.log('PASSED: Action Scheduler and sync infrastructure verified');
 	});
