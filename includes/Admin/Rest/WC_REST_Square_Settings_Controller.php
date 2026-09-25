@@ -206,7 +206,6 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings     = array();
 		$keys_to_skip = array(
 			'is_connected',
 			'access_tokens',
@@ -217,17 +216,25 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 			'disconnection_url',
 		);
 
+		// Start from existing settings so callers that send only changed fields
+		// (e.g. the modern-settings SDK save handler) don't wipe unrelated keys.
+		$settings = (array) get_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, array() );
+
 		foreach ( $this->allowed_params as $index => $key ) {
 			if ( in_array( $key, $keys_to_skip, true ) ) {
 				continue;
 			}
 
-			$new_value        = wc_clean( wp_unslash( $request->get_param( $key ) ) );
-			$settings[ $key ] = $new_value;
+			$param = $request->get_param( $key );
+			if ( null === $param ) {
+				continue;
+			}
+
+			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
-		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ) ?? '' );
-		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ) ?? '' );
+		$is_sandbox    = wc_clean( wp_unslash( $settings['enable_sandbox'] ?? '' ) );
+		$sandbox_token = wc_clean( wp_unslash( $settings['sandbox_token'] ?? '' ) );
 
 		update_option( self::SQUARE_GATEWAY_SETTINGS_OPTION_NAME, $settings );
 
@@ -235,8 +242,17 @@ class WC_REST_Square_Settings_Controller extends WC_Square_REST_Base_Controller 
 		// and won't refresh until the next page load.
 		wc_square()->get_settings_handler()->init_settings();
 
+		// Propagate the sandbox token into the encrypted access-token store so the
+		// connection registers in sandbox mode. Use the merged value (stored or
+		// just-submitted) — switching INTO sandbox must apply the stored token even
+		// when it was not re-typed, otherwise is_connected() stays false and the
+		// Business location section never appears. Skip the re-encrypt when the
+		// token already matches what is stored, so it does not re-write on every save.
 		if ( 'yes' === $is_sandbox && ! empty( $sandbox_token ) ) {
-			wc_square()->get_settings_handler()->update_access_token( $sandbox_token );
+			$handler = wc_square()->get_settings_handler();
+			if ( $sandbox_token !== $handler->get_access_token() ) {
+				$handler->update_access_token( $sandbox_token );
+			}
 		}
 
 		wp_send_json_success();
