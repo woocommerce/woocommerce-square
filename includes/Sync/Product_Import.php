@@ -93,6 +93,21 @@ class Product_Import extends Stepped_Job {
 		$result     = wc_square()->get_api()->retrieve_options_data( $cursor );
 		$new_cursor = isset( $result[2] ) ? $result[2] : null;
 
+		// Logged per page, not just at the end, so a read that stops short is visible here as a
+		// count that never reaches the number of options Square holds. Without it a truncated read
+		// only surfaces much later, as Square rejecting an option it already has.
+		if ( isset( $result[1] ) && is_array( $result[1] ) ) {
+			$option_count = count( $result[1] );
+
+			wc_square()->log(
+				sprintf(
+					'Fetched item options from Square: %1$d accumulated, %2$s.',
+					$option_count,
+					empty( $new_cursor ) ? 'read complete' : 'more pages to follow'
+				)
+			);
+		}
+
 		if ( ! empty( $new_cursor ) ) {
 			$this->set_attr( 'fetch_options_data_cursor', $new_cursor );
 		} else {
@@ -309,6 +324,19 @@ class Product_Import extends Stepped_Job {
 			$inventory_hash[ $inventory_count->getCatalogObjectId() ] = $inventory_count->getQuantity();
 		}
 
+		// Verify zero counts against Square's inventory change history: a never-counted item
+		// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
+		// (SQUARE-145).
+		$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+		$verified_zero_ids = $this->resolve_zero_count_verification( 'import_inventory', $zero_object_ids );
+
+		if ( null === $verified_zero_ids ) {
+			// Verification unavailable and retries remain: return WITHOUT advancing the import cursor
+			// so the step runs again; throwing would fail the whole import for one transient error.
+			// Once the retries are spent the import proceeds writing no zeros and records an alert.
+			return;
+		}
+
 		foreach ( $objects as $catalog_object ) {
 
 			// all inventory should be tied to a variation, but check here just in case
@@ -317,24 +345,43 @@ class Product_Import extends Stepped_Job {
 				$product = Product::get_product_by_square_variation_id( $catalog_object->getId() );
 
 				if ( $product && $product instanceof \WC_Product ) {
+
+					// No "Sync with Square" gate here on purpose: an import is started by the
+					// merchant, so it belongs with the explicit fetch action rather than with the
+					// automatic pulls SQUARE-359 gates. Products matched and updated during an
+					// import also never receive the synced flag (it is only set for newly imported
+					// products), so gating here would silently skip their inventory.
 					$inventory_data        = $catalog_objects_hash[ $catalog_object->getId() ] ?? array();
 					$is_tracking_inventory = $inventory_data['track_inventory'] ?? false;
 					$sold_out              = $inventory_data['sold_out'] ?? false;
 
-					/* If catalog object is tracked and has a quantity > 0 set in Square. */
 					if ( $is_tracking_inventory && isset( $inventory_hash[ $catalog_object->getId() ] ) ) {
-						$product->set_stock_quantity( (float) $inventory_hash[ $catalog_object->getId() ] );
-						$product->set_manage_stock( true );
 
-						/* If the catalog object is tracked but the quantity in Square is set to 0. */
-					} elseif ( $is_tracking_inventory ) {
-						$product->set_stock_quantity( 0 );
-						$product->set_manage_stock( true );
+						$changed = Helper::apply_square_inventory_count(
+							$product,
+							(float) $inventory_hash[ $catalog_object->getId() ],
+							(bool) $sold_out,
+							in_array( $catalog_object->getId(), $verified_zero_ids, true )
+						);
 
-						/* If the catalog object is not tracked in Square at all. */
-					} else {
+						if ( ! $changed ) {
+							continue;
+						}
+					} elseif ( ! $is_tracking_inventory ) {
+
+						// Not tracked in Square: reflect availability. Stock management follows only
+						// when Square owns the setting; under WooCommerce SOR it is merchant intent
+						// and is left alone, so a Square side toggle cannot invert the system of
+						// record.
 						$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-						$product->set_manage_stock( false );
+
+						if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+							$product->set_manage_stock( false );
+						}
+					} else {
+
+						// Tracked but no IN_STOCK count returned: "no information", never a zero.
+						continue;
 					}
 
 					$product->save();
@@ -771,7 +818,10 @@ class Product_Import extends Stepped_Job {
 					'value_ids' => $option_value_ids,
 				);
 
-				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+				// Handed to the API layer rather than written straight to the finished cache: the
+				// read above never walks the cursor, so its set can be the first page of a
+				// paginated catalogue and must not be published as the whole of it.
+				wc_square()->get_api()->cache_option_data( $option_id, $options_data[ $option_id ] );
 			}
 
 			$attributes[] = array(
@@ -868,7 +918,9 @@ class Product_Import extends Stepped_Job {
 					'values'    => $option_values,
 					'value_ids' => array_combine( $option_value_ids, $option_values ),
 				);
-				set_transient( 'wc_square_options_data', $options_data, DAY_IN_SECONDS );
+
+				// Same reason as above: an unlooped read must not publish under the finished cache.
+				wc_square()->get_api()->cache_option_data( $option_id, $options_data[ $option_id ] );
 			}
 
 			// Filter option values to only include those actually used by variations.
