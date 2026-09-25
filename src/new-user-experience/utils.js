@@ -32,22 +32,41 @@ export const getPaymentGatewaySettingsData = async () => {
 			settings.tokenization || CREDIT_CARD_DEFAULT_STATE.tokenization,
 	};
 
+	const hideOptions = Array.isArray(
+		settings.digital_wallets_hide_button_options
+	)
+		? settings.digital_wallets_hide_button_options
+		: [];
+
+	// Prefer the new per-wallet keys; fall back to the superseded hide-list /
+	// shared button type so stores that have not migrated yet still load correctly.
+	const googlePayEnabled =
+		settings.digital_wallets_google_pay_enabled ||
+		( hideOptions.includes( 'google' ) ? 'no' : 'yes' );
+	const applePayEnabled =
+		settings.digital_wallets_apple_pay_enabled ||
+		( hideOptions.includes( 'apple' ) ? 'no' : 'yes' );
+	const applePayButtonType =
+		settings.digital_wallets_apple_pay_button_type ||
+		settings.digital_wallets_button_type ||
+		DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_apple_pay_button_type;
+
 	const digitalWallet = {
 		enable_digital_wallets:
 			settings.enable_digital_wallets ||
 			DIGITAL_WALLETS_DEFAULT_STATE.enable_digital_wallets,
-		digital_wallets_button_type:
-			settings.digital_wallets_button_type ||
-			DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_button_type,
+		digital_wallets_google_pay_enabled: googlePayEnabled,
+		digital_wallets_apple_pay_enabled: applePayEnabled,
+		digital_wallets_google_pay_button_type:
+			settings.digital_wallets_google_pay_button_type ||
+			DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_google_pay_button_type,
+		digital_wallets_apple_pay_button_type: applePayButtonType,
 		digital_wallets_apple_pay_button_color:
 			settings.digital_wallets_apple_pay_button_color ||
 			DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_apple_pay_button_color,
 		digital_wallets_google_pay_button_color:
 			settings.digital_wallets_google_pay_button_color ||
 			DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_google_pay_button_color,
-		digital_wallets_hide_button_options:
-			settings.digital_wallets_hide_button_options ||
-			DIGITAL_WALLETS_DEFAULT_STATE.digital_wallets_hide_button_options,
 	};
 
 	return { creditCard, digitalWallet };
