@@ -18,7 +18,6 @@ module.exports = {
 			'@woocommerce/settings',
 			'@wordpress/i18n',
 			'@wordpress/element',
-			'@woocommerce/block-templates',
 		],
 		'import/resolver': {
 			node: {

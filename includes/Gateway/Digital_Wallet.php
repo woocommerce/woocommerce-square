@@ -64,8 +64,10 @@ class Digital_Wallet {
 			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		}
 
-		if ( is_admin() && ( $gateway->get_plugin()->is_gateway_settings() || $gateway->get_plugin()->is_plugin_settings() ) ) {
-			add_action( 'init', array( $this, 'apple_pay_domain_registration' ), 11 );
+		if ( is_admin() ) {
+			// Hooked on `admin_init` rather than `init` so that it runs after `auth_redirect()`. The screen
+			// and capability checks live in the callback, see Digital_Wallet::apple_pay_domain_registration().
+			add_action( 'admin_init', array( $this, 'apple_pay_domain_registration' ), 11 );
 		}
 
 		// WC AJAX
@@ -1103,14 +1105,25 @@ class Digital_Wallet {
 	 * @since 2.3
 	 */
 	public function apple_pay_domain_registration() {
-		// Only register the store url with Apple Pay if the gateway and digital wallets are enable (check POST data to account for the page load when settings are being saved).
-		if ( ( 'no' === $this->gateway->get_option( 'enabled', 'no' ) && empty( $_POST['woocommerce_square_credit_card_enabled'] ) ) || ( 'no' === $this->gateway->get_option( 'enable_digital_wallets', 'yes' ) && empty( $_POST['woocommerce_square_credit_card_enable_digital_wallets'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// `admin_init` is also fired by admin-ajax.php, which does not run `auth_redirect()`, so an explicit
+		// capability check is required here and cannot be replaced by a screen check alone.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 			return;
 		}
 
-		// when settings are being saved, make sure we use the latest values from POST data to check if Apple isn't one of the hidden wallet options
-		$hidden_wallet_options = ! isset( $_POST['woocommerce_square_credit_card_enable_digital_wallets'] ) ? $this->gateway->get_option( 'digital_wallets_hide_button_options', array() ) : ( ! empty( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ? wc_clean( wp_unslash( $_POST['woocommerce_square_credit_card_digital_wallets_hide_button_options'] ) ) : array() ); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( in_array( 'apple', $hidden_wallet_options, true ) ) {
+		// Only run while viewing the plugin or gateway settings screens.
+		if ( ! $this->gateway->get_plugin()->is_gateway_settings() && ! $this->gateway->get_plugin()->is_plugin_settings() ) {
+			return;
+		}
+
+		// Only register the store url with Apple Pay if the gateway and digital wallets are enabled. WooCommerce saves
+		// the settings on `wp_loaded`, so by the time this runs on `admin_init` the stored values are already current.
+		if ( 'no' === $this->gateway->get_option( 'enabled', 'no' ) || 'no' === $this->gateway->get_option( 'enable_digital_wallets', 'yes' ) ) {
+			return;
+		}
+
+		$hidden_wallet_options = $this->gateway->get_option( 'digital_wallets_hide_button_options', array() );
+		if ( in_array( 'apple', (array) $hidden_wallet_options, true ) ) {
 			return;
 		}
 
@@ -1149,12 +1162,15 @@ class Digital_Wallet {
 	private function register_apple_pay_domain() {
 		$access_token = $this->gateway->get_plugin()->get_settings_handler()->get_access_token();
 		$is_sandbox   = $this->gateway->get_plugin()->get_settings_handler()->is_sandbox();
-		$domain_name  = ! empty( $_SERVER['HTTP_HOST'] ) ? wc_clean( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		// Derived from the stored home URL rather than the Host header, which is supplied by the request.
+		// This matches the domain passed to Apple Pay merchant validation.
+		$home_host   = wp_parse_url( home_url(), PHP_URL_HOST );
+		$domain_name = is_string( $home_host ) ? $home_host : '';
 
 		$this->gateway->update_option( 'apple_pay_domain_registration_attempted', 'yes' );
 
 		if ( empty( $domain_name ) ) {
-			throw new \Exception( 'Unable to verify domain with Apple Pay - no domain found in $_SERVER[\'HTTP_HOST\'].' );
+			throw new \Exception( 'Unable to verify domain with Apple Pay - no domain found in the home URL.' );
 		}
 
 		if ( empty( $access_token ) ) {

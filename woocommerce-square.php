@@ -2,10 +2,10 @@
 /**
  * Plugin Name: WooCommerce Square
  * Requires Plugins: woocommerce
- * Version: 5.4.1
+ * Version: 5.5.1
  * Plugin URI: https://woocommerce.com/products/square/
- * Requires at least: 6.8
- * Tested up to: 7.0
+ * Requires at least: 6.9
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * PHP tested up to: 8.4
  *
@@ -22,14 +22,14 @@
  * @copyright Copyright (c) 2019, Automattic, Inc.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0 or later
  *
- * WC requires at least: 10.7
- * WC tested up to: 10.9
+ * WC requires at least: 10.9
+ * WC tested up to: 11.1
  */
 
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_VERSION' ) ) {
-	define( 'WC_SQUARE_PLUGIN_VERSION', '5.4.1' ); // WRCS: DEFINED_VERSION.
+	define( 'WC_SQUARE_PLUGIN_VERSION', '5.5.1' ); // WRCS: DEFINED_VERSION.
 }
 
 if ( ! defined( 'WC_SQUARE_PLUGIN_URL' ) ) {
@@ -60,10 +60,10 @@ class WooCommerce_Square_Loader {
 	const MINIMUM_PHP_VERSION = '7.4.0';
 
 	/** minimum WordPress version required by this plugin */
-	const MINIMUM_WP_VERSION = '6.8';
+	const MINIMUM_WP_VERSION = '6.9';
 
 	/** minimum WooCommerce version required by this plugin */
-	const MINIMUM_WC_VERSION = '10.7';
+	const MINIMUM_WC_VERSION = '10.9';
 
 	/**
 	 * SkyVerge plugin framework version used by this plugin
@@ -141,7 +141,25 @@ class WooCommerce_Square_Loader {
 		$loader = require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		// register plugin namespace with autoloader
-		$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		if ( is_object( $loader ) && method_exists( $loader, 'addPsr4' ) ) {
+			$loader->addPsr4( 'WooCommerce\\Square\\', __DIR__ . '/includes' );
+		} else {
+			// require_once returns true rather than the ClassLoader when something loaded the same
+			// autoloader first, which is what happens under PHPUnit. Register the namespace directly
+			// so the plugin still resolves its own classes instead of fataling here.
+			spl_autoload_register(
+				static function ( $class_name ) {
+					$prefix = 'WooCommerce\\Square\\';
+					if ( 0 !== strncmp( $class_name, $prefix, strlen( $prefix ) ) ) {
+						return;
+					}
+					$file = __DIR__ . '/includes/' . str_replace( '\\', '/', substr( $class_name, strlen( $prefix ) ) ) . '.php';
+					if ( file_exists( $file ) ) {
+						require_once $file;
+					}
+				}
+			);
+		}
 
 		require_once plugin_dir_path( __FILE__ ) . 'includes/Functions.php';
 
@@ -471,7 +489,6 @@ class WooCommerce_Square_Loader {
 				 */
 				return;
 			}
-			new \WooCommerce\Square\Admin\Product_Editor_Compatibility();
 		}
 	}
 
