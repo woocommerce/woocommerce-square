@@ -1,6 +1,6 @@
 import apiFetch from '@wordpress/api-fetch';
 import { Button, CheckboxControl, Modal } from '@wordpress/components';
-import { RawHTML, useState } from '@wordpress/element';
+import { createInterpolateElement, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 
 const IMPORT_PATH = '/wc/v3/wc_square/import-products';
@@ -175,17 +175,29 @@ export default function ImportProducts( { field, values, initialValues } ) {
 							'woocommerce-square'
 						) }
 					</h3>
-					<RawHTML>
-						{ sprintf(
-							/* translators: %1$s and %2$s are placeholders for the link to the documentation */
-							__(
-								'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.',
-								'woocommerce-square'
+					<p>
+						{ createInterpolateElement(
+							sprintf(
+								/* translators: %1$s and %2$s are placeholders for the link to the documentation */
+								__(
+									'Doing so will update existing WooCommerce products with the latest information from Square. %1$sView Documentation%2$s.',
+									'woocommerce-square'
+								),
+								'<a>',
+								'</a>'
 							),
-							'<a href="https://woocommerce.com/document/woocommerce-square/sync-settings/#import-products" target="_blank" rel="noopener">',
-							'</a>'
+							{
+								a: (
+									// eslint-disable-next-line jsx-a11y/anchor-has-content
+									<a
+										href="https://woocommerce.com/document/woocommerce-square/sync-settings/#import-products"
+										target="_blank"
+										rel="noopener noreferrer"
+									/>
+								),
+							}
 						) }
-					</RawHTML>
+					</p>
 					<CheckboxControl
 						label={ __(
 							'Update existing products during import.',
