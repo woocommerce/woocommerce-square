@@ -7,6 +7,7 @@ import DigitalWalletToggle from './payment-methods/digital-wallet-toggle';
 import HiddenField from './payment-methods/hidden-field';
 import CashAppButtonPreview from './cash-app/button-preview';
 import DigitalWalletPreview from './digital-wallets/preview';
+import ImportProducts from './synchronize/import-products';
 import squareSaveHandler from './save-handler';
 
 /**
@@ -34,6 +35,19 @@ const paymentMethodsView = ( values ) => {
 	return view;
 };
 
+/**
+ * True when the system of record makes the product sync fields relevant.
+ *
+ * With sync disabled the legacy screen hides the interval, the inventory toggle
+ * and the manual import action, so the modern tab does the same.
+ *
+ * @param {Object} values All current form values.
+ * @return {boolean} Whether product sync is active.
+ */
+const isProductSyncActive = ( values ) =>
+	values.system_of_record === 'woocommerce' ||
+	values.system_of_record === 'square';
+
 registerSettingsExtension( {
 	scope: { page: 'square' },
 	components: {
@@ -45,6 +59,7 @@ registerSettingsExtension( {
 		'square/hidden-field': HiddenField,
 		'square/cash-app-button-preview': CashAppButtonPreview,
 		'square/digital-wallet-preview': DigitalWalletPreview,
+		'square/import-products': ImportProducts,
 	},
 	fieldVisibility: {
 		// Sandbox credential fields are only shown when sandbox is selected.
@@ -66,6 +81,20 @@ registerSettingsExtension( {
 		digital_wallet_preview: ( { values } ) =>
 			values.digital_wallets_google_pay_enabled === 'yes' ||
 			values.digital_wallets_apple_pay_enabled === 'yes',
+		// Synchronize tab: the sync fields only apply when a system of record is
+		// set. Values are never cleared when it changes, matching the legacy
+		// screen, so a field that comes back keeps the merchant's prior choice.
+		enable_inventory_sync: ( { values } ) => isProductSyncActive( values ),
+		sync_interval: ( { values } ) => isProductSyncActive( values ),
+		// The manual import heading and its button are one sub-section.
+		square_import_products_header: ( { values } ) =>
+			isProductSyncActive( values ),
+		square_import_products: ( { values } ) => isProductSyncActive( values ),
+		// These two only ever applied when Square is the system of record.
+		override_product_images: ( { values } ) =>
+			values.system_of_record === 'square',
+		hide_missing_products: ( { values } ) =>
+			values.system_of_record === 'square',
 	},
 	groupVisibility: {
 		// Payment Methods tab: show one sub-page at a time based on the
