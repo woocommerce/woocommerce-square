@@ -9,7 +9,6 @@ import { useState, useCallback } from '@wordpress/element';
 import {
 	getSquareServerData,
 	log,
-	handleErrors,
 	convertAmount,
 	shouldChargeOrder,
 } from '../square-utils';
@@ -167,7 +166,9 @@ export const usePaymentForm = (
 
 				return tokenResult;
 			} catch ( error ) {
-				handleErrors( [ error ] );
+				// Return an error-shaped result so the caller can surface the failure
+				// instead of dereferencing `undefined`.
+				return { status: 'Error', errors: [ error ] };
 			}
 		},
 		[ token, getVerificationDetails ]
