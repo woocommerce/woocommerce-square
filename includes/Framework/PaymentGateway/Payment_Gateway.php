@@ -1148,7 +1148,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @since 3.0.0
 	 * @return string payment method title to show on checkout
 	 */
-	protected function get_default_title() {
+	public function get_default_title() {
 
 		// defaults for credit card, override for others
 		if ( $this->is_credit_card_gateway() ) {
@@ -1166,7 +1166,7 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 	 * @since 3.0.0
 	 * @return string payment method description to show on checkout
 	 */
-	protected function get_default_description() {
+	public function get_default_description() {
 
 		// defaults for credit card, override for others
 		if ( $this->is_credit_card_gateway() ) {

@@ -156,7 +156,7 @@ class Gift_Card extends Payment_Gateway {
 	 *
 	 * @return string payment method title to show on checkout
 	 */
-	protected function get_default_title() {
+	public function get_default_title() {
 		return esc_html__( 'Square Gift Cards', 'woocommerce-square' );
 	}
 
@@ -168,7 +168,7 @@ class Gift_Card extends Payment_Gateway {
 	 *
 	 * @return string payment method description to show on checkout
 	 */
-	protected function get_default_description() {
+	public function get_default_description() {
 		return esc_html__( 'Allow customers to purchase and redeem gift cards during checkout.', 'woocommerce-square' );
 	}
 
