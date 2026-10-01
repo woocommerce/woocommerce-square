@@ -76,6 +76,10 @@ registerSettingsExtension( {
 			values.cc_transaction_type === 'authorization',
 		cc_enable_paid_capture: ( { values } ) =>
 			values.cc_transaction_type === 'authorization',
+		cashapp_charge_virtual_orders: ( { values } ) =>
+			values.cashapp_transaction_type === 'authorization',
+		cashapp_enable_paid_capture: ( { values } ) =>
+			values.cashapp_transaction_type === 'authorization',
 	},
 	groupVisibility: {
 		// Payment Methods tab: show one sub-page at a time based on the

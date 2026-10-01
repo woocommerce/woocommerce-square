@@ -29,6 +29,8 @@ const CASH_APP_TRANSACTION_FIELDS = {
 	cashapp_title: 'title',
 	cashapp_description: 'description',
 	cashapp_transaction_type: 'transaction_type',
+	cashapp_charge_virtual_orders: 'charge_virtual_orders',
+	cashapp_enable_paid_capture: 'enable_paid_capture',
 };
 
 // Payments & Transactions tab Credit Card fields, mapped to the REST param

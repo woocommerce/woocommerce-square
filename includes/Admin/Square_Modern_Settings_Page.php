@@ -772,6 +772,20 @@ if ( class_exists( '\Automattic\WooCommerce\Admin\Settings\LegacySettingsPageAda
 							'value'       => $cash_app['transaction_type'] ?? 'charge',
 							'options'     => $this->get_transaction_type_options(),
 						),
+						array(
+							'id'          => 'cashapp_charge_virtual_orders',
+							'label'       => __( 'Charge Virtual-Only Orders', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'If the order contains exclusively virtual items, enable this to immediately charge, rather than authorize, the transaction.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $cash_app['charge_virtual_orders'] ?? 'no' ) ),
+						),
+						array(
+							'id'          => 'cashapp_enable_paid_capture',
+							'label'       => __( 'Capture Paid Orders', 'woocommerce-square' ),
+							'type'        => 'checkbox',
+							'description' => __( 'Automatically capture orders when they are changed to a paid status.', 'woocommerce-square' ),
+							'value'       => wc_bool_to_string( wc_string_to_bool( $cash_app['enable_paid_capture'] ?? 'no' ) ),
+						),
 					),
 				),
 				'pt_advanced_section'    => array(
