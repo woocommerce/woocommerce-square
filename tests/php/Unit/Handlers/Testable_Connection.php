@@ -19,7 +19,7 @@ class Testable_Connection extends Connection {
 	 *
 	 * @param Memory_Plugin $plugin Plugin double.
 	 */
-	public function __construct( Memory_Plugin $plugin ) {
+	public function __construct( $plugin ) {
 		$this->plugin = $plugin;
 	}
 
