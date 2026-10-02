@@ -1183,7 +1183,8 @@ class API extends Base {
 			return true;
 		}
 
-		$errors = array();
+		$errors    = array();
+		$refreshed = false;
 
 		/** @var \Square\Models\Error $error */
 		foreach ( $this->get_response()->get_errors() as $error ) {
@@ -1194,33 +1195,30 @@ class API extends Base {
 
 			$errors[] = trim( "[{$error_code}] {$error->getDetail()}" );
 
-			// Last attempt to refresh access token.
-			if ( in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'UNAUTHORIZED' ), true ) ) {
+			// Last attempt to refresh access token, once per response.
+			if ( ! $refreshed && in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'UNAUTHORIZED' ), true ) ) {
 				if ( 'ACCESS_TOKEN_EXPIRED' === $error_code ) {
 					$this->get_plugin()->log( 'Access Token Expired, attempting a refresh.' );
 				} else {
 					$this->get_plugin()->log( 'Authorization error occurred, attempting a refresh.' );
 				}
 
-				$this->get_plugin()->get_connection_handler()->refresh_connection();
+				$refreshed = (bool) $this->get_plugin()->get_connection_handler()->refresh_connection();
 
-				$failure_value = get_option( 'wc_square_refresh_failed', 'yes' );
-
-				if ( empty( $failure_value ) ) {
-					// Successfully refreshed on the last attempt
+				if ( $refreshed ) {
 					$this->get_plugin()->log( 'Connection successfully refreshed.' );
-					return true;
 				}
 			}
 
-			// if the error indicates that access token is bad, disconnect the plugin to prevent further attempts
-			if ( in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'ACCESS_TOKEN_REVOKED', 'UNAUTHORIZED' ), true ) ) {
+			// if the access token is bad and could not be refreshed, disconnect the plugin to prevent further attempts
+			if ( ! $refreshed && in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'ACCESS_TOKEN_REVOKED', 'UNAUTHORIZED' ), true ) ) {
 				$this->get_plugin()->get_connection_handler()->disconnect();
 				$this->get_plugin()->log( 'Disconnected due to invalid authorization. Please try connecting again.' );
 			}
 		}
 
-		// At this point we could not validate the response and assume a failed attempt.
+		// At this point we could not validate the response and assume a failed attempt. A refreshed
+		// token is picked up by the next request, as get_api() builds a new client each time.
 		throw new \Exception( esc_html( implode( ' | ', $errors ) ) );
 	}
 
