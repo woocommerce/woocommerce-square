@@ -556,25 +556,9 @@ class Gateway extends Payment_Gateway_Direct {
 					$response = $this->get_api()->retrieve_order( $order->square_order_id );
 				}
 
-				// Adjust order by delta so Square total matches WooCommerce displayed total (charge what the customer saw).
 				// When Square redemption is used, pass current order so adjustment is a service charge (not discounted again); otherwise line item.
-				// This is to avoid discount applying to the adjustment again.
 				$square_coupon_in_use = ! empty( $square_discount_code_ids ) ? $response : null;
-				$wc_total             = Money_Utility::amount_to_cents( $order->get_total() );
-				$square_total         = $response->getTotalMoney()->getAmount();
-				$delta_total          = $wc_total - $square_total;
-
-				if ( abs( $delta_total ) > 0 ) {
-					$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total, $square_coupon_in_use );
-
-					// since a downward adjustment causes (downward) tax recomputation, perform an additional (untaxed) upward adjustment if necessary
-					$square_total = $response->getTotalMoney()->getAmount();
-					$delta_total  = $wc_total - $square_total;
-
-					if ( $delta_total > 0 ) {
-						$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total, $square_coupon_in_use );
-					}
-				}
+				$response             = $this->reconcile_square_order_total( $location_id, $order, $response, $square_coupon_in_use );
 
 				// Reset the payment total to the total calculated by Square to prevent errors.
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );
@@ -596,6 +580,44 @@ class Gateway extends Payment_Gateway_Direct {
 
 		Performance_Logger::end( 'create_order', $this->get_plugin(), $is_error );
 		return parent::do_transaction( $order );
+	}
+
+	/**
+	 * Adjusts the Square order by delta so its total matches the WooCommerce total (charge what the customer saw).
+	 *
+	 * A downward adjustment is an order-level discount, which Square applies before tax and caps at the pre-tax
+	 * subtotal, so it can leave the Square total below the WooCommerce total. The remainder is then added as an
+	 * untaxed, post-tax service charge: a line item would be absorbed by any unused part of that same discount,
+	 * which can zero the order (e.g. a WooCommerce gift card larger than the pre-tax subtotal).
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string                    $location_id          Square location ID.
+	 * @param \WC_Order                 $order                WooCommerce order.
+	 * @param \Square\Models\Order      $square_order         Current Square order.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption is used; null otherwise.
+	 * @return \Square\Models\Order
+	 * @throws \Exception
+	 */
+	protected function reconcile_square_order_total( $location_id, $order, $square_order, $square_coupon_in_use = null ) {
+		$wc_total     = Money_Utility::amount_to_cents( $order->get_total() );
+		$square_total = $square_order->getTotalMoney()->getAmount();
+		$delta_total  = $wc_total - $square_total;
+
+		if ( abs( $delta_total ) > 0 ) {
+			$square_order = $this->get_api()->adjust_order( $location_id, $order, $square_order->getVersion(), $delta_total, $square_coupon_in_use );
+
+			// since a downward adjustment causes (downward) tax recomputation, perform an additional (untaxed) upward adjustment if necessary
+			$square_total = $square_order->getTotalMoney()->getAmount();
+			$delta_total  = $wc_total - $square_total;
+
+			if ( $delta_total > 0 ) {
+				// Pass the current order so this is a service charge, which the earlier discount cannot apply to.
+				$square_order = $this->get_api()->adjust_order( $location_id, $order, $square_order->getVersion(), $delta_total, $square_order );
+			}
+		}
+
+		return $square_order;
 	}
 
 	/**

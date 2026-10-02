@@ -648,8 +648,9 @@ class API extends \WooCommerce\Square\API {
 
 	/**
 	 * Adjusts an existing Square order by amount.
-	 * When Square redemption is used, positive adjustments use a service charge (not a line item) so the amount is not eligible for coupon discount.
-	 * When no Square coupon is used, positive adjustments use a line item (original plugin behavior).
+	 * When the current Square order is passed, positive adjustments use a service charge (not a line item) so the amount is not
+	 * eligible for discounts already on the order (a Square coupon, or an earlier downward adjustment).
+	 * Otherwise, positive adjustments use a line item (original plugin behavior).
 	 *
 	 * @since 2.0.4
 	 *
@@ -657,7 +658,7 @@ class API extends \WooCommerce\Square\API {
 	 * @param \WC_Order                 $order                WooCommerce order.
 	 * @param int                       $version              Current 'version' value of Square order.
 	 * @param int                       $amount               Adjustment in smallest unit (cents). Positive = add, negative = discount.
-	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption used (use service charge); null = use line item.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order to add a service charge to; null = use line item.
 	 * @return \Square\Models\Order
 	 * @throws \Exception
 	 */
