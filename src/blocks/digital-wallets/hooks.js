@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 
 import { getSquareServerData } from '../square-utils';
 import {
@@ -40,6 +41,49 @@ export function useSquare() {
 }
 
 /**
+ * Keeps the payment request total in step with the cart.
+ *
+ * Without this, the wallet sheet shows the total from when the buttons
+ * mounted. Carts that ship get corrected when the sheet opens, but carts
+ * that don't ship never do.
+ *
+ * @param {Object} paymentRequest The payment request object.
+ */
+function useCartTotalSync( paymentRequest ) {
+	const cartTotal = useSelect(
+		( select ) => select( 'wc/store/cart' ).getCartTotals()?.total_price
+	);
+	const syncedTotal = useRef( cartTotal );
+
+	useEffect( () => {
+		if ( ! paymentRequest || cartTotal === syncedTotal.current ) {
+			return;
+		}
+
+		syncedTotal.current = cartTotal;
+		let isStale = false;
+
+		// The server builds the line items, so ask it rather than rebuilding them here.
+		getPaymentRequest()
+			.then( ( paymentRequestJson ) => {
+				if ( isStale ) {
+					return;
+				}
+
+				const { total, lineItems } = JSON.parse( paymentRequestJson );
+
+				// Square refuses updates while a sheet is open; its shipping handlers cover that case.
+				paymentRequest.update( { total, lineItems } );
+			} )
+			.catch( () => {} );
+
+		return () => {
+			isStale = true;
+		};
+	}, [ paymentRequest, cartTotal ] );
+}
+
+/**
  * Builds and returns the payment request object.
  *
  * @param {Object}  payments      The Square payments object used to create the payment request.
@@ -72,6 +116,8 @@ export function usePaymentRequest( payments, needsShipping ) {
 
 		createPaymentRequest();
 	}, [ payments, needsShipping ] );
+
+	useCartTotalSync( paymentRequest );
 
 	return paymentRequest;
 }
