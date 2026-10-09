@@ -48,20 +48,22 @@ export function useSquare() {
  * that don't ship never do.
  *
  * @param {Object} paymentRequest The payment request object.
+ * @return {boolean} Whether an update is in flight. Square can't update an open sheet, so block clicks meanwhile.
  */
-function useCartTotalSync( paymentRequest ) {
+export function useCartTotalSync( paymentRequest ) {
 	const cartTotal = useSelect(
 		( select ) => select( 'wc/store/cart' ).getCartTotals()?.total_price
 	);
 	const syncedTotal = useRef( cartTotal );
+	const [ isSyncing, setIsSyncing ] = useState( false );
 
 	useEffect( () => {
 		if ( ! paymentRequest || cartTotal === syncedTotal.current ) {
 			return;
 		}
 
-		syncedTotal.current = cartTotal;
 		let isStale = false;
+		setIsSyncing( true );
 
 		// The server builds the line items, so ask it rather than rebuilding them here.
 		getPaymentRequest()
@@ -72,15 +74,23 @@ function useCartTotalSync( paymentRequest ) {
 
 				const { total, lineItems } = JSON.parse( paymentRequestJson );
 
-				// Square refuses updates while a sheet is open; its shipping handlers cover that case.
-				paymentRequest.update( { total, lineItems } );
+				if ( paymentRequest.update( { total, lineItems } ) ) {
+					syncedTotal.current = cartTotal;
+				}
 			} )
-			.catch( () => {} );
+			.catch( () => {} )
+			.finally( () => {
+				if ( ! isStale ) {
+					setIsSyncing( false );
+				}
+			} );
 
 		return () => {
 			isStale = true;
 		};
 	}, [ paymentRequest, cartTotal ] );
+
+	return isSyncing;
 }
 
 /**
@@ -116,8 +126,6 @@ export function usePaymentRequest( payments, needsShipping ) {
 
 		createPaymentRequest();
 	}, [ payments, needsShipping ] );
-
-	useCartTotalSync( paymentRequest );
 
 	return paymentRequest;
 }
