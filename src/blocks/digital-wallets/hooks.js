@@ -59,6 +59,8 @@ export function useCartTotalSync( paymentRequest ) {
 
 	useEffect( () => {
 		if ( ! paymentRequest || cartTotal === syncedTotal.current ) {
+			// A superseded request leaves the flag on, e.g. when a coupon is added and removed quickly.
+			setIsSyncing( false );
 			return;
 		}
 
