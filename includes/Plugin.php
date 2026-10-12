@@ -38,6 +38,7 @@ use WooCommerce\Square\Handlers\Order_Sync;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Handlers\Sync;
 use WooCommerce\Square\Handlers\Products;
+use WooCommerce\Square\Internal\Abilities\Abilities_Registrar;
 
 /**
  * The main plugin class.
@@ -150,6 +151,10 @@ class Plugin extends Payment_Gateway_Plugin {
 
 		// Unschedule order sync event if order sync is disabled.
 		add_action( 'admin_init', array( $this, 'unschedule_order_sync' ) );
+
+		// Register WordPress Abilities API definitions (gated by the
+		// `woocommerce_square_abilities_enabled` filter, default false).
+		Abilities_Registrar::init();
 	}
 
 	/**
@@ -667,6 +672,70 @@ class Plugin extends Payment_Gateway_Plugin {
 	}
 
 
+	/**
+	 * Extracts the request body hash embedded in an idempotency key.
+	 *
+	 * Keys built for catalog upserts embed md5( serialize( $body ) ) as the first 32
+	 * characters of the key input (the part after the colon separator). Comparing this
+	 * hash against the hash of the current request body decides whether a stored key
+	 * can be reused on retry (unchanged body) or a new key is required (changed body).
+	 *
+	 * Returns null when the key has no parseable input, e.g. when the
+	 * `wc_square_idempotency_key` filter strips the input suffix. Callers must treat
+	 * null as "no match" and generate a fresh key.
+	 *
+	 * @since 5.5.0
+	 *
+	 * @param string $idempotency_key full idempotency key as returned by get_idempotency_key()
+	 * @return string|null 32-character md5 body hash, or null if not parseable
+	 */
+	public function get_idempotency_key_body_hash( $idempotency_key ) {
+
+		if ( ! is_string( $idempotency_key ) ) {
+			return null;
+		}
+
+		$separator_position = strpos( $idempotency_key, ':' );
+
+		if ( false === $separator_position ) {
+			return null;
+		}
+
+		$key_input = substr( $idempotency_key, $separator_position + 1 );
+
+		if ( strlen( $key_input ) < 32 || ! ctype_xdigit( substr( $key_input, 0, 32 ) ) ) {
+			return null;
+		}
+
+		return substr( $key_input, 0, 32 );
+	}
+
+
+	/**
+	 * Returns the idempotency key to use for a request, reusing a previous key when allowed.
+	 *
+	 * Implements Square's idempotency contract for retries: a 429/5xx retry must resubmit
+	 * with the SAME key when the request body is unchanged, but a key can never be reused
+	 * with a different body (Square rejects it with IDEMPOTENCY_KEY_REUSED). The previous
+	 * key embeds the hash of the body it was created for, so body equality decides reuse.
+	 *
+	 * @since 5.5.0
+	 *
+	 * @param string|null $previous_key key stored by an earlier failed attempt, if any
+	 * @param string $body_hash md5 hash of the serialized current request body
+	 * @param string $context static context suffix for the key input, e.g. '_upsert_products'
+	 * @return string the previous key when the body is unchanged, otherwise a fresh key
+	 */
+	public function get_reusable_idempotency_key( $previous_key, $body_hash, $context ) {
+
+		if ( ! empty( $previous_key ) && $this->get_idempotency_key_body_hash( $previous_key ) === $body_hash ) {
+			return $previous_key;
+		}
+
+		return $this->get_idempotency_key( $body_hash . time() . $context );
+	}
+
+
 	/** Conditional methods *******************************************************************************************/
 
 
@@ -1071,11 +1140,6 @@ class Plugin extends Payment_Gateway_Plugin {
 		if ( false !== get_option( 'wc_square_payment_token_migration_complete' ) ) {
 			return;
 		}
-
-		// Remove all OLD scheduled actions to cleanup DB.
-		// TODO: Remove this in next release.
-		global $wpdb;
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}actionscheduler_actions WHERE hook = 'wc_square_init_payment_token_migration'" );
 
 		if ( false === as_has_scheduled_action( 'wc_square_init_payment_token_migration_v2' ) ) {
 			as_enqueue_async_action( 'wc_square_init_payment_token_migration_v2', array( 'page' => 1 ) );

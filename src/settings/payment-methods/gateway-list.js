@@ -107,6 +107,15 @@ export default function GatewayList( { values, setValue } ) {
 				'woocommerce-square'
 			),
 			customize: 'digital-wallet',
+			// Digital wallets have no payment rail of their own: they are
+			// processed through the Credit/debit card gateway
+			// (`Digital_Wallet::is_available()` requires it), so they cannot be
+			// offered while that gateway is off.
+			dependsOn: 'square_credit_card_enabled',
+			dependencyNote: __(
+				'Digital wallets are processed through the Credit/debit card gateway. Enable Credit/debit card to offer them at checkout.',
+				'woocommerce-square'
+			),
 		},
 		{
 			key: 'square_cash_app_pay_enabled',
@@ -138,51 +147,77 @@ export default function GatewayList( { values, setValue } ) {
 					'woocommerce-square'
 				) }
 			</p>
-			{ rows.map( ( row ) => (
-				<div
-					key={ row.key }
-					className="wc-square-payment-methods-list__row"
-				>
-					<div className="wc-square-payment-methods-list__row-icon">
-						{ row.icon }
-					</div>
-					<div className="wc-square-payment-methods-list__row-content">
-						<strong className="wc-square-payment-methods-list__row-title">
-							{ row.title }
-						</strong>
-						<p className="wc-square-payment-methods-list__row-description">
-							{ row.description }
-						</p>
-					</div>
-					<div className="wc-square-payment-methods-list__row-actions">
-						{ row.customize &&
-							// Display settings are only meaningful while the method
-							// is enabled; hide the entry to its Customize sub-page
-							// when that method's toggle is off.
-							isOn( row.key ) && (
-								<Button
-									variant="link"
-									onClick={ () =>
-										goToView( setValue, row.customize )
-									}
-								>
-									{ __( 'Customize', 'woocommerce-square' ) }
-								</Button>
+			{ rows.map( ( row ) => {
+				// A method that rides another gateway's payment rail cannot work
+				// while that gateway is off, so the whole row is greyed out and
+				// locked with a note explaining the dependency rather than left
+				// looking independently toggleable.
+				const locked = !! row.dependsOn && ! isOn( row.dependsOn );
+
+				return (
+					<div
+						key={ row.key }
+						className={
+							'wc-square-payment-methods-list__row' +
+							( locked
+								? ' wc-square-payment-methods-list__row--locked'
+								: '' )
+						}
+					>
+						<div className="wc-square-payment-methods-list__row-icon">
+							{ row.icon }
+						</div>
+						<div className="wc-square-payment-methods-list__row-content">
+							<strong className="wc-square-payment-methods-list__row-title">
+								{ row.title }
+							</strong>
+							<p className="wc-square-payment-methods-list__row-description">
+								{ row.description }
+							</p>
+							{ locked && (
+								<p className="wc-square-payment-methods-list__row-note">
+									{ row.dependencyNote }
+								</p>
 							) }
-						<ToggleControl
-							checked={ isOn( row.key ) }
-							onChange={ ( val ) => handleToggle( row.key, val ) }
-							label=""
-							aria-label={ sprintf(
-								/* translators: %s: payment method name */
-								__( 'Enable %s', 'woocommerce-square' ),
-								row.title
-							) }
-							__nextHasNoMarginBottom
-						/>
+						</div>
+						<div className="wc-square-payment-methods-list__row-actions">
+							{ row.customize &&
+								// Display settings are only meaningful while the method
+								// is enabled and usable; hide the entry to its Customize
+								// sub-page when that method's toggle is off or the
+								// method is locked by a disabled dependency.
+								! locked &&
+								isOn( row.key ) && (
+									<Button
+										variant="link"
+										onClick={ () =>
+											goToView( setValue, row.customize )
+										}
+									>
+										{ __(
+											'Customize',
+											'woocommerce-square'
+										) }
+									</Button>
+								) }
+							<ToggleControl
+								checked={ isOn( row.key ) }
+								disabled={ locked }
+								onChange={ ( val ) =>
+									handleToggle( row.key, val )
+								}
+								label=""
+								aria-label={ sprintf(
+									/* translators: %s: payment method name */
+									__( 'Enable %s', 'woocommerce-square' ),
+									row.title
+								) }
+								__nextHasNoMarginBottom
+							/>
+						</div>
 					</div>
-				</div>
-			) ) }
+				);
+			} ) }
 		</div>
 	);
 }

@@ -1,5 +1,62 @@
 *** WooCommerce Square Changelog ***
 
+= 5.5.1 - 2026-09-21 =
+* Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
+* Fix - The domain registered with Square for Apple Pay is now based on the Site Address setting.
+
+= 5.5.0 - 2026-08-31 =
+* Fix - Prevent product sync from getting stuck when a product set to sync with Square is deleted.
+* Fix - Automatically detect and recover a background sync job stuck in processing, unblock the sync queue, show an admin notice prompting a re run, and prune old failed scheduler actions.
+* Fix - Skip products that Square rejects during a sync instead of failing the whole sync, and report the name, SKU and reason for each skipped product.
+* Fix - Stop Square inventory pulls from writing zero stock for items Square has no real count for, never change a product's stock management setting on a zero, and honor the per product Sync with Square setting on all automatic pulls.
+* Fix - Allow "Manage stock" to be changed on a synced product when WooCommerce is the system of record, and keep it read-only when Square is.
+* Fix - Square inventory sync errors no longer interrupt checkout or refunds for orders paid through other payment gateways.
+* Fix - Reuse the Square catalog sync idempotency key on an unchanged retry and generate a new one when the request body changes, so a rate limited sync on stores with many categories recovers instead of getting stuck.
+* Fix - Sync no longer fails when Square already holds an item option whose name differs only by case, or when a store has more than 100 item options.
+* Fix - Reuse an existing Square item option that differs only by capitalization, so variations use Square's spelling of the value instead of creating a duplicate option.
+* Dev - Bump WordPress "Tested up to" to 7.1.
+* Dev - Bump WooCommerce "tested up to" version 11.1.
+* Dev - Bump WooCommerce minimum supported version to 10.9.
+* Dev - Update PHP_CodeSniffer to 3.13.6 and WooCommerce Sniffs to 1.0.1.
+
+= 5.4.3 - 2026-08-06 =
+* Fix - Hardened validation of guest billing details submitted on the order payment page.
+* Dev - Update WordPress Coding Standards to 3.4.1.
+
+= 5.4.2 - 2026-07-22 =
+* Update - Remove deprecated beta Product Editor (`@woocommerce/product-editor`) integration.
+* Fix - Remove obsolete pre-7.6 WooCommerce compatibility code, as the minimum supported WooCommerce version is now 10.7.
+* Dev - Bump WooCommerce "tested up to" version 11.0.
+* Dev - Bump WooCommerce minimum supported version to 10.8.
+* Dev - Bump WordPress minimum supported version to 6.9.
+
+= 5.4.1 - 2026-06-24 =
+* Fix - Syncing new products to Square no longer leaves them at zero inventory if the sync fails partway through.
+* Dev - Bump WooCommerce "tested up to" version 10.9.
+* Dev - Bump WooCommerce minimum supported version to 10.7.
+
+= 5.4.0 - 2026-05-28 =
+* Add - Register seven read-only abilities with the WordPress Abilities API, gated behind the woocommerce_square_abilities_enabled filter (default off) and the WC 10.9 loader.
+* Fix - Correct button alignment in the Import Products modal on WP 7.0.
+* Fix - Allow extending the "Pay for Order" functionality via the WordPress capability system.
+* Fix - Square product syncs no longer fail entirely when one item has an outdated catalog ID.
+* Fix - Product categories are updated properly during manual sync.
+* Fix - Ensure stale category mappings are fully cleaned up when two WooCommerce categories share the same Square category ID.
+* Dev - Removed stale Action Scheduler DELETE hook from Plugin.php.
+* Dev - Bump WooCommerce "tested up to" version 10.8.
+* Dev - Bump WooCommerce minimum supported version to 10.6.
+
+= 5.3.3 - 2026-05-07 =
+* Add - Admin notice to inform merchants if a successful product sync has not occurred in a while.
+* Fix - Add SKU-based existence check before creating new Square catalog items to prevent duplicates.
+* Fix - Skip SKU-based product matching for Square variations with no SKU to prevent unrelated WooCommerce products from being overwritten during sync.
+* Fix - Push inventory now attempts SKU-based lookup for synced products missing a Square variation ID.
+* Fix - Syncs no longer crash when encountering certain malformed items in your Square catalog.
+* Fix - Add safeguard to skip disabling cards on Square when removing tokens from staging/non-production sites.
+* Fix - Ensure the debug mode admin notice link points to the correct settings page.
+* Dev - Bump WooCommerce "tested up to" version 10.7.
+* Dev - Bump WooCommerce minimum supported version to 10.5.
+
 = 5.3.2 - 2026-04-06 =
 * Fix - Prevent stale Square catalog IDs from breaking checkout while still surfacing genuine coupon redemption failures as checkout errors.
 * Fix - Ensure that the order note wordings for partial payments are translatable.

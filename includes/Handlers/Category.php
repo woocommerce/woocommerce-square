@@ -263,4 +263,56 @@ class Category {
 
 		return $catalog_category_id;
 	}
+
+	/**
+	 * Get the WooCommerce category IDs from a catalog item.
+	 *
+	 * @since 5.4.0
+	 *
+	 * @param \Square\Models\CatalogItem $catalog_item the catalog item object
+	 * @return array
+	 */
+	public static function get_category_ids_from_catalog_item( $catalog_item ) {
+		$category_ids         = array();
+		$missing_category_ids = array();
+
+		if ( empty( $catalog_item ) || ! $catalog_item instanceof \Square\Models\CatalogItem ) {
+			return $category_ids;
+		}
+
+		if ( $catalog_item->getCategories() && is_array( $catalog_item->getCategories() ) ) {
+			foreach ( $catalog_item->getCategories() as $category ) {
+				if ( $category instanceof \Square\Models\CatalogObjectCategory ) {
+					$category_id = self::get_category_id_by_square_id( $category->getId() );
+					if ( $category_id ) {
+						$category_ids[] = $category_id;
+					} else {
+						$missing_category_ids[] = $category->getId();
+					}
+				}
+			}
+		}
+
+		// Fetch and import missing categories.
+		if ( ! empty( $missing_category_ids ) ) {
+			try {
+				$response = wc_square()->get_api()->batch_retrieve_catalog_objects( $missing_category_ids );
+				if ( $response->get_data() instanceof \Square\Models\BatchRetrieveCatalogObjectsResponse ) {
+					$missing_categories = $response->get_data()->getObjects();
+					if ( $missing_categories && is_array( $missing_categories ) ) {
+						foreach ( $missing_categories as $missing_category ) {
+							$imported_category_id = self::import_or_update( $missing_category );
+							if ( $imported_category_id ) {
+								$category_ids[] = $imported_category_id;
+							}
+						}
+					}
+				}
+			} catch ( \Exception $e ) {
+				wc_square()->log( 'Error fetching missing categories for product ' . $catalog_item->getName() . ': ' . $e->getMessage() );
+			}
+		}
+
+		return array_unique( $category_ids );
+	}
 }

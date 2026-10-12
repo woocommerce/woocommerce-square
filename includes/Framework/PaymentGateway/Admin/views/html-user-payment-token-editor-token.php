@@ -17,6 +17,8 @@
  *
  * Modified by WooCommerce on 03 January 2022.
  */
+
+defined( 'ABSPATH' ) || exit;
 ?>
 
 <?php $token_input_name = $input_name . '[' . $index . ']'; ?>

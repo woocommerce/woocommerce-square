@@ -230,35 +230,6 @@ class Product {
 			$product->set_description( $product_description );
 		}
 
-		$square_category_id = Category::get_square_category_id( $catalog_item );
-		$category_id        = Category::get_category_id_by_square_id( $square_category_id );
-
-		if ( $category_id ) {
-			wp_set_object_terms( $product->get_id(), intval( $category_id ), 'product_cat' );
-		} else {
-			$message = sprintf(
-				/* translators: Placeholder: %s category ID */
-				__( 'Square category with id (%s) was not imported to your Store. Please run Import Products from Square settings.', 'woocommerce-square' ),
-				$square_category_id
-			);
-
-			$records = Records::get_records();
-			foreach ( $records as $record ) {
-				if ( $record->get_message() === $message ) {
-					$is_recorded = true;
-				}
-			}
-
-			if ( ! isset( $is_recorded ) ) {
-				Records::set_record(
-					array(
-						'type'    => 'alert',
-						'message' => $message,
-					)
-				);
-			}
-		}
-
 		if ( $catalog_id ) {
 			$product->update_meta_data( self::SQUARE_ID_META_KEY, $catalog_id );
 		}
@@ -431,7 +402,8 @@ class Product {
 		}
 		$inventory_tracking = Helper::get_catalog_inventory_tracking( array( $result->get_data()->getObject() ) );
 
-		$stock = 0;
+		$stock        = 0;
+		$has_in_stock = false;
 
 		if ( $response->get_data() && $response->get_data()->getCounts() ) {
 
@@ -439,7 +411,8 @@ class Product {
 			foreach ( $response->get_data()->getCounts() as $count ) {
 
 				if ( 'IN_STOCK' === $count->getState() ) {
-					$stock += (float) $count->getQuantity();
+					$stock       += (float) $count->getQuantity();
+					$has_in_stock = true;
 				}
 			}
 		}
@@ -448,13 +421,33 @@ class Product {
 		$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 		$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
 
-		if ( $is_inventory_tracking ) {
-			$product->set_manage_stock( true );
-			$product->set_stock_quantity( $stock );
-		} else {
+		if ( $is_inventory_tracking && $has_in_stock ) {
+
+			// A zero needs provenance: a never-counted item reports IN_STOCK 0 exactly like a real
+			// sellout, and only real zeros may be written (SQUARE-145).
+			$zero_verified = false;
+			if ( 0.0 === (float) $stock ) {
+				$verified_ids  = Helper::get_catalog_objects_with_inventory_history( array( $square_id ) );
+				$zero_verified = is_array( $verified_ids ) && in_array( $square_id, $verified_ids, true );
+				if ( null === $verified_ids ) {
+					wc_square()->log( 'Could not verify the zero inventory count against Square history for product #' . $product->get_id() . '; stock left unchanged.' );
+				}
+			}
+
+			Helper::apply_square_inventory_count( $product, (float) $stock, (bool) $sold_out, $zero_verified );
+		} elseif ( ! $is_inventory_tracking ) {
+
+			// Not tracked in Square: reflect availability. Whether stock management follows depends on
+			// who owns the setting. Under WooCommerce SOR it is merchant intent and is left alone, so a
+			// Square side toggle cannot silently invert the system of record. Under Square SOR the
+			// authority is reversed, so tracking off is mirrored onto the product.
 			$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-			$product->set_manage_stock( false );
+
+			if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+				$product->set_manage_stock( false );
+			}
 		}
+		// Tracked but no IN_STOCK count returned: "no information", never a zero.
 
 		if ( $save ) {
 			$product->save();
@@ -474,6 +467,23 @@ class Product {
 	 * @throws \Exception
 	 */
 	public static function update_products_stock_from_square( $product_ids ) {
+
+		// Respect the per-product "Sync with Square" setting: this method backs automatic pulls
+		// (e.g. the add to cart inventory refresh), and a product the merchant unticked or
+		// unlinked must not have its stock overwritten from Square. Filtering up front also
+		// avoids needless Square API calls for excluded products.
+		$product_ids = array_filter(
+			(array) $product_ids,
+			function ( $product_id ) {
+				$product = wc_get_product( $product_id );
+				return $product instanceof \WC_Product && self::is_synced_with_square( $product );
+			}
+		);
+
+		if ( empty( $product_ids ) ) {
+			return;
+		}
+
 		$products_map = self::get_square_meta( $product_ids, 'square_item_variation_id' );
 		$square_ids   = array_keys( $products_map );
 
@@ -495,9 +505,22 @@ class Product {
 			$inventory_hash     = Helper::get_catalog_objects_inventory_stats( $square_ids );
 			$inventory_tracking = Helper::get_catalog_inventory_tracking( $response->get_data()->getObjects() );
 
+			// Verify zero counts against Square's inventory change history: a never-counted item
+			// reports IN_STOCK 0 exactly like a real sellout, and only real zeros may be written
+			// (SQUARE-145).
+			$zero_object_ids   = Helper::zero_count_object_ids( $inventory_hash );
+			$verified_zero_ids = Helper::get_catalog_objects_with_inventory_history( $zero_object_ids );
+
+			if ( null === $verified_zero_ids ) {
+				// Verification unavailable: never throw on this path (it runs inside checkout via
+				// the add to cart refresh); treat every zero as unverified and let the next
+				// trigger retry naturally.
+				wc_square()->log( 'Could not verify zero inventory counts against Square history; zero stock writes skipped for this refresh.' );
+				$verified_zero_ids = array();
+			}
+
 			foreach ( $response->get_data()->getObjects() as $catalog_object ) {
 				$square_id               = $catalog_object->getId();
-				$stock                   = $inventory_hash[ $square_id ] ?? 0;
 				$inventory_tracking_data = $inventory_tracking[ $square_id ] ?? array();
 				$is_inventory_tracking   = $inventory_tracking_data['track_inventory'] ?? false;
 				$sold_out                = $inventory_tracking_data['sold_out'] ?? false;
@@ -509,12 +532,32 @@ class Product {
 					continue;
 				}
 
-				if ( $is_inventory_tracking ) {
-					$product->set_manage_stock( true );
-					$product->set_stock_quantity( $stock );
-				} else {
+				if ( $is_inventory_tracking && isset( $inventory_hash[ $square_id ] ) ) {
+
+					$changed = Helper::apply_square_inventory_count(
+						$product,
+						(float) $inventory_hash[ $square_id ],
+						(bool) $sold_out,
+						in_array( $square_id, $verified_zero_ids, true )
+					);
+
+					if ( ! $changed ) {
+						continue;
+					}
+				} elseif ( ! $is_inventory_tracking ) {
+
+					// Not tracked in Square: reflect availability. Stock management follows only when
+					// Square owns the setting; under WooCommerce SOR it is merchant intent and is
+					// left alone, so a Square side toggle cannot silently invert the system of record.
 					$product->set_stock_status( $sold_out ? 'outofstock' : 'instock' );
-					$product->set_manage_stock( false );
+
+					if ( wc_square()->get_settings_handler()->is_system_of_record_square() ) {
+						$product->set_manage_stock( false );
+					}
+				} else {
+
+					// Tracked but no IN_STOCK count returned: "no information", never a zero.
+					continue;
 				}
 
 				$product->save();
@@ -1169,6 +1212,61 @@ class Product {
 
 
 	/**
+	 * Looks up a Square catalog variation ID by SKU (e.g. when mapping was lost after timeout).
+	 * Optionally persists the mapping so future syncs don't need to look it up again.
+	 *
+	 * @since 5.3.3
+	 *
+	 * @param string     $sku        WooCommerce product/variation SKU.
+	 * @param int|null   $product_id Optional. Product ID to save the mapping to when found.
+	 * @param bool       $persist    Optional. Whether to save the variation ID to the product when found. Default true.
+	 * @return string|null Square variation ID if found, null otherwise.
+	 */
+	public static function get_square_variation_id_by_sku( $sku, $product_id = null, $persist = true ) {
+
+		$sku = is_string( $sku ) ? trim( $sku ) : '';
+		if ( '' === $sku ) {
+			return null;
+		}
+
+		try {
+			$exact_query = new \Square\Models\CatalogQueryExact( 'sku', $sku );
+
+			$query = new \Square\Models\CatalogQuery();
+			$query->setExactQuery( $exact_query );
+
+			$response = wc_square()->get_api()->search_catalog_objects(
+				array(
+					'object_types' => array( 'ITEM_VARIATION' ),
+					'query'        => $query,
+					'limit'        => 1,
+				)
+			);
+
+			$data = $response->get_data();
+			if ( ! $data instanceof \Square\Models\SearchCatalogObjectsResponse ) {
+				return null;
+			}
+
+			$objects = $data->getObjects();
+			if ( ! is_array( $objects ) || empty( $objects ) || ! $objects[0] instanceof \Square\Models\CatalogObject ) {
+				return null;
+			}
+
+			$variation_id = $objects[0]->getId();
+			if ( $variation_id && $product_id && $persist ) {
+				self::set_square_item_variation_id( $product_id, $variation_id );
+			}
+
+			return $variation_id ? $variation_id : null;
+		} catch ( \Exception $e ) {
+			wc_square()->log( 'SKU lookup for Square variation failed: ' . $e->getMessage(), array( 'sku' => $sku ) );
+			return null;
+		}
+	}
+
+
+	/**
 	 * Returns the Square item version (if known) for the given product.
 	 *
 	 * @since 2.0.0
@@ -1542,21 +1640,54 @@ class Product {
 	 */
 	public static function get_inventory_change_physical_count_type( \WC_Product $product ) {
 
-		$inventory_change    = null;
 		$square_variation_id = self::get_square_item_variation_id( $product->get_id(), false );
-		if ( $square_variation_id ) {
 
-			$inventory_physical_count = new \Square\Models\InventoryPhysicalCount();
-			$inventory_physical_count->setCatalogObjectId( $square_variation_id );
-			$inventory_physical_count->setQuantity( '' . max( 0, $product->get_stock_quantity() ) );
-			$inventory_physical_count->setLocationId( wc_square()->get_settings_handler()->get_location_id() );
-			$inventory_physical_count->setState( 'IN_STOCK' );
-			$inventory_physical_count->setOccurredAt( gmdate( 'Y-m-d\TH:i:sP' ) );
-
-			$inventory_change = new \Square\Models\InventoryChange();
-			$inventory_change->setType( 'PHYSICAL_COUNT' );
-			$inventory_change->setPhysicalCount( $inventory_physical_count );
+		if ( ! $square_variation_id ) {
+			return null;
 		}
+
+		if ( $product->get_manage_stock() ) {
+
+			$quantity = $product->get_stock_quantity();
+
+			// An unresolved quantity must never be coerced to zero: pushing a fabricated 0 marks
+			// the item sold out in Square and poisons its inventory history (SQUARE-145).
+			if ( null === $quantity ) {
+				wc_square()->log(
+					sprintf(
+						'Skipped pushing inventory for product #%d: stock is managed but no quantity is set.',
+						$product->get_id()
+					)
+				);
+				return null;
+			}
+
+			// Square cannot hold negative counts; backordered stock is represented as zero.
+			$quantity = max( 0, $quantity );
+		} elseif ( 'outofstock' === $product->get_stock_status() ) {
+
+			// Not stock-managed but out of stock: push an explicit zero so the item is
+			// deterministically marked sold out in Square (sold_out is read-only and only becomes
+			// true through a tracked count of zero), including items that previously held a
+			// positive count.
+			$quantity = 0;
+		} else {
+
+			// Not stock-managed and in stock: there is no real number to send; the item is left
+			// untracked in Square, which is the sellable state.
+			return null;
+		}
+
+		$inventory_physical_count = new \Square\Models\InventoryPhysicalCount();
+		$inventory_physical_count->setCatalogObjectId( $square_variation_id );
+		$inventory_physical_count->setQuantity( '' . $quantity );
+		$inventory_physical_count->setLocationId( wc_square()->get_settings_handler()->get_location_id() );
+		$inventory_physical_count->setState( 'IN_STOCK' );
+		$inventory_physical_count->setOccurredAt( gmdate( 'Y-m-d\TH:i:sP' ) );
+
+		$inventory_change = new \Square\Models\InventoryChange();
+		$inventory_change->setType( 'PHYSICAL_COUNT' );
+		$inventory_change->setPhysicalCount( $inventory_physical_count );
 
 		return $inventory_change;
 	}

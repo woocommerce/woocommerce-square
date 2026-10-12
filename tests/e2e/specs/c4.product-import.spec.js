@@ -24,9 +24,18 @@ test.beforeAll( 'Setup', async () => {
 
 	await deleteAllProducts( page );
 	await deleteAllCatalogItems();
-	const categoryResponse = await createCategory('Hats');
+	const categoryResponse = await createCategory( 'Hats' );
 	const categoryId = categoryResponse.catalog_object?.id || '';
-	const response = await createCatalogObject( 'Cap', 'cap', 1350, 'This is a very good cap, no cap.', categoryId );
+	const categoryResponse2 = await createCategory( 'Hats2' );
+	const categoryId2 = categoryResponse2.catalog_object?.id || '';
+	const response = await createCatalogObject(
+		'Cap',
+		'cap',
+		1350,
+		'This is a very good cap, no cap.',
+		categoryId,
+		categoryId2
+	);
 	itemId = response.catalog_object.item_data.variations[0].id;
 
 	await updateCatalogItemInventory( itemId, '53' );
@@ -70,7 +79,7 @@ test( 'Import Cap from Square @sync', async ( { page, baseURL } ) => {
 	await expect( await page.locator( '.entry-summary .sku_wrapper' ) ).toHaveText( 'SKU: cap-regular' );
 	await expect( await page.getByText( 'This is a very good cap, no cap.' ) ).toBeVisible();
 	await expect( await page.getByText( '53 in stock' ) ).toBeVisible();
-	await expect( await page.getByText( 'Category: Hats' ) ).toBeVisible();
+	await expect( await page.getByText( 'Categories: Hats, Hats2' ) ).toBeVisible();
 } );
 
 test('Sync Inventory stock from Square on the product edit screen - (SOR Square) @sync', async ({

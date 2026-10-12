@@ -9,6 +9,31 @@ import CashAppButtonPreview from './cash-app/button-preview';
 import DigitalWalletPreview from './digital-wallets/preview';
 import squareSaveHandler from './save-handler';
 
+/**
+ * Resolves which Payment Methods sub-view is showing.
+ *
+ * The view comes from the `payment_methods_view` sentinel (set by the Customize
+ * links, a `pm-view` deep link, or the browser Back/Forward buttons). Digital
+ * wallets ride the Credit/debit card gateway's payment rail, so their Customize
+ * sub-page is not reachable while that gateway is off — any request for it falls
+ * back to the gateway list, which greys the method out and explains why.
+ *
+ * @param {Object} values All current form values.
+ * @return {string} 'list' | 'digital-wallet' | 'cash-app'
+ */
+const paymentMethodsView = ( values ) => {
+	const view = values.payment_methods_view || 'list';
+
+	if (
+		view === 'digital-wallet' &&
+		values.square_credit_card_enabled !== 'yes'
+	) {
+		return 'list';
+	}
+
+	return view;
+};
+
 registerSettingsExtension( {
 	scope: { page: 'square' },
 	components: {
@@ -46,12 +71,11 @@ registerSettingsExtension( {
 		// Payment Methods tab: show one sub-page at a time based on the
 		// `payment_methods_view` sentinel field (never persisted).
 		payment_methods_list: ( { values } ) =>
-			! values.payment_methods_view ||
-			values.payment_methods_view === 'list',
+			paymentMethodsView( values ) === 'list',
 		digital_wallets_section: ( { values } ) =>
-			values.payment_methods_view === 'digital-wallet',
+			paymentMethodsView( values ) === 'digital-wallet',
 		cash_app_pay_section: ( { values } ) =>
-			values.payment_methods_view === 'cash-app',
+			paymentMethodsView( values ) === 'cash-app',
 	},
 	saveHandlers: {
 		'square/save': squareSaveHandler,

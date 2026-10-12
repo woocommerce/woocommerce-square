@@ -17,6 +17,8 @@
  *
  * Modified by WooCommerce on 03 January 2022.
  */
+
+defined( 'ABSPATH' ) || exit;
 ?>
 
 <table class="wc_status_table widefat" cellspacing="0">

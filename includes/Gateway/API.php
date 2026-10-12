@@ -46,6 +46,9 @@ class API extends \WooCommerce\Square\API {
 	/** @var string API ID */
 	protected $api_id;
 
+	/** @var bool whether the gateway is in sandbox mode */
+	protected $is_sandbox = false;
+
 	/**
 	 * Constructs the class.
 	 *
@@ -53,12 +56,14 @@ class API extends \WooCommerce\Square\API {
 	 *
 	 * @param string $access_token the API access token
 	 * @param string $location_id location ID to use for requests
+	 * @param bool   $is_sandbox whether the gateway is in sandbox mode
 	 */
 	public function __construct( $access_token, $location_id, $is_sandbox = null ) {
 
 		parent::__construct( $access_token, $is_sandbox );
 
 		$this->location_id = $location_id;
+		$this->is_sandbox  = (bool) $is_sandbox;
 	}
 
 
@@ -359,16 +364,33 @@ class API extends \WooCommerce\Square\API {
 
 
 	/**
-	 * Removes the tokenized payment method.
+	 * Removes the tokenized payment method (disables the card on Square).
+	 *
+	 * Safeguard: when this site is staging/local/development and uses production Square
+	 * credentials, we skip the Square API call for admin/CLI/cron requests (e.g. merchant
+	 * deleting users, privacy erasure) so that live customer cards are never disabled.
+	 * When we skip, we still return a successful response so the local token is removed
+	 * in WordPress only. See should_disable_card_on_square().
 	 *
 	 * @since 2.0.0
 	 *
-	 * @param string $token the payment method token
+	 * @param string $token the payment method token (Square card ID)
 	 * @param string $customer_id unique customer id
 	 * @return API\Response
 	 * @throws \Exception
 	 */
 	public function remove_tokenized_payment_method( $token, $customer_id ) {
+
+		if ( ! $this->should_disable_card_on_square( $token, $customer_id ) ) {
+			if ( function_exists( 'wc_square' ) ) {
+				wc_square()->log(
+					__( 'Skipped disabling card on Square (staging/non-production site using production credentials).', 'woocommerce-square' ),
+					'square'
+				);
+			}
+			// Return success so the token handler removes the token locally; Square is not called.
+			return new API\Response( null );
+		}
 
 		$request = new API\Requests\Card( $this->client );
 
@@ -379,6 +401,76 @@ class API extends \WooCommerce\Square\API {
 		return $this->perform_request( $request );
 	}
 
+	/**
+	 * Determines whether we should call the Square API to disable the card when a token is removed.
+	 *
+	 * Used to avoid disabling live customer cards when token removal happens on a staging/
+	 * local/development site that uses production Square credentials (e.g. merchant deletes
+	 * users on staging → we must not call Square so live cards stay enabled).
+	 *
+	 * Logic:
+	 * - Sandbox: always call Square (test data only).
+	 * - Customer request (e.g. My Account "delete payment method"): always call Square.
+	 * - Admin/CLI/cron on production site: call Square.
+	 * - Admin/CLI/cron on non-production site (staging/local/dev or WCS duplicate): do not call Square.
+	 *
+	 * @since 5.3.3
+	 *
+	 * @param string $token       the payment method token (Square card ID).
+	 * @param string $customer_id unique customer id.
+	 *
+	 * @return bool true to call the Square API and disable the card, false to skip the API call
+	 */
+	protected function should_disable_card_on_square( $token, $customer_id ) {
+
+		// Sandbox: only test data is affected; always allow the API call.
+		if ( $this->is_sandbox ) {
+			$should_disable = true;
+		} elseif (
+			// Frontend/customer request (e.g. customer deleting their card on My Account).
+			// We always allow the API call so the card is disabled on Square when the customer removes it.
+			! ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) || wp_doing_cron() )
+		) {
+			$should_disable = true;
+		} elseif ( $this->is_staging_or_non_production_site() ) {
+			// Request is from admin, WP-CLI, or cron. On non-production do not call Square.
+			$should_disable = false;
+		} else {
+			$should_disable = true;
+		}
+
+		/**
+		 * Filters whether to call the Square API to disable the card when a saved payment method is removed.
+		 *
+		 * @since 5.3.3
+		 *
+		 * @param bool   $should_disable Whether to call Square (true) or skip and only remove the token locally (false).
+		 * @param string $token          Square card ID.
+		 * @param string $customer_id    Square customer id.
+		 * @param API    $api            Gateway API instance.
+		 */
+		return (bool) apply_filters( 'woocommerce_square_should_disable_card_on_square', $should_disable, $token, $customer_id, $this );
+	}
+
+	/**
+	 * Whether the current WordPress environment is staging, local, development, or a WCS duplicate site.
+	 *
+	 * @since 5.3.3
+	 *
+	 * @return bool true if the site is non-production (staging/local/dev or WooCommerce Subscriptions duplicate)
+	 */
+	protected function is_staging_or_non_production_site() {
+
+		if ( function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type() ) {
+			return true;
+		}
+
+		if ( class_exists( 'WCS_Staging' ) && method_exists( 'WCS_Staging', 'is_duplicate_site' ) && \WCS_Staging::is_duplicate_site() ) {
+			return true;
+		}
+
+		return false;
+	}
 
 	/**
 	 * Creates a new Square order from a WooCommerce order.

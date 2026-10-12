@@ -38,11 +38,6 @@ test.beforeAll( 'Setup', async () => {
 
 	await createVariableProductsInSquare();
 
-	// Keep using classic editor.
-	await runWpCliCommand(
-		'wp option update woocommerce_feature_product_block_editor_enabled "no"'
-	);
-
 	await browser.close();
 } );
 

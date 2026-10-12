@@ -42,9 +42,6 @@ test.describe( 'Pre-Orders Tests @general', () => {
 			transactionType: 'charge',
 		} );
 
-		await runWpCliCommand(
-			'wp option update woocommerce_feature_product_block_editor_enabled "no"'
-		);
 	} );
 
 	const isBlockCheckout = [ true, false ];
