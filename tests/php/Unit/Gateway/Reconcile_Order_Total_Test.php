@@ -1,16 +1,16 @@
 <?php
 /**
- * Tests for WooCommerce\Square\Gateway::reconcile_square_order_total().
+ * Tests for WooCommerce\Square\Gateway\API::reconcile_order_total().
  *
  * @package WooCommerce\Square
  */
 
 namespace WooCommerce\Square\Tests\Unit\Gateway;
 
-use WooCommerce\Square\Gateway;
+use WooCommerce\Square\Gateway\API;
 use WP_UnitTestCase;
 
-class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
+class Reconcile_Order_Total_Test extends WP_UnitTestCase {
 
 	/**
 	 * Arguments of each adjust_order() call, in order.
@@ -45,13 +45,13 @@ class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Builds a gateway whose API returns the given Square order totals, one per adjust_order() call.
+	 * Builds an API whose adjust_order() returns the given Square order totals, one per call.
 	 *
 	 * @param int[] $totals_after_each_adjustment Square totals (cents) returned by successive adjust_order() calls.
-	 * @return Gateway
+	 * @return API
 	 */
-	private function make_gateway( array $totals_after_each_adjustment ) {
-		$api = $this->getMockBuilder( Gateway\API::class )
+	private function make_api( array $totals_after_each_adjustment ) {
+		$api = $this->getMockBuilder( API::class )
 			->disableOriginalConstructor()
 			->onlyMethods( array( 'adjust_order' ) )
 			->getMock();
@@ -68,34 +68,24 @@ class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
 			}
 		);
 
-		$gateway = $this->getMockBuilder( Gateway::class )
-			->disableOriginalConstructor()
-			->onlyMethods( array( 'get_api' ) )
-			->getMock();
-
-		$gateway->method( 'get_api' )->willReturn( $api );
-
-		return $gateway;
+		return $api;
 	}
 
 	/**
-	 * Runs the protected reconcile_square_order_total() method.
+	 * Runs reconcile_order_total() for a WooCommerce order with the given total.
 	 *
-	 * @param Gateway                   $gateway              Gateway under test.
+	 * @param API                       $api                  API under test.
 	 * @param float                     $wc_total             WooCommerce order total.
 	 * @param \Square\Models\Order      $square_order         Square order before reconciliation.
 	 * @param \Square\Models\Order|null $square_coupon_in_use Square order when redemption is used.
 	 * @return \Square\Models\Order
 	 */
-	private function reconcile( $gateway, $wc_total, $square_order, $square_coupon_in_use = null ) {
+	private function reconcile( $api, $wc_total, $square_order, $square_coupon_in_use = null ) {
 		$order = new \WC_Order();
 		$order->set_currency( 'USD' );
 		$order->set_total( $wc_total );
 
-		$method = new \ReflectionMethod( Gateway::class, 'reconcile_square_order_total' );
-		$method->setAccessible( true );
-
-		return $method->invoke( $gateway, 'LOCATION', $order, $square_order, $square_coupon_in_use );
+		return $api->reconcile_order_total( 'LOCATION', $order, $square_order, $square_coupon_in_use );
 	}
 
 	/**
@@ -104,9 +94,9 @@ class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
 	 * as a line item the unused discount absorbed it and Square was asked to charge $0.
 	 */
 	public function test_remainder_after_a_capped_discount_is_added_as_a_service_charge() {
-		$gateway = $this->make_gateway( array( 0, 175 ) );
+		$api = $this->make_api( array( 0, 175 ) );
 
-		$result = $this->reconcile( $gateway, 1.75, $this->make_square_order( 35175, 3 ) );
+		$result = $this->reconcile( $api, 1.75, $this->make_square_order( 35175, 3 ) );
 
 		$this->assertCount( 2, $this->adjust_calls );
 		$this->assertSame( -35000, $this->adjust_calls[0]['amount'] );
@@ -119,18 +109,30 @@ class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
 		$this->assertSame( 175, $result->getTotalMoney()->getAmount() );
 	}
 
-	public function test_matching_totals_are_not_adjusted() {
-		$gateway = $this->make_gateway( array() );
-		$square  = $this->make_square_order( 15175, 3 );
+	public function test_remainder_with_a_coupon_builds_on_the_discounted_order() {
+		$api    = $this->make_api( array( 0, 175 ) );
+		$coupon = $this->make_square_order( 35175, 3 );
 
-		$this->assertSame( $square, $this->reconcile( $gateway, 151.75, $square ) );
+		$this->reconcile( $api, 1.75, $coupon, $coupon );
+
+		$this->assertCount( 2, $this->adjust_calls );
+		$this->assertSame( $coupon, $this->adjust_calls[0]['square_order'] );
+		$this->assertNotSame( $coupon, $this->adjust_calls[1]['square_order'], 'The top-up must not reuse the pre-discount order.' );
+		$this->assertSame( 4, $this->adjust_calls[1]['square_order']->getVersion() );
+	}
+
+	public function test_matching_totals_are_not_adjusted() {
+		$api    = $this->make_api( array() );
+		$square = $this->make_square_order( 15175, 3 );
+
+		$this->assertSame( $square, $this->reconcile( $api, 151.75, $square ) );
 		$this->assertCount( 0, $this->adjust_calls );
 	}
 
 	public function test_upward_only_adjustment_stays_a_line_item_without_a_coupon() {
-		$gateway = $this->make_gateway( array( 15175 ) );
+		$api = $this->make_api( array( 15175 ) );
 
-		$this->reconcile( $gateway, 151.75, $this->make_square_order( 15000, 3 ) );
+		$this->reconcile( $api, 151.75, $this->make_square_order( 15000, 3 ) );
 
 		$this->assertCount( 1, $this->adjust_calls );
 		$this->assertSame( 175, $this->adjust_calls[0]['amount'] );
@@ -138,19 +140,19 @@ class Reconcile_Square_Order_Total_Test extends WP_UnitTestCase {
 	}
 
 	public function test_upward_only_adjustment_stays_a_service_charge_with_a_coupon() {
-		$gateway = $this->make_gateway( array( 15175 ) );
-		$coupon  = $this->make_square_order( 15000, 3 );
+		$api    = $this->make_api( array( 15175 ) );
+		$coupon = $this->make_square_order( 15000, 3 );
 
-		$this->reconcile( $gateway, 151.75, $coupon, $coupon );
+		$this->reconcile( $api, 151.75, $coupon, $coupon );
 
 		$this->assertCount( 1, $this->adjust_calls );
 		$this->assertSame( $coupon, $this->adjust_calls[0]['square_order'] );
 	}
 
 	public function test_downward_adjustment_that_lands_exactly_needs_no_top_up() {
-		$gateway = $this->make_gateway( array( 15175 ) );
+		$api = $this->make_api( array( 15175 ) );
 
-		$this->reconcile( $gateway, 151.75, $this->make_square_order( 16000, 3 ) );
+		$this->reconcile( $api, 151.75, $this->make_square_order( 16000, 3 ) );
 
 		$this->assertCount( 1, $this->adjust_calls );
 		$this->assertSame( -825, $this->adjust_calls[0]['amount'] );
