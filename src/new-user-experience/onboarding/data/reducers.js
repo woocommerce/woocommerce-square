@@ -29,10 +29,12 @@ const creditCardReducer = ( state = CREDIT_CARD_DEFAULT_STATE, action ) => {
 
 export const DIGITAL_WALLETS_DEFAULT_STATE = {
 	enable_digital_wallets: 'yes',
-	digital_wallets_button_type: 'buy',
+	digital_wallets_google_pay_enabled: 'yes',
+	digital_wallets_apple_pay_enabled: 'yes',
+	digital_wallets_google_pay_button_type: 'long',
+	digital_wallets_apple_pay_button_type: 'buy',
 	digital_wallets_apple_pay_button_color: 'black',
 	digital_wallets_google_pay_button_color: 'black',
-	digital_wallets_hide_button_options: [],
 };
 
 const digitalWalletsReducer = (

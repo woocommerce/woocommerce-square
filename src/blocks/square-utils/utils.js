@@ -47,6 +47,7 @@ const getSquareServerData = () => {
 		googlePayColor: squareData.google_pay_color || 'black',
 		applePayColor: squareData.apple_pay_color || 'black',
 		applePayType: squareData.apple_pay_type || 'buy',
+		googlePayType: squareData.google_pay_type || 'long',
 		hideButtonOptions: squareData.hide_button_options || [],
 		shouldChargeOrderNonce: squareData.should_charge_order_nonce || '',
 		isChangePaymentMethod: squareData.is_change_payment_method || false,

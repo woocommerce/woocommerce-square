@@ -128,13 +128,30 @@ export const PaymentMethods = () => {
 						<ToggleControl
 							className="payment-gateway-toggle__digital-wallet"
 							checked={ enable_digital_wallets === 'yes' }
-							onChange={ ( digital_wallets ) =>
-								setDigitalWalletData( {
+							onChange={ ( digital_wallets ) => {
+								const updates = {
 									enable_digital_wallets: digital_wallets
 										? 'yes'
 										: 'no',
-								} )
-							}
+								};
+
+								// Turning the parent on with both wallets off
+								// defaults both children on (matches modern hub).
+								if (
+									digital_wallets &&
+									paymentGatewaySettings.digital_wallets_google_pay_enabled !==
+										'yes' &&
+									paymentGatewaySettings.digital_wallets_apple_pay_enabled !==
+										'yes'
+								) {
+									updates.digital_wallets_google_pay_enabled =
+										'yes';
+									updates.digital_wallets_apple_pay_enabled =
+										'yes';
+								}
+
+								setDigitalWalletData( updates );
+							} }
 						/>
 					</InputWrapper>
 

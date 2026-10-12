@@ -59,6 +59,7 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 			'3.7.1',
 			'3.8.3',
 			'4.7.0',
+			'5.5.0',
 		);
 	}
 
@@ -334,6 +335,44 @@ class Lifecycle extends \WooCommerce\Square\Framework\Lifecycle {
 
 		// Mark the onboarding wizard as visited for existing users.
 		add_option( 'wc_square_connected_page_visited', true, '', 'no' );
+	}
+
+	/**
+	 * Upgrades to version 5.5.0.
+	 *
+	 * Migrates superseded digital wallet keys to the per-wallet configuration model.
+	 *
+	 * @since x.x.x
+	 */
+	protected function upgrade_to_5_5_0() {
+		$option_name = 'woocommerce_square_credit_card_settings';
+		$settings    = get_option( $option_name, array() );
+
+		if ( ! is_array( $settings ) || empty( $settings ) ) {
+			return;
+		}
+
+		$hide_options = isset( $settings['digital_wallets_hide_button_options'] ) && is_array( $settings['digital_wallets_hide_button_options'] )
+			? $settings['digital_wallets_hide_button_options']
+			: array();
+
+		if ( ! isset( $settings['digital_wallets_google_pay_enabled'] ) ) {
+			$settings['digital_wallets_google_pay_enabled'] = in_array( 'google', $hide_options, true ) ? 'no' : 'yes';
+		}
+
+		if ( ! isset( $settings['digital_wallets_apple_pay_enabled'] ) ) {
+			$settings['digital_wallets_apple_pay_enabled'] = in_array( 'apple', $hide_options, true ) ? 'no' : 'yes';
+		}
+
+		if ( ! isset( $settings['digital_wallets_apple_pay_button_type'] ) ) {
+			$settings['digital_wallets_apple_pay_button_type'] = $settings['digital_wallets_button_type'] ?? 'buy';
+		}
+
+		if ( ! isset( $settings['digital_wallets_google_pay_button_type'] ) ) {
+			$settings['digital_wallets_google_pay_button_type'] = 'long';
+		}
+
+		update_option( $option_name, $settings );
 	}
 
 	/**
