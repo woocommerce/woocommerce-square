@@ -684,7 +684,7 @@ export async function completePreOrder(page, orderId) {
 	await page.goto(`/wp-admin/admin.php?page=wc_pre_orders`);
 	await page
 		.locator(
-			`#the-list th.check-column input[name="order_id[]"][value="${orderId}"]`
+			`#the-list .check-column input[name="order_id[]"][value="${orderId}"]`
 		)
 		.check();
 	await page.locator('#bulk-action-selector-top').selectOption('complete');
@@ -783,7 +783,7 @@ export async function runScheduledAction(
 		'wp-admin/tools.php?page=action-scheduler&status=pending&s=' + action
 	);
 
-	const actionLocator = page.getByRole( 'cell', { name: action } ).first();
+	const actionLocator = page.getByRole( 'rowheader', { name: action } ).first();
 	if ( ! ( await actionLocator.isVisible() ) ) {
 		return;
 	}
