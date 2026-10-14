@@ -48,7 +48,9 @@ export const useAfterProcessingCheckout = (
 			) {
 				response = {
 					type: emitResponse.responseTypes.ERROR,
-					message: JSON.parse( paymentDetails.checkoutNotices ),
+					message: JSON.parse( paymentDetails.checkoutNotices ).join(
+						' '
+					),
 					messageContext: emitResponse.noticeContexts.PAYMENTS,
 					retry: true,
 				};
