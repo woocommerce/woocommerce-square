@@ -97,7 +97,18 @@ class Product {
 			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM' );
 		}
 
-		$product->update_meta_data( self::SQUARE_ID_META_KEY, $catalog_object->getId() );
+		// A client placeholder ("#item_<id>") only names the object inside the request that creates it.
+		// Storing it before Square confirms the create leaves the product half mapped when the reply never
+		// lands, so only a real Square ID is stored here; the ID Square assigns is written once the upsert
+		// response maps it. A placeholder left behind by an earlier sync is removed.
+		if ( self::is_placeholder_square_id( $catalog_object->getId() ) ) {
+			if ( self::is_placeholder_square_id( $product->get_meta( self::SQUARE_ID_META_KEY ) ) ) {
+				$product->delete_meta_data( self::SQUARE_ID_META_KEY );
+			}
+		} else {
+			$product->update_meta_data( self::SQUARE_ID_META_KEY, $catalog_object->getId() );
+		}
+
 		$product->update_meta_data( self::SQUARE_VERSION_META_KEY, $catalog_object->getVersion() );
 		$product->update_meta_data( self::SQUARE_IMAGE_ID_META_KEY, self::get_catalog_item_thumbnail_id( $catalog_object ) );
 
@@ -115,10 +126,34 @@ class Product {
 			throw new \InvalidArgumentException( 'Type of $catalog_object must be an ITEM_VARIATION' );
 		}
 
-		$product->update_meta_data( self::SQUARE_VARIATION_ID_META_KEY, $catalog_object->getId() );
+		// Same rule as update_product(): never store a client placeholder as the variation ID.
+		if ( self::is_placeholder_square_id( $catalog_object->getId() ) ) {
+			if ( self::is_placeholder_square_id( $product->get_meta( self::SQUARE_VARIATION_ID_META_KEY ) ) ) {
+				$product->delete_meta_data( self::SQUARE_VARIATION_ID_META_KEY );
+			}
+		} else {
+			$product->update_meta_data( self::SQUARE_VARIATION_ID_META_KEY, $catalog_object->getId() );
+		}
+
 		$product->update_meta_data( self::SQUARE_VARIATION_VERSION_META_KEY, $catalog_object->getVersion() );
 
 		$product->save();
+	}
+
+	/**
+	 * Determines whether a Square ID is a client placeholder rather than an ID Square assigned.
+	 *
+	 * Placeholders start with "#" (e.g. "#item_123") and are only meaningful inside the request
+	 * that creates the object.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param mixed $square_id the Square ID to check
+	 * @return bool
+	 */
+	private static function is_placeholder_square_id( $square_id ) {
+
+		return is_string( $square_id ) && 0 === strpos( $square_id, '#' );
 	}
 
 	/**
