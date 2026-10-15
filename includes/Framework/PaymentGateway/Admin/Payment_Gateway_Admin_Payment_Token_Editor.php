@@ -82,6 +82,11 @@ class Payment_Gateway_Admin_Payment_Token_Editor {
 			return;
 		}
 
+		$plugin = $this->get_gateway()->get_plugin();
+		if ( $plugin->is_modern_settings_path_active() && \WooCommerce\Square\Admin\Payments_Square_Hub::is_square_payments_hub() ) {
+			return;
+		}
+
 		// Stylesheet
 		wp_enqueue_style( 'payment-gateway-token-editor', $this->get_gateway()->get_plugin()->get_plugin_url() . '/build/assets/admin/wc-square-payment-gateway-token-editor.css', array(), Plugin::VERSION );
 
