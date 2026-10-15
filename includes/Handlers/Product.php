@@ -146,7 +146,7 @@ class Product {
 	 * Placeholders start with "#" (e.g. "#item_123") and are only meaningful inside the request
 	 * that creates the object.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.2
 	 *
 	 * @param mixed $square_id the Square ID to check
 	 * @return bool

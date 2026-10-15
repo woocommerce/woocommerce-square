@@ -605,7 +605,7 @@ class Manual_Synchronization extends Stepped_Job {
 	 * lookup is logged and changes nothing beyond the matches already found, so the caller falls back
 	 * to retrying every remaining category on its own.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.2
 	 *
 	 * @param \Square\Models\CatalogObjectBatch[] $category_batches batches of the failed chunk (one category each)
 	 * @param array $reverse_map square id keyed map to local term ids, updated in place

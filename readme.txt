@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 5.5.1
+Stable tag: 5.5.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,16 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.5.2 - 2026-10-15 =
+* Fix - Prevent duplicate Square items and categories when a failed sync batch is retried item by item, and stop saving temporary Square IDs on products.
+* Fix - Checkout with a Square credit card or Cash App Pay no longer fails with a "value too low" error when a WooCommerce gift card covers more than the order subtotal but less than the order total. The remaining balance is now charged.
+* Fix - Show the current cart total in the Apple Pay sheet on the Cart and Checkout blocks after the cart changes.
+* Fix - Ensure that the Checkout Block prevents submitting a card payment without a payment token.
+* Fix - Prevent a connected store from being disconnected after a successful Square access-token refresh.
+* Fix - Ensure Square digital wallet (Apple Pay / Google Pay) buttons are visible on cart and product pages when the shipping phone field is required.
+* Dev - Bump WooCommerce "tested up to" version 11.2.
+* Dev - Bump WooCommerce minimum supported version to 11.0.
 
 = 5.5.1 - 2026-09-21 =
 * Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
