@@ -699,7 +699,7 @@ class API extends \WooCommerce\Square\API {
 	 * untaxed, post-tax service charge: a line item would be absorbed by any unused part of that same discount,
 	 * which can zero the order (e.g. a WooCommerce gift card larger than the pre-tax subtotal).
 	 *
-	 * @since x.x.x
+	 * @since 5.5.2
 	 *
 	 * @param string                    $location_id          Square location ID.
 	 * @param \WC_Order                 $order                WooCommerce order.
