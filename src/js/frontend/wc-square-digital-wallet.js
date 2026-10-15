@@ -552,6 +552,7 @@ jQuery( document ).ready( ( $ ) => {
 				shipping_city: shippingContact.city ? shippingContact.city : '',
 				shipping_state: shippingContact.state ? shippingContact.state : '',
 				shipping_postcode: shippingContact.postalCode ? shippingContact.postalCode : '',
+				shipping_phone: shippingContact.phone ?? billingContact.phone ?? '',
 				shipping_method: [ ! shippingOption ? null : shippingOption.id ],
 				order_comments: '',
 				payment_method: 'square_credit_card',
