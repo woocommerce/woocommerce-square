@@ -248,6 +248,7 @@ class Digital_Wallet {
 			'shipping_city',
 			'shipping_state',
 			'shipping_postcode',
+			'shipping_phone',
 			'order_comments',
 			'account_username',
 			'account_password',
