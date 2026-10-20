@@ -32,9 +32,6 @@ class Async_Request_Session_Test extends WP_UnitTestCase {
 	}
 
 	public function tearDown(): void {
-		if ( WC()->session ) {
-			remove_action( 'shutdown', array( WC()->session, 'save_data' ), 20 );
-		}
 		WC()->session = $this->original_session;
 
 		parent::tearDown();
@@ -125,10 +122,5 @@ class Async_Request_Session_Test extends WP_UnitTestCase {
 		$add_hooks->invoke( $products );
 
 		$this->assertSame( 99, has_action( 'shutdown', array( $products, 'maybe_sync_product_inventory' ) ) );
-
-		remove_action( 'woocommerce_add_to_cart', array( $products, 'maybe_stage_products_for_sync_inventory' ) );
-		remove_action( 'shutdown', array( $products, 'maybe_sync_staged_products' ) );
-		remove_action( 'shutdown', array( $products, 'maybe_delete_staged_products' ) );
-		remove_action( 'shutdown', array( $products, 'maybe_sync_product_inventory' ), 99 );
 	}
 }
