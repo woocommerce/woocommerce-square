@@ -506,6 +506,11 @@ class Manual_Synchronization extends Stepped_Job {
 				// retrying every batch on its own: the broken category is recorded and skipped,
 				// the rest sync normally (SQUARE-143 / SQUARE-31).
 				wc_square()->log( 'Category chunk upsert failed (' . $chunk_exception->getMessage() . '); retrying each category individually.' );
+
+				// Square applies the batches of a request in order and keeps the ones before a batch
+				// that fails while processing, without returning their IDs. Retrying those on their
+				// own would create each category a second time, so they are looked up and mapped first.
+				$chunk = $this->link_created_categories( $chunk, $reverse_map );
 			}
 
 			foreach ( $chunk as $single_batch ) {
@@ -589,6 +594,117 @@ class Manual_Synchronization extends Stepped_Job {
 				unset( $reverse_map[ $id ] );
 			}
 		}
+	}
+
+	/**
+	 * Maps the categories a failed chunk already created in Square and returns the batches still to retry.
+	 *
+	 * Only new categories (temporary "#" IDs) are looked up, by name, the same case insensitive way
+	 * query_unmapped_categories() matches them. A name that appears more than once in the chunk is
+	 * left to the per category retry because a match could not tell those categories apart. A failed
+	 * lookup is logged and changes nothing beyond the matches already found, so the caller falls back
+	 * to retrying every remaining category on its own.
+	 *
+	 * @since 5.5.2
+	 *
+	 * @param \Square\Models\CatalogObjectBatch[] $category_batches batches of the failed chunk (one category each)
+	 * @param array $reverse_map square id keyed map to local term ids, updated in place
+	 * @return \Square\Models\CatalogObjectBatch[] the batches that were not matched
+	 */
+	protected function link_created_categories( array $category_batches, array &$reverse_map ) {
+
+		$batch_keys_by_name = array();
+		$duplicate_names    = array();
+
+		foreach ( $category_batches as $batch_key => $category_batch ) {
+
+			$objects = $category_batch->getObjects();
+
+			if ( ! is_array( $objects ) || ! isset( $objects[0] ) || ! $objects[0]->getCategoryData() ) {
+				continue;
+			}
+
+			$client_id = (string) $objects[0]->getId();
+
+			// An existing category carries its real Square ID, so its upsert cannot create a copy.
+			if ( 0 !== strpos( $client_id, '#' ) || ! isset( $reverse_map[ $client_id ] ) ) {
+				continue;
+			}
+
+			$name_key = strtolower( (string) $objects[0]->getCategoryData()->getName() );
+
+			if ( isset( $batch_keys_by_name[ $name_key ] ) ) {
+				$duplicate_names[ $name_key ] = true;
+			}
+
+			$batch_keys_by_name[ $name_key ] = $batch_key;
+		}
+
+		$batch_keys_by_name = array_diff_key( $batch_keys_by_name, $duplicate_names );
+
+		if ( empty( $batch_keys_by_name ) ) {
+			return $category_batches;
+		}
+
+		$matches = array();
+
+		try {
+			foreach ( array_chunk( array_keys( $batch_keys_by_name ), 100 ) as $names ) {
+
+				$query = new CatalogQuery();
+				$query->setSetQuery( new CatalogQuerySet( 'name', array_map( 'strval', $names ) ) );
+				$cursor = null;
+
+				do {
+					$response = wc_square()->get_api()->search_catalog_objects(
+						array(
+							'object_types' => array( 'CATEGORY' ),
+							'query'        => $query,
+							'cursor'       => $cursor,
+						)
+					);
+
+					$search_response = $response->get_data();
+
+					if ( ! $search_response instanceof SearchCatalogObjectsResponse ) {
+						break;
+					}
+
+					foreach ( is_array( $search_response->getObjects() ) ? $search_response->getObjects() : array() as $category_object ) {
+
+						if ( ! $category_object instanceof CatalogObject || $category_object->getIsDeleted() || ! $category_object->getCategoryData() ) {
+							continue;
+						}
+
+						$name_key = strtolower( (string) $category_object->getCategoryData()->getName() );
+
+						if ( isset( $batch_keys_by_name[ $name_key ] ) && ! isset( $matches[ $name_key ] ) ) {
+							$matches[ $name_key ] = $category_object;
+						}
+					}
+
+					$cursor = $search_response->getCursor();
+
+				} while ( ! empty( $cursor ) );
+			}
+		} catch ( \Exception $exception ) {
+			wc_square()->log( 'Could not look up categories a failed chunk may have created: ' . $exception->getMessage() );
+		}
+
+		foreach ( $matches as $name_key => $category_object ) {
+
+			$batch_key = $batch_keys_by_name[ $name_key ];
+			$client_id = (string) $category_batches[ $batch_key ]->getObjects()[0]->getId();
+
+			Category::update_mapping( $reverse_map[ $client_id ], $category_object->getId(), $category_object->getVersion() );
+			unset( $reverse_map[ $client_id ], $category_batches[ $batch_key ] );
+		}
+
+		if ( ! empty( $matches ) ) {
+			wc_square()->log( 'Mapped ' . count( $matches ) . ' categories the failed chunk had already created in Square.' );
+		}
+
+		return array_values( $category_batches );
 	}
 
 	/**
@@ -1237,6 +1353,7 @@ class Manual_Synchronization extends Stepped_Job {
 				'processed_remote_catalog_item_ids' => array(),
 				'isolated_fail_ids'                 => array(),
 				'partial_error_detail'              => '',
+				'linked_product_ids'                => array(),
 			)
 		);
 
@@ -1257,6 +1374,10 @@ class Manual_Synchronization extends Stepped_Job {
 			// would raise a second alert and a second error count for every one of them.
 			$isolated_fail_ids    = (array) ( $in_progress['isolated_fail_ids'] ?? array() );
 			$partial_error_detail = (string) ( $in_progress['partial_error_detail'] ?? '' );
+
+			// Products linked to items a failed batch already created are not in the saved response,
+			// so without this a resumed cycle would report them as not returned and skip them.
+			$successful_product_ids = (array) ( $in_progress['linked_product_ids'] ?? array() );
 		}
 
 		if ( empty( $upsert_response ) || ! $upsert_response instanceof BatchUpsertCatalogObjectsResponse ) {
@@ -1471,9 +1592,29 @@ class Manual_Synchronization extends Stepped_Job {
 				// and only products the fallback actually attempted are consumed this cycle; the
 				// rest are staged again on the next cycle.
 				wc_square()->log( 'Batch upsert failed (' . $error_message . '); retrying the staged products individually.' );
-				$isolation          = $this->upsert_products_individually( $batches, array_values( array_diff( $staged_product_ids, $isolated_fail_ids ) ) );
+
+				$isolation_product_ids = array_values( array_diff( $staged_product_ids, $isolated_fail_ids ) );
+
+				// Square applies the batches of a request in order and keeps the ones before a batch
+				// that fails while processing, without returning their IDs. A single product request
+				// has a different body and key, so retrying those would create a second item. New
+				// products the failed request already created are found by SKU and linked instead,
+				// and count as upserted. Products without a SKU cannot be matched and are retried.
+				if ( $new_products && ! empty( $isolation_product_ids ) ) {
+					try {
+						$successful_product_ids = array_values( array_intersect( $isolation_product_ids, $this->link_products_to_existing_square_items( $isolation_product_ids ) ) );
+					} catch ( \Exception $link_exception ) {
+						wc_square()->log( 'Could not look up items the failed batch may have created: ' . $link_exception->getMessage() );
+					}
+
+					if ( ! empty( $successful_product_ids ) ) {
+						wc_square()->log( 'Linked ' . count( $successful_product_ids ) . ' products to items the failed batch had already created in Square.' );
+					}
+				}
+
+				$isolation          = $this->upsert_products_individually( $batches, array_values( array_diff( $isolation_product_ids, $successful_product_ids ) ) );
 				$upsert_response    = $isolation['response'];
-				$staged_product_ids = array_values( array_unique( array_merge( $isolated_fail_ids, $isolation['done_ids'], $isolation['failed_ids'] ) ) );
+				$staged_product_ids = array_values( array_unique( array_merge( $isolated_fail_ids, $successful_product_ids, $isolation['done_ids'], $isolation['failed_ids'] ) ) );
 				$isolated_fail_ids  = array_values( array_unique( array_merge( $isolated_fail_ids, $isolation['failed_ids'] ) ) );
 			}
 
@@ -1498,6 +1639,7 @@ class Manual_Synchronization extends Stepped_Job {
 			$in_progress['unprocessed_upsert_response'] = wp_json_encode( $upsert_response, JSON_PRETTY_PRINT );
 			$in_progress['isolated_fail_ids']           = $isolated_fail_ids;
 			$in_progress['partial_error_detail']        = $partial_error_detail;
+			$in_progress['linked_product_ids']          = $successful_product_ids;
 			$this->set_attr( 'in_progress_upsert_catalog_objects', $in_progress );
 
 			$duration = number_format( microtime( true ) - $start, 2 );

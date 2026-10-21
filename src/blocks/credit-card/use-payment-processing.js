@@ -6,7 +6,7 @@ import { useEffect, useRef } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { getSquareServerData } from '../square-utils';
+import { getSquareServerData, handleErrors } from '../square-utils';
 
 /**
  * @typedef {import('@woocommerce/type-defs/registered-payment-method-props').EmitResponseProps} EmitResponseProps
@@ -16,11 +16,13 @@ import { getSquareServerData } from '../square-utils';
 /**
  * Sets up payment details and POST data to be processed on server-side on checkout submission.
  *
- * If the checkout has a nonce, token or data to be logged to WooCommerce Status logs, this function
- * sends a SUCCESS request to the server with this data inside paymentMethodData.
+ * If tokenization produced a nonce or a verified token, this function sends a SUCCESS response to
+ * the server with that data inside paymentMethodData.
  *
- * If the checkout has errors, we send `has-checkout-errors` to the server-side so that the status
- * of the request can be set to 'ERROR' before gateway validation is done.
+ * If tokenization did not produce a payment token, the checkout is stopped client-side with an
+ * ERROR response carrying the messages Square returned. Submitting without a payment token would
+ * make the Store API create the order and reserve stock before failing gateway validation, which
+ * strands a pending order the customer never paid for.
  *
  * @param {Function}          onPaymentSetup       Callback for registering observers on the payment processing event
  * @param {EmitResponseProps} emitResponse         Helpers for observer response objects
@@ -53,12 +55,24 @@ export const usePaymentProcessing = (
 			};
 
 			if ( square.current?.token ) {
-				const { paymentTokenNonce } = getSquareServerData();
-				const __response = await fetch(
-					`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
-				);
-				const { success, data: token } = await __response.json();
-				const savedCardToken = success ? token : '';
+				let savedCardToken = '';
+
+				try {
+					const { paymentTokenNonce } = getSquareServerData();
+					const __response = await fetch(
+						`${ wc.wcSettings.ADMIN_URL }admin-ajax.php?action=wc_square_credit_card_get_token_by_id&token_id=${ square.current.token }&nonce=${ paymentTokenNonce }`
+					);
+
+					const { success, data: token } = await __response.json();
+					savedCardToken = success ? token : '';
+
+					if ( ! savedCardToken ) {
+						// The saved card could not be looked up, so there is nothing to tokenize.
+						handleErrors( null, paymentData );
+					}
+				} catch ( error ) {
+					handleErrors( [ error ], paymentData );
+				}
 
 				if ( savedCardToken ) {
 					const tokenizeSavedCardResponse = await tokenizeSavedCard(
@@ -67,44 +81,68 @@ export const usePaymentProcessing = (
 					);
 
 					if (
-						tokenizeSavedCardResponse.status === 'OK' &&
-						tokenizeSavedCardResponse.token
+						tokenizeSavedCardResponse?.status === 'OK' &&
+						tokenizeSavedCardResponse?.token
 					) {
 						paymentData.verifiedToken =
 							tokenizeSavedCardResponse.token;
 					} else {
-						paymentData.notices = paymentData.notices.concat( [
-							'Failed to tokenize saved card',
-						] );
+						handleErrors(
+							tokenizeSavedCardResponse?.errors,
+							paymentData
+						);
 					}
 				}
 			} else {
-				const createNonceResponse = await createNonce(
-					square.current.card
-				);
-				paymentData.nonce = createNonceResponse.token;
+				let createNonceResponse;
+
+				try {
+					createNonceResponse = await createNonce(
+						square.current.card
+					);
+				} catch ( error ) {
+					handleErrors( [ error ], paymentData );
+				}
 
 				if (
-					createNonceResponse?.details?.card &&
-					createNonceResponse?.details?.billing
+					createNonceResponse?.status === 'OK' &&
+					createNonceResponse?.token
 				) {
-					paymentData.cardData = {
-						...createNonceResponse.details.card,
-						...createNonceResponse.details.billing,
-					};
+					paymentData.nonce = createNonceResponse.token;
+
+					if (
+						createNonceResponse?.details?.card &&
+						createNonceResponse?.details?.billing
+					) {
+						paymentData.cardData = {
+							...createNonceResponse.details.card,
+							...createNonceResponse.details.billing,
+						};
+					}
+				} else if ( createNonceResponse ) {
+					// Tokenization resolved with a non-OK status (Invalid, Error, Abort).
+					handleErrors( createNonceResponse.errors, paymentData );
 				}
 			}
 
 			const paymentToken = paymentData.verifiedToken || paymentData.nonce;
 
-			if ( paymentToken || paymentData.logs.length > 0 ) {
-				response.meta = {
-					paymentMethodData: getPaymentMethodData( paymentData ),
-				};
-			} else if ( paymentData.notices.length > 0 ) {
+			// Fail closed: without a payment token the request can never pay, so stop here
+			// rather than letting the server create an order we would only have to fail.
+			if ( ! paymentToken ) {
 				response.type = emitResponse.responseTypes.ERROR;
-				response.message = paymentData.notices;
+				// The checkout only renders `message` when it is a non-empty string,
+				// so collapse the collected notices rather than passing the array.
+				response.message = paymentData.notices.join( ' ' );
+				response.messageContext = emitResponse.noticeContexts.PAYMENTS;
+				response.retry = true;
+
+				return response;
 			}
+
+			response.meta = {
+				paymentMethodData: getPaymentMethodData( paymentData ),
+			};
 
 			return response;
 		};
@@ -115,6 +153,7 @@ export const usePaymentProcessing = (
 		onPaymentSetup,
 		emitResponse.responseTypes.SUCCESS,
 		emitResponse.responseTypes.ERROR,
+		emitResponse.noticeContexts.PAYMENTS,
 		createNonce,
 		tokenizeSavedCard,
 		getPaymentMethodData,
