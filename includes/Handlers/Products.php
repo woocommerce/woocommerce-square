@@ -188,7 +188,8 @@ class Products {
 
 		// Sync product inventory when a product is added to the cart.
 		add_action( 'woocommerce_add_to_cart', array( $this, 'maybe_stage_products_for_sync_inventory' ), 10, 4 );
-		add_action( 'shutdown', array( $this, 'maybe_sync_product_inventory' ) );
+		// Dispatch after WooCommerce saves the session (shutdown, priority 20), so the async request reads the current cart.
+		add_action( 'shutdown', array( $this, 'maybe_sync_product_inventory' ), 99 );
 	}
 
 	/**
