@@ -1573,9 +1573,7 @@ class Manual_Synchronization extends Stepped_Job {
 				//
 				// Detected through classify_sync_error() rather than by matching the message, so the
 				// two branches that both needed to spot a rate limit agree on one definition of it.
-				// A catalog lock refusal retries on its own counter, so it keeps the key even when the
-				// rate limit retries are spent.
-				if ( 'rate_limited' === $classification && ( $retry < 3 || $this->will_pause_for_catalog_lock( $error_message ) ) ) {
+				if ( 'rate_limited' === $classification && $retry < 3 ) {
 					$this->set_attr( 'upsert_retry_idempotency_key', $idempotency_key );
 					if ( $new_products ) {
 						$this->set_attr( 'upsert_retry_product_ids', $product_ids );

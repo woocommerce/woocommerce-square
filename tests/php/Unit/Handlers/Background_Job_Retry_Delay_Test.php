@@ -12,7 +12,6 @@
 namespace WooCommerce\Square\Tests\Unit\Handlers;
 
 use WP_UnitTestCase;
-use WooCommerce\Square\Sync\Stepped_Job;
 
 class Background_Job_Retry_Delay_Test extends WP_UnitTestCase {
 
@@ -61,11 +60,11 @@ class Background_Job_Retry_Delay_Test extends WP_UnitTestCase {
 		$delay = $this->next_runner_after( array( 'catalog_lock_retry' => 1 ) );
 
 		$this->assertIsInt( $delay, 'The runner must be scheduled for later, not enqueued now.' );
-		$this->assertEqualsWithDelta( Stepped_Job::CATALOG_LOCK_RETRY_DELAY, $delay, 2 );
+		$this->assertEqualsWithDelta( 10, $delay, 2 );
 	}
 
-	/** A lock pause wins over an earlier rate limit retry the job is still carrying. */
-	public function test_a_lock_pause_after_a_rate_limit_still_uses_the_short_delay() {
+	/** A rate limit retry the job is still carrying keeps its backoff, so the quota path is unchanged. */
+	public function test_a_rate_limit_retry_wins_over_a_lock_pause() {
 		$delay = $this->next_runner_after(
 			array(
 				'catalog_lock_retry' => 1,
@@ -74,7 +73,7 @@ class Background_Job_Retry_Delay_Test extends WP_UnitTestCase {
 		);
 
 		$this->assertIsInt( $delay, 'The runner must be scheduled for later, not enqueued now.' );
-		$this->assertEqualsWithDelta( Stepped_Job::CATALOG_LOCK_RETRY_DELAY, $delay, 2 );
+		$this->assertEqualsWithDelta( 120, $delay, 2 );
 	}
 
 	/** A rate limit retry keeps the existing exponential backoff. */

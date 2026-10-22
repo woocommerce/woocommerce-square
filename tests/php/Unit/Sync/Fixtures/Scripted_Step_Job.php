@@ -42,16 +42,6 @@ class Scripted_Step_Job extends Stepped_Job {
 	}
 
 	/**
-	 * Exposes the lock refusal check.
-	 *
-	 * @param string $error_message exception message.
-	 * @return bool
-	 */
-	public function lock_refusal( $error_message ) {
-		return $this->is_catalog_lock_refusal( $error_message );
-	}
-
-	/**
 	 * Reads a job attribute.
 	 *
 	 * @param string $attr attribute name.
