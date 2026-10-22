@@ -4,7 +4,7 @@ Full details of the Automattic Security Policy can be found on [automattic.com](
 
 ## Supported Versions
 
-Generally, only the latest version of the extension has continued support.  In some cases, we may opt to backport critical vulnerabilities fixes to previous versions. 
+Generally, only the latest version of the extension has continued support. In some cases, we may opt to backport critical vulnerabilities fixes to previous versions.
 
 ## Reporting a Vulnerability
 
