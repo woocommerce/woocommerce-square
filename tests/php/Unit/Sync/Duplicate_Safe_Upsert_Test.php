@@ -17,6 +17,7 @@ use WooCommerce\Square\API\Response;
 use WooCommerce\Square\Handlers\Category;
 use WooCommerce\Square\Handlers\Product;
 use WooCommerce\Square\Sync\Manual_Synchronization;
+use WooCommerce\Square\Sync\Stepped_Job;
 use WooCommerce\Square\Tests\Unit\Sync\Fixtures\Scripted_Api_Plugin;
 use WooCommerce\Square\Tests\Unit\Sync\Fixtures\Scripted_Catalog_Api;
 
@@ -296,5 +297,61 @@ class Duplicate_Safe_Upsert_Test extends WP_UnitTestCase {
 		$this->assertCount( 3, $this->api->upserts, 'the chunk and one retry per category' );
 		$this->assertSame( Scripted_Catalog_Api::permanent_id( '#category_' . $alpha ), Category::get_square_id( $alpha ) );
 		$this->assertSame( Scripted_Catalog_Api::permanent_id( '#category_' . $bravo ), Category::get_square_id( $bravo ) );
+	}
+
+	/**
+	 * Runs upsert_new_products() for one product against a scripted rate limit and returns the job.
+	 *
+	 * @param string $error_message the rate limit Square answers with.
+	 * @param array  $attrs         job attributes, such as the retry counters.
+	 * @return Manual_Synchronization
+	 */
+	private function rate_limited_upsert( $error_message, array $attrs ) {
+		$product = $this->make_product();
+		$job     = $this->make_job( array_merge( array( 'validated_product_ids' => array( $product->get_id() ) ), $attrs ) );
+
+		$this->api->upsert_script[] = function () use ( $error_message ) {
+			throw new \Exception( $error_message ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- scripted test message, never output.
+		};
+
+		try {
+			$this->call( $job, 'upsert_new_products' );
+			$this->fail( 'A rate limit must reach the job runner.' );
+		} catch ( \Exception $e ) {
+			$this->assertSame( $error_message, $e->getMessage() );
+		}
+
+		return $job;
+	}
+
+	/**
+	 * A catalog lock refusal is retried on its own counter even once the rate limit retries are spent,
+	 * so the key is kept: a partly applied batch sent again under a fresh key would create duplicates.
+	 */
+	public function test_a_lock_refusal_keeps_the_key_after_the_rate_limit_retries_are_spent() {
+		$job = $this->rate_limited_upsert( '[RATE_LIMITED] Catalog locked by prior request.', array( 'retry' => 3 ) );
+
+		$this->assertNotEmpty( $this->call( $job, 'get_attr', 'upsert_retry_idempotency_key' ) );
+		$this->assertNotEmpty( $this->call( $job, 'get_attr', 'upsert_retry_product_ids' ) );
+	}
+
+	/** A quota rejection with its retries spent fails the job, so there is no retry to keep the key for. */
+	public function test_a_quota_rejection_does_not_keep_the_key_after_the_retries_are_spent() {
+		$job = $this->rate_limited_upsert( '[RATE_LIMITED] Rate limit exceeded.', array( 'retry' => 3 ) );
+
+		$this->assertEmpty( $this->call( $job, 'get_attr', 'upsert_retry_idempotency_key' ) );
+	}
+
+	/** Once the lock retries are spent too, a lock refusal is a plain rate limit and follows the same rule. */
+	public function test_a_lock_refusal_does_not_keep_the_key_once_both_retries_are_spent() {
+		$job = $this->rate_limited_upsert(
+			'[RATE_LIMITED] Catalog locked by prior request.',
+			array(
+				'retry'              => 3,
+				'catalog_lock_retry' => Stepped_Job::MAX_CATALOG_LOCK_RETRIES,
+			)
+		);
+
+		$this->assertEmpty( $this->call( $job, 'get_attr', 'upsert_retry_idempotency_key' ) );
 	}
 }

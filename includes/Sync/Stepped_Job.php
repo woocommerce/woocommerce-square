@@ -38,6 +38,12 @@ abstract class Stepped_Job extends Job {
 	/** @var int attempts a step makes to verify zero counts before it proceeds without them */
 	const MAX_ZERO_VERIFICATION_ATTEMPTS = 3;
 
+	/** @var int consecutive catalog lock refusals a step rides out before one counts as a rate limit */
+	const MAX_CATALOG_LOCK_RETRIES = 10;
+
+	/** @var int seconds to wait before running a step again after Square refused it on a catalog lock */
+	const CATALOG_LOCK_RETRY_DELAY = 10;
+
 
 	/**
 	 * Executes the next step of this job.
@@ -252,9 +258,31 @@ abstract class Stepped_Job extends Job {
 
 				$this->$next_step();
 				$this->complete_step_cycle( $next_step );
+				$this->set_attr( 'catalog_lock_retry', 0, false );
 				$this->set_attr( 'retry', 0 ); // Reset retry count to 0 after successful step cycle.
 			} catch ( \Exception $exception ) {
 				$error_message = $exception->getMessage();
+
+				// Square refuses a catalog write that arrives while it is still applying our previous one,
+				// with the same RATE_LIMITED code it uses for a quota. That lock clears in seconds, so the
+				// step is paused briefly on its own counter instead of spending the rate limit retries,
+				// which would otherwise fail a large sync that is still making progress. Once the lock
+				// retries are spent the refusal is treated as an ordinary rate limit below.
+				if ( $this->will_pause_for_catalog_lock( $error_message ) ) {
+					$lock_retry = $this->get_attr( 'catalog_lock_retry', 0 ) + 1;
+					wc_square()->log( sprintf( 'Square catalog locked by a prior request, retrying the step shortly (%d of %d)...', $lock_retry, self::MAX_CATALOG_LOCK_RETRIES ) );
+					$this->set_attr( 'catalog_lock_retry', $lock_retry );
+					return;
+				}
+
+				if ( $this->is_catalog_lock_refusal( $error_message ) ) {
+					wc_square()->log( 'Square catalog still locked after the short retries, treating it as a rate limit.' );
+				}
+
+				// Not a lock pause, so the job runner must not schedule the short lock delay. Persisted by
+				// the retry or failure write that follows.
+				$this->set_attr( 'catalog_lock_retry', 0, false );
+
 				// If sync fail with rate limit error, retry the sync process after few seconds. (retry upto 3 times)
 				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $retry < $max_retry ) {
 					wc_square()->log( 'Rate limit error detected, pausing sync process for few secs...' );
@@ -272,6 +300,58 @@ abstract class Stepped_Job extends Job {
 
 			$this->complete();
 		}
+	}
+
+
+	/**
+	 * Checks whether an error is Square refusing a catalog write because a prior request holds the lock.
+	 *
+	 * Square reports both a catalog lock and a genuine quota rejection as RATE_LIMITED, so the detail
+	 * text is the only way to tell them apart. Every RATE_LIMITED error in the message must be a lock
+	 * refusal: if any of them is a quota rejection, the long rate limit backoff is the right response.
+	 *
+	 * Codes are only read at the start of a segment, as in Manual_Synchronization::classify_sync_error(),
+	 * so bracketed text inside another error's detail is never taken for a code.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $error_message exception message, Square errors formatted as "[CODE] detail" and joined with " | "
+	 * @return bool
+	 */
+	protected function is_catalog_lock_refusal( $error_message ) {
+
+		$is_lock = false;
+
+		foreach ( explode( ' | ', (string) $error_message ) as $segment ) {
+			if ( ! preg_match( '/^\[RATE_LIMITED\](.*)$/s', trim( $segment ), $matches ) ) {
+				continue;
+			}
+
+			if ( false === stripos( $matches[1], 'catalog locked' ) ) {
+				return false;
+			}
+
+			$is_lock = true;
+		}
+
+		return $is_lock;
+	}
+
+
+	/**
+	 * Checks whether a step that failed with this error will be paused for a catalog lock.
+	 *
+	 * True for a lock refusal while the lock retries are not yet spent. Callers that keep state for the
+	 * retry, such as a reusable idempotency key, use this so they agree with do_next_step().
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $error_message exception message
+	 * @return bool
+	 */
+	protected function will_pause_for_catalog_lock( $error_message ) {
+
+		return $this->is_catalog_lock_refusal( $error_message ) && $this->get_attr( 'catalog_lock_retry', 0 ) < self::MAX_CATALOG_LOCK_RETRIES;
 	}
 
 
