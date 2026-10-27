@@ -58,6 +58,10 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 			'digital_wallets_apple_pay_button_color',
 			'digital_wallets_google_pay_button_color',
 			'digital_wallets_hide_button_options',
+			'digital_wallets_google_pay_enabled',
+			'digital_wallets_apple_pay_enabled',
+			'digital_wallets_google_pay_button_type',
+			'digital_wallets_apple_pay_button_type',
 			'gift_card_settings',
 		);
 
@@ -150,6 +154,30 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 						'type'              => 'array',
 						'sanitize_callback' => '',
 					),
+					'digital_wallets_google_pay_enabled'  => array(
+						'description'       => __( 'Whether the Google Pay button is enabled.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'enum'              => array( 'yes', 'no' ),
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'digital_wallets_apple_pay_enabled'   => array(
+						'description'       => __( 'Whether the Apple Pay button is enabled.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'enum'              => array( 'yes', 'no' ),
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'digital_wallets_google_pay_button_type' => array(
+						'description'       => __( 'Button label for the Google Pay button.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'enum'              => array( 'long', 'short' ),
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'digital_wallets_apple_pay_button_type' => array(
+						'description'       => __( 'Button label for the Apple Pay button.', 'woocommerce-square' ),
+						'type'              => 'string',
+						'enum'              => array( 'buy', 'donate', 'plain' ),
+						'sanitize_callback' => 'sanitize_key',
+					),
 				),
 			)
 		);
@@ -173,12 +201,17 @@ class WC_REST_Square_Credit_Card_Payment_Settings_Controller extends WC_Square_R
 	 * @param WP_REST_Request $request Full data about the request.
 	 */
 	public function save_settings( WP_REST_Request $request ) {
-		$settings = array();
+		// Start from the stored settings so callers that send only changed fields
+		// (e.g. the settings UI SDK save handler) don't wipe unrelated keys.
+		$settings = (array) get_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, array() );
 
 		foreach ( $this->allowed_params as $index => $key ) {
-			$new_value = wc_clean( wp_unslash( $request->get_param( $key ) ) );
+			$param = $request->get_param( $key );
+			if ( null === $param ) {
+				continue;
+			}
 
-			$settings[ $key ] = $new_value;
+			$settings[ $key ] = wc_clean( wp_unslash( $param ) );
 		}
 
 		update_option( self::SQUARE_PAYMENT_SETTINGS_OPTION_NAME, $settings );
