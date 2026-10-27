@@ -32,6 +32,15 @@ class SteppedJobCatalogLockRetryTest extends WP_UnitTestCase {
 		}
 	}
 
+	public function tearDown(): void {
+		// Jobs created here persist as options, so clear them before they reach later tests.
+		if ( function_exists( 'wc_square' ) && wc_square() ) {
+			wc_square()->get_background_job_handler()->clear_all_jobs();
+		}
+
+		parent::tearDown();
+	}
+
 	/**
 	 * Builds a job backed by a real background job row, so attribute writes persist as in production.
 	 *
