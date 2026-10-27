@@ -252,9 +252,21 @@ abstract class Stepped_Job extends Job {
 
 				$this->$next_step();
 				$this->complete_step_cycle( $next_step );
+				$this->set_attr( 'catalog_lock_retry', 0, false );
 				$this->set_attr( 'retry', 0 ); // Reset retry count to 0 after successful step cycle.
 			} catch ( \Exception $exception ) {
 				$error_message = $exception->getMessage();
+				$lock_retry    = (int) $this->get_attr( 'catalog_lock_retry', 0 );
+
+				// Square refuses a catalog write while it is still applying a prior one, with the same
+				// RATE_LIMITED code it uses for a quota. The lock clears in seconds, so it is retried on its
+				// own counter (up to 10 times) instead of spending the rate limit retries below.
+				if ( $lock_retry < 10 && preg_match( '/^\[RATE_LIMITED\][^|]*catalog locked[^|]*$/i', $error_message ) ) {
+					wc_square()->log( 'Square catalog locked by a prior request, retrying the step shortly...' );
+					$this->set_attr( 'catalog_lock_retry', $lock_retry + 1 );
+					return;
+				}
+
 				// If sync fail with rate limit error, retry the sync process after few seconds. (retry upto 3 times)
 				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $retry < $max_retry ) {
 					wc_square()->log( 'Rate limit error detected, pausing sync process for few secs...' );
