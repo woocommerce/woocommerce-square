@@ -47,48 +47,63 @@ function delaySquareCardLifecycle( delays ) {
 		}
 	};
 
-	const wrapSquare = ( square ) => {
-		if ( ! square || square.__delayed ) {
-			return square;
+	// Proxies the SDK objects instead of mutating them, as some of them are frozen. The proxy
+	// target is an empty shell so frozen properties can still be overridden, and methods stay
+	// bound to the real object so the SDK's internal state keeps working.
+	const wrap = ( target, overrides ) =>
+		new Proxy(
+			{},
+			{
+				get( shell, prop ) {
+					if ( prop in overrides ) {
+						return overrides[ prop ];
+					}
+
+					const value = target[ prop ];
+					return typeof value === 'function' ? value.bind( target ) : value;
+				},
+				has: ( shell, prop ) => prop in overrides || prop in target,
+			}
+		);
+
+	const wrapCard = ( card ) =>
+		wrap( card, {
+			attach: delayed( 'attach', card.attach.bind( card ) ),
+			destroy: delayed( 'destroy', card.destroy.bind( card ) ),
+		} );
+
+	const wrapPayments = ( payments ) =>
+		wrap( payments, {
+			card: delayed( 'card', async ( ...args ) =>
+				wrapCard( await payments.card( ...args ) )
+			),
+		} );
+
+	const wrapSquare = () => {
+		if ( ! window.Square || window.__squareCardWrapped ) {
+			return;
 		}
 
-		const payments = square.payments.bind( square );
+		const square = window.Square;
 
-		square.payments = ( ...paymentsArgs ) => {
-			const instance = payments( ...paymentsArgs );
-			const card = instance.card.bind( instance );
-
-			instance.card = delayed( 'card', async ( ...cardArgs ) => {
-				const cardInstance = await card( ...cardArgs );
-
-				cardInstance.attach = delayed(
-					'attach',
-					cardInstance.attach.bind( cardInstance )
-				);
-				cardInstance.destroy = delayed(
-					'destroy',
-					cardInstance.destroy.bind( cardInstance )
-				);
-
-				return cardInstance;
-			} );
-
-			return instance;
-		};
-
-		square.__delayed = true;
-		return square;
+		window.Square = wrap( square, {
+			payments: ( ...args ) => wrapPayments( square.payments( ...args ) ),
+		} );
+		window.__squareCardWrapped = true;
 	};
 
-	let square;
-
-	Object.defineProperty( window, 'Square', {
-		configurable: true,
-		get: () => square,
-		set: ( value ) => {
-			square = wrapSquare( value );
+	// The SDK is loaded synchronously, so wrap it as soon as its script has run and before
+	// any plugin script can use it. `DOMContentLoaded` is a fallback.
+	document.addEventListener(
+		'load',
+		( event ) => {
+			if ( event.target?.src?.includes( '/v1/square.js' ) ) {
+				wrapSquare();
+			}
 		},
-	} );
+		true
+	);
+	document.addEventListener( 'DOMContentLoaded', wrapSquare );
 }
 
 /**
