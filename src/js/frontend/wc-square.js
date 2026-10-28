@@ -51,11 +51,7 @@ jQuery( document ).ready( ( $ ) => {
 				args.is_change_payment_method_request;
 			this.metrics = {};
 
-			// Whether the card form is being built or torn down. `this.payment_form` is only
-			// assigned once the build completes, so it can't be used as the guard on its own.
 			this.is_building_payment_form = false;
-
-			// Whether a checkout update arrived while the card form was being built.
 			this.has_pending_payment_form_refresh = false;
 
 			if ( $( 'form.checkout' ).length ) {
@@ -207,8 +203,8 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since 2.0.0
 		 */
 		set_payment_fields() {
-			// A build is already in flight. Starting another one would attach a second card to the
-			// container, so queue a single refresh and apply it once the current build settles.
+			// `this.payment_form` isn't set until a build finishes, so starting another build now
+			// would mount a second card. Apply this update once the current build settles.
 			if ( this.is_building_payment_form ) {
 				this.has_pending_payment_form_refresh = true;
 				return;
@@ -227,8 +223,17 @@ jQuery( document ).ready( ( $ ) => {
 					return;
 				}
 
-				// Destroy the payment form and re-initialize it.
-				this.rebuild_payment_form();
+				// Destroy the payment form and re-initialize it. The reference is dropped first so an
+				// update arriving during the teardown is queued instead of destroying it again.
+				const payment_form = this.payment_form;
+				this.payment_form = null;
+				this.is_building_payment_form = true;
+
+				this.log( 'Destroying payment form' );
+				payment_form.destroy().catch( () => {} ).then( () => {
+					this.log( 'Re-building payment form' );
+					this.initializeCard( this.payments );
+				} );
 				return;
 			}
 
@@ -241,42 +246,11 @@ jQuery( document ).ready( ( $ ) => {
 		}
 
 		/**
-		 * Destroys the current payment form and builds a new one in its place.
-		 *
-		 * @since x.x.x
-		 */
-		async rebuild_payment_form() {
-			const previous_payment_form = this.payment_form;
-
-			// Flag the rebuild and drop the reference synchronously, so a checkout update arriving
-			// while the form is being destroyed is queued rather than destroying it a second time.
-			this.is_building_payment_form = true;
-			this.payment_form = null;
-
-			this.log( 'Destroying payment form' );
-
-			try {
-				await previous_payment_form.destroy();
-			} catch ( error ) {
-				this.log(
-					`Could not destroy payment form: ${ error }`,
-					'error'
-				);
-			}
-
-			// Build regardless of how the teardown went - the customer still needs a card field.
-			// Not awaited: `initializeCard()` takes over the flag and handles its own errors.
-			this.log( 'Re-building payment form' );
-			this.initializeCard( this.payments );
-		}
-
-		/**
 		 * Initialises the Credit Card field with defaults (if any)
 		 *
 		 * @param {object} payments The Square payment object.
 		 */
 		async initializeCard( payments ) {
-			// `payments.card()` and `card.attach()` are both async, flag the build before either starts.
 			this.is_building_payment_form = true;
 
 			let defaultPostalCode = $( '#billing_postcode' ).val();
@@ -289,21 +263,9 @@ jQuery( document ).ready( ( $ ) => {
 					postalCode: defaultPostalCode, // Default postal code value.
 				} );
 
-				const container = document.getElementById(
-					'wc-square-credit-card-container'
-				);
-
-				if ( ! container ) {
-					await card.destroy();
+				if ( ! document.getElementById( 'wc-square-credit-card-container' ) ) {
 					this.end( 'initialize_payment_form', true );
 					return;
-				}
-
-				// The container is rendered empty, so anything inside it was left behind by an
-				// earlier attach. Clear it rather than mounting a second card alongside it.
-				if ( container.hasChildNodes() ) {
-					this.log( 'Clearing stale payment form from container' );
-					$( container ).empty();
 				}
 
 				// Only expose the card once it is mounted and ready to tokenize.
@@ -315,22 +277,11 @@ jQuery( document ).ready( ( $ ) => {
 				this.log( `Could not build payment form: ${ error }`, 'error' );
 				this.end( 'initialize_payment_form', true );
 
-				// Don't leave a half-built card behind if `attach()` failed. Awaited so a queued
-				// refresh can't start mounting a new card while this one is still being destroyed.
-				if ( card ) {
-					try {
-						await card.destroy();
-					} catch ( destroy_error ) {
-						this.log(
-							`Could not destroy payment form: ${ destroy_error }`,
-							'error'
-						);
-					}
-				}
+				// Don't leave a half-built card behind for the next build to mount alongside.
+				await card?.destroy().catch( () => {} );
 			} finally {
 				this.is_building_payment_form = false;
 
-				// Apply a checkout update that arrived while the form was being built.
 				if ( this.has_pending_payment_form_refresh ) {
 					this.has_pending_payment_form_refresh = false;
 					this.set_payment_fields();
@@ -377,14 +328,6 @@ jQuery( document ).ready( ( $ ) => {
 				this.log( 'Payment nonce present, placing order' );
 				this.end( 'validate_payment_data' );
 				return true;
-			}
-
-			// The card form is still being built, there is nothing to tokenize yet.
-			if ( ! this.payment_form ) {
-				this.log( 'Payment form is not ready yet', 'error' );
-				this.handle_errors();
-				this.end( 'validate_payment_data', true );
-				return false;
 			}
 
 			const tokenized_card_id = this.get_tokenized_payment_method_id();
