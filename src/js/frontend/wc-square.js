@@ -315,9 +315,17 @@ jQuery( document ).ready( ( $ ) => {
 				this.log( `Could not build payment form: ${ error }`, 'error' );
 				this.end( 'initialize_payment_form', true );
 
-				// Don't leave a half-built card behind if `attach()` failed.
+				// Don't leave a half-built card behind if `attach()` failed. Awaited so a queued
+				// refresh can't start mounting a new card while this one is still being destroyed.
 				if ( card ) {
-					card.destroy().catch( () => {} );
+					try {
+						await card.destroy();
+					} catch ( destroy_error ) {
+						this.log(
+							`Could not destroy payment form: ${ destroy_error }`,
+							'error'
+						);
+					}
 				}
 			} finally {
 				this.is_building_payment_form = false;
