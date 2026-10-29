@@ -41,14 +41,34 @@ test.describe( 'Subscriptions Tests @general', () => {
 				'simple-subscription-product'
 			) )
 		) {
+			// WooCommerce Subscriptions 9.0 uses the purchase-options model:
+			// a simple product carrying a subscription plan, instead of the
+			// legacy `subscription` product type.
+			const subscriptionMetaData = [
+				{ key: '_wcsatt_schemes_status', value: 'override' },
+				{
+					key: '_wcsatt_schemes',
+					value: {
+						'1_month': {
+							id: '1_month',
+							subscription_period: 'month',
+							subscription_period_interval: 1,
+							subscription_length: 0,
+							subscription_trial_period: 'day',
+							subscription_trial_length: 0,
+							subscription_pricing_method: 'override',
+							subscription_regular_price: 10,
+							subscription_sale_price: '',
+							subscription_discount: '',
+						},
+					},
+				},
+				{ key: '_wcsatt_force_subscription', value: 'yes' },
+			];
 			await runWpCliCommand(
-				'wp option update woocommerce_subscriptions_enable_simple_subscription "yes"'
-			);
-			await runWpCliCommand(
-				'wp option update woocommerce_subscriptions_enable_variable_subscription "yes"'
-			);
-			await runWpCliCommand(
-				'wp wc product create --name="Simple Subscription Product" --slug="simple-subscription-product" --user=1 --regular_price=10 --type=subscription --meta_data=\'[{"key":"_subscription_price","value":"10"},{"key":"_subscription_period","value":"month"},{"key":"_subscription_period_interval","value":"1"}]\''
+				`wp wc product create --name="Simple Subscription Product" --slug="simple-subscription-product" --user=1 --regular_price=10 --meta_data='${ JSON.stringify(
+					subscriptionMetaData
+				) }'`
 			);
 		}
 	} );
