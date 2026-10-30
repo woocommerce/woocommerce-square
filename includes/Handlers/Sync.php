@@ -102,7 +102,8 @@ class Sync {
 	public function schedule_sync( $change_interval = false ) {
 
 		// bail if product sync is not enabled or there hasn't been a previous sync
-		if ( $this->is_sync_in_progress() || ! $this->get_last_synced_at() || ! $this->get_plugin()->get_settings_handler()->is_connected() || ! $this->get_plugin()->get_settings_handler()->is_product_sync_enabled() ) {
+		// cheap checks go first so the background job lookup in is_sync_in_progress() only runs when it matters
+		if ( ! $this->is_sync_enabled() || ! $this->get_plugin()->get_settings_handler()->is_connected() || ! $this->get_last_synced_at() || $this->is_sync_in_progress() ) {
 			return;
 		}
 
@@ -429,10 +430,17 @@ class Sync {
 	 * page when product import is in progress.
 	 */
 	public function render_import_no_navigation_warning() {
-		$job_in_progress = wc_square()->get_sync_handler()->get_job_in_progress();
+		$settings = $this->get_plugin()->get_settings_handler();
+
+		// a product import can only be started with product sync enabled, so skip the background job lookup otherwise
+		if ( ! $settings->is_product_sync_enabled() || ! $settings->is_connected() ) {
+			return;
+		}
+
+		$job_in_progress = $this->get_job_in_progress();
 
 		if ( $job_in_progress && 'product_import' === $job_in_progress->action ) {
-			wc_square()->get_admin_notice_handler()->add_admin_notice(
+			$this->get_plugin()->get_admin_notice_handler()->add_admin_notice(
 				__( 'Please do not close or navigate away from this page as the product import job is in progress. This page may load several times during the course of sync.', 'woocommerce-square' ),
 				'wc-square-sync-in-progress-message',
 				array(
