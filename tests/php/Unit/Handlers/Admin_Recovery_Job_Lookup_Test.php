@@ -28,6 +28,7 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 		}
 
 		delete_transient( 'wc_square_admin_recovery_check' );
+		delete_option( 'wc_square_failed_action_cleanup_at' );
 
 		add_filter( 'query', array( $this, 'record_job_query' ) );
 	}
@@ -35,6 +36,7 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 	public function tearDown(): void {
 		remove_filter( 'query', array( $this, 'record_job_query' ) );
 		delete_transient( 'wc_square_admin_recovery_check' );
+		delete_option( 'wc_square_failed_action_cleanup_at' );
 		wc_square()->get_settings_handler()->update_option( 'system_of_record', 'disabled' );
 		wp_set_current_user( 0 );
 
@@ -64,7 +66,17 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 		wc_square()->get_background_job_handler()->maybe_recover_stuck_sync_from_admin();
 
 		$this->assertSame( array(), $this->job_queries );
-		$this->assertFalse( get_transient( 'wc_square_admin_recovery_check' ) );
+	}
+
+	/**
+	 * Failed action cleanup also covers order sync, so it must still run with product sync disabled.
+	 */
+	public function test_cleans_up_failed_actions_when_product_sync_disabled() {
+		wc_square()->get_settings_handler()->update_option( 'system_of_record', 'disabled' );
+
+		wc_square()->get_background_job_handler()->maybe_recover_stuck_sync_from_admin();
+
+		$this->assertNotFalse( get_option( 'wc_square_failed_action_cleanup_at', false ) );
 	}
 
 	/**
@@ -76,6 +88,6 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 		wc_square()->get_background_job_handler()->maybe_recover_stuck_sync_from_admin();
 
 		$this->assertNotEmpty( $this->job_queries );
-		$this->assertNotFalse( get_transient( 'wc_square_admin_recovery_check' ) );
+		$this->assertNotFalse( get_option( 'wc_square_failed_action_cleanup_at', false ) );
 	}
 }
