@@ -391,8 +391,8 @@ class Background_Job extends Background_Job_Handler {
 			return;
 		}
 
-		// Sync jobs are only created with product sync enabled, so skip the job lookup otherwise. It scans
-		// the options table and is slow on large stores. The scheduled healthcheck still covers recovery.
+		// With product sync off, no new sync jobs start, so recovery can wait until sync is turned back on.
+		// The job lookup scans the options table and is slow on large stores.
 		if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
 			return;
 		}
