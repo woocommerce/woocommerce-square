@@ -100,7 +100,10 @@ class Sync_Job_Lookup_Test extends WP_UnitTestCase {
 		$this->sync->schedule_sync();
 
 		$this->assertSame( 1, $this->plugin->jobs->lookups );
-		$this->assertNotFalse( as_next_scheduled_action( 'wc_square_sync', array(), 'square' ) );
+
+		$next_run = as_next_scheduled_action( 'wc_square_sync', array(), 'square' );
+		$this->assertNotFalse( $next_run );
+		$this->assertEqualsWithDelta( time() + $this->plugin->settings->sync_interval, $next_run, 5 );
 	}
 
 	/**

@@ -26,6 +26,13 @@ class Sync_Settings {
 	 */
 	public $connected = true;
 
+	/**
+	 * Sync interval in seconds. Differs from the real one hour default so tests can tell the double is used.
+	 *
+	 * @var int
+	 */
+	public $sync_interval = 2 * HOUR_IN_SECONDS;
+
 	public function is_product_sync_enabled() {
 		return $this->product_sync_enabled;
 	}
@@ -35,6 +42,6 @@ class Sync_Settings {
 	}
 
 	public function get_sync_interval() {
-		return HOUR_IN_SECONDS;
+		return $this->sync_interval;
 	}
 }

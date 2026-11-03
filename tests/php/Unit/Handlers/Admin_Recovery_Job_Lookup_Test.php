@@ -18,6 +18,13 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 	 */
 	private $job_queries = array();
 
+	/**
+	 * The system of record setting before the test, restored in tearDown().
+	 *
+	 * @var mixed
+	 */
+	private $original_system_of_record;
+
 	public function setUp(): void {
 		parent::setUp();
 
@@ -26,6 +33,8 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) { // phpcs:ignore WordPress.WP.Capabilities.Unknown
 			$this->markTestSkipped( 'WooCommerce capabilities are not available in this environment.' );
 		}
+
+		$this->original_system_of_record = wc_square()->get_settings_handler()->get_option( 'system_of_record' );
 
 		delete_transient( 'wc_square_admin_recovery_check' );
 		delete_option( 'wc_square_failed_action_cleanup_at' );
@@ -37,7 +46,7 @@ class Admin_Recovery_Job_Lookup_Test extends WP_UnitTestCase {
 		remove_filter( 'query', array( $this, 'record_job_query' ) );
 		delete_transient( 'wc_square_admin_recovery_check' );
 		delete_option( 'wc_square_failed_action_cleanup_at' );
-		wc_square()->get_settings_handler()->update_option( 'system_of_record', 'disabled' );
+		wc_square()->get_settings_handler()->update_option( 'system_of_record', $this->original_system_of_record );
 		wp_set_current_user( 0 );
 
 		parent::tearDown();

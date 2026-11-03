@@ -102,13 +102,14 @@ class Sync {
 	public function schedule_sync( $change_interval = false ) {
 
 		// bail if product sync is not enabled or there hasn't been a previous sync
-		// cheap checks go first so the background job lookup in is_sync_in_progress() only runs when it matters
+		// cheap checks go first so the background job lookup in is_sync_in_progress() only runs when it matters.
+		// Stores with product sync enabled still run that lookup on every request, see SQUARE-445.
 		if ( ! $this->is_sync_enabled() || ! $this->get_plugin()->get_settings_handler()->is_connected() || ! $this->get_last_synced_at() || $this->is_sync_in_progress() ) {
 			return;
 		}
 
 		$plugin_id = $this->get_plugin()->get_id();
-		$interval  = wc_square()->get_settings_handler()->get_sync_interval();
+		$interval  = $this->get_plugin()->get_settings_handler()->get_sync_interval();
 
 		if ( false === as_next_scheduled_action( $this->sync_scheduled_event_name, array(), $plugin_id ) || $change_interval ) {
 			as_unschedule_all_actions( $this->sync_scheduled_event_name, array(), $plugin_id );
