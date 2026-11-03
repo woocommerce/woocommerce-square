@@ -231,15 +231,15 @@ class Sync_Page {
 									<?php
 									if ( $resume_state['needs_attention'] ) {
 										printf(
-											/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync */
-											esc_html__( 'Stopped partway: %1$d of %2$d products synced. Needs attention, click Sync now to start a new sync.', 'woocommerce-square' ),
+											/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync */
+											esc_html__( 'Stopped partway: this sync updated %1$d of %2$d products. Needs attention, click Sync now to start a new sync.', 'woocommerce-square' ),
 											esc_html( $resume_state['done'] ),
 											esc_html( $resume_state['total'] )
 										);
 									} else {
 										printf(
-											/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync */
-											esc_html__( 'Stopped partway: %1$d of %2$d products synced. Continuing automatically.', 'woocommerce-square' ),
+											/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync */
+											esc_html__( 'Stopped partway: this sync updated %1$d of %2$d products. Continuing automatically.', 'woocommerce-square' ),
 											esc_html( $resume_state['done'] ),
 											esc_html( $resume_state['total'] )
 										);

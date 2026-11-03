@@ -301,8 +301,8 @@ class Background_Job extends Background_Job_Handler {
 					array(
 						'type'    => 'failed',
 						'message' => sprintf(
-							/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$d - number of automatic attempts */
-							__( 'Sync stopped: %1$d of %2$d products synced, %3$d still to go. It made no progress in %4$d automatic attempts and needs attention. Check the Square logs, then click Sync now to start a new sync.', 'woocommerce-square' ),
+							/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$d - number of automatic attempts */
+							__( 'Sync stopped: this sync updated %1$d of %2$d products, %3$d still to go. It made no progress in %4$d automatic attempts and needs attention. Check the Square logs, then click Sync now to start a new sync.', 'woocommerce-square' ),
 							$state['done'],
 							$state['total'],
 							$state['remaining'],
@@ -322,8 +322,8 @@ class Background_Job extends Background_Job_Handler {
 					array(
 						'type'    => 'notice',
 						'message' => sprintf(
-							/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$s - date and time the sync continues */
-							__( 'Sync stopped partway: %1$d of %2$d products synced, %3$d still to go. It will continue automatically at %4$s.', 'woocommerce-square' ),
+							/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$s - date and time the sync continues */
+							__( 'Sync stopped partway: this sync updated %1$d of %2$d products, %3$d still to go. It will continue automatically at %4$s.', 'woocommerce-square' ),
 							$state['done'],
 							$state['total'],
 							$state['remaining'],

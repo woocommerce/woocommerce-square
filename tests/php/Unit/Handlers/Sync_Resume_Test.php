@@ -118,7 +118,7 @@ class Sync_Resume_Test extends WP_UnitTestCase {
 
 		$record = $this->latest_record();
 		$this->assertSame( 'notice', $record->get_type() );
-		$this->assertStringContainsString( '4 of 10 products synced, 6 still to go', $record->get_message() );
+		$this->assertStringContainsString( 'this sync updated 4 of 10 products, 6 still to go', $record->get_message() );
 		$this->assertStringContainsString( 'continue automatically', $record->get_message() );
 	}
 
@@ -265,7 +265,7 @@ class Sync_Resume_Test extends WP_UnitTestCase {
 		);
 		$this->assertCount( 1, $failed, 'Only the attempt that gave up is recorded as a failure.' );
 		$record = $failed[0];
-		$this->assertStringContainsString( '2 of 10 products synced, 8 still to go', $record->get_message() );
+		$this->assertStringContainsString( 'this sync updated 2 of 10 products, 8 still to go', $record->get_message() );
 		$this->assertStringContainsString( 'needs attention', $record->get_message() );
 
 		// A late resume event does nothing once it has given up.
