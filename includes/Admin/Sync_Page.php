@@ -149,6 +149,7 @@ class Sync_Page {
 		$synced_products   = wc_square()->get_settings_handler()->is_product_sync_enabled() ? Product::get_products_synced_with_square() : array();
 		$synced_count      = count( $synced_products );
 		$is_product_import = false;
+		$resume_state      = $is_connected && ! $sync_in_progress && wc_square()->get_settings_handler()->is_system_of_record_woocommerce() ? wc_square()->get_sync_handler()->get_sync_resume_state() : null;
 
 		if ( $sync_in_progress ) {
 
@@ -224,13 +225,36 @@ class Sync_Page {
 								<?php endif; ?>
 							<?php endif; ?>
 						</p>
+						<?php if ( $resume_state ) : ?>
+							<p class="sync-resume">
+								<em>
+									<?php
+									if ( $resume_state['needs_attention'] ) {
+										printf(
+											/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync */
+											esc_html__( 'Stopped partway: %1$d of %2$d products synced. Needs attention, click Sync now to start a new sync.', 'woocommerce-square' ),
+											esc_html( $resume_state['done'] ),
+											esc_html( $resume_state['total'] )
+										);
+									} else {
+										printf(
+											/* translators: Placeholders: %1$d - number of products synced, %2$d - number of products in the sync */
+											esc_html__( 'Stopped partway: %1$d of %2$d products synced. Continuing automatically.', 'woocommerce-square' ),
+											esc_html( $resume_state['done'] ),
+											esc_html( $resume_state['total'] )
+										);
+									}
+									?>
+								</em>
+							</p>
+						<?php endif; ?>
 					</td>
 					<td class="next-sync">
 						<p>
 							<?php if ( $sync_in_progress ) : ?>
 								&mdash;
 							<?php else : ?>
-								<?php $next_sync_at = wc_square()->get_sync_handler()->get_next_sync_at(); ?>
+								<?php $next_sync_at = ! empty( $resume_state['next_at'] ) ? $resume_state['next_at'] : wc_square()->get_sync_handler()->get_next_sync_at(); ?>
 								<?php if ( $next_sync_at ) : ?>
 									<?php
 									$next_sync_date = new \DateTime();
