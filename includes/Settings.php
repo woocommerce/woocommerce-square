@@ -835,7 +835,34 @@ class Settings extends \WC_Settings_API {
 		$section = isset( $_GET['section'] ) ? sanitize_text_field( wp_unslash( $_GET['section'] ) ) : false;  // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		if ( ! ( ( $this->is_admin_settings_screen() && 'update' !== $section ) || $force ) ) {
-			$this->locations = get_transient( $locations_transient_key );
+			if ( wp_using_ext_object_cache() ) {
+				$marker          = wp_cache_get( $locations_transient_key, 'transient', false, $found );
+				$this->locations = false;
+
+				if ( $found && false === $marker ) {
+					$json = get_transient( $locations_transient_key . '_json' );
+					$data = is_string( $json ) ? json_decode( $json ) : null;
+
+					if ( is_array( $data ) ) {
+						try {
+							$this->locations = array_map(
+								static function ( $location ) {
+									$location = \Square\ApiHelper::getJsonHelper()->mapClass( $location, \Square\Models\Location::class );
+									if ( ! $location instanceof \Square\Models\Location ) {
+										throw new \UnexpectedValueException( 'Invalid cached Square location.' );
+									}
+									return $location;
+								},
+								$data
+							);
+						} catch ( \Throwable $exception ) {
+							$this->locations = false;
+						}
+					}
+				}
+			} else {
+				$this->locations = get_transient( $locations_transient_key );
+			}
 		}
 
 		if ( ! is_array( $this->locations ) && did_action( 'wc_square_initialized' ) ) {
@@ -850,7 +877,13 @@ class Settings extends \WC_Settings_API {
 
 				// cache the locations returned so they can be used elsewhere.
 				$this->locations = $this->get_plugin()->get_api( $this->get_access_token(), $this->is_sandbox() )->get_locations();
-				set_transient( $locations_transient_key, $this->locations, HOUR_IN_SECONDS );
+				if ( wp_using_ext_object_cache() ) {
+					set_transient( $locations_transient_key . '_json', \Square\ApiHelper::serialize( $this->locations ), HOUR_IN_SECONDS );
+					// Old readers treat false as a miss; old invalidators delete this marker.
+					set_transient( $locations_transient_key, false, HOUR_IN_SECONDS );
+				} else {
+					set_transient( $locations_transient_key, $this->locations, HOUR_IN_SECONDS );
+				}
 
 				// check the returned IDs against what's currently configured.
 				$stored_location_id = $this->get_location_id();

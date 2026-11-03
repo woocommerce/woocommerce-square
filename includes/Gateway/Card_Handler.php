@@ -96,7 +96,35 @@ class Card_Handler extends Payment_Gateway_Payment_Tokens_Handler {
 		$customer_id = $args['customer_id'];
 
 		if ( $transient_key ) {
-			$transient_tokens = get_transient( $transient_key );
+			if ( wp_using_ext_object_cache() ) {
+				$marker           = wp_cache_get( $transient_key, 'transient', false, $found );
+				$transient_tokens = false;
+
+				if ( $found && false === $marker ) {
+					$token_ids = get_transient( $transient_key . '_ids' );
+
+					if ( is_array( $token_ids ) ) {
+						$transient_tokens = array();
+						foreach ( $token_ids as $key => $token_id ) {
+							if ( ! is_numeric( $token_id ) || (int) $token_id < 1 ) {
+								continue;
+							}
+
+							try {
+								$token = new Square_Credit_Card_Payment_Token( $token_id );
+								if ( $token->get_user_id() === (int) $user_id && \WooCommerce\Square\Plugin::GATEWAY_ID === $token->get_gateway_id() ) {
+									$transient_tokens[ $key ] = $token;
+								}
+							} catch ( \Exception $exception ) {
+								// A saved token may have been deleted since the cache was populated.
+								continue;
+							}
+						}
+					}
+				}
+			} else {
+				$transient_tokens = get_transient( $transient_key );
+			}
 
 			if ( false !== $transient_tokens ) {
 				return $transient_tokens;
@@ -165,7 +193,21 @@ class Card_Handler extends Payment_Gateway_Payment_Tokens_Handler {
 		 */
 		do_action( 'wc_payment_gateway_square_credit_card_payment_tokens_loaded', $loaded_tokens, $this );
 
-		set_transient( $transient_key, $loaded_tokens, HOUR_IN_SECONDS );
+		if ( $transient_key ) {
+			if ( wp_using_ext_object_cache() ) {
+				$token_ids = array_map(
+					static function ( $token ) {
+						return $token->get_id();
+					},
+					$loaded_tokens
+				);
+				set_transient( $transient_key . '_ids', $token_ids, HOUR_IN_SECONDS );
+				// Keep the legacy key usable by old readers and existing invalidators.
+				set_transient( $transient_key, false, HOUR_IN_SECONDS );
+			} else {
+				set_transient( $transient_key, $loaded_tokens, HOUR_IN_SECONDS );
+			}
+		}
 
 		return $loaded_tokens;
 	}
