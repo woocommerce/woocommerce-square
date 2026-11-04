@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 5.5.2
+Stable tag: 5.5.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,15 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.5.3 - 2026-11-04 =
+* Fix - Stores with product sync disabled no longer run a slow database query on every page load and API request.
+* Fix - Product sync no longer fails when Square temporarily locks the catalog while processing a previous write. The affected step is retried after a short pause without consuming the rate-limit retry attempts.
+* Fix - Products added to the cart no longer disappear a few seconds later when Square inventory sync is enabled.
+* Fix - Prevent the Square credit card field from rendering twice on the classic checkout when the checkout updates while the card form is loading.
+* Dev - Update the subscription E2E tests to create subscription products the WooCommerce Subscriptions 9.0 way.
+* Dev - Bump WooCommerce "tested up to" version 11.3.
+* Dev - Bump WooCommerce minimum supported version to 11.1.
 
 = 5.5.2 - 2026-10-15 =
 * Fix - Prevent duplicate Square items and categories when a failed sync batch is retried item by item, and stop saving temporary Square IDs on products.

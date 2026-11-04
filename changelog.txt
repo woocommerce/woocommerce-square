@@ -1,5 +1,14 @@
 *** WooCommerce Square Changelog ***
 
+= 5.5.3 - 2026-11-04 =
+* Fix - Stores with product sync disabled no longer run a slow database query on every page load and API request.
+* Fix - Product sync no longer fails when Square temporarily locks the catalog while processing a previous write. The affected step is retried after a short pause without consuming the rate-limit retry attempts.
+* Fix - Products added to the cart no longer disappear a few seconds later when Square inventory sync is enabled.
+* Fix - Prevent the Square credit card field from rendering twice on the classic checkout when the checkout updates while the card form is loading.
+* Dev - Update the subscription E2E tests to create subscription products the WooCommerce Subscriptions 9.0 way.
+* Dev - Bump WooCommerce "tested up to" version 11.3.
+* Dev - Bump WooCommerce minimum supported version to 11.1.
+
 = 5.5.2 - 2026-10-15 =
 * Fix - Prevent duplicate Square items and categories when a failed sync batch is retried item by item, and stop saving temporary Square IDs on products.
 * Fix - Checkout with a Square credit card or Cash App Pay no longer fails with a "value too low" error when a WooCommerce gift card covers more than the order subtotal but less than the order total. The remaining balance is now charged.
