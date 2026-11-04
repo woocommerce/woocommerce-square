@@ -399,6 +399,17 @@ class Background_Job extends Background_Job_Handler {
 		}
 		set_transient( 'wc_square_admin_recovery_check', 1, 5 * MINUTE_IN_SECONDS );
 
+		// Runs whatever the sync setting, because it also prunes failed order sync actions. Once the queue
+		// empties, the scheduled healthcheck is unscheduled and this is the only remaining trigger.
+		$this->cleanup_stale_failed_actions();
+
+		// With product sync off, stalled-job recovery can wait until sync is turned back on. The scheduled
+		// healthcheck still covers a job already in progress. The job lookup scans the options table and is
+		// slow on large stores.
+		if ( ! wc_square()->get_settings_handler()->is_product_sync_enabled() ) {
+			return;
+		}
+
 		// Deliberately NOT the full healthcheck. Its tail enqueues a job runner whenever the queue is
 		// non empty and Action Scheduler has nothing scheduled, and handle() takes the process lock
 		// without checking it first, so making every admin page load a third enqueue trigger would
@@ -406,8 +417,6 @@ class Background_Job extends Background_Job_Handler {
 		// Recovery and housekeeping are safe here; the queue is only restarted when this call
 		// actually failed a stalled job, which is the case where nothing else will restart it.
 		$recovered = $this->maybe_recover_stuck_sync();
-
-		$this->cleanup_stale_failed_actions();
 
 		if ( $recovered && ! $this->is_queue_empty() && ! $this->has_pending_job_runner() ) {
 			as_enqueue_async_action( 'wc_square_job_runner' );
