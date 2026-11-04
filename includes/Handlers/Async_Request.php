@@ -54,6 +54,12 @@ if ( class_exists( '\\WP_Async_Request', false ) ) :
 		 * Handle a dispatched request.
 		 */
 		protected function handle() {
+			// This request carries the shopper's cookies, so WooCommerce loads their session.
+			// Never save it: a stale snapshot would overwrite newer cart changes.
+			if ( function_exists( 'WC' ) && WC()->session ) {
+				remove_action( 'shutdown', array( WC()->session, 'save_data' ), 20 );
+			}
+
 			// Sync inventory for products.
 			$product_ids = isset( $_POST['product_ids'] ) ? array_map( 'absint', $_POST['product_ids'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
 			if ( empty( $product_ids ) ) {
