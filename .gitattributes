@@ -35,3 +35,4 @@ README.md               export-ignore
 webpack.config.js       export-ignore
 .nvmrc                  export-ignore
 AGENTS.md               export-ignore
+SECURITY.md             export-ignore
