@@ -1,5 +1,15 @@
 *** WooCommerce Square Changelog ***
 
+= 5.5.2 - 2026-10-15 =
+* Fix - Prevent duplicate Square items and categories when a failed sync batch is retried item by item, and stop saving temporary Square IDs on products.
+* Fix - Checkout with a Square credit card or Cash App Pay no longer fails with a "value too low" error when a WooCommerce gift card covers more than the order subtotal but less than the order total. The remaining balance is now charged.
+* Fix - Show the current cart total in the Apple Pay sheet on the Cart and Checkout blocks after the cart changes.
+* Fix - Ensure that the Checkout Block prevents submitting a card payment without a payment token.
+* Fix - Prevent a connected store from being disconnected after a successful Square access-token refresh.
+* Fix - Ensure Square digital wallet (Apple Pay / Google Pay) buttons are visible on cart and product pages when the shipping phone field is required.
+* Dev - Bump WooCommerce "tested up to" version 11.2.
+* Dev - Bump WooCommerce minimum supported version to 11.0.
+
 = 5.5.1 - 2026-09-21 =
 * Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
 * Fix - The domain registered with Square for Apple Pay is now based on the Site Address setting.
