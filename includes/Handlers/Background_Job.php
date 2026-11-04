@@ -138,6 +138,9 @@ class Background_Job extends Background_Job_Handler {
 				$delay      = $base_delay * ( pow( 2, $job->retry ) );
 				wc_square()->log( "Retrying in {$delay} seconds." );
 				as_schedule_single_action( time() + $delay, 'wc_square_job_runner' );
+			} elseif ( isset( $job->catalog_lock_retry ) && is_numeric( $job->catalog_lock_retry ) && $job->catalog_lock_retry > 0 ) {
+				// A catalog lock clears in seconds, so retry the job after a short pause.
+				as_schedule_single_action( time() + 10, 'wc_square_job_runner' );
 			} else {
 				as_enqueue_async_action( 'wc_square_job_runner' );
 			}
