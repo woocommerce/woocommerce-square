@@ -510,15 +510,19 @@ class Product_Import extends Stepped_Job {
 	 * @return int|null
 	 */
 	public function update_product( $product, $data ) {
-		global $wpdb;
 		$product_id = $product->get_id();
 
 		try {
-			$wpdb->query( 'START TRANSACTION' );
+			wc_transaction_query( 'start' );
 
 			// update an existing product from a simple to a variable product if it has at least two variations
 			if ( ! $product instanceof \WC_Product_Variable && 'variable' === $data['type'] ) {
 				$product_id = $this->update_simple_product_to_variable( $product_id, $data );
+				$product    = wc_get_product( $product_id );
+
+				if ( ! $product instanceof \WC_Product ) {
+					throw new \Exception( esc_html__( 'Could not convert the product to a variable product.', 'woocommerce-square' ) );
+				}
 			}
 
 			$product->set_name( $data['title'] );
@@ -536,12 +540,12 @@ class Product_Import extends Stepped_Job {
 				$this->save_variations( $product_id, $data );
 			}
 
-			$wpdb->query( 'COMMIT' );
+			wc_transaction_query( 'commit' );
 
 			wc_delete_product_transients( $product_id );
 		} catch ( \Exception $e ) {
 			// undo any updated data when updating fails
-			$wpdb->query( 'ROLLBACK' );
+			wc_transaction_query( 'rollback' );
 			$product_id = 0;
 
 			$this->record_error( $e->getMessage(), $data, 'update' );
@@ -561,11 +565,13 @@ class Product_Import extends Stepped_Job {
 	 * @return int|null
 	 */
 	protected function update_simple_product_to_variable( $variation_id, $data = array() ) {
+		$simple_product = wc_get_product( $variation_id );
+		$total_sales    = $simple_product instanceof \WC_Product ? $simple_product->get_total_sales( 'edit' ) : 0;
+
 		// create a new parent product
 		$parent_product_id = $this->create_product_from_square_data( $data );
 
-		// convert the simple product to a variation
-		wp_set_object_terms( $variation_id, 'variation', 'product_type' );
+		// WooCommerce has no CRUD method to change a post type, so move the post over before loading it as a variation
 		wp_update_post(
 			array(
 				'ID'           => $variation_id,
@@ -576,17 +582,29 @@ class Product_Import extends Stepped_Job {
 			)
 		);
 
+		\WC_Cache_Helper::invalidate_cache_group( 'product_' . $variation_id );
+
+		// saving the variation also removes the simple product type term
+		$variation = new \WC_Product_Variation( $variation_id );
+		$variation->set_parent_id( $parent_product_id );
+
 		// remove simple product meta that doesn't exist or needs be updated on the variation
-		delete_post_meta( $variation_id, Product::SQUARE_ID_META_KEY );
-		delete_post_meta( $variation_id, Product::SQUARE_VERSION_META_KEY );
-		delete_post_meta( $variation_id, Product::SQUARE_IMAGE_ID_META_KEY );
+		$variation->delete_meta_data( Product::SQUARE_ID_META_KEY );
+		$variation->delete_meta_data( Product::SQUARE_VERSION_META_KEY );
+		$variation->delete_meta_data( Product::SQUARE_IMAGE_ID_META_KEY );
+		$variation->save();
+
+		// legacy pre-WC 3.0 key written by earlier versions of this importer, not managed by the CRUD layer
 		delete_post_meta( $variation_id, '_visibility' );
 
 		// copy total sales from previous simple product over to new parent variable product
-		$total_sales = get_post_meta( $variation_id, 'total_sales', true );
-
 		if ( $total_sales ) {
-			update_post_meta( $parent_product_id, 'total_sales', $total_sales );
+			$parent_product = wc_get_product( $parent_product_id );
+
+			if ( $parent_product instanceof \WC_Product ) {
+				$parent_product->set_total_sales( $total_sales );
+				$parent_product->save();
+			}
 		}
 
 		return $parent_product_id;
@@ -989,58 +1007,35 @@ class Product_Import extends Stepped_Job {
 	 */
 	protected function save_product_meta( $product_id, $data ) {
 
+		$product = wc_get_product( $product_id );
+
+		if ( ! $product instanceof \WC_Product ) {
+			/* translators: Placeholders: %d - product ID */
+			throw new \Exception( sprintf( esc_html__( 'Invalid product ID %d', 'woocommerce-square' ), absint( $product_id ) ) );
+		}
+
 		// product type
-		$product_type = null;
+		$product_type = $product->get_type();
 
 		if ( isset( $data['type'] ) ) {
 
 			$product_type = wc_clean( $data['type'] );
 
-			wp_set_object_terms( $product_id, $product_type, 'product_type' );
-		} else {
-			$_product_type = get_the_terms( $product_id, 'product_type' );
-
-			if ( is_array( $_product_type ) ) {
-
-				$_product_type = current( $_product_type );
-				$product_type  = $_product_type->slug;
+			// load the product with the class for its new type, the type term is updated on save
+			if ( ! $product->is_type( $product_type ) ) {
+				$classname = \WC_Product_Factory::get_product_classname( $product_id, $product_type );
+				$product   = new $classname( $product_id );
 			}
 		}
 
-		// default total sales
-		add_post_meta( $product_id, 'total_sales', '0', true );
-
 		// catalog visibility
-		update_post_meta( $product_id, '_visibility', ! empty( $data['catalog_visibility'] ) ? wc_clean( $data['catalog_visibility'] ) : 'visible' );
+		if ( ! empty( $data['catalog_visibility'] ) ) {
+			$product->set_catalog_visibility( wc_clean( $data['catalog_visibility'] ) );
+		}
 
 		// sku
 		if ( isset( $data['sku'] ) ) {
-
-			$sku     = get_post_meta( $product_id, '_sku', true );
-			$new_sku = wc_clean( $data['sku'] );
-
-			if ( '' === $new_sku ) {
-
-				update_post_meta( $product_id, '_sku', '' );
-
-			} elseif ( $new_sku !== $sku ) {
-
-				if ( ! empty( $new_sku ) ) {
-
-					$unique_sku = wc_product_has_unique_sku( $product_id, $new_sku );
-
-					if ( $unique_sku ) {
-
-						update_post_meta( $product_id, '_sku', $new_sku );
-
-					} else {
-
-						throw new \Exception( esc_html__( 'The SKU already exists on another product', 'woocommerce-square' ) );
-					}
-				} else {
-					update_post_meta( $product_id, '_sku', '' );
-				}
-			}
+			$this->set_product_sku( $product, $data['sku'] );
 		}
 
 		// attributes
@@ -1050,8 +1045,8 @@ class Product_Import extends Stepped_Job {
 
 			foreach ( $data['attributes'] as $attribute ) {
 
-				$is_taxonomy = 0;
-				$taxonomy    = 0;
+				$attribute_id = 0;
+				$taxonomy     = null;
 
 				if ( ! isset( $attribute['name'] ) ) {
 					continue;
@@ -1065,12 +1060,11 @@ class Product_Import extends Stepped_Job {
 				}
 
 				if ( $taxonomy ) {
-					$is_taxonomy = 1;
+					$attribute_id = wc_attribute_taxonomy_id_by_name( $taxonomy );
 
 				} elseif ( isset( $attribute['pa_prefix'] ) && $attribute['pa_prefix'] ) {
 					// Create new taxonomy attribute.
-					$is_taxonomy = 1;
-					$taxonomy    = wc_attribute_taxonomy_name( $attribute_slug );
+					$taxonomy = wc_attribute_taxonomy_name( $attribute_slug );
 
 					if ( ! taxonomy_exists( $taxonomy ) ) {
 						$attribute_name = ucfirst( wc_clean( $attribute['name'] ) );
@@ -1097,6 +1091,8 @@ class Product_Import extends Stepped_Job {
 								'rewrite'      => false,
 							)
 						);
+					} else {
+						$attribute_id = wc_attribute_taxonomy_id_by_name( $taxonomy );
 					}
 				}
 
@@ -1105,7 +1101,7 @@ class Product_Import extends Stepped_Job {
 					$attribute['options'] = array_diff( $attribute['options'], array( WC_SQUARE_OPTION_ANY ) );
 				}
 
-				if ( $is_taxonomy ) {
+				if ( $attribute_id ) {
 
 					if ( isset( $attribute['options'] ) ) {
 
@@ -1125,105 +1121,85 @@ class Product_Import extends Stepped_Job {
 						$values = array();
 					}
 
-					// update post terms
-					if ( taxonomy_exists( $taxonomy ) ) {
-
-						wp_set_object_terms( $product_id, $values, $taxonomy );
+					// attributes left out of the product are removed and their terms cleared on save
+					if ( empty( $values ) ) {
+						continue;
 					}
 
-					if ( ! empty( $values ) ) {
+					$attribute_name = $taxonomy;
 
-						// add attribute to array, but don't set values
-						$attributes[ $taxonomy ] = array(
-							'name'         => $taxonomy,
-							'value'        => '',
-							'position'     => isset( $attribute['position'] ) ? (string) absint( $attribute['position'] ) : '0',
-							'is_visible'   => ( isset( $attribute['visible'] ) && $attribute['visible'] ) ? 1 : 0,
-							'is_variation' => ( isset( $attribute['variation'] ) && $attribute['variation'] ) ? 1 : 0,
-							'is_taxonomy'  => $is_taxonomy,
-						);
-					}
 				} elseif ( isset( $attribute['options'] ) ) {
 					// array based
-					if ( is_array( $attribute['options'] ) ) {
+					$options = is_array( $attribute['options'] ) ? $attribute['options'] : explode( WC_DELIMITER, $attribute['options'] );
 
-						$values = implode( ' ' . WC_DELIMITER . ' ', array_map( 'wc_clean', $attribute['options'] ) );
+					$values         = array_map( 'wc_clean', $options );
+					$attribute_name = wc_clean( $attribute['name'] );
 
-					} else {
-
-						$values = implode( ' ' . WC_DELIMITER . ' ', array_map( 'wc_clean', explode( WC_DELIMITER, $attribute['options'] ) ) );
-					}
-
-					// custom attribute - add attribute to array and set the values
-					$attributes[ $attribute_slug ] = array(
-						'name'         => wc_clean( $attribute['name'] ),
-						'value'        => $values,
-						'position'     => isset( $attribute['position'] ) ? (string) absint( $attribute['position'] ) : '0',
-						'is_visible'   => ( isset( $attribute['visible'] ) && $attribute['visible'] ) ? 1 : 0,
-						'is_variation' => ( isset( $attribute['variation'] ) && $attribute['variation'] ) ? 1 : 0,
-						'is_taxonomy'  => $is_taxonomy,
-					);
+				} else {
+					continue;
 				}
+
+				$product_attribute = new \WC_Product_Attribute();
+				$product_attribute->set_id( $attribute_id );
+				$product_attribute->set_name( $attribute_name );
+				$product_attribute->set_options( array_values( $values ) );
+				$product_attribute->set_position( isset( $attribute['position'] ) ? absint( $attribute['position'] ) : 0 );
+				$product_attribute->set_visible( isset( $attribute['visible'] ) && $attribute['visible'] );
+				$product_attribute->set_variation( isset( $attribute['variation'] ) && $attribute['variation'] );
+
+				$attributes[] = $product_attribute;
 			}
 
-			uasort( $attributes, 'wc_product_attribute_uasort_comparison' );
-
-			update_post_meta( $product_id, '_product_attributes', $attributes );
+			$product->set_attributes( $attributes );
 		}
 
 		// sales and prices
 		if ( in_array( $product_type, array( 'variable', 'grouped' ), true ) ) {
 
 			// variable and grouped products have no prices
-			update_post_meta( $product_id, '_regular_price', '' );
-			update_post_meta( $product_id, '_sale_price', '' );
-			update_post_meta( $product_id, '_sale_price_dates_from', '' );
-			update_post_meta( $product_id, '_sale_price_dates_to', '' );
-			update_post_meta( $product_id, '_price', '' );
+			$product->set_regular_price( '' );
+			$product->set_sale_price( '' );
+			$product->set_date_on_sale_from( null );
+			$product->set_date_on_sale_to( null );
+			$product->set_price( '' );
 
 		} else {
 
-			$this->wc_save_product_price( $product_id, $data['regular_price'] );
+			$this->set_product_price_props( $product, $data['regular_price'] );
 		}
 
 		// product categories
 		if ( isset( $data['categories'] ) && is_array( $data['categories'] ) ) {
-
-			$term_ids = array_unique( array_map( 'intval', $data['categories'] ) );
-
-			wp_set_object_terms( $product_id, $term_ids, 'product_cat' );
+			$product->set_category_ids( array_unique( array_map( 'intval', $data['categories'] ) ) );
 		}
 
 		// Update custom meta.
 		if ( $data['custom_meta'] ) {
 			foreach ( $data['custom_meta'] as $meta_key => $meta_value ) {
-				update_post_meta( $product_id, $meta_key, $meta_value );
+				$product->update_meta_data( $meta_key, $meta_value );
 			}
 		}
 
-		// clear/invalidate cache before calling WooCommerce\Square\Handlers\Product functions (these functions call wc_get_product() and save(), overriding our changes)
-		if ( is_callable( '\WC_Cache_Helper::invalidate_cache_group' ) ) {
-			\WC_Cache_Helper::invalidate_cache_group( 'product_' . $product_id );
-		}
+		$product->save();
 
 		// square item id
 		if ( isset( $data['square_meta']['item_id'] ) ) {
-			Product::set_square_item_id( $product_id, $data['square_meta']['item_id'] );
+			Product::set_square_item_id( $product, $data['square_meta']['item_id'] );
 		}
 
 		// square item version
 		if ( isset( $data['square_meta']['item_version'] ) ) {
-			Product::set_square_version( $product_id, $data['square_meta']['item_version'] );
+			Product::set_square_version( $product, $data['square_meta']['item_version'] );
 		}
 
 		// square item variation id
 		if ( isset( $data['square_meta']['item_variation_id'] ) ) {
-			Product::set_square_item_variation_id( $product_id, $data['square_meta']['item_variation_id'] );
+			Product::set_square_item_variation_id( $product, $data['square_meta']['item_variation_id'] );
 		}
 
 		// square item variation version
 		if ( isset( $data['square_meta']['item_variation_version'] ) ) {
-			Product::set_square_variation_version( $product_id, $data['square_meta']['item_variation_version'] );
+			Product::set_square_variation_version( $product, $data['square_meta']['item_variation_version'] );
 		}
 
 		/**
@@ -1241,6 +1217,31 @@ class Product_Import extends Stepped_Job {
 
 
 	/**
+	 * Sets the SKU on a product, making sure it is unique.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product the product or variation object
+	 * @param string $sku the SKU from Square
+	 * @throws \Exception
+	 */
+	private function set_product_sku( $product, $sku ) {
+
+		$new_sku = wc_clean( $sku );
+
+		if ( $new_sku === $product->get_sku( 'edit' ) ) {
+			return;
+		}
+
+		if ( ! empty( $new_sku ) && ! wc_product_has_unique_sku( $product->get_id(), $new_sku ) ) {
+			throw new \Exception( esc_html__( 'The SKU already exists on another product', 'woocommerce-square' ) );
+		}
+
+		$product->set_sku( empty( $new_sku ) ? '' : $new_sku );
+	}
+
+
+	/**
 	 * Saves the variations for a given product.
 	 *
 	 * @since 2.0.0
@@ -1251,11 +1252,10 @@ class Product_Import extends Stepped_Job {
 	 * @throws \Exception
 	 */
 	protected function save_variations( $product_id, $data ) {
-		global $wpdb;
 
 		$variations           = $data['variations'];
-		$attributes           = (array) maybe_unserialize( get_post_meta( $product_id, '_product_attributes', true ) );
 		$variable_product     = wc_get_product( $product_id );
+		$attributes           = $variable_product ? $variable_product->get_attributes( 'edit' ) : array();
 		$variations_to_remove = $variable_product ? $variable_product->get_children() : array();
 
 		foreach ( $variations as $menu_order => $variation ) {
@@ -1268,24 +1268,29 @@ class Product_Import extends Stepped_Job {
 				$variation_id  = wc_get_product_id_by_sku( $variation_sku );
 			}
 
-			/* translators: Placeholders: %1$s - variation ID, %2$s - product name */
-			$variation_post_title = sprintf( __( 'Variation #%1$s of %2$s', 'woocommerce-square' ), $variation_id, esc_html( get_the_title( $product_id ) ) );
+			$is_new_variation = ! $variation_id;
+			$variation_object = $is_new_variation ? new \WC_Product_Variation() : wc_get_product( $variation_id );
 
-			// update or add post
+			if ( ! $variation_object instanceof \WC_Product_Variation ) {
+				/* translators: Placeholders: %d - product ID */
+				throw new \Exception( sprintf( esc_html__( 'Product #%d is not a product variation', 'woocommerce-square' ), absint( $variation_id ) ) );
+			}
+
+			$variation_object->set_parent_id( $product_id );
+			$variation_object->set_menu_order( $menu_order );
+
+			if ( $is_new_variation || isset( $variation['visible'] ) ) {
+				$variation_object->set_status( ( isset( $variation['visible'] ) && false === $variation['visible'] ) ? 'private' : 'publish' );
+			}
+
+			$variation_id = $variation_object->save();
+
+			// stop if we don't have a variation ID
 			if ( ! $variation_id ) {
+				throw new \Exception( esc_html__( 'Could not save the product variation', 'woocommerce-square' ) );
+			}
 
-				$post_status   = ( isset( $variation['visible'] ) && false === $variation['visible'] ) ? 'private' : 'publish';
-				$new_variation = array(
-					'post_title'   => $variation_post_title,
-					'post_content' => '',
-					'post_status'  => $post_status,
-					'post_author'  => get_current_user_id(),
-					'post_parent'  => $product_id,
-					'post_type'    => 'product_variation',
-					'menu_order'   => $menu_order,
-				);
-
-				$variation_id = wp_insert_post( $new_variation );
+			if ( $is_new_variation ) {
 
 				/**
 				 * Fired after creating a product variation during an import from Square.
@@ -1297,21 +1302,6 @@ class Product_Import extends Stepped_Job {
 				do_action( 'woocommerce_square_create_product_variation', $variation_id );
 
 			} else {
-
-				$update_variation = array(
-					'post_title'  => $variation_post_title,
-					'menu_order'  => $menu_order,
-					'post_parent' => $product_id,
-				);
-
-				if ( isset( $variation['visible'] ) ) {
-
-					$post_status = ( false === $variation['visible'] ) ? 'private' : 'publish';
-
-					$update_variation['post_status'] = $post_status;
-				}
-
-				$wpdb->update( $wpdb->posts, $update_variation, array( 'ID' => $variation_id ) );
 
 				// remove any variation from $variations_to_remove that is found in Sqaure and also matches a variation in Woo
 				if ( ( $key = array_search( $variation_id, $variations_to_remove, true ) ) !== false ) { //phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition.Found, Squiz.PHP.DisallowMultipleAssignments.FoundInControlStructure
@@ -1328,59 +1318,29 @@ class Product_Import extends Stepped_Job {
 				do_action( 'woocommerce_square_update_product_variation', $variation_id );
 			}
 
-			// stop if we don't have a variation ID
-			if ( is_wp_error( $variation_id ) ) {
-
-				throw new \Exception( esc_html( $variation_id->get_error_message() ) );
-			}
-
 			// SKU
 			if ( isset( $variation['sku'] ) ) {
-
-				$sku     = get_post_meta( $variation_id, '_sku', true );
-				$new_sku = wc_clean( $variation['sku'] );
-
-				if ( '' === $new_sku ) {
-
-					update_post_meta( $variation_id, '_sku', '' );
-
-				} elseif ( $new_sku !== $sku ) {
-
-					if ( ! empty( $new_sku ) ) {
-
-						if ( wc_product_has_unique_sku( $variation_id, $new_sku ) ) {
-
-							update_post_meta( $variation_id, '_sku', $new_sku );
-
-						} else {
-
-							throw new \Exception( esc_html__( 'The SKU already exists on another product', 'woocommerce-square' ) );
-						}
-					} else {
-
-						update_post_meta( $variation_id, '_sku', '' );
-					}
-				}
+				$this->set_product_sku( $variation_object, $variation['sku'] );
 			}
 
-			update_post_meta( $variation_id, '_manage_stock', 'yes' );
-			update_post_meta( $variation_id, '_backorders', 'no' );
+			$variation_object->set_manage_stock( true );
+			$variation_object->set_backorders( 'no' );
 
-			$this->wc_save_product_price( $variation_id, $variation['regular_price'] );
+			$this->set_product_price_props( $variation_object, $variation['regular_price'] );
 
-			update_post_meta( $variation_id, '_download_limit', '' );
-			update_post_meta( $variation_id, '_download_expiry', '' );
-			update_post_meta( $variation_id, '_downloadable_files', '' );
+			$variation_object->set_download_limit( -1 );
+			$variation_object->set_download_expiry( -1 );
+			$variation_object->set_downloads( array() );
 
 			// description
 			if ( isset( $variation['description'] ) ) {
-				update_post_meta( $variation_id, '_variation_description', wp_kses_post( $variation['description'] ) );
+				$variation_object->set_description( wp_kses_post( $variation['description'] ) );
 			}
 
-			// update taxonomies
+			// update taxonomies, attributes left out are removed from the variation on save
 			if ( isset( $variation['attributes'] ) ) {
 
-				$updated_attribute_keys = array();
+				$variation_attributes = array();
 
 				foreach ( $variation['attributes'] as $attribute_key => $attribute ) {
 					// Set empty if attribute is to 'Any' to prevent it from being saved.
@@ -1390,8 +1350,7 @@ class Product_Import extends Stepped_Job {
 						continue;
 					}
 
-					$taxonomy   = 0;
-					$_attribute = array();
+					$taxonomy = 0;
 
 					if ( isset( $attribute['slug'] ) ) {
 
@@ -1403,47 +1362,38 @@ class Product_Import extends Stepped_Job {
 						$taxonomy = sanitize_title( $attribute['name'] );
 					}
 
-					if ( isset( $attributes[ $taxonomy ] ) ) {
+					$_attribute = isset( $attributes[ $taxonomy ] ) ? $attributes[ $taxonomy ] : null;
 
-						$_attribute = $attributes[ $taxonomy ];
+					if ( ! $_attribute instanceof \WC_Product_Attribute || ! $_attribute->get_variation() ) {
+						continue;
 					}
 
-					if ( isset( $_attribute['is_variation'] ) && $_attribute['is_variation'] ) {
+					if ( $_attribute->is_taxonomy() ) {
 
-						$_attribute_key           = 'attribute_' . sanitize_title( $_attribute['name'] );
-						$updated_attribute_keys[] = $_attribute_key;
+						// Don't use wc_clean as it destroys sanitized characters
+						$_attribute_value = sanitize_title( stripslashes( $attribute['option'] ) );
 
-						if ( isset( $_attribute['is_taxonomy'] ) && $_attribute['is_taxonomy'] ) {
+					} else {
 
-							// Don't use wc_clean as it destroys sanitized characters
-							$_attribute_value = isset( $attribute['option'] ) ? sanitize_title( stripslashes( $attribute['option'] ) ) : '';
-
-						} else {
-
-							$_attribute_value = isset( $attribute['option'] ) ? wc_clean( stripslashes( $attribute['option'] ) ) : '';
-						}
-
-						update_post_meta( $variation_id, $_attribute_key, $_attribute_value );
+						$_attribute_value = wc_clean( stripslashes( $attribute['option'] ) );
 					}
+
+					$variation_attributes[ sanitize_title( $_attribute->get_name() ) ] = $_attribute_value;
 				}
 
-				// remove old taxonomies attributes so data is kept up to date - first get attribute key names
-				$delete_attribute_keys = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM {$wpdb->postmeta} WHERE meta_key LIKE 'attribute_%%' AND meta_key NOT IN ( '" . implode( "','", $updated_attribute_keys ) . "' ) AND post_id = %d;", $variation_id ) ); //phpcs:ignore WordPress.DB.PreparedSQLPlaceholders, WordPress.DB.PreparedSQL.NotPrepared
-
-				foreach ( $delete_attribute_keys as $key ) {
-
-					delete_post_meta( $variation_id, $key );
-				}
+				$variation_object->set_attributes( $variation_attributes );
 			}
+
+			$variation_object->save();
 
 			// square item variation id
 			if ( isset( $variation['square_meta']['item_variation_id'] ) ) {
-				Product::set_square_item_variation_id( $variation_id, $variation['square_meta']['item_variation_id'] );
+				Product::set_square_item_variation_id( $variation_object, $variation['square_meta']['item_variation_id'] );
 			}
 
 			// square item variation version
 			if ( isset( $variation['square_meta']['item_variation_version'] ) ) {
-				Product::set_square_variation_version( $variation_id, $variation['square_meta']['item_variation_version'] );
+				Product::set_square_variation_version( $variation_object, $variation['square_meta']['item_variation_version'] );
 			}
 
 			/**
@@ -1460,7 +1410,11 @@ class Product_Import extends Stepped_Job {
 
 		// remove any existing variations on the product that no longer exist in Square
 		foreach ( $variations_to_remove as $variation_id ) {
-			wp_delete_post( $variation_id, true );
+			$variation_to_remove = wc_get_product( $variation_id );
+
+			if ( $variation_to_remove instanceof \WC_Product ) {
+				$variation_to_remove->delete( true );
+			}
 		}
 
 		// update parent if variable so price sorting works and stays in sync with the cheapest child
@@ -1492,13 +1446,13 @@ class Product_Import extends Stepped_Job {
 
 					$_attribute = $attributes[ $taxonomy ];
 
-					if ( $_attribute['is_variation'] ) {
+					if ( $_attribute->get_variation() ) {
 
 						$value = '';
 
 						if ( isset( $default_attr['option'] ) ) {
 
-							if ( $_attribute['is_taxonomy'] ) {
+							if ( $_attribute->is_taxonomy() ) {
 
 								// Don't use wc_clean as it destroys sanitized characters
 								$value = sanitize_title( trim( stripslashes( $default_attr['option'] ) ) );
@@ -1517,7 +1471,13 @@ class Product_Import extends Stepped_Job {
 				}
 			}
 
-			update_post_meta( $product_id, '_default_attributes', $default_attributes );
+			// reload the parent, sync() above saved its prices on a separate object
+			$variable_product = wc_get_product( $product_id );
+
+			if ( $variable_product instanceof \WC_Product ) {
+				$variable_product->set_default_attributes( $default_attributes );
+				$variable_product->save();
+			}
 		}
 
 		return true;
@@ -1563,47 +1523,53 @@ class Product_Import extends Stepped_Job {
 	 */
 	public function wc_save_product_price( $product_id, $regular_price, $sale_price = '', $date_from = '', $date_to = '' ) {
 
-		$product_id    = absint( $product_id );
+		$product = wc_get_product( absint( $product_id ) );
+
+		if ( ! $product instanceof \WC_Product ) {
+			return;
+		}
+
+		$this->set_product_price_props( $product, $regular_price, $sale_price, $date_from, $date_to );
+
+		$product->save();
+	}
+
+
+	/**
+	 * Sets the price props on a product object without saving it.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product the product or variation object
+	 * @param float $regular_price
+	 * @param float $sale_price
+	 * @param string $date_from
+	 * @param string $date_to
+	 */
+	private function set_product_price_props( $product, $regular_price, $sale_price = '', $date_from = '', $date_to = '' ) {
+
 		$regular_price = wc_format_decimal( $regular_price );
 		$sale_price    = '' === $sale_price ? '' : wc_format_decimal( $sale_price );
 		$date_from     = wc_clean( $date_from );
 		$date_to       = wc_clean( $date_to );
 
-		update_post_meta( $product_id, '_regular_price', $regular_price );
-		update_post_meta( $product_id, '_sale_price', $sale_price );
-
-		// Save Dates
-		update_post_meta( $product_id, '_sale_price_dates_from', $date_from ? strtotime( $date_from ) : '' );
-		update_post_meta( $product_id, '_sale_price_dates_to', $date_to ? strtotime( $date_to ) : '' );
-
 		if ( $date_to && ! $date_from ) {
-
-			$date_from = strtotime( 'NOW', current_time( 'timestamp' ) ); //phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
-
-			update_post_meta( $product_id, '_sale_price_dates_from', $date_from );
+			$date_from = time();
 		}
 
-		// Update price if on sale
-		if ( '' !== $sale_price && '' === $date_to && '' === $date_from ) {
-
-			update_post_meta( $product_id, '_price', $sale_price );
-
-		} else {
-
-			update_post_meta( $product_id, '_price', $regular_price );
+		// a sale that already ended has no dates
+		if ( $date_to && strtotime( $date_to ) < time() ) {
+			$date_from = '';
+			$date_to   = '';
 		}
 
-		if ( '' !== $sale_price && $date_from && strtotime( $date_from ) < strtotime( 'NOW', current_time( 'timestamp' ) ) ) { //phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+		$product->set_regular_price( $regular_price );
+		$product->set_sale_price( $sale_price );
+		$product->set_date_on_sale_from( $date_from ? $date_from : null );
+		$product->set_date_on_sale_to( $date_to ? $date_to : null );
 
-			update_post_meta( $product_id, '_price', $sale_price );
-		}
-
-		if ( $date_to && strtotime( $date_to ) < strtotime( 'NOW', current_time( 'timestamp' ) ) ) { //phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
-
-			update_post_meta( $product_id, '_price', $regular_price );
-			update_post_meta( $product_id, '_sale_price_dates_from', '' );
-			update_post_meta( $product_id, '_sale_price_dates_to', '' );
-		}
+		// WooCommerce recalculates the active price on save when any of the props above change, this covers the case where none did
+		$product->set_price( $product->is_on_sale( 'edit' ) ? $sale_price : $regular_price );
 	}
 
 
@@ -1634,7 +1600,11 @@ class Product_Import extends Stepped_Job {
 		}
 
 		// Delete product
-		wp_delete_post( $product_id, true );
+		$product = wc_get_product( $product_id );
+
+		if ( $product instanceof \WC_Product ) {
+			$product->delete( true );
+		}
 	}
 
 	/**
@@ -1653,30 +1623,31 @@ class Product_Import extends Stepped_Job {
 			throw new \Exception( sprintf( esc_html__( 'Missing parameter %s', 'woocommerce-square' ), 'title' ) );
 		}
 
+		$product_type = wc_clean( $data['type'] );
+
 		// validate type
-		if ( ! array_key_exists( wc_clean( $data['type'] ), wc_get_product_types() ) ) {
+		if ( ! array_key_exists( $product_type, wc_get_product_types() ) ) {
 			/* translators: Placeholders: %s - comma separated list of valid product types */
 			throw new \Exception( sprintf( esc_html__( 'Invalid product type - the product type must be any of these: %s', 'woocommerce-square' ), esc_html( implode( ', ', array_keys( wc_get_product_types() ) ) ) ) );
 		}
 
-		$new_product = array(
-			'post_title'   => wc_clean( $data['title'] ),
-			'post_status'  => isset( $data['status'] ) ? wc_clean( $data['status'] ) : 'publish',
-			'post_type'    => 'product',
-			'post_content' => isset( $data['description'] ) ? $data['description'] : '',
-			'post_author'  => get_current_user_id(),
-			'menu_order'   => isset( $data['menu_order'] ) ? (int) $data['menu_order'] : 0,
-		);
+		$classname = \WC_Product_Factory::get_product_classname( 0, $product_type );
+		$product   = new $classname();
+
+		$product->set_name( wc_clean( $data['title'] ) );
+		$product->set_status( isset( $data['status'] ) ? wc_clean( $data['status'] ) : 'publish' );
+		$product->set_description( isset( $data['description'] ) ? $data['description'] : '' );
+		$product->set_menu_order( isset( $data['menu_order'] ) ? (int) $data['menu_order'] : 0 );
 
 		if ( ! empty( $data['name'] ) ) {
-			$new_product = array_merge( $new_product, array( 'post_name' => sanitize_title( $data['name'] ) ) );
+			$product->set_slug( sanitize_title( $data['name'] ) );
 		}
 
 		// attempt to create the new product
-		$product_id = wp_insert_post( $new_product, true );
+		$product_id = $product->save();
 
-		if ( is_wp_error( $product_id ) ) {
-			throw new \Exception( esc_html( $product_id->get_error_message() ) );
+		if ( ! $product_id ) {
+			throw new \Exception( esc_html__( 'Could not create the product', 'woocommerce-square' ) );
 		}
 
 		return $product_id;
