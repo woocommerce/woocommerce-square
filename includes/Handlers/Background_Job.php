@@ -266,6 +266,10 @@ class Background_Job extends Background_Job_Handler {
 			delete_option( 'wc_square_sync_auto_recovered_at' );
 		}
 
+		if ( ! empty( $job->full_sync ) ) {
+			wc_square()->get_sync_handler()->clear_sync_resume();
+		}
+
 		wc_square()->get_sync_handler()->set_last_synced_at();
 
 		wc_square()->get_sync_handler()->record_sync( $job->processed_product_ids, $job );
@@ -282,6 +286,58 @@ class Background_Job extends Background_Job_Handler {
 	 * @param $job
 	 */
 	public function job_failed( $job ) {
+
+		// A full sync pushing a WooCommerce catalog that stops partway resumes on its own, so the
+		// merchant is told how far it got rather than asked to try again. The email is held back until
+		// it gives up, so an unattended sync of a large catalog does not send one for every attempt.
+		if ( ! empty( $job->full_sync ) && 'woocommerce' === ( $job->system_of_record ?? '' ) ) {
+
+			$state = wc_square()->get_sync_handler()->handle_full_sync_failure( $job );
+
+			if ( ! $state ) {
+				return;
+			}
+
+			if ( $state['needs_attention'] ) {
+
+				Records::set_record(
+					array(
+						'type'    => 'failed',
+						'message' => sprintf(
+							/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$d - number of automatic attempts */
+							__( 'Sync stopped: this sync updated %1$d of %2$d products, %3$d still to go. It made no progress in %4$d automatic attempts and needs attention. Check the Square logs, then click Sync now to start a new sync.', 'woocommerce-square' ),
+							$state['done'],
+							$state['total'],
+							$state['remaining'],
+							$state['attempts']
+						),
+					)
+				);
+
+				wc_square()->get_email_handler()->get_sync_completed_email()->trigger( $job );
+
+			} else {
+
+				$resume_at = new \DateTime( '@' . $state['next_at'] );
+				$resume_at->setTimezone( new \DateTimeZone( wc_timezone_string() ) );
+
+				Records::set_record(
+					array(
+						'type'    => 'notice',
+						'message' => sprintf(
+							/* translators: Placeholders: %1$d - number of products this sync updated, %2$d - number of products in the sync, %3$d - number of products not synced yet, %4$s - date and time the sync continues */
+							__( 'Sync stopped partway: this sync updated %1$d of %2$d products, %3$d still to go. It will continue automatically at %4$s.', 'woocommerce-square' ),
+							$state['done'],
+							$state['total'],
+							$state['remaining'],
+							$resume_at->format( wc_date_format() . ' ' . wc_time_format() )
+						),
+					)
+				);
+			}
+
+			return;
+		}
 
 		$message = empty( $job->auto_failed )
 			? __( 'Sync failed. Please try again', 'woocommerce-square' )
@@ -371,6 +427,9 @@ class Background_Job extends Background_Job_Handler {
 	public function run_clear_background_jobs() {
 
 		$this->clear_all_jobs();
+
+		// Clearing is the merchant asking for syncing to stop, so a stopped full sync must not resume.
+		wc_square()->get_sync_handler()->clear_sync_resume();
 
 		$this->debug_message = esc_html__( 'Success! You can now sync your products.', 'woocommerce-square' );
 
