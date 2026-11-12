@@ -10,8 +10,8 @@ concurrency:
 permissions: {}
 
 # Two jobs on purpose: the first one runs the pull request's own code (its build scripts and its
-# dependencies' install scripts), so it gets a read-only token and no secrets. The second one holds
-# the Jetpack Beta Builder secret and the token that can comment, and runs nothing from the pull request.
+# dependencies' install scripts), so it gets a read-only token. The second one holds the token that
+# can comment, and runs nothing from the pull request.
 jobs:
   build-zip-file:
     name: "Build the zip file"
@@ -19,8 +19,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-    outputs:
-      dev-version: ${{ steps.get-dev-version.outputs.DEV_VERSION }}
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -76,52 +74,23 @@ jobs:
             -e "s/define( 'WC_SQUARE_PLUGIN_VERSION', '[^']*' )/define( 'WC_SQUARE_PLUGIN_VERSION', '${DEV_VERSION}' )/" \
             woocommerce-square.php
 
-          # 'Stable tag' header in readme.txt; the Jetpack Beta Builder reads it.
-          sed -i.bak "s/^Stable tag: .*$/Stable tag: ${DEV_VERSION}/" readme.txt
-
-          rm -f woocommerce-square.php.bak readme.txt.bak
+          rm -f woocommerce-square.php.bak
 
           # Fail here rather than ship a build that still carries the release version.
           grep -qF " * Version: ${DEV_VERSION}" woocommerce-square.php
           grep -qF "define( 'WC_SQUARE_PLUGIN_VERSION', '${DEV_VERSION}' )" woocommerce-square.php
-          grep -qF "Stable tag: ${DEV_VERSION}" readme.txt
 
       - name: "Build the plugin"
         run: npm run build
 
-      # The Jetpack Beta Builder expects the folder and the zip to be named `<plugin-slug>-dev`, so the
-      # build installs next to the released plugin on a tester's site instead of replacing it.
-      - name: "Update the structure of artifacts for Jetpack Beta Builder"
-        run: |
-          mkdir release
-          unzip -q woocommerce-square.zip -d release
-          cd release
-          mv woocommerce-square woocommerce-square-dev
-          zip -q -r "woocommerce-square-dev.zip" "woocommerce-square-dev/"
-          rm -fR "woocommerce-square-dev"
-
-      - name: "Add file size notice"
-        run: |
-          echo ":information_source: Ignore the artifact size mentioned since GitHub calculates the size of the source folder instead of the zip file created." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: "Upload the zip file as an artifact"
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
-        with:
-          name: plugins # Hard-coded value for Jetpack Beta Builder.
-          path: release
-          if-no-files-found: error
-          overwrite: true
-          # Only need to retain for a day since the Jetpack Beta Builder slurps it up to distribute.
-          retention-days: 1
-
-      # The Playground links in the PR comment download their artifact on every click, so this one is kept
-      # for longer. The run ID in the name ties the links to the build of one run: a later run that fails
-      # or is cancelled part-way cannot change what an earlier comment's links install.
+      # The Playground links in the PR comment download this artifact on every click, so it is kept
+      # for 14 days. The run ID in the name ties the links to the build of one run: a later run that
+      # fails or is cancelled part-way cannot change what an earlier comment's links install.
       - name: "Upload the zip file as an artifact for the Playground preview"
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: plugins-${{ github.run_id }}
-          path: release
+          path: woocommerce-square.zip
           if-no-files-found: error
           overwrite: true
           retention-days: 14
@@ -134,50 +103,6 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      # Options 1 and 2 of the comment are served by the Jetpack Beta Builder, which only takes builds
-      # from repositories registered with it, identified by this secret. Without the secret (it is not
-      # set until the plugin is registered, and pull requests from forks never receive secrets) the
-      # Beta Builder is not informed, and the comment says under those two options that they are
-      # not available yet and what they need, instead of showing links that cannot work.
-      - name: "Check whether the Jetpack Beta Builder is set up"
-        id: beta-builder
-        env:
-          SECRET: ${{ secrets.SQUARE_LIVE_BRANCH_SECRET }}
-        run: |
-          if [ -n "$SECRET" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo ":information_source: No Jetpack Beta Builder secret is available to this run, so the build is not sent to the Jetpack Beta Builder." >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: "Get plugin data for Jetpack Beta Builder"
-        id: get-plugin-data
-        if: steps.beta-builder.outputs.enabled == 'true'
-        env:
-          DEV_VERSION: ${{ needs.build-zip-file.outputs.dev-version }}
-        run: |
-          # Plugin data is passed as a JSON object.
-          PLUGIN_DATA=$( jq -cn --arg slug "woocommerce-square" --arg ver "$DEV_VERSION" '{ ( $slug ): { version: $ver } }' )
-          echo "plugin-data=$PLUGIN_DATA" >> "$GITHUB_OUTPUT"
-
-      - name: "Inform Jetpack Beta Builder webhook"
-        if: steps.beta-builder.outputs.enabled == 'true'
-        env:
-          SECRET: ${{ secrets.SQUARE_LIVE_BRANCH_SECRET }}
-          PLUGIN_DATA: ${{ steps.get-plugin-data.outputs.plugin-data }}
-          PR: ${{ github.event.number }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          # On `pull_request` events GITHUB_REF is `refs/pull/<n>/merge`, so the PR's branch name is
-          # sent explicitly: it is what Jetpack Beta and Jurassic Ninja look the build up by.
-          curl --silent --show-error --fail -L \
-            --url "https://betadownload.jetpack.me/gh-action.php?run_id=$GITHUB_RUN_ID&pr=$PR&commit=$GITHUB_SHA" \
-            --form-string "repo=$GITHUB_REPOSITORY" \
-            --form-string "branch=$PR_HEAD_REF" \
-            --form-string "plugins=$PLUGIN_DATA" \
-            --form-string "secret=$SECRET"
-
       # WordPress Playground runs in the visitor's browser and can only fetch public URLs.
       # Its artifact proxy serves this workflow's artifacts for the PR, looked up by workflow
       # name - hence GITHUB_WORKFLOW rather than a literal that a rename would silently break.
@@ -238,7 +163,7 @@ jobs:
                 { step: "installPlugin", pluginData: { resource: "wordpress.org/plugins", slug: "woocommerce" }, options: { activate: true } },
                 { step: "runPHP", code: $store_setup },
                 { step: "unzip", zipFile: { resource: "url", url: $artifact_url, caption: "Downloading the Square build for this PR" }, extractToPath: "/tmp/pr" },
-                { step: "installPlugin", pluginData: { resource: "vfs", path: "/tmp/pr/woocommerce-square-dev.zip" }, options: { activate: true } }
+                { step: "installPlugin", pluginData: { resource: "vfs", path: "/tmp/pr/woocommerce-square.zip" }, options: { activate: true } }
               ]
             } as $base
             | {
@@ -253,54 +178,15 @@ jobs:
 
       - name: "Write the information for the PR"
         env:
-          BETA_BUILDER_ENABLED: ${{ steps.beta-builder.outputs.enabled }}
           PLAYGROUND_SETTINGS_URL: ${{ steps.playground.outputs.settings_url }}
           PLAYGROUND_ONBOARDING_URL: ${{ steps.playground.outputs.onboarding_url }}
-          PR_NUMBER: ${{ github.event.number }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           COMMENT_FILE: ${{ runner.temp }}/test-the-build.md
         run: |
-          echo "### Test the build" > "$COMMENT_FILE"
+          cat > "$COMMENT_FILE" <<EOF
+          ### Test the build
 
-          # The comment always has the same three options, in the same order. An option that cannot
-          # work for this build keeps its heading and says why, without a link.
-          if [ "$BETA_BUILDER_ENABLED" = "true" ]; then
-            JN_BRANCH=$( jq -rn --arg ref "$PR_HEAD_REF" '$ref|@uri' )
-
-            cat >> "$COMMENT_FILE" <<EOF
-
-          #### Option 1. Jetpack Beta
-
-          - Install and activate [Jetpack Beta](https://jetpack.com/beta/#download-and-install).
-          - Use this build by searching for PR number \`${PR_NUMBER}\` or branch name \`${PR_HEAD_REF}\` in your-test.site/wp-admin/admin.php?page=jetpack-beta&plugin=woocommerce-square
-
-          :information_source: Use a test site: the build runs with the settings and the Square connection that site already has.
-
-          #### Option 2. Jurassic Ninja - available for logged-in A12s
-
-          :warning: Log in at [jurassic.ninja](https://jurassic.ninja/) first. Without a login, the link below takes you to the Jurassic Ninja homepage and no site is created.
-
-          :rocket: [Launch a JN site with this branch and sample products](https://jurassic.ninja/create/?jetpack-beta&nojetpack&woocommerce&woocommerce-import-sample-data&branches.woocommerce-square=${JN_BRANCH}) :rocket:
-
-          :information_source: The site starts without a Square connection. To test payments or product sync, connect it to a Square sandbox account from the Square settings.
-          EOF
-          else
-            cat >> "$COMMENT_FILE" <<EOF
-
-          #### Option 1. Jetpack Beta
-
-          :construction: Not available yet. This build was not sent to the Jetpack Beta Builder, because the workflow has no \`SQUARE_LIVE_BRANCH_SECRET\` secret. To make this option work, register the plugin with the Jetpack Beta Builder and save the webhook secret under that name in this repository's Actions secrets.
-
-          #### Option 2. Jurassic Ninja - available for logged-in A12s
-
-          :construction: Not available yet. Jurassic Ninja installs the build of a pull request through Jetpack Beta, so it needs the same setup as Option 1.
-          EOF
-          fi
-
-          cat >> "$COMMENT_FILE" <<EOF
-
-          #### Option 3. WordPress Playground - runs in your browser
+          #### WordPress Playground - runs in your browser
 
           - :gear: [Open the Square settings](${PLAYGROUND_SETTINGS_URL}): a fresh store with WooCommerce, a sample product and this build, on WooCommerce > Settings > Square.
           - :sparkles: [Open the onboarding wizard](${PLAYGROUND_ONBOARDING_URL}): the same store, on the wizard a new merchant sees first.
