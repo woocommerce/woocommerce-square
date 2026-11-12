@@ -279,9 +279,9 @@ jobs:
 
           #### Option 2. Jurassic Ninja - available for logged-in A12s
 
-          :rocket: [Launch a JN site with this branch and sample products](https://jurassic.ninja/create/?jetpack-beta&nojetpack&woocommerce&woocommerce-import-sample-data&branches.woocommerce-square=${JN_BRANCH}) :rocket:
+          :warning: Log in at [jurassic.ninja](https://jurassic.ninja/) first. Without a login, the link below takes you to the Jurassic Ninja homepage and no site is created.
 
-          :information_source: Log in to [Jurassic Ninja](https://jurassic.ninja/) first. If you are not logged in, the link takes you to its homepage instead of launching a site.
+          :rocket: [Launch a JN site with this branch and sample products](https://jurassic.ninja/create/?jetpack-beta&nojetpack&woocommerce&woocommerce-import-sample-data&branches.woocommerce-square=${JN_BRANCH}) :rocket:
           EOF
           fi
 
