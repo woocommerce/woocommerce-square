@@ -350,7 +350,14 @@ test.describe('Cash App Pay Tests @cashapp', () => {
 			await selectPaymentMethod(page, 'square_cash_app_pay', true);
 			// Decline transcation once.
 			await placeCashAppPayOrder(page, true, true);
-			await page.waitForLoadState('networkidle');
+			// Declining returns to the checkout, which rebuilds the Cash App Pay button.
+			await expect(
+				page.locator('#wc-square-cash-app-pay').getByTestId('cap-btn')
+			).toBeVisible();
+			await page
+				.locator('.wc-block-components-loading-mask')
+				.first()
+				.waitFor({ state: 'detached' });
 			const orderId = await placeCashAppPayOrder(page, true);
 
 			await gotoOrderEditPage(page, orderId);
