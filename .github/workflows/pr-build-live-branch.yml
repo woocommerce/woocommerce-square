@@ -137,7 +137,8 @@ jobs:
       # Options 1 and 2 of the comment are served by the Jetpack Beta Builder, which only takes builds
       # from repositories registered with it, identified by this secret. Without the secret (it is not
       # set until the plugin is registered, and pull requests from forks never receive secrets) the
-      # Beta Builder is not informed and the comment leaves those two options out.
+      # Beta Builder is not informed, and the comment says under those two options that they are
+      # not available yet and what they need, instead of showing links that cannot work.
       - name: "Check whether the Jetpack Beta Builder is set up"
         id: beta-builder
         env:
@@ -262,12 +263,9 @@ jobs:
         run: |
           echo "### Test the build" > "$COMMENT_FILE"
 
-          # The Playground option is numbered after the options before it, so the comment has no gap
-          # when the Jetpack Beta Builder options are left out.
-          PLAYGROUND_OPTION=1
-
+          # The comment always has the same three options, in the same order. An option that cannot
+          # work for this build keeps its heading and says why, without a link.
           if [ "$BETA_BUILDER_ENABLED" = "true" ]; then
-            PLAYGROUND_OPTION=3
             JN_BRANCH=$( jq -rn --arg ref "$PR_HEAD_REF" '$ref|@uri' )
 
             cat >> "$COMMENT_FILE" <<EOF
@@ -277,17 +275,32 @@ jobs:
           - Install and activate [Jetpack Beta](https://jetpack.com/beta/#download-and-install).
           - Use this build by searching for PR number \`${PR_NUMBER}\` or branch name \`${PR_HEAD_REF}\` in your-test.site/wp-admin/admin.php?page=jetpack-beta&plugin=woocommerce-square
 
+          :information_source: Use a test site: the build runs with the settings and the Square connection that site already has.
+
           #### Option 2. Jurassic Ninja - available for logged-in A12s
 
           :warning: Log in at [jurassic.ninja](https://jurassic.ninja/) first. Without a login, the link below takes you to the Jurassic Ninja homepage and no site is created.
 
           :rocket: [Launch a JN site with this branch and sample products](https://jurassic.ninja/create/?jetpack-beta&nojetpack&woocommerce&woocommerce-import-sample-data&branches.woocommerce-square=${JN_BRANCH}) :rocket:
+
+          :information_source: The site starts without a Square connection. To test payments or product sync, connect it to a Square sandbox account from the Square settings.
+          EOF
+          else
+            cat >> "$COMMENT_FILE" <<EOF
+
+          #### Option 1. Jetpack Beta
+
+          :construction: Not available yet. This build was not sent to the Jetpack Beta Builder, because the workflow has no \`SQUARE_LIVE_BRANCH_SECRET\` secret. To make this option work, register the plugin with the Jetpack Beta Builder and save the webhook secret under that name in this repository's Actions secrets.
+
+          #### Option 2. Jurassic Ninja - available for logged-in A12s
+
+          :construction: Not available yet. Jurassic Ninja installs the build of a pull request through Jetpack Beta, so it needs the same setup as Option 1.
           EOF
           fi
 
           cat >> "$COMMENT_FILE" <<EOF
 
-          #### Option ${PLAYGROUND_OPTION}. WordPress Playground - runs in your browser
+          #### Option 3. WordPress Playground - runs in your browser
 
           - :gear: [Open the Square settings](${PLAYGROUND_SETTINGS_URL}): a fresh store with WooCommerce, a sample product and this build, on WooCommerce > Settings > Square.
           - :sparkles: [Open the onboarding wizard](${PLAYGROUND_ONBOARDING_URL}): the same store, on the wizard a new merchant sees first.
