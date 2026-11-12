@@ -1,0 +1,316 @@
+name: Build PR for testing
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+# Two jobs on purpose: the first one runs the pull request's own code (its build scripts and its
+# dependencies' install scripts), so it gets a read-only token and no secrets. The second one holds
+# the Jetpack Beta Builder secret and the token that can comment, and runs nothing from the pull request.
+jobs:
+  build-zip-file:
+    name: "Build the zip file"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      dev-version: ${{ steps.get-dev-version.outputs.DEV_VERSION }}
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: "Cache node_modules"
+        id: cache-node-modules
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: "Setup node version and npm cache"
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: "Install Node dependencies"
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci --no-optional
+
+      # The build is labelled as a pre-release of the next patch version, so it sorts above the
+      # current release and below the next one, and names the pull request and commit it was built from.
+      - name: "Get dev version"
+        id: get-dev-version
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          VERSION=$( sed -n 's/^ \* Version: //p' woocommerce-square.php | head -n1 )
+          IFS=. read -r MAJOR MINOR PATCH <<<"$VERSION"
+          PATCH="${PATCH%%[!0-9]*}"
+          if [[ ! "$MAJOR" =~ ^[0-9]+$ || ! "$MINOR" =~ ^[0-9]+$ || ! "$PATCH" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not read the plugin version from woocommerce-square.php (found '$VERSION')."
+            exit 1
+          fi
+          DEV_VERSION="${MAJOR}.${MINOR}.$(( PATCH + 1 ))-dev_PR-${PR_NUMBER}_commit-${PR_HEAD_SHA:0:7}"
+          echo "Current version found: $VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "Dev version: $DEV_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "DEV_VERSION=$DEV_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: "Bump dev version"
+        env:
+          DEV_VERSION: ${{ steps.get-dev-version.outputs.DEV_VERSION }}
+        run: |
+          # 'Version' header and WC_SQUARE_PLUGIN_VERSION constant in the plugin entry file.
+          sed -i.bak \
+            -e "s/^ \* Version: .*$/ * Version: ${DEV_VERSION}/" \
+            -e "s/define( 'WC_SQUARE_PLUGIN_VERSION', '[^']*' )/define( 'WC_SQUARE_PLUGIN_VERSION', '${DEV_VERSION}' )/" \
+            woocommerce-square.php
+
+          # 'Stable tag' header in readme.txt; the Jetpack Beta Builder reads it.
+          sed -i.bak "s/^Stable tag: .*$/Stable tag: ${DEV_VERSION}/" readme.txt
+
+          rm -f woocommerce-square.php.bak readme.txt.bak
+
+          # Fail here rather than ship a build that still carries the release version.
+          grep -qF " * Version: ${DEV_VERSION}" woocommerce-square.php
+          grep -qF "define( 'WC_SQUARE_PLUGIN_VERSION', '${DEV_VERSION}' )" woocommerce-square.php
+          grep -qF "Stable tag: ${DEV_VERSION}" readme.txt
+
+      - name: "Build the plugin"
+        run: npm run build
+
+      # The Jetpack Beta Builder expects the folder and the zip to be named `<plugin-slug>-dev`, so the
+      # build installs next to the released plugin on a tester's site instead of replacing it.
+      - name: "Update the structure of artifacts for Jetpack Beta Builder"
+        run: |
+          mkdir release
+          unzip -q woocommerce-square.zip -d release
+          cd release
+          mv woocommerce-square woocommerce-square-dev
+          zip -q -r "woocommerce-square-dev.zip" "woocommerce-square-dev/"
+          rm -fR "woocommerce-square-dev"
+
+      - name: "Add file size notice"
+        run: |
+          echo ":information_source: Ignore the artifact size mentioned since GitHub calculates the size of the source folder instead of the zip file created." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Upload the zip file as an artifact"
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: plugins # Hard-coded value for Jetpack Beta Builder.
+          path: release
+          if-no-files-found: error
+          overwrite: true
+          # Only need to retain for a day since the Jetpack Beta Builder slurps it up to distribute.
+          retention-days: 1
+
+      # The Playground links in the PR comment download their artifact on every click, so this one is kept
+      # for longer. The run ID in the name ties the links to the build of one run: a later run that fails
+      # or is cancelled part-way cannot change what an earlier comment's links install.
+      - name: "Upload the zip file as an artifact for the Playground preview"
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: plugins-${{ github.run_id }}
+          path: release
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
+
+  inform-zip-file:
+    name: "Inform the zip file"
+    needs: build-zip-file
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      # Options 1 and 2 of the comment are served by the Jetpack Beta Builder, which only takes builds
+      # from repositories registered with it, identified by this secret. Without the secret (it is not
+      # set until the plugin is registered, and pull requests from forks never receive secrets) the
+      # Beta Builder is not informed and the comment leaves those two options out.
+      - name: "Check whether the Jetpack Beta Builder is set up"
+        id: beta-builder
+        env:
+          SECRET: ${{ secrets.SQUARE_LIVE_BRANCH_SECRET }}
+        run: |
+          if [ -n "$SECRET" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo ":information_source: No Jetpack Beta Builder secret is available to this run, so the build is not sent to the Jetpack Beta Builder." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: "Get plugin data for Jetpack Beta Builder"
+        id: get-plugin-data
+        if: steps.beta-builder.outputs.enabled == 'true'
+        env:
+          DEV_VERSION: ${{ needs.build-zip-file.outputs.dev-version }}
+        run: |
+          # Plugin data is passed as a JSON object.
+          PLUGIN_DATA=$( jq -cn --arg slug "woocommerce-square" --arg ver "$DEV_VERSION" '{ ( $slug ): { version: $ver } }' )
+          echo "plugin-data=$PLUGIN_DATA" >> "$GITHUB_OUTPUT"
+
+      - name: "Inform Jetpack Beta Builder webhook"
+        if: steps.beta-builder.outputs.enabled == 'true'
+        env:
+          SECRET: ${{ secrets.SQUARE_LIVE_BRANCH_SECRET }}
+          PLUGIN_DATA: ${{ steps.get-plugin-data.outputs.plugin-data }}
+          PR: ${{ github.event.number }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          # On `pull_request` events GITHUB_REF is `refs/pull/<n>/merge`, so the PR's branch name is
+          # sent explicitly: it is what Jetpack Beta and Jurassic Ninja look the build up by.
+          curl --silent --show-error --fail -L \
+            --url "https://betadownload.jetpack.me/gh-action.php?run_id=$GITHUB_RUN_ID&pr=$PR&commit=$GITHUB_SHA" \
+            --form-string "repo=$GITHUB_REPOSITORY" \
+            --form-string "branch=$PR_HEAD_REF" \
+            --form-string "plugins=$PLUGIN_DATA" \
+            --form-string "secret=$SECRET"
+
+      # WordPress Playground runs in the visitor's browser and can only fetch public URLs.
+      # Its artifact proxy serves this workflow's artifacts for the PR, looked up by workflow
+      # name - hence GITHUB_WORKFLOW rather than a literal that a rename would silently break.
+      # The build artifact wraps the plugin zip, so the Blueprints unzip it before installing.
+      #
+      # The proxy resolves the PR to its branch name and serves the newest build with that branch
+      # name, pull requests from forks included, so a link cannot promise whose code it runs.
+      # Never add a Blueprint that carries a secret, or a link that asks for credentials or tokens.
+      #
+      # The links are for reviewers with no development environment, so the store is set up for them:
+      # nothing is left to click through before the Square screens. If a pull request puts its UI
+      # behind an option or a feature flag, turn it on in STORE_SETUP in that same pull request.
+      - name: "Build the WordPress Playground preview links"
+        id: playground
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          # `read` returns non-zero when it reaches the end of the here-document, hence `|| true`.
+          read -r -d '' STORE_SETUP <<'PHP' || true
+          <?php
+          require '/wordpress/wp-load.php';
+
+          // Skip WooCommerce's setup wizard and take the store out of "coming soon" mode.
+          delete_transient( '_wc_activation_redirect' );
+          update_option( 'woocommerce_onboarding_profile', array( 'skipped' => true ) );
+          update_option( 'woocommerce_coming_soon', 'no' );
+
+          // Store orders the way a new store does (HPOS). WooCommerce creates the tables.
+          update_option( 'woocommerce_custom_orders_table_enabled', 'yes' );
+
+          // Square sends a new merchant to its onboarding wizard on the first admin page load.
+          // Mark that as done, so each link opens the screen it names.
+          update_option( 'wc_square_show_wizard_on_activation', true );
+
+          $product = new WC_Product_Simple();
+          $product->set_name( 'Sample product' );
+          $product->set_sku( 'sample-product' );
+          $product->set_regular_price( '10' );
+          $product->set_status( 'publish' );
+          $product->save();
+          PHP
+
+          ARTIFACT_URL=$( jq -rn \
+            --arg org "$GITHUB_REPOSITORY_OWNER" \
+            --arg repo "${GITHUB_REPOSITORY#*/}" \
+            --arg workflow "$GITHUB_WORKFLOW" \
+            --arg pr "$PR_NUMBER" \
+            --arg artifact "plugins-$GITHUB_RUN_ID" \
+            '"https://playground.wordpress.net/plugin-proxy.php?org=\($org|@uri)&repo=\($repo|@uri)&workflow=\($workflow|@uri)&pr=\($pr|@uri)&artifact=\($artifact|@uri)"' )
+
+          BLUEPRINTS=$( jq -cn --arg artifact_url "$ARTIFACT_URL" --arg store_setup "$STORE_SETUP" '
+            {
+              "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+              preferredVersions: { php: "8.3", wp: "latest" },
+              features: { networking: true },
+              steps: [
+                { step: "login", username: "admin" },
+                { step: "installPlugin", pluginData: { resource: "wordpress.org/plugins", slug: "woocommerce" }, options: { activate: true } },
+                { step: "runPHP", code: $store_setup },
+                { step: "unzip", zipFile: { resource: "url", url: $artifact_url, caption: "Downloading the Square build for this PR" }, extractToPath: "/tmp/pr" },
+                { step: "installPlugin", pluginData: { resource: "vfs", path: "/tmp/pr/woocommerce-square-dev.zip" }, options: { activate: true } }
+              ]
+            } as $base
+            | {
+                settings: ( $base + { landingPage: "/wp-admin/admin.php?page=wc-settings&tab=square" } ),
+                onboarding: ( $base + { landingPage: "/wp-admin/admin.php?page=woocommerce-square-onboarding" } )
+              }' )
+
+          {
+            echo "settings_url=https://playground.wordpress.net/#$( jq -rn --argjson blueprints "$BLUEPRINTS" '$blueprints.settings|tojson|@uri' )"
+            echo "onboarding_url=https://playground.wordpress.net/#$( jq -rn --argjson blueprints "$BLUEPRINTS" '$blueprints.onboarding|tojson|@uri' )"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: "Write the information for the PR"
+        env:
+          BETA_BUILDER_ENABLED: ${{ steps.beta-builder.outputs.enabled }}
+          PLAYGROUND_SETTINGS_URL: ${{ steps.playground.outputs.settings_url }}
+          PLAYGROUND_ONBOARDING_URL: ${{ steps.playground.outputs.onboarding_url }}
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          COMMENT_FILE: ${{ runner.temp }}/test-the-build.md
+        run: |
+          echo "### Test the build" > "$COMMENT_FILE"
+
+          # The Playground option is numbered after the options before it, so the comment has no gap
+          # when the Jetpack Beta Builder options are left out.
+          PLAYGROUND_OPTION=1
+
+          if [ "$BETA_BUILDER_ENABLED" = "true" ]; then
+            PLAYGROUND_OPTION=3
+            JN_BRANCH=$( jq -rn --arg ref "$PR_HEAD_REF" '$ref|@uri' )
+
+            cat >> "$COMMENT_FILE" <<EOF
+
+          #### Option 1. Jetpack Beta
+
+          - Install and activate [Jetpack Beta](https://jetpack.com/beta/#download-and-install).
+          - Use this build by searching for PR number \`${PR_NUMBER}\` or branch name \`${PR_HEAD_REF}\` in your-test.site/wp-admin/admin.php?page=jetpack-beta&plugin=woocommerce-square
+
+          #### Option 2. Jurassic Ninja - available for logged-in A12s
+
+          :rocket: [Launch a JN site with this branch and sample products](https://jurassic.ninja/create/?jetpack-beta&nojetpack&woocommerce&woocommerce-import-sample-data&branches.woocommerce-square=${JN_BRANCH}) :rocket:
+
+          :information_source: Log in to [Jurassic Ninja](https://jurassic.ninja/) first. If you are not logged in, the link takes you to its homepage instead of launching a site.
+          EOF
+          fi
+
+          cat >> "$COMMENT_FILE" <<EOF
+
+          #### Option ${PLAYGROUND_OPTION}. WordPress Playground - runs in your browser
+
+          - :gear: [Open the Square settings](${PLAYGROUND_SETTINGS_URL}): a fresh store with WooCommerce, a sample product and this build, on WooCommerce > Settings > Square.
+          - :sparkles: [Open the onboarding wizard](${PLAYGROUND_ONBOARDING_URL}): the same store, on the wizard a new merchant sees first.
+
+          :information_source: Neither can connect to Square: signing in to Square has to send you back to the site, and a site that runs in your browser tab has no public address to come back to. Without a connection the store cannot take payments, sync products or receive webhooks, so the previews show what a merchant sees before connecting. Do not enter Square access tokens or other credentials in a preview. The links stop working 14 days after the last build.
+
+          ---
+
+          Build info:
+
+          - Latest commit: ${PR_HEAD_SHA}
+          - Build time: $( date -u "+%Y-%m-%d %H:%M:%S UTC" )
+
+          _Note: the build is updated when a new commit is pushed to this PR._
+          EOF
+
+          cat "$COMMENT_FILE" >> "$GITHUB_STEP_SUMMARY"
+
+      # Pull requests from forks get a read-only token, so they cannot be commented on from here.
+      # Their build information is in the summary of the workflow run instead.
+      - name: "Add/update the information as a comment in the PR"
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728 # v2.9.1
+        with:
+          header: test-the-build
+          path: ${{ runner.temp }}/test-the-build.md
