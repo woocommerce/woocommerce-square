@@ -134,6 +134,7 @@ class Order {
 		add_action( 'woocommerce_reduce_order_item_stock', array( $this, 'maybe_stage_stock_updates_for_product' ), 10, 3 );
 		add_action( 'woocommerce_reduce_order_stock', array( $this, 'maybe_sync_staged_inventory_updates' ) );
 		add_action( self::RESOLVE_INVENTORY_BASELINE_HOOK, array( $this, 'resolve_pending_inventory_adjustment' ) );
+		add_filter( 'woocommerce_duplicate_product_exclude_meta', array( $this, 'exclude_inventory_meta_from_duplicate' ) );
 
 		// ADD hooks to restore stock for pending and cancelled order status.
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'maybe_sync_inventory_for_stock_increase' ), 1 );
@@ -923,6 +924,30 @@ class Order {
 		if ( ! as_schedule_single_action( time() + $delay, self::RESOLVE_INVENTORY_BASELINE_HOOK, $args, 'square' ) ) {
 			wc_square()->log( sprintf( 'Could not schedule the pending Square inventory change for product #%d; it is sent after the product\'s next order.', $product_id ) );
 		}
+	}
+
+	/**
+	 * Keeps the inventory bookkeeping meta off duplicated products.
+	 *
+	 * A copy carrying a pending change would send that change to Square a second time.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string[] $meta_keys Meta keys WooCommerce excludes when duplicating a product.
+	 * @return string[]
+	 */
+	public function exclude_inventory_meta_from_duplicate( $meta_keys ) {
+		return array_merge(
+			(array) $meta_keys,
+			array(
+				self::INVENTORY_BASELINE_META_KEY,
+				self::PENDING_INVENTORY_ADJUSTMENT_META_KEY,
+				self::PENDING_INVENTORY_SINCE_META_KEY,
+				self::PENDING_INVENTORY_ATTEMPTS_META_KEY,
+			)
+		);
 	}
 
 	/**
