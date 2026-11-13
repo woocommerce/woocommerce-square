@@ -39,6 +39,18 @@ defined( 'ABSPATH' ) || exit;
 class Order {
 
 	/**
+	 * Product meta recording that Square holds an inventory count for the product's Square variation.
+	 *
+	 * The value is "{location_id}|{square_variation_id}", so relinking the product to another Square
+	 * object or switching the store's location invalidates it without any cleanup.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const INVENTORY_BASELINE_META_KEY = '_wc_square_inventory_baseline';
+
+	/**
 	 * Array of previous stock values.
 	 *
 	 * @var array
@@ -367,61 +379,32 @@ class Order {
 	/**
 	 * Initializes a synchronization event for any staged inventory updates in this request.
 	 *
+	 * An order sends a relative adjustment, which assumes Square already holds a count for the item.
+	 * When it does not, the delta becomes Square's whole count and the two sides drift apart
+	 * immediately: a sale of one leaves WooCommerce at 19 and Square at -1. For those objects
+	 * WooCommerce's current quantity is sent as an absolute count instead, which establishes the
+	 * baseline; every later order can then adjust from it normally.
+	 *
+	 * Whether Square holds a count is remembered per product once known, so only a product's first
+	 * order asks Square's inventory history.
+	 *
 	 * @internal
 	 *
 	 * @since 2.0.8
+	 * @since x.x.x Remembers the inventory baseline per product.
 	 */
-	/**
-	 * Returns the Square catalog objects for these products that Square has never counted.
-	 *
-	 * A relative adjustment is only meaningful once Square holds a count, so callers use this to
-	 * decide when to send an absolute count instead. An unavailable answer returns an empty list, so
-	 * the caller keeps the existing adjustment behaviour rather than guessing.
-	 *
-	 * @since x.x.x
-	 *
-	 * @param int[] $product_ids WooCommerce product IDs.
-	 * @return string[] catalog object IDs with no inventory history.
-	 */
-	private static function get_objects_without_inventory_history( array $product_ids ) {
-
-		$square_ids = array();
-
-		foreach ( $product_ids as $product_id ) {
-			$square_id = Product::get_square_item_variation_id( $product_id, false );
-
-			if ( $square_id ) {
-				$square_ids[] = $square_id;
-			}
-		}
-
-		if ( ! $square_ids ) {
-			return array();
-		}
-
-		$with_history = Helper::get_catalog_objects_with_inventory_history( $square_ids );
-
-		if ( null === $with_history ) {
-			return array();
-		}
-
-		return array_values( array_diff( $square_ids, $with_history ) );
-	}
-
-
 	public function maybe_sync_staged_inventory_updates() {
 
-		$inventory_adjustments = array();
+		$products_to_sync = $this->products_to_sync;
 
-		// An order sends a relative adjustment, which assumes Square already holds a count for the
-		// item. When it does not, and the merchant enabled inventory sync after the item was created,
-		// the delta becomes Square's whole count and the two sides drift apart immediately: a sale of
-		// one leaves WooCommerce at 19 and Square at -1. For those objects send WooCommerce's current
-		// quantity as an absolute count instead, which establishes the baseline; every later order can
-		// then adjust from it normally.
-		$never_counted = self::get_objects_without_inventory_history( array_keys( $this->products_to_sync ) );
+		// Reset first: staged changes must never be sent twice if this runs again in the same
+		// request, for example from the shutdown hook.
+		$this->products_to_sync = array();
 
-		foreach ( $this->products_to_sync as $product_id => $adjustment ) {
+		$staged  = array();
+		$unknown = array();
+
+		foreach ( $products_to_sync as $product_id => $adjustment ) {
 
 			$product = wc_get_product( $product_id );
 			if ( ! $product instanceof \WC_Product ) {
@@ -429,26 +412,58 @@ class Order {
 			}
 
 			$square_id = Product::get_square_item_variation_id( $product_id, false );
-
-			if ( $square_id && in_array( $square_id, $never_counted, true ) ) {
-				$inventory_adjustment = Product::get_inventory_change_physical_count_type( $product );
-			} else {
-				$inventory_adjustment = Product::get_inventory_change_adjustment_type( $product, $adjustment );
-			}
-
-			if ( empty( $inventory_adjustment ) ) {
+			if ( ! $square_id ) {
 				continue;
 			}
 
-			$inventory_adjustments[] = $inventory_adjustment;
+			$staged[ $product_id ] = array(
+				'product'    => $product,
+				'square_id'  => $square_id,
+				'adjustment' => $adjustment,
+			);
+
+			if ( ! self::has_inventory_baseline( $product_id, $square_id ) ) {
+				$unknown[] = $square_id;
+			}
 		}
 
-		if ( empty( $inventory_adjustments ) ) {
+		// Only products whose baseline is not yet known reach Square's history, so after a
+		// product's first order this costs no request at all.
+		$with_history = empty( $unknown ) ? array() : Helper::get_catalog_objects_with_inventory_history( $unknown );
+
+		$inventory_changes = array();
+		$counted           = array();
+
+		foreach ( $staged as $product_id => $item ) {
+
+			$square_id = $item['square_id'];
+
+			// When Square could not be asked (null), keep the existing adjustment behaviour.
+			if ( ! in_array( $square_id, $unknown, true ) || null === $with_history ) {
+				$inventory_change = Product::get_inventory_change_adjustment_type( $item['product'], $item['adjustment'] );
+			} elseif ( in_array( $square_id, $with_history, true ) ) {
+				self::mark_inventory_baseline( $product_id, $square_id );
+				$inventory_change = Product::get_inventory_change_adjustment_type( $item['product'], $item['adjustment'] );
+			} else {
+				$inventory_change = Product::get_inventory_change_physical_count_type( $item['product'] );
+				if ( $inventory_change ) {
+					$counted[ $product_id ] = $square_id;
+				}
+			}
+
+			if ( empty( $inventory_change ) ) {
+				continue;
+			}
+
+			$inventory_changes[] = $inventory_change;
+		}
+
+		if ( empty( $inventory_changes ) ) {
 			return;
 		}
 
 		wc_square()->log( 'New order from other gateway inventory syncing..' );
-		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_changes ) ) . '_change_inventory' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
 		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
 		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
@@ -456,19 +471,62 @@ class Order {
 		// let the gateway mark an already paid order as failed. Log and continue instead; stock
 		// converges on the next successful sync.
 		try {
-			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 		} catch ( \Exception $exception ) {
 			wc_square()->log(
 				sprintf(
 					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
-					count( $inventory_adjustments ),
+					count( $inventory_changes ),
 					$exception->getMessage()
 				)
 			);
-		} finally {
-			// Always reset, or the shutdown hook re-attempts the same failing call in this request.
-			$this->products_to_sync = array();
+			return;
 		}
+
+		// Only now does Square hold a count for these, so later orders can adjust from it.
+		foreach ( $counted as $product_id => $square_id ) {
+			self::mark_inventory_baseline( $product_id, $square_id );
+		}
+	}
+
+	/**
+	 * Determines whether Square is known to hold an inventory count for the product's variation.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int    $product_id WooCommerce product ID.
+	 * @param string $square_id  Square catalog object (variation) ID.
+	 * @return bool Whether the baseline is known for this variation at the configured location.
+	 */
+	private static function has_inventory_baseline( $product_id, $square_id ) {
+		return self::get_inventory_baseline_value( $square_id ) === get_post_meta( $product_id, self::INVENTORY_BASELINE_META_KEY, true );
+	}
+
+	/**
+	 * Records that Square holds an inventory count for the product's variation.
+	 *
+	 * Written as post meta directly: saving the product here would fire the product save hooks,
+	 * which push the product to Square, from inside a stock change.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int    $product_id WooCommerce product ID.
+	 * @param string $square_id  Square catalog object (variation) ID.
+	 */
+	private static function mark_inventory_baseline( $product_id, $square_id ) {
+		update_post_meta( $product_id, self::INVENTORY_BASELINE_META_KEY, self::get_inventory_baseline_value( $square_id ) );
+	}
+
+	/**
+	 * Builds the baseline meta value for a Square variation at the configured location.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $square_id Square catalog object (variation) ID.
+	 * @return string Location and variation ID joined by a pipe.
+	 */
+	private static function get_inventory_baseline_value( $square_id ) {
+		return wc_square()->get_settings_handler()->get_location_id() . '|' . $square_id;
 	}
 
 	/**
