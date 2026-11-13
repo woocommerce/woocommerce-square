@@ -79,6 +79,15 @@ class Order {
 	const RESOLVE_INVENTORY_BASELINE_HOOK = 'wc_square_resolve_inventory_baseline';
 
 	/**
+	 * Product meta holding the time, in RFC 3339 UTC, a pending inventory change was first deferred.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const PENDING_INVENTORY_SINCE_META_KEY = '_wc_square_inventory_pending_since';
+
+	/**
 	 * Longest delay, in seconds, between attempts to send a pending inventory change.
 	 *
 	 * @since x.x.x
@@ -558,8 +567,10 @@ class Order {
 	 *
 	 * Runs from Action Scheduler, outside checkout. A product Square has never counted receives
 	 * WooCommerce's current quantity as an absolute count, which already reflects every pending
-	 * sale; otherwise the pending net change is sent as an adjustment. Failures are retried with a
-	 * growing delay until Square answers.
+	 * sale; otherwise the pending net change is sent as an adjustment. When an absolute count reached
+	 * Square after the change was deferred (a sync push, or a count entered in Square), that count
+	 * already reflects the pending change, so it is dropped instead of applied twice. Failures are
+	 * retried with a growing delay until Square answers.
 	 *
 	 * @internal
 	 *
@@ -595,10 +606,23 @@ class Order {
 			return;
 		}
 
+		$pending_since = self::get_pending_inventory_since( $product_id );
+		$superseded    = self::has_physical_count_since( $square_id, $pending_since );
+
+		if ( null === $superseded ) {
+			self::retry_pending_inventory_adjustment( $product_id, 'inventory history unavailable' );
+			return;
+		}
+
 		$counted          = false;
 		$inventory_change = null;
 
-		if ( self::has_inventory_baseline( $product_id, $square_id ) ) {
+		if ( $superseded ) {
+			// Square already holds a count taken after these changes, so it has a baseline and
+			// the count reflects them. Sending the changes now would apply them twice.
+			self::mark_inventory_baseline( $product_id, $square_id );
+			wc_square()->log( sprintf( 'Dropped a pending Square inventory change of %1$d for product #%2$d: Square received a newer absolute count.', $pending, $product_id ) );
+		} elseif ( self::has_inventory_baseline( $product_id, $square_id ) ) {
 			$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
 		} else {
 			$with_history = Helper::get_catalog_objects_with_inventory_history( array( $square_id ) );
@@ -641,8 +665,56 @@ class Order {
 		}
 
 		update_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, $remaining );
+		update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY );
 		self::schedule_pending_inventory_adjustment( $product_id );
+	}
+
+	/**
+	 * Checks whether Square received an absolute count for an object after a given time.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $square_id Square catalog object (variation) ID.
+	 * @param string $since     RFC 3339 time; empty means no time is known, which is treated as no count.
+	 * @return bool|null True or false, or null when Square could not be asked.
+	 */
+	private static function has_physical_count_since( $square_id, $since ) {
+
+		if ( ! $since ) {
+			return false;
+		}
+
+		try {
+			$response = wc_square()->get_api()->batch_retrieve_inventory_changes(
+				array(
+					'catalog_object_ids' => array( $square_id ),
+					'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+					'types'              => array( 'PHYSICAL_COUNT' ),
+					'updated_after'      => $since,
+				)
+			);
+		} catch ( \Exception $exception ) {
+			wc_square()->log( 'Could not check Square for a newer inventory count: ' . $exception->getMessage() );
+			return null;
+		}
+
+		$data = $response->get_data();
+
+		if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
+			wc_square()->log( 'Could not check Square for a newer inventory count: unexpected API response.' );
+			return null;
+		}
+
+		// Match the object id rather than trusting a non-empty response: Square drops the object
+		// filter when the object does not exist and answers for the whole location.
+		foreach ( is_array( $data->getChanges() ) ? $data->getChanges() : array() as $change ) {
+			if ( $change->getPhysicalCount() && $square_id === $change->getPhysicalCount()->getCatalogObjectId() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -698,6 +770,18 @@ class Order {
 	}
 
 	/**
+	 * Gets the time a product's pending change was first deferred.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 * @return string RFC 3339 time, or empty when unknown.
+	 */
+	private static function get_pending_inventory_since( $product_id ) {
+		return (string) get_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, true );
+	}
+
+	/**
 	 * Adds a stock change to the product's pending change and makes sure a resolve action is queued.
 	 *
 	 * @since x.x.x
@@ -707,12 +791,17 @@ class Order {
 	 */
 	private static function defer_inventory_adjustment( $product_id, $adjustment ) {
 
-		$pending = self::get_pending_inventory_adjustment( $product_id ) + (int) $adjustment;
+		$previous = self::get_pending_inventory_adjustment( $product_id );
+		$pending  = $previous + (int) $adjustment;
 
 		if ( 0 === $pending ) {
 			// The changes cancelled out, e.g. an order cancelled while Square was unreachable.
 			self::clear_pending_inventory_adjustment( $product_id );
 			return;
+		}
+
+		if ( 0 === $previous ) {
+			update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
 		}
 
 		update_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, $pending );
@@ -729,6 +818,7 @@ class Order {
 	 */
 	private static function clear_pending_inventory_adjustment( $product_id ) {
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY );
+		delete_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY );
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY );
 	}
 
