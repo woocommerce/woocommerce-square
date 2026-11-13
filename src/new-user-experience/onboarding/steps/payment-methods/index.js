@@ -162,7 +162,7 @@ export const PaymentMethods = () => {
 							'woocommerce-square'
 						) }
 						description={ __(
-							'Let customers buy and pay with Square Gift Cards at checkout.',
+							'Let customers buy and redeem Square Gift Cards at checkout.',
 							'woocommerce-square'
 						) }
 						variant="boxed"
