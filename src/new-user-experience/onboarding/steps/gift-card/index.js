@@ -92,6 +92,10 @@ export const GiftCardSetup = ( { origin = '' } ) => {
 								'Enable Square Gift Cards',
 								'woocommerce-square'
 							) }
+							description={ __(
+								'Let customers buy and pay with Square Gift Cards at checkout.',
+								'woocommerce-square'
+							) }
 							variant="boxed"
 						>
 							<ToggleControl
