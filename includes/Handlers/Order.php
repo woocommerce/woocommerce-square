@@ -491,6 +491,7 @@ class Order {
 
 		$inventory_changes = array();
 		$counted           = array();
+		$sent              = array();
 
 		foreach ( $staged as $product_id => $item ) {
 
@@ -520,6 +521,7 @@ class Order {
 			}
 
 			$inventory_changes[] = $inventory_change;
+			$sent[ $product_id ] = $item['adjustment'];
 		}
 
 		if ( $history_error ) {
@@ -541,15 +543,19 @@ class Order {
 		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
 		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
 		// exception) must never bubble up - it would abort the payment flow mid transition and
-		// let the gateway mark an already paid order as failed. Log and continue instead; stock
-		// converges on the next successful sync.
+		// let the gateway mark an already paid order as failed. Hold the changes for the
+		// background retry instead of dropping them, so Square does not silently miss the sale.
 		try {
 			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 		} catch ( \Exception $exception ) {
+			foreach ( $sent as $product_id => $adjustment ) {
+				self::defer_inventory_adjustment( $product_id, $adjustment );
+			}
+
 			wc_square()->log(
 				sprintf(
-					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
-					count( $inventory_changes ),
+					'Square inventory sync failed for order from other gateway (order flow left untouched); stock changes for product(s) #%1$s are deferred to a background retry: %2$s',
+					implode( ', #', array_keys( $sent ) ),
 					$exception->getMessage()
 				)
 			);
