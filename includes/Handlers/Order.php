@@ -623,7 +623,7 @@ class Order {
 			self::mark_inventory_baseline( $product_id, $square_id );
 			wc_square()->log( sprintf( 'Dropped a pending Square inventory change of %1$d for product #%2$d: Square received a newer absolute count.', $pending, $product_id ) );
 		} elseif ( self::has_inventory_baseline( $product_id, $square_id ) ) {
-			$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
+			$inventory_change = self::get_pending_adjustment_change( $product, $pending, $pending_since );
 		} else {
 			$with_history = Helper::get_catalog_objects_with_inventory_history( array( $square_id ) );
 
@@ -634,7 +634,7 @@ class Order {
 
 			if ( in_array( $square_id, $with_history, true ) ) {
 				self::mark_inventory_baseline( $product_id, $square_id );
-				$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
+				$inventory_change = self::get_pending_adjustment_change( $product, $pending, $pending_since );
 			} else {
 				$inventory_change = Product::get_inventory_change_physical_count_type( $product );
 				$counted          = true;
@@ -668,6 +668,31 @@ class Order {
 		update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY );
 		self::schedule_pending_inventory_adjustment( $product_id );
+	}
+
+	/**
+	 * Builds the adjustment for a pending change, dated when it was first deferred.
+	 *
+	 * A fixed date keeps the request body, and so its idempotency key, identical across retries
+	 * while the pending change is unchanged: a retry after a timed out request that Square did apply
+	 * is then recognised by Square instead of applied a second time.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product       Product object.
+	 * @param int         $pending       Net pending change.
+	 * @param string      $pending_since RFC 3339 time the change was first deferred, or empty.
+	 * @return \Square\Models\InventoryChange|null
+	 */
+	private static function get_pending_adjustment_change( \WC_Product $product, $pending, $pending_since ) {
+
+		$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
+
+		if ( $inventory_change && $pending_since && $inventory_change->getAdjustment() ) {
+			$inventory_change->getAdjustment()->setOccurredAt( $pending_since );
+		}
+
+		return $inventory_change;
 	}
 
 	/**
