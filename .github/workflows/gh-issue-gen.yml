@@ -20,10 +20,9 @@ jobs:
         id: check
         run: |
           BRANCH=$(jq -r .pull_request.head.ref "$GITHUB_EVENT_PATH")
-          echo "${{ github.event.pull_request.body }}" > body.txt
-          BODY=$(cat body.txt)
-          echo "${{ github.event.pull_request.title }}" > title.txt
-          TITLE=$(cat title.txt)
+          # Read the PR text from the event payload: pasting it into this script would run it as shell.
+          BODY=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
+          TITLE=$(jq -r .pull_request.title "$GITHUB_EVENT_PATH")
           echo "Checking branch: $BRANCH"
 
           # 1) Branch names like add/123 or add/123-desc
