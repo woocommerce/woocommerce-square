@@ -1916,6 +1916,16 @@ abstract class Payment_Gateway extends \WC_Payment_Gateway {
 		$gan = $gift_card_activity->getGiftCardActivity()->getGiftCardGan();
 		$this->update_order_meta( $order, 'gift_card_number', wc_clean( $gan ) );
 
+		// Discounts reduce the purchase payment, not the value activated on the card.
+		$balance_money = $gift_card_activity->getGiftCardActivity()->getGiftCardBalanceMoney();
+		if ( null !== $balance_money && null !== $balance_money->getAmount() ) {
+			$this->update_order_meta(
+				$order,
+				'gift_card_balance',
+				Square_Helper::number_format( Money_Utility::cents_to_float( $balance_money->getAmount() ) )
+			);
+		}
+
 		$order->add_order_note(
 			sprintf(
 				/* translators: %1$s - Gift Card Account Number */
