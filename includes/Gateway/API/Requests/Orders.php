@@ -476,9 +476,8 @@ class Orders extends API\Request {
 						if ( empty( $tax_id ) ) {
 							continue;
 						}
-						// Match rate_id as int or string (Woo may store either).
-						$tax_obj = isset( $taxes[ $tax_id ] ) ? $taxes[ $tax_id ] : ( isset( $taxes[ (string) $tax_id ] ) ? $taxes[ (string) $tax_id ] : ( isset( $taxes[ (int) $tax_id ] ) ? $taxes[ (int) $tax_id ] : null ) );
-						if ( $tax_obj instanceof \Square\Models\OrderLineItemTax ) {
+						$tax_obj = $this->get_order_tax_for_rate_id( $taxes, $tax_id );
+						if ( $tax_obj ) {
 							$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $tax_obj->getUid() );
 						}
 					}
@@ -610,9 +609,21 @@ class Orders extends API\Request {
 						continue;
 					}
 
+					$order_tax = $this->get_order_tax_for_rate_id( $taxes, $key );
+
+					/*
+					 * Tax plugins such as Avalara AvaTax and TaxJar can leave a line item referencing a tax rate that has
+					 * no matching tax item on the order. Skip that tax: the gateway's order total adjustment keeps the
+					 * amount charged in line with the WooCommerce order total.
+					 */
+					if ( ! $order_tax ) {
+						$this->log_missing_order_tax( $order, $item, $key );
+						continue;
+					}
+
 					$item_uid            = $item->get_id();
-					$tax_uid             = $taxes[ $key ]->getUid();
-					$prev_percentage     = $taxes[ $key ]->getPercentage();
+					$tax_uid             = $order_tax->getUid();
+					$prev_percentage     = $order_tax->getPercentage();
 					$adjusted_percentage = $prev_percentage;
 					/*
 					 * $total_amount could be 0 for some cases, eg: Retail Delivery Fee via Avalara AvaTax for Minnesota (MN) and Colorado (CO).
@@ -628,7 +639,7 @@ class Orders extends API\Request {
 						$uniqid = uniqid();
 
 						$tax_item          = new \Square\Models\OrderLineItemTax();
-						$adjusted_tax_name = $taxes[ $key ]->getName() . __( ' - (Adjusted Tax for) - ', 'woocommerce-square' ) . $item_uid;
+						$adjusted_tax_name = $order_tax->getName() . __( ' - (Adjusted Tax for) - ', 'woocommerce-square' ) . $item_uid;
 						$tax_item->setUid( $uniqid );
 						$tax_item->setName( $adjusted_tax_name );
 						$tax_item->setType( $tax_type );
@@ -695,6 +706,49 @@ class Orders extends API\Request {
 	}
 
 	/**
+	 * Gets the Square tax object for a WooCommerce tax rate ID.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \Square\Models\OrderLineItemTax[] $taxes   Order taxes keyed by rate_id, from get_order_taxes().
+	 * @param int|string                        $rate_id WooCommerce tax rate ID.
+	 * @return \Square\Models\OrderLineItemTax|null The tax object, or null if the order has no tax for the rate.
+	 */
+	protected function get_order_tax_for_rate_id( array $taxes, $rate_id ) {
+		/*
+		 * PHP already treats numeric string keys ("5") and int keys (5) as the same array key, so no casting is needed.
+		 * Casting would be harmful: tax plugins such as AvaTax use string rate IDs (eg: "AVATAX-CA-STATE-TAX"), which
+		 * (int) turns into 0 and would match an unrelated tax stored under rate ID 0.
+		 */
+		if ( isset( $taxes[ $rate_id ] ) && $taxes[ $rate_id ] instanceof \Square\Models\OrderLineItemTax ) {
+			return $taxes[ $rate_id ];
+		}
+
+		return null;
+	}
+
+	/**
+	 * Logs a line item tax that references a tax rate missing from the order's taxes.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Order      $order   WooCommerce order object.
+	 * @param \WC_Order_Item $item    Order item carrying the tax.
+	 * @param int|string     $rate_id WooCommerce tax rate ID that could not be resolved.
+	 */
+	protected function log_missing_order_tax( \WC_Order $order, $item, $rate_id ) {
+		wc_square()->log(
+			sprintf(
+				'Order #%1$s: item #%2$s ("%3$s") has tax for rate ID %4$s, but the order has no tax item for that rate. Skipping this tax in the Square order.',
+				$order->get_id(),
+				$item->get_id(),
+				$item->get_name(),
+				$rate_id
+			)
+		);
+	}
+
+	/**
 	 * Creates applied taxes array for each Square line item.
 	 *
 	 * @since 2.0.4
@@ -721,7 +775,10 @@ class Orders extends API\Request {
 				continue;
 			}
 
-			$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $taxes[ $tax_id ]->getUid() );
+			$order_tax = $this->get_order_tax_for_rate_id( $taxes, $tax_id );
+			if ( $order_tax ) {
+				$applied_taxes[] = new \Square\Models\OrderLineItemAppliedTax( $order_tax->getUid() );
+			}
 		};
 
 		return empty( $applied_taxes ) ? null : $applied_taxes;
