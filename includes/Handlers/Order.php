@@ -56,9 +56,9 @@ class Order {
 	/**
 	 * Product meta holding the net stock change that has not reached Square yet.
 	 *
-	 * A change is held here instead of being guessed or dropped when Square's inventory history
-	 * could not be read, or when the push itself failed. The resolve action sends it later, and
-	 * later orders for the same product add to it until then so changes reach Square in order.
+	 * A change is held here instead of being guessed when Square's inventory history could not be
+	 * read. The resolve action sends it later, and later orders for the same product add to it until
+	 * then so changes reach Square in order.
 	 *
 	 * @since x.x.x
 	 *
@@ -455,15 +455,14 @@ class Order {
 	 * Whether Square holds a count is remembered per product once known, so only a product's first
 	 * order asks Square's inventory history and checkout does not wait on that lookup afterwards.
 	 *
-	 * Nothing is guessed or dropped. When the history lookup fails, sending an adjustment could
-	 * drift a never counted item, and when the push fails, the sale would be lost; in both cases the
-	 * change is held on the product and sent by a background action instead.
+	 * Nothing is guessed. When the history lookup fails, an adjustment could drift a never counted
+	 * item, so the change is held on the product and sent by a background action instead.
 	 *
 	 * @internal
 	 *
 	 * @since 2.0.8
-	 * @since x.x.x Remembers the inventory baseline per product, and holds stock changes that cannot
-	 *              be sent safely for a background retry instead of guessing or dropping them.
+	 * @since x.x.x Remembers the inventory baseline per product, and holds stock changes for a
+	 *              background retry when Square's inventory history cannot be read.
 	 */
 	public function maybe_sync_staged_inventory_updates() {
 
@@ -516,7 +515,6 @@ class Order {
 
 		$inventory_changes = array();
 		$counted           = array(); // product ID => Square variation ID, for absolute counts in this batch.
-		$sent              = array(); // product ID => stock change in this batch, held again if the push fails.
 
 		foreach ( $staged as $product_id => $item ) {
 
@@ -548,7 +546,6 @@ class Order {
 			}
 
 			$inventory_changes[] = $inventory_change;
-			$sent[ $product_id ] = $item['adjustment'];
 		}
 
 		if ( $history_error ) {
@@ -570,20 +567,15 @@ class Order {
 		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
 		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
 		// exception) must never bubble up - it would abort the payment flow mid transition and
-		// let the gateway mark an already paid order as failed. Hold the changes for the
-		// background retry instead of dropping them, so Square does not silently miss the sale.
+		// let the gateway mark an already paid order as failed. Log and continue instead; stock
+		// converges on the next successful sync.
 		try {
 			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 		} catch ( \Exception $exception ) {
-			// Square rejects a batch as a whole, so every change in it is held.
-			foreach ( $sent as $product_id => $adjustment ) {
-				self::defer_inventory_adjustment( $product_id, $adjustment );
-			}
-
 			wc_square()->log(
 				sprintf(
-					'Square inventory sync failed for order from other gateway (order flow left untouched); stock changes for product(s) #%1$s are deferred to a background retry: %2$s',
-					implode( ', #', array_keys( $sent ) ),
+					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
+					count( $inventory_changes ),
 					$exception->getMessage()
 				)
 			);
@@ -591,7 +583,7 @@ class Order {
 		}
 
 		// Only now does Square hold a count for these, so later orders can adjust from it. Had the
-		// push failed, the baseline would stay unknown and the next attempt would ask again.
+		// push failed, the baseline would stay unknown and the next order would ask again.
 		foreach ( $counted as $product_id => $square_id ) {
 			self::mark_inventory_baseline( $product_id, $square_id );
 		}
@@ -857,8 +849,8 @@ class Order {
 	/**
 	 * Adds a stock change to the product's pending change and makes sure a resolve action is queued.
 	 *
-	 * The single entry point for holding a change: used when the history lookup fails, when the push
-	 * fails, and for orders that arrive while an earlier change is still held.
+	 * The single entry point for holding a change: used when the history lookup fails, and for
+	 * orders that arrive while an earlier change is still held.
 	 *
 	 * @since x.x.x
 	 *
