@@ -35,12 +35,13 @@ class Orders_Tax_Lookup_Test extends WP_UnitTestCase {
 	/**
 	 * Builds an unsaved order with one product line item.
 	 *
-	 * @param array $line_taxes     line item taxes, keyed by rate ID
-	 * @param array $order_rate_ids rate IDs to add as order tax items
+	 * @param array          $line_taxes     line item taxes, keyed by rate ID
+	 * @param array          $order_rate_ids rate IDs to add as order tax items
+	 * @param \WC_Order|null $order          optional empty order to fill, defaults to a new \WC_Order
 	 * @return \WC_Order
 	 */
-	private function build_order( array $line_taxes, array $order_rate_ids ) {
-		$order = new \WC_Order();
+	private function build_order( array $line_taxes, array $order_rate_ids, $order = null ) {
+		$order = $order ? $order : new \WC_Order();
 		$order->set_currency( 'USD' );
 
 		$item = new \WC_Order_Item_Product();
@@ -175,6 +176,38 @@ class Orders_Tax_Lookup_Test extends WP_UnitTestCase {
 			$this->assertCount( 1, $charges );
 			$this->assertSame( $taxes[ $expected_rate_id ]->getUid(), $charges[0]->getAppliedTaxes()[0]->getTaxUid() );
 		}
+	}
+
+	/**
+	 * Classic checkout, block checkout and subscription renewals all build the Square order through
+	 * set_create_order_data(). Uses an AvaTax-style string rate ID, as the reported cases did.
+	 */
+	public function test_create_order_request_skips_missing_string_rate_id() {
+		// The gateway sets unique_transaction_ref on the order before payment. Declare it to avoid a dynamic property.
+		$gateway_order = new class() extends \WC_Order {
+			/** @var string */
+			public $unique_transaction_ref = 'test-transaction-ref';
+		};
+
+		$order = $this->build_order(
+			array(
+				1                     => 0.8,
+				'AVATAX-CA-STATE-TAX' => 0.5,
+			),
+			array( 1 ),
+			$gateway_order
+		);
+
+		$this->request->set_create_order_data( 'test-location', $order );
+
+		$square_order = $this->request->get_square_api_args()[0]->getOrder();
+		$line_items   = $square_order->getLineItems();
+		$order_taxes  = $square_order->getTaxes();
+
+		$this->assertCount( 1, $line_items );
+		$this->assertCount( 1, $order_taxes );
+		$this->assertSame( array( $order_taxes[0]->getUid() ), $this->applied_tax_uids( $line_items[0] ) );
+		$this->assertSame( array( 'AVATAX-CA-STATE-TAX' ), $this->request->missing_rate_ids );
 	}
 
 	public function test_apply_taxes_skips_missing_rate() {
