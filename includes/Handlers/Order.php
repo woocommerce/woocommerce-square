@@ -67,16 +67,6 @@ class Order {
 	const PENDING_INVENTORY_ADJUSTMENT_META_KEY = '_wc_square_inventory_pending_adjustment';
 
 	/**
-	 * Product meta counting failed attempts to send a pending inventory adjustment, used to grow the
-	 * delay between retries.
-	 *
-	 * @since x.x.x
-	 *
-	 * @var string
-	 */
-	const PENDING_INVENTORY_ATTEMPTS_META_KEY = '_wc_square_inventory_pending_attempts';
-
-	/**
 	 * Action Scheduler hook that sends a pending inventory adjustment once Square can be asked.
 	 *
 	 * Scheduled with the product ID as its only argument, at most one pending action per product.
@@ -99,16 +89,16 @@ class Order {
 	const PENDING_INVENTORY_SINCE_META_KEY = '_wc_square_inventory_pending_since';
 
 	/**
-	 * Longest delay, in seconds, between attempts to send a pending inventory change.
+	 * Delay, in seconds, before a pending inventory change is retried after Square could not be reached.
 	 *
-	 * Retries never stop: the delay doubles from 5 minutes up to this cap, so a product with no
-	 * further orders still reaches Square once it is reachable again.
+	 * Retries never stop, so a product with no further orders still reaches Square once it is
+	 * reachable again.
 	 *
 	 * @since x.x.x
 	 *
 	 * @var int
 	 */
-	const MAX_PENDING_INVENTORY_RETRY_DELAY = 6 * HOUR_IN_SECONDS;
+	const PENDING_INVENTORY_RETRY_DELAY = 15 * MINUTE_IN_SECONDS;
 
 	/**
 	 * Array of previous stock values.
@@ -596,7 +586,7 @@ class Order {
 	 * sale; otherwise the pending net change is sent as an adjustment. When an absolute count reached
 	 * Square after the change was deferred (a sync push, or a count entered in Square), that count
 	 * already reflects the pending change, so it is dropped instead of applied twice. Failures are
-	 * retried with a growing delay until Square answers.
+	 * retried every 15 minutes until Square answers.
 	 *
 	 * Order of decisions:
 	 * 1. Nothing pending, or the product is no longer synced: clear and stop.
@@ -702,7 +692,6 @@ class Order {
 
 		update_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, $remaining );
 		update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
-		delete_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY );
 		self::schedule_pending_inventory_adjustment( $product_id );
 	}
 
@@ -861,14 +850,10 @@ class Order {
 	private static function clear_pending_inventory_adjustment( $product_id ) {
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY );
 		delete_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY );
-		delete_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY );
 	}
 
 	/**
-	 * Schedules a retry of a product's pending change with a growing delay.
-	 *
-	 * The delay doubles from 5 minutes and is capped, so a product with no further orders still
-	 * converges once Square is reachable again.
+	 * Schedules a retry of a product's pending change and logs why the attempt failed.
 	 *
 	 * @since x.x.x
 	 *
@@ -877,24 +862,16 @@ class Order {
 	 */
 	private static function retry_pending_inventory_adjustment( $product_id, $reason ) {
 
-		$attempts = (int) get_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY, true ) + 1;
-
-		update_post_meta( $product_id, self::PENDING_INVENTORY_ATTEMPTS_META_KEY, $attempts );
-
-		// 5, 10, 20, 40, 80, 160, 320 minutes, then every 6 hours.
-		$delay = (int) min( 5 * MINUTE_IN_SECONDS * ( 2 ** min( $attempts - 1, 10 ) ), self::MAX_PENDING_INVENTORY_RETRY_DELAY );
-
 		wc_square()->log(
 			sprintf(
-				'Pending Square inventory change for product #%1$d not sent on attempt %2$d (%3$s); retrying in %4$d minutes.',
+				'Pending Square inventory change for product #%1$d not sent (%2$s); retrying in %3$d minutes.',
 				$product_id,
-				$attempts,
 				$reason,
-				$delay / MINUTE_IN_SECONDS
+				self::PENDING_INVENTORY_RETRY_DELAY / MINUTE_IN_SECONDS
 			)
 		);
 
-		self::schedule_pending_inventory_adjustment( $product_id, $delay );
+		self::schedule_pending_inventory_adjustment( $product_id, self::PENDING_INVENTORY_RETRY_DELAY );
 	}
 
 	/**
@@ -955,7 +932,6 @@ class Order {
 				self::INVENTORY_BASELINE_META_KEY,
 				self::PENDING_INVENTORY_ADJUSTMENT_META_KEY,
 				self::PENDING_INVENTORY_SINCE_META_KEY,
-				self::PENDING_INVENTORY_ATTEMPTS_META_KEY,
 			)
 		);
 	}
