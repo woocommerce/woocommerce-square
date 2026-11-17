@@ -39,6 +39,68 @@ defined( 'ABSPATH' ) || exit;
 class Order {
 
 	/**
+	 * Product meta recording that Square holds an inventory count for the product's Square variation.
+	 *
+	 * Set when Square's inventory history shows a count, or after this handler pushes an absolute
+	 * count itself. While it is set, orders send a relative adjustment without asking Square first.
+	 *
+	 * The value is "{location_id}|{square_variation_id}", so relinking the product to another Square
+	 * object or switching the store's location invalidates it without any cleanup.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const INVENTORY_BASELINE_META_KEY = '_wc_square_inventory_baseline';
+
+	/**
+	 * Product meta holding the net stock change that has not reached Square yet.
+	 *
+	 * A change is held here instead of being guessed when Square's inventory history could not be
+	 * read. The resolve action sends it later, and later orders for the same product add to it until
+	 * then so changes reach Square in order.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const PENDING_INVENTORY_ADJUSTMENT_META_KEY = '_wc_square_inventory_pending_adjustment';
+
+	/**
+	 * Action Scheduler hook that sends a pending inventory adjustment once Square can be asked.
+	 *
+	 * Scheduled with the product ID as its only argument, at most one pending action per product.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const RESOLVE_INVENTORY_BASELINE_HOOK = 'wc_square_resolve_inventory_baseline';
+
+	/**
+	 * Product meta holding the time, in RFC 3339 UTC, a pending inventory change was first deferred.
+	 *
+	 * Used to detect an absolute count that reached Square after the change was held.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var string
+	 */
+	const PENDING_INVENTORY_SINCE_META_KEY = '_wc_square_inventory_pending_since';
+
+	/**
+	 * Delay, in seconds, before a pending inventory change is retried after Square could not be reached.
+	 *
+	 * Retries never stop, so a product with no further orders still reaches Square once it is
+	 * reachable again.
+	 *
+	 * @since x.x.x
+	 *
+	 * @var int
+	 */
+	const PENDING_INVENTORY_RETRY_DELAY = 15 * MINUTE_IN_SECONDS;
+
+	/**
 	 * Array of previous stock values.
 	 *
 	 * @var array
@@ -75,6 +137,12 @@ class Order {
 		// Add hooks for stock sync.
 		add_action( 'woocommerce_reduce_order_item_stock', array( $this, 'maybe_stage_stock_updates_for_product' ), 10, 3 );
 		add_action( 'woocommerce_reduce_order_stock', array( $this, 'maybe_sync_staged_inventory_updates' ) );
+
+		// Sends stock changes that could not reach Square during checkout, outside the request.
+		add_action( self::RESOLVE_INVENTORY_BASELINE_HOOK, array( $this, 'resolve_pending_inventory_adjustment' ) );
+
+		// A duplicated product must not inherit the inventory bookkeeping of the original.
+		add_filter( 'woocommerce_duplicate_product_exclude_meta', array( $this, 'exclude_inventory_meta_from_duplicate' ) );
 
 		// ADD hooks to restore stock for pending and cancelled order status.
 		add_action( 'woocommerce_order_status_cancelled', array( $this, 'maybe_sync_inventory_for_stock_increase' ), 1 );
@@ -367,61 +435,38 @@ class Order {
 	/**
 	 * Initializes a synchronization event for any staged inventory updates in this request.
 	 *
+	 * An order sends a relative adjustment, which assumes Square already holds a count for the item.
+	 * When it does not, the delta becomes Square's whole count and the two sides drift apart
+	 * immediately: a sale of one leaves WooCommerce at 19 and Square at -1. For those objects
+	 * WooCommerce's current quantity is sent as an absolute count instead, which establishes the
+	 * baseline; every later order can then adjust from it normally.
+	 *
+	 * Whether Square holds a count is remembered per product once known, so only a product's first
+	 * order asks Square's inventory history and checkout does not wait on that lookup afterwards.
+	 *
+	 * Nothing is guessed. When the history lookup fails, an adjustment could drift a never counted
+	 * item, so the change is held on the product and sent by a background action instead.
+	 *
 	 * @internal
 	 *
 	 * @since 2.0.8
+	 * @since x.x.x Remembers the inventory baseline per product, and holds stock changes for a
+	 *              background retry when Square's inventory history cannot be read.
 	 */
-	/**
-	 * Returns the Square catalog objects for these products that Square has never counted.
-	 *
-	 * A relative adjustment is only meaningful once Square holds a count, so callers use this to
-	 * decide when to send an absolute count instead. An unavailable answer returns an empty list, so
-	 * the caller keeps the existing adjustment behaviour rather than guessing.
-	 *
-	 * @since 5.5.0
-	 *
-	 * @param int[] $product_ids WooCommerce product IDs.
-	 * @return string[] catalog object IDs with no inventory history.
-	 */
-	private static function get_objects_without_inventory_history( array $product_ids ) {
-
-		$square_ids = array();
-
-		foreach ( $product_ids as $product_id ) {
-			$square_id = Product::get_square_item_variation_id( $product_id, false );
-
-			if ( $square_id ) {
-				$square_ids[] = $square_id;
-			}
-		}
-
-		if ( ! $square_ids ) {
-			return array();
-		}
-
-		$with_history = Helper::get_catalog_objects_with_inventory_history( $square_ids );
-
-		if ( null === $with_history ) {
-			return array();
-		}
-
-		return array_values( array_diff( $square_ids, $with_history ) );
-	}
-
-
 	public function maybe_sync_staged_inventory_updates() {
 
-		$inventory_adjustments = array();
+		$products_to_sync = $this->products_to_sync;
 
-		// An order sends a relative adjustment, which assumes Square already holds a count for the
-		// item. When it does not, and the merchant enabled inventory sync after the item was created,
-		// the delta becomes Square's whole count and the two sides drift apart immediately: a sale of
-		// one leaves WooCommerce at 19 and Square at -1. For those objects send WooCommerce's current
-		// quantity as an absolute count instead, which establishes the baseline; every later order can
-		// then adjust from it normally.
-		$never_counted = self::get_objects_without_inventory_history( array_keys( $this->products_to_sync ) );
+		// Reset first: a deferred change must never be staged twice if this runs again in the same
+		// request, for example from the shutdown hook.
+		$this->products_to_sync = array();
 
-		foreach ( $this->products_to_sync as $product_id => $adjustment ) {
+		$staged        = array(); // product ID => product, Square variation ID and stock change to send now.
+		$unknown       = array(); // Square variation IDs whose baseline is not known yet.
+		$deferred      = array(); // product IDs held for a background retry, for logging.
+		$history_error = false;
+
+		foreach ( $products_to_sync as $product_id => $adjustment ) {
 
 			$product = wc_get_product( $product_id );
 			if ( ! $product instanceof \WC_Product ) {
@@ -429,26 +474,84 @@ class Order {
 			}
 
 			$square_id = Product::get_square_item_variation_id( $product_id, false );
-
-			if ( $square_id && in_array( $square_id, $never_counted, true ) ) {
-				$inventory_adjustment = Product::get_inventory_change_physical_count_type( $product );
-			} else {
-				$inventory_adjustment = Product::get_inventory_change_adjustment_type( $product, $adjustment );
-			}
-
-			if ( empty( $inventory_adjustment ) ) {
+			if ( ! $square_id ) {
 				continue;
 			}
 
-			$inventory_adjustments[] = $inventory_adjustment;
+			// An earlier change is still waiting to be sent. Queue behind it, so changes reach
+			// Square in order and the deferred action settles the baseline once for all of them.
+			if ( 0 !== self::get_pending_inventory_adjustment( $product_id ) ) {
+				self::defer_inventory_adjustment( $product_id, $adjustment );
+				$deferred[] = $product_id;
+				continue;
+			}
+
+			$staged[ $product_id ] = array(
+				'product'    => $product,
+				'square_id'  => $square_id,
+				'adjustment' => $adjustment,
+			);
+
+			if ( ! self::has_inventory_baseline( $product_id, $square_id ) ) {
+				$unknown[] = $square_id;
+			}
 		}
 
-		if ( empty( $inventory_adjustments ) ) {
+		// Only products whose baseline is not yet known reach Square's history, so after a
+		// product's first order this costs no request at all. The helper returns the IDs that have
+		// history, an empty array when none do, or null when Square could not be asked.
+		$with_history = empty( $unknown ) ? array() : Helper::get_catalog_objects_with_inventory_history( $unknown );
+
+		$inventory_changes = array();
+		$counted           = array(); // product ID => Square variation ID, for absolute counts in this batch.
+
+		foreach ( $staged as $product_id => $item ) {
+
+			$square_id = $item['square_id'];
+
+			// Baseline known: adjust from Square's count. Lookup failed: hold. Square has history:
+			// remember that and adjust. Never counted: send WooCommerce's quantity as an absolute count.
+			if ( ! in_array( $square_id, $unknown, true ) ) {
+				$inventory_change = Product::get_inventory_change_adjustment_type( $item['product'], $item['adjustment'] );
+			} elseif ( null === $with_history ) {
+				// Square could not be asked. An adjustment would drift if Square has never counted
+				// the item, so hold the change until it can be asked.
+				self::defer_inventory_adjustment( $product_id, $item['adjustment'] );
+				$deferred[]    = $product_id;
+				$history_error = true;
+				continue;
+			} elseif ( in_array( $square_id, $with_history, true ) ) {
+				self::mark_inventory_baseline( $product_id, $square_id );
+				$inventory_change = Product::get_inventory_change_adjustment_type( $item['product'], $item['adjustment'] );
+			} else {
+				$inventory_change = Product::get_inventory_change_physical_count_type( $item['product'] );
+				if ( $inventory_change ) {
+					$counted[ $product_id ] = $square_id;
+				}
+			}
+
+			if ( empty( $inventory_change ) ) {
+				continue;
+			}
+
+			$inventory_changes[] = $inventory_change;
+		}
+
+		if ( $history_error ) {
+			wc_square()->log(
+				sprintf(
+					'Square inventory history was unavailable for an order from another gateway; stock changes for product(s) #%s are deferred to a background retry.',
+					implode( ', #', $deferred )
+				)
+			);
+		}
+
+		if ( empty( $inventory_changes ) ) {
 			return;
 		}
 
 		wc_square()->log( 'New order from other gateway inventory syncing..' );
-		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_adjustments ) ) . '_change_inventory' );
+		$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_changes ) ) . '_change_inventory' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 
 		// This runs inside checkout and stock-reduction hooks for orders paid through OTHER
 		// gateways, so a Square API failure (e.g. an expired connection throwing an auth
@@ -456,19 +559,381 @@ class Order {
 		// let the gateway mark an already paid order as failed. Log and continue instead; stock
 		// converges on the next successful sync.
 		try {
-			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_adjustments );
+			wc_square()->get_api()->batch_change_inventory( $idempotency_key, $inventory_changes );
 		} catch ( \Exception $exception ) {
 			wc_square()->log(
 				sprintf(
 					'Square inventory sync failed for order from other gateway (order flow left untouched, %d adjustment(s) skipped): %s',
-					count( $inventory_adjustments ),
+					count( $inventory_changes ),
 					$exception->getMessage()
 				)
 			);
-		} finally {
-			// Always reset, or the shutdown hook re-attempts the same failing call in this request.
-			$this->products_to_sync = array();
+			return;
 		}
+
+		// Only now does Square hold a count for these, so later orders can adjust from it. Had the
+		// push failed, the baseline would stay unknown and the next order would ask again.
+		foreach ( $counted as $product_id => $square_id ) {
+			self::mark_inventory_baseline( $product_id, $square_id );
+		}
+	}
+
+	/**
+	 * Sends a product's pending inventory change once Square can say whether it holds a count.
+	 *
+	 * Runs from Action Scheduler, outside checkout. A product Square has never counted receives
+	 * WooCommerce's current quantity as an absolute count, which already reflects every pending
+	 * sale; otherwise the pending net change is sent as an adjustment. When an absolute count reached
+	 * Square after the change was deferred (a sync push, or a count entered in Square), that count
+	 * already reflects the pending change, so it is dropped instead of applied twice. Failures are
+	 * retried every 15 minutes until Square answers.
+	 *
+	 * Order of decisions:
+	 * 1. Nothing pending, or the product is no longer synced: clear and stop.
+	 * 2. A newer absolute count exists in Square: drop the pending change.
+	 * 3. Baseline known: send the pending change as an adjustment.
+	 * 4. Otherwise ask Square's history: adjustment if it has history, absolute count if never counted.
+	 * Any Square failure along the way schedules a retry and keeps the pending change.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 */
+	public function resolve_pending_inventory_adjustment( $product_id ) {
+
+		$product_id = absint( $product_id );
+		$pending    = self::get_pending_inventory_adjustment( $product_id );
+
+		if ( 0 === $pending ) {
+			self::clear_pending_inventory_adjustment( $product_id );
+			return;
+		}
+
+		// The product, and so the quantity an absolute count would send, is loaded after the pending
+		// change is read. An order landing in between is then counted in both and sent once more as
+		// an adjustment; the window is the length of one meta read, and the alternative order loses
+		// that sale instead.
+		$product   = wc_get_product( $product_id );
+		$square_id = $product ? Product::get_square_item_variation_id( $product_id, false ) : null;
+
+		if (
+			! $product instanceof \WC_Product ||
+			! $square_id ||
+			! wc_square()->get_settings_handler()->is_inventory_sync_enabled() ||
+			! Product::is_synced_with_square( $product )
+		) {
+			wc_square()->log( sprintf( 'Dropped a pending Square inventory change for product #%d: the product is no longer synced with Square.', $product_id ) );
+			self::clear_pending_inventory_adjustment( $product_id );
+			return;
+		}
+
+		// An absolute count pushed after the change was held, for example by a product sync, already
+		// reflects the held sales. Check for one first, or the change would be applied twice.
+		$pending_since = self::get_pending_inventory_since( $product_id );
+		$superseded    = self::has_physical_count_since( $square_id, $pending_since );
+
+		if ( null === $superseded ) {
+			self::retry_pending_inventory_adjustment( $product_id, 'inventory history unavailable' );
+			return;
+		}
+
+		$counted          = false;
+		$inventory_change = null;
+
+		if ( $superseded ) {
+			// Square already holds a count taken after these changes, so it has a baseline and
+			// the count reflects them. Sending the changes now would apply them twice.
+			self::mark_inventory_baseline( $product_id, $square_id );
+			wc_square()->log( sprintf( 'Dropped a pending Square inventory change of %1$d for product #%2$d: Square received a newer absolute count.', $pending, $product_id ) );
+		} elseif ( self::has_inventory_baseline( $product_id, $square_id ) ) {
+			$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
+		} else {
+			$with_history = Helper::get_catalog_objects_with_inventory_history( array( $square_id ) );
+
+			if ( null === $with_history ) {
+				self::retry_pending_inventory_adjustment( $product_id, 'inventory history unavailable' );
+				return;
+			}
+
+			if ( in_array( $square_id, $with_history, true ) ) {
+				self::mark_inventory_baseline( $product_id, $square_id );
+				$inventory_change = Product::get_inventory_change_adjustment_type( $product, $pending );
+			} else {
+				// Never counted: WooCommerce's current quantity already includes every held sale.
+				$inventory_change = Product::get_inventory_change_physical_count_type( $product );
+				$counted          = true;
+			}
+		}
+
+		if ( $inventory_change ) {
+			try {
+				$idempotency_key = wc_square()->get_idempotency_key( md5( serialize( $inventory_change ) ) . '_change_inventory' ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+				wc_square()->get_api()->batch_change_inventory( $idempotency_key, array( $inventory_change ) );
+			} catch ( \Exception $exception ) {
+				self::retry_pending_inventory_adjustment( $product_id, $exception->getMessage() );
+				return;
+			}
+
+			if ( $counted ) {
+				self::mark_inventory_baseline( $product_id, $square_id );
+			}
+		}
+
+		// Subtract what was handled rather than deleting, so a change staged by an order while this
+		// ran is kept and sent next.
+		$remaining = self::get_pending_inventory_adjustment( $product_id ) - $pending;
+
+		if ( 0 === $remaining ) {
+			self::clear_pending_inventory_adjustment( $product_id );
+			return;
+		}
+
+		update_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, $remaining );
+		update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
+		self::schedule_pending_inventory_adjustment( $product_id );
+	}
+
+	/**
+	 * Checks whether Square received an absolute count for an object after a given time.
+	 *
+	 * Reads only PHYSICAL_COUNT changes updated after the given time, so the answer is one small
+	 * page regardless of how busy the item is.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $square_id Square catalog object (variation) ID.
+	 * @param string $since     RFC 3339 time; empty means no time is known, which is treated as no count.
+	 * @return bool|null True or false, or null when Square could not be asked.
+	 */
+	private static function has_physical_count_since( $square_id, $since ) {
+
+		if ( ! $since ) {
+			return false;
+		}
+
+		try {
+			$response = wc_square()->get_api()->batch_retrieve_inventory_changes(
+				array(
+					'catalog_object_ids' => array( $square_id ),
+					'location_ids'       => array( wc_square()->get_settings_handler()->get_location_id() ),
+					'types'              => array( 'PHYSICAL_COUNT' ),
+					'updated_after'      => $since,
+				)
+			);
+		} catch ( \Exception $exception ) {
+			wc_square()->log( 'Could not check Square for a newer inventory count: ' . $exception->getMessage() );
+			return null;
+		}
+
+		$data = $response->get_data();
+
+		if ( ! $data instanceof \Square\Models\BatchRetrieveInventoryChangesResponse ) {
+			wc_square()->log( 'Could not check Square for a newer inventory count: unexpected API response.' );
+			return null;
+		}
+
+		// Match the object id rather than trusting a non-empty response: Square drops the object
+		// filter when the object does not exist and answers for the whole location.
+		foreach ( is_array( $data->getChanges() ) ? $data->getChanges() : array() as $change ) {
+			if ( $change->getPhysicalCount() && $square_id === $change->getPhysicalCount()->getCatalogObjectId() ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Determines whether Square is known to hold an inventory count for the product's variation.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int    $product_id WooCommerce product ID.
+	 * @param string $square_id  Square catalog object (variation) ID.
+	 * @return bool Whether the baseline is known for this variation at the configured location.
+	 */
+	private static function has_inventory_baseline( $product_id, $square_id ) {
+		return self::get_inventory_baseline_value( $square_id ) === get_post_meta( $product_id, self::INVENTORY_BASELINE_META_KEY, true );
+	}
+
+	/**
+	 * Records that Square holds an inventory count for the product's variation.
+	 *
+	 * Written as post meta directly: saving the product here would fire the product save hooks,
+	 * which push the product to Square, from inside a stock change.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int    $product_id WooCommerce product ID.
+	 * @param string $square_id  Square catalog object (variation) ID.
+	 */
+	private static function mark_inventory_baseline( $product_id, $square_id ) {
+		update_post_meta( $product_id, self::INVENTORY_BASELINE_META_KEY, self::get_inventory_baseline_value( $square_id ) );
+	}
+
+	/**
+	 * Builds the baseline meta value for a Square variation at the configured location.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string $square_id Square catalog object (variation) ID.
+	 * @return string Location and variation ID joined by a pipe.
+	 */
+	private static function get_inventory_baseline_value( $square_id ) {
+		return wc_square()->get_settings_handler()->get_location_id() . '|' . $square_id;
+	}
+
+	/**
+	 * Gets the net stock change waiting to be sent to Square for a product.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 * @return int Net pending change, 0 when nothing is pending.
+	 */
+	private static function get_pending_inventory_adjustment( $product_id ) {
+		return (int) get_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, true );
+	}
+
+	/**
+	 * Gets the time a product's pending change was first deferred.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 * @return string RFC 3339 time, or empty when unknown.
+	 */
+	private static function get_pending_inventory_since( $product_id ) {
+		return (string) get_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, true );
+	}
+
+	/**
+	 * Adds a stock change to the product's pending change and makes sure a resolve action is queued.
+	 *
+	 * The single entry point for holding a change: used when the history lookup fails, and for
+	 * orders that arrive while an earlier change is still held.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 * @param int $adjustment Stock change, negative for a decrease.
+	 */
+	private static function defer_inventory_adjustment( $product_id, $adjustment ) {
+
+		$previous = self::get_pending_inventory_adjustment( $product_id );
+		$pending  = $previous + (int) $adjustment;
+
+		if ( 0 === $pending ) {
+			// The changes cancelled out, e.g. an order cancelled while Square was unreachable.
+			self::clear_pending_inventory_adjustment( $product_id );
+			return;
+		}
+
+		if ( 0 === $previous ) {
+			update_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY, gmdate( 'Y-m-d\TH:i:s\Z' ) );
+		}
+
+		update_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY, $pending );
+
+		self::schedule_pending_inventory_adjustment( $product_id );
+	}
+
+	/**
+	 * Removes a product's pending change and its bookkeeping.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 */
+	private static function clear_pending_inventory_adjustment( $product_id ) {
+		delete_post_meta( $product_id, self::PENDING_INVENTORY_ADJUSTMENT_META_KEY );
+		delete_post_meta( $product_id, self::PENDING_INVENTORY_SINCE_META_KEY );
+	}
+
+	/**
+	 * Schedules a retry of a product's pending change and logs why the attempt failed.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int    $product_id WooCommerce product ID.
+	 * @param string $reason     Why the attempt failed.
+	 */
+	private static function retry_pending_inventory_adjustment( $product_id, $reason ) {
+
+		wc_square()->log(
+			sprintf(
+				'Pending Square inventory change for product #%1$d not sent (%2$s); retrying in %3$d minutes.',
+				$product_id,
+				$reason,
+				self::PENDING_INVENTORY_RETRY_DELAY / MINUTE_IN_SECONDS
+			)
+		);
+
+		self::schedule_pending_inventory_adjustment( $product_id, self::PENDING_INVENTORY_RETRY_DELAY );
+	}
+
+	/**
+	 * Queues the resolve action for a product unless one is already waiting to run.
+	 *
+	 * Only pending actions count: the action that is running now must be able to queue its own retry.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id WooCommerce product ID.
+	 * @param int $delay      Seconds from now.
+	 */
+	private static function schedule_pending_inventory_adjustment( $product_id, $delay = MINUTE_IN_SECONDS ) {
+
+		if ( ! function_exists( 'as_schedule_single_action' ) ) {
+			wc_square()->log( sprintf( 'Could not schedule the pending Square inventory change for product #%d: Action Scheduler is unavailable.', $product_id ) );
+			return;
+		}
+
+		$args = array( (int) $product_id );
+
+		$waiting = as_get_scheduled_actions(
+			array(
+				'hook'     => self::RESOLVE_INVENTORY_BASELINE_HOOK,
+				'args'     => $args,
+				'status'   => \ActionScheduler_Store::STATUS_PENDING,
+				'per_page' => 1,
+				'orderby'  => 'none',
+			),
+			'ids'
+		);
+
+		if ( ! empty( $waiting ) ) {
+			return;
+		}
+
+		if ( ! as_schedule_single_action( time() + $delay, self::RESOLVE_INVENTORY_BASELINE_HOOK, $args, 'square' ) ) {
+			wc_square()->log( sprintf( 'Could not schedule the pending Square inventory change for product #%d; it is sent after the product\'s next order.', $product_id ) );
+		}
+	}
+
+	/**
+	 * Keeps the inventory bookkeeping meta off duplicated products.
+	 *
+	 * A copy carrying a pending change would send that change to Square a second time.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param string[] $meta_keys Meta keys WooCommerce excludes when duplicating a product.
+	 * @return string[]
+	 */
+	public function exclude_inventory_meta_from_duplicate( $meta_keys ) {
+		return array_merge(
+			(array) $meta_keys,
+			array(
+				self::INVENTORY_BASELINE_META_KEY,
+				self::PENDING_INVENTORY_ADJUSTMENT_META_KEY,
+				self::PENDING_INVENTORY_SINCE_META_KEY,
+			)
+		);
 	}
 
 	/**
