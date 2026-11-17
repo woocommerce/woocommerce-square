@@ -27,6 +27,7 @@ defined( 'ABSPATH' ) || exit;
 
 use Square\Models\Order;
 use WooCommerce\Square\Utilities\Coupon_Utility;
+use WooCommerce\Square\Utilities\Money_Utility;
 use WooCommerce\Square\WC_Order_Square;
 
 /**
@@ -648,8 +649,9 @@ class API extends \WooCommerce\Square\API {
 
 	/**
 	 * Adjusts an existing Square order by amount.
-	 * When Square redemption is used, positive adjustments use a service charge (not a line item) so the amount is not eligible for coupon discount.
-	 * When no Square coupon is used, positive adjustments use a line item (original plugin behavior).
+	 * When the current Square order is passed, positive adjustments use a service charge (not a line item) so the amount is not
+	 * eligible for discounts already on the order (a Square coupon, or an earlier downward adjustment).
+	 * Otherwise, positive adjustments use a line item (original plugin behavior).
 	 *
 	 * @since 2.0.4
 	 *
@@ -657,7 +659,7 @@ class API extends \WooCommerce\Square\API {
 	 * @param \WC_Order                 $order                WooCommerce order.
 	 * @param int                       $version              Current 'version' value of Square order.
 	 * @param int                       $amount               Adjustment in smallest unit (cents). Positive = add, negative = discount.
-	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption used (use service charge); null = use line item.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order to add a service charge to; null = use line item.
 	 * @return \Square\Models\Order
 	 * @throws \Exception
 	 */
@@ -687,6 +689,44 @@ class API extends \WooCommerce\Square\API {
 		}
 
 		throw new \Exception( esc_html__( 'Failed to make request updateOrder.', 'woocommerce-square' ) );
+	}
+
+	/**
+	 * Adjusts the Square order by delta so its total matches the WooCommerce total (charge what the customer saw).
+	 *
+	 * A downward adjustment is an order-level discount, which Square applies before tax and caps at the pre-tax
+	 * subtotal, so it can leave the Square total below the WooCommerce total. The remainder is then added as an
+	 * untaxed, post-tax service charge: a line item would be absorbed by any unused part of that same discount,
+	 * which can zero the order (e.g. a WooCommerce gift card larger than the pre-tax subtotal).
+	 *
+	 * @since 5.5.2
+	 *
+	 * @param string                    $location_id          Square location ID.
+	 * @param \WC_Order                 $order                WooCommerce order.
+	 * @param \Square\Models\Order      $square_order         Current Square order.
+	 * @param \Square\Models\Order|null $square_coupon_in_use Current Square order when redemption is used; null otherwise.
+	 * @return \Square\Models\Order
+	 * @throws \Exception
+	 */
+	public function reconcile_order_total( $location_id, \WC_Order $order, $square_order, $square_coupon_in_use = null ) {
+		$wc_total     = Money_Utility::amount_to_cents( $order->get_total() );
+		$square_total = $square_order->getTotalMoney()->getAmount();
+		$delta_total  = $wc_total - $square_total;
+
+		if ( abs( $delta_total ) > 0 ) {
+			$square_order = $this->adjust_order( $location_id, $order, $square_order->getVersion(), $delta_total, $square_coupon_in_use );
+
+			// since a downward adjustment causes (downward) tax recomputation, perform an additional (untaxed) upward adjustment if necessary
+			$square_total = $square_order->getTotalMoney()->getAmount();
+			$delta_total  = $wc_total - $square_total;
+
+			if ( $delta_total > 0 ) {
+				// Pass the current order so this is a service charge, which the earlier discount cannot apply to.
+				$square_order = $this->adjust_order( $location_id, $order, $square_order->getVersion(), $delta_total, $square_order );
+			}
+		}
+
+		return $square_order;
 	}
 
 	/**

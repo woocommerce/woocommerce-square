@@ -16,6 +16,7 @@ import {
 	useGooglePay,
 	useApplePay,
 	usePaymentProcessing,
+	useCartTotalSync,
 } from './hooks';
 
 const Content = ( {
@@ -31,6 +32,7 @@ const Content = ( {
 	const { needsShipping } = shippingData;
 	const payments = useSquare();
 	const paymentRequest = usePaymentRequest( payments, needsShipping );
+	const isSyncingTotal = useCartTotalSync( paymentRequest );
 	const [ googlePay, googlePayRef ] = useGooglePay(
 		payments,
 		paymentRequest
@@ -74,7 +76,7 @@ const Content = ( {
 		getSquareServerData().hideButtonOptions.includes( 'apple' );
 
 	function onClickHandler( buttonInstance ) {
-		if ( ! buttonInstance ) {
+		if ( ! buttonInstance || isSyncingTotal ) {
 			return;
 		}
 
@@ -97,6 +99,7 @@ const Content = ( {
 			tabIndex={ 0 }
 			role="button"
 			ref={ googlePayRef }
+			aria-disabled={ isSyncingTotal }
 			onClick={ () => onClickHandler( googlePay ) }
 		></div>
 	);
@@ -106,6 +109,7 @@ const Content = ( {
 			tabIndex={ 0 }
 			role="button"
 			ref={ applePayRef }
+			aria-disabled={ isSyncingTotal }
 			onClick={ () => onClickHandler( applePay ) }
 			className="apple-pay-button wc-square-wallet-buttons"
 		>

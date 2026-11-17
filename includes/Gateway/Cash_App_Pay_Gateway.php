@@ -1104,21 +1104,7 @@ class Cash_App_Pay_Gateway extends Payment_Gateway {
 				$order->square_order_id = $response->getId();
 
 				// adjust order by difference between WooCommerce and Square order totals
-				$wc_total     = Money_Utility::amount_to_cents( $order->get_total() );
-				$square_total = $response->getTotalMoney()->getAmount();
-				$delta_total  = $wc_total - $square_total;
-
-				if ( abs( $delta_total ) > 0 ) {
-					$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total );
-
-					// since a downward adjustment causes (downward) tax recomputation, perform an additional (untaxed) upward adjustment if necessary
-					$square_total = $response->getTotalMoney()->getAmount();
-					$delta_total  = $wc_total - $square_total;
-
-					if ( $delta_total > 0 ) {
-						$response = $this->get_api()->adjust_order( $location_id, $order, $response->getVersion(), $delta_total );
-					}
-				}
+				$response = $this->get_api()->reconcile_order_total( $location_id, $order, $response );
 
 				// reset the payment total to the total calculated by Square to prevent errors
 				$order->payment_total = Square_Helper::number_format( Money_Utility::cents_to_float( $response->getTotalMoney()->getAmount() ) );

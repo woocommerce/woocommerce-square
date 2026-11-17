@@ -51,6 +51,9 @@ jQuery( document ).ready( ( $ ) => {
 				args.is_change_payment_method_request;
 			this.metrics = {};
 
+			this.is_building_payment_form = false;
+			this.has_pending_payment_form_refresh = false;
+
 			if ( $( 'form.checkout' ).length ) {
 				this.form = $( 'form.checkout' );
 				this.handle_checkout_page();
@@ -200,6 +203,13 @@ jQuery( document ).ready( ( $ ) => {
 		 * @since 2.0.0
 		 */
 		set_payment_fields() {
+			// `this.payment_form` isn't set until a build finishes, so starting another build now
+			// would mount a second card. Apply this update once the current build settles.
+			if ( this.is_building_payment_form ) {
+				this.has_pending_payment_form_refresh = true;
+				return;
+			}
+
 			if ( this.payment_form ) {
 				// Don't re-initialize the payment form if it's already been initialized and exist in DOM.
 				if (
@@ -213,9 +223,14 @@ jQuery( document ).ready( ( $ ) => {
 					return;
 				}
 
-				// Destroy the payment form and re-initialize it.
+				// Destroy the payment form and re-initialize it. The reference is dropped first so an
+				// update arriving during the teardown is queued instead of destroying it again.
+				const payment_form = this.payment_form;
+				this.payment_form = null;
+				this.is_building_payment_form = true;
+
 				this.log( 'Destroying payment form' );
-				this.payment_form.destroy().then( () => {
+				payment_form.destroy().catch( () => {} ).then( () => {
 					this.log( 'Re-building payment form' );
 					this.initializeCard( this.payments );
 				} );
@@ -235,23 +250,43 @@ jQuery( document ).ready( ( $ ) => {
 		 *
 		 * @param {object} payments The Square payment object.
 		 */
-		initializeCard( payments ) {
+		async initializeCard( payments ) {
+			this.is_building_payment_form = true;
+
 			let defaultPostalCode = $( '#billing_postcode' ).val();
 			defaultPostalCode = defaultPostalCode || '';
 
-			payments.card( {
-				postalCode: defaultPostalCode, // Default postal code value.
-			} ).then( ( card ) => {
+			let card = null;
+
+			try {
+				card = await payments.card( {
+					postalCode: defaultPostalCode, // Default postal code value.
+				} );
+
 				if ( ! document.getElementById( 'wc-square-credit-card-container' ) ) {
 					this.end( 'initialize_payment_form', true );
 					return;
 				}
 
-				card.attach( '#wc-square-credit-card-container' );
+				// Only expose the card once it is mounted and ready to tokenize.
+				await card.attach( '#wc-square-credit-card-container' );
 				this.payment_form = card;
 				this.log( 'Payment form loaded' );
 				this.end( 'initialize_payment_form' );
-			} );
+			} catch ( error ) {
+				this.log( `Could not build payment form: ${ error }`, 'error' );
+				this.end( 'initialize_payment_form', true );
+
+				// Don't leave a half-built card behind for the next build to mount alongside.
+				await card?.destroy().catch( () => {} );
+			} finally {
+				this.is_building_payment_form = false;
+
+				if ( this.has_pending_payment_form_refresh ) {
+					this.has_pending_payment_form_refresh = false;
+					this.set_payment_fields();
+				}
+			}
 		}
 
 		/**

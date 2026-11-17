@@ -56,7 +56,7 @@ class API extends Base {
 	 * two walks could overwrite each other's pages here and promote a silently truncated cache,
 	 * which is the very failure this class of bug is about. Make the key per job before that lands.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 * @var string
 	 */
 	const OPTIONS_DATA_PARTIAL_TRANSIENT = 'wc_square_options_data_partial';
@@ -707,7 +707,7 @@ class API extends Base {
 	 * message is matched rather than the error code, since Square answers both the stale cache case
 	 * and a permanently invalid payload with the same INVALID_VALUE and BAD_REQUEST codes.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $message the message Square returned
 	 * @return bool
@@ -732,7 +732,7 @@ class API extends Base {
 	 * the first page of a paginated catalogue as the whole of it, for a day. With no cache to
 	 * extend there is nothing to do and the next full read is left to build it.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $option_id   Square item option ID.
 	 * @param array  $option_data Cache entry for the option.
@@ -1183,7 +1183,8 @@ class API extends Base {
 			return true;
 		}
 
-		$errors = array();
+		$errors    = array();
+		$refreshed = false;
 
 		/** @var \Square\Models\Error $error */
 		foreach ( $this->get_response()->get_errors() as $error ) {
@@ -1194,33 +1195,30 @@ class API extends Base {
 
 			$errors[] = trim( "[{$error_code}] {$error->getDetail()}" );
 
-			// Last attempt to refresh access token.
-			if ( in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'UNAUTHORIZED' ), true ) ) {
+			// Last attempt to refresh access token, once per response.
+			if ( ! $refreshed && in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'UNAUTHORIZED' ), true ) ) {
 				if ( 'ACCESS_TOKEN_EXPIRED' === $error_code ) {
 					$this->get_plugin()->log( 'Access Token Expired, attempting a refresh.' );
 				} else {
 					$this->get_plugin()->log( 'Authorization error occurred, attempting a refresh.' );
 				}
 
-				$this->get_plugin()->get_connection_handler()->refresh_connection();
+				$refreshed = (bool) $this->get_plugin()->get_connection_handler()->refresh_connection();
 
-				$failure_value = get_option( 'wc_square_refresh_failed', 'yes' );
-
-				if ( empty( $failure_value ) ) {
-					// Successfully refreshed on the last attempt
+				if ( $refreshed ) {
 					$this->get_plugin()->log( 'Connection successfully refreshed.' );
-					return true;
 				}
 			}
 
-			// if the error indicates that access token is bad, disconnect the plugin to prevent further attempts
-			if ( in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'ACCESS_TOKEN_REVOKED', 'UNAUTHORIZED' ), true ) ) {
+			// if the access token is bad and could not be refreshed, disconnect the plugin to prevent further attempts
+			if ( ! $refreshed && in_array( $error_code, array( 'ACCESS_TOKEN_EXPIRED', 'ACCESS_TOKEN_REVOKED', 'UNAUTHORIZED' ), true ) ) {
 				$this->get_plugin()->get_connection_handler()->disconnect();
 				$this->get_plugin()->log( 'Disconnected due to invalid authorization. Please try connecting again.' );
 			}
 		}
 
-		// At this point we could not validate the response and assume a failed attempt.
+		// At this point we could not validate the response and assume a failed attempt. A refreshed
+		// token is picked up by the next request, as get_api() builds a new client each time.
 		throw new \Exception( esc_html( implode( ' | ', $errors ) ) );
 	}
 

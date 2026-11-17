@@ -7,7 +7,7 @@
     "url": "git://github.com/woocommerce/woocommerce-square.git"
   },
   "title": "WooCommerce Square",
-  "version": "5.4.3",
+  "version": "5.5.3",
   "homepage": "https://woocommerce.com/products/woocommerce-square/",
   "scripts": {
     "build": "composer install --no-dev && npm run build:webpack && npm run makepot && npm run archive",
@@ -32,7 +32,7 @@
     "postenv:start": "bash ./tests/e2e/config/env-post-setup.sh"
   },
   "devDependencies": {
-    "@playwright/test": "^1.54.1",
+    "@playwright/test": "^1.61.1",
     "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.1",
     "@woocommerce/e2e-utils-playwright": "^0.4.0",
     "@woocommerce/eslint-plugin": "^2.3.0",

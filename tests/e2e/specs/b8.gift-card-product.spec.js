@@ -127,7 +127,7 @@ test( 'Purchase Gift card product @giftcard', async ( { page } ) => {
 
 test( 'Gift card recipient email @giftcard', async ( { page } ) => {
 	await page.goto( '/wp-admin/admin.php?page=email-log' );
-	await page.locator( '.view-content a' ).first().dispatchEvent( 'click' );
+	await page.locator( 'tr', { hasText: /Gift Card!/ } ).locator( '.view-content a' ).first().dispatchEvent( 'click' );
 	await expect( await page.locator( '#template_container' ).getByText( 'woocommerce-square Gift Card received!' ) ).toBeVisible();
 	await expect( await page.locator( '#template_container' ).getByText( 'Hey Emily Doe, you just received a gift card!' ) ).toBeVisible();
 	await expect( await page.locator( '#wc-square-gift-card-email__card-balance' ) ).toContainText( '$25.00' )

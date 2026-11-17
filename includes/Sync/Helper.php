@@ -44,7 +44,7 @@ class Helper {
 	 * Bounds the worst case: without it a page that resolves a single id each time would issue one
 	 * group request per id on top of the per id fallback.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 * @var int
 	 */
 	const MAX_HISTORY_NARROWING_PASSES = 5;
@@ -107,7 +107,7 @@ class Helper {
 	 * Callers hold counts in two shapes: a plain id to quantity map, and an id to stats map where the
 	 * quantity sits under a key. Both are accepted so the zero collection is written once.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param array $counts id keyed counts, values either a quantity or an array of stats
 	 * @param string|null $quantity_key key holding the quantity when values are arrays
@@ -149,7 +149,7 @@ class Helper {
 	 * genuine sellout would be permanently skipped once the API recovers. Null is distinct from an
 	 * empty array, which is a POSITIVE verification that none of the ids have history.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string[] $catalog_object_ids catalog object (variation) IDs to check
 	 * @return string[]|null IDs with at least one real inventory change, or null when Square could not be asked
@@ -250,7 +250,7 @@ class Helper {
 	/**
 	 * Fetches one page of inventory changes for the given catalog object ids.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string[] $catalog_object_ids ids to query
 	 * @return array|null { object_ids: string[] with a change on this page, cursor: string|null } or null on failure
@@ -337,7 +337,7 @@ class Helper {
 	 *   a phantom zero from a never-counted item is skipped. For a product that does not manage
 	 *   stock, counts are ignored entirely and only the stock status is reflected.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param \WC_Product $product the WooCommerce product or variation
 	 * @param float $quantity the IN_STOCK quantity reported by Square

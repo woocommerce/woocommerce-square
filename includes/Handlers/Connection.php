@@ -248,11 +248,15 @@ class Connection {
 	 * Refreshes the access token via the Woo proxy.
 	 *
 	 * @since 2.0.0
+	 *
+	 * @return bool True when a new access token was stored, false otherwise (including in sandbox mode, where refresh is not supported).
 	 */
 	public function refresh_connection() {
 		if ( $this->get_plugin()->get_settings_handler()->is_sandbox() ) {
-			return;
+			return false;
 		}
+
+		$refreshed = false;
 
 		try {
 
@@ -266,7 +270,7 @@ class Connection {
 				$this->get_plugin()->log( 'No refresh token stored, cannot refresh connection.' );
 				update_option( 'wc_square_refresh_failed', 'yes' );
 				wc_square()->get_email_handler()->get_access_token_email()->trigger();
-				return;
+				return false;
 			}
 
 			$request = array(
@@ -307,6 +311,8 @@ class Connection {
 
 			// in case this option was set
 			delete_option( 'wc_square_refresh_failed' );
+
+			$refreshed = true;
 		} catch ( \Exception $exception ) {
 
 			$this->get_plugin()->log( 'Unable to refresh connection: ' . $exception->getMessage() );
@@ -317,6 +323,8 @@ class Connection {
 		}
 
 		$this->schedule_refresh();
+
+		return $refreshed;
 	}
 
 

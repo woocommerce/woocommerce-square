@@ -4,7 +4,7 @@ Tags: credit card, square, woocommerce, inventory sync
 Requires at least: 6.9
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 5.4.3
+Stable tag: 5.5.3
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,44 @@ If you get stuck, you can ask for help in the [Plugin Forum](https://wordpress.o
 2. The payment gateway settings.
 
 == Changelog ==
+
+= 5.5.3 - 2026-11-04 =
+* Fix - Stores with product sync disabled no longer run a slow database query on every page load and API request.
+* Fix - Product sync no longer fails when Square temporarily locks the catalog while processing a previous write. The affected step is retried after a short pause without consuming the rate-limit retry attempts.
+* Fix - Products added to the cart no longer disappear a few seconds later when Square inventory sync is enabled.
+* Fix - Prevent the Square credit card field from rendering twice on the classic checkout when the checkout updates while the card form is loading.
+* Dev - Update the subscription E2E tests to create subscription products the WooCommerce Subscriptions 9.0 way.
+* Dev - Bump WooCommerce "tested up to" version 11.3.
+* Dev - Bump WooCommerce minimum supported version to 11.1.
+
+= 5.5.2 - 2026-10-15 =
+* Fix - Prevent duplicate Square items and categories when a failed sync batch is retried item by item, and stop saving temporary Square IDs on products.
+* Fix - Checkout with a Square credit card or Cash App Pay no longer fails with a "value too low" error when a WooCommerce gift card covers more than the order subtotal but less than the order total. The remaining balance is now charged.
+* Fix - Show the current cart total in the Apple Pay sheet on the Cart and Checkout blocks after the cart changes.
+* Fix - Ensure that the Checkout Block prevents submitting a card payment without a payment token.
+* Fix - Prevent a connected store from being disconnected after a successful Square access-token refresh.
+* Fix - Ensure Square digital wallet (Apple Pay / Google Pay) buttons are visible on cart and product pages when the shipping phone field is required.
+* Dev - Bump WooCommerce "tested up to" version 11.2.
+* Dev - Bump WooCommerce minimum supported version to 11.0.
+
+= 5.5.1 - 2026-09-21 =
+* Fix - Improved handling of Apple Pay domain registration on the Square settings screen.
+* Fix - The domain registered with Square for Apple Pay is now based on the Site Address setting.
+
+= 5.5.0 - 2026-08-31 =
+* Fix - Prevent product sync from getting stuck when a product set to sync with Square is deleted.
+* Fix - Automatically detect and recover a background sync job stuck in processing, unblock the sync queue, show an admin notice prompting a re run, and prune old failed scheduler actions.
+* Fix - Skip products that Square rejects during a sync instead of failing the whole sync, and report the name, SKU and reason for each skipped product.
+* Fix - Stop Square inventory pulls from writing zero stock for items Square has no real count for, never change a product's stock management setting on a zero, and honor the per product Sync with Square setting on all automatic pulls.
+* Fix - Allow "Manage stock" to be changed on a synced product when WooCommerce is the system of record, and keep it read-only when Square is.
+* Fix - Square inventory sync errors no longer interrupt checkout or refunds for orders paid through other payment gateways.
+* Fix - Reuse the Square catalog sync idempotency key on an unchanged retry and generate a new one when the request body changes, so a rate limited sync on stores with many categories recovers instead of getting stuck.
+* Fix - Sync no longer fails when Square already holds an item option whose name differs only by case, or when a store has more than 100 item options.
+* Fix - Reuse an existing Square item option that differs only by capitalization, so variations use Square's spelling of the value instead of creating a duplicate option.
+* Dev - Bump WordPress "Tested up to" to 7.1.
+* Dev - Bump WooCommerce "tested up to" version 11.1.
+* Dev - Bump WooCommerce minimum supported version to 10.9.
+* Dev - Update PHP_CodeSniffer to 3.13.6 and WooCommerce Sniffs to 1.0.1.
 
 = 5.4.3 - 2026-08-06 =
 * Fix - Hardened validation of guest billing details submitted on the order payment page.

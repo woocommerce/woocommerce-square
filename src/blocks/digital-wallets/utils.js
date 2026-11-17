@@ -57,17 +57,15 @@ export const getPaymentRequest = () => {
 				} ),
 		};
 
-		jQuery.post(
-			getAjaxUrl( 'get_payment_request' ),
-			data,
-			( response ) => {
+		jQuery
+			.post( getAjaxUrl( 'get_payment_request' ), data, ( response ) => {
 				if ( response.success ) {
 					return resolve( response.data );
 				}
 
 				return reject( response.data );
-			}
-		);
+			} )
+			.fail( reject );
 	} );
 };
 

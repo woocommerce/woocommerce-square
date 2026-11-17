@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 
 import { getSquareServerData } from '../square-utils';
 import {
@@ -37,6 +38,61 @@ export function useSquare() {
 	}, [] );
 
 	return payment;
+}
+
+/**
+ * Keeps the payment request total in step with the cart.
+ *
+ * Without this, the wallet sheet shows the total from when the buttons
+ * mounted. Carts that ship get corrected when the sheet opens, but carts
+ * that don't ship never do.
+ *
+ * @param {Object} paymentRequest The payment request object.
+ * @return {boolean} Whether an update is in flight. Square can't update an open sheet, so block clicks meanwhile.
+ */
+export function useCartTotalSync( paymentRequest ) {
+	const cartTotal = useSelect(
+		( select ) => select( 'wc/store/cart' ).getCartTotals()?.total_price
+	);
+	const syncedTotal = useRef( cartTotal );
+	const [ isSyncing, setIsSyncing ] = useState( false );
+
+	useEffect( () => {
+		if ( ! paymentRequest || cartTotal === syncedTotal.current ) {
+			// A superseded request leaves the flag on, e.g. when a coupon is added and removed quickly.
+			setIsSyncing( false );
+			return;
+		}
+
+		let isStale = false;
+		setIsSyncing( true );
+
+		// The server builds the line items, so ask it rather than rebuilding them here.
+		getPaymentRequest()
+			.then( ( paymentRequestJson ) => {
+				if ( isStale ) {
+					return;
+				}
+
+				const { total, lineItems } = JSON.parse( paymentRequestJson );
+
+				if ( paymentRequest.update( { total, lineItems } ) ) {
+					syncedTotal.current = cartTotal;
+				}
+			} )
+			.catch( () => {} )
+			.finally( () => {
+				if ( ! isStale ) {
+					setIsSyncing( false );
+				}
+			} );
+
+		return () => {
+			isStale = true;
+		};
+	}, [ paymentRequest, cartTotal ] );
+
+	return isSyncing;
 }
 
 /**

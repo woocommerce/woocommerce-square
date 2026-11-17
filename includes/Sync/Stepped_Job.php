@@ -75,7 +75,7 @@ abstract class Stepped_Job extends Job {
 	 * attempts ran out (to keep a watermark from advancing over a window it could not verify) must ask
 	 * zero_verification_exhausted() rather than infer it from an empty array.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name used for the attempt counters and messages
 	 * @param string[] $zero_object_ids catalog object ids reporting a zero count
@@ -114,7 +114,7 @@ abstract class Stepped_Job extends Job {
 	 * verify, or a genuine sellout in that window is skipped for good. An empty verified list cannot
 	 * answer this, since it also means "asked, and none of them were real".
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name used for the attempt counters
 	 * @return bool
@@ -137,7 +137,7 @@ abstract class Stepped_Job extends Job {
 	 * and records an alert so the outcome is never silent. Steps that own a watermark should also
 	 * leave it alone on that path so the same window is read again later.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 *
 	 * @param string $step_name step name for the log and record messages
 	 * @return bool true when the caller should stop and retry later, false when it should proceed
@@ -183,7 +183,7 @@ abstract class Stepped_Job extends Job {
 	/**
 	 * Clears the unverified zero count retry counter after a successful verification.
 	 *
-	 * @since x.x.x
+	 * @since 5.5.0
 	 */
 	protected function clear_unverified_zero_count_attempts( $step_name ) {
 
@@ -252,9 +252,21 @@ abstract class Stepped_Job extends Job {
 
 				$this->$next_step();
 				$this->complete_step_cycle( $next_step );
+				$this->set_attr( 'catalog_lock_retry', 0, false );
 				$this->set_attr( 'retry', 0 ); // Reset retry count to 0 after successful step cycle.
 			} catch ( \Exception $exception ) {
 				$error_message = $exception->getMessage();
+				$lock_retry    = (int) $this->get_attr( 'catalog_lock_retry', 0 );
+
+				// Square refuses a catalog write while it is still applying a prior one, with the same
+				// RATE_LIMITED code it uses for a quota. The lock clears in seconds, so it is retried on its
+				// own counter (up to 10 times) instead of spending the rate limit retries below.
+				if ( $lock_retry < 10 && preg_match( '/^\[RATE_LIMITED\][^|]*catalog locked[^|]*$/i', $error_message ) ) {
+					wc_square()->log( 'Square catalog locked by a prior request, retrying the step shortly...' );
+					$this->set_attr( 'catalog_lock_retry', $lock_retry + 1 );
+					return;
+				}
+
 				// If sync fail with rate limit error, retry the sync process after few seconds. (retry upto 3 times)
 				if ( false !== strpos( $error_message, 'RATE_LIMITED' ) && $retry < $max_retry ) {
 					wc_square()->log( 'Rate limit error detected, pausing sync process for few secs...' );
