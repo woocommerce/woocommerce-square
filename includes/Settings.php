@@ -549,6 +549,13 @@ class Settings extends \WC_Settings_API {
 		update_option( 'wc_square_access_tokens', $access_tokens );
 
 		Utilities\Token_Scope_Utility::clear_scope_cache( $environment );
+
+		// A token change points at a (potentially different) Square account, so any
+		// cached business locations are now stale. Clear the per-request memo and the
+		// transient; otherwise the settings page reloads the previously connected
+		// account's locations instead of refetching for the new token.
+		$this->locations = null;
+		delete_transient( 'wc_square_locations_' . $this->get_plugin()->get_version() );
 	}
 
 
@@ -773,6 +780,23 @@ class Settings extends \WC_Settings_API {
 	public function is_sandbox() {
 
 		return 'sandbox' === $this->get_environment();
+	}
+
+
+	/**
+	 * Gets the URL of the Square Web Payments SDK (square.js) for the current
+	 * environment. Shared so the checkout gateways and the settings preview all
+	 * load the same CDN URL from one place.
+	 *
+	 * @since x.x.x
+	 *
+	 * @return string
+	 */
+	public function get_square_js_url() {
+
+		return $this->is_sandbox()
+			? 'https://sandbox.web.squarecdn.com/v1/square.js'
+			: 'https://web.squarecdn.com/v1/square.js';
 	}
 
 
