@@ -182,6 +182,13 @@ class Products {
 	private function add_product_sync_hooks() {
 
 		add_action( 'woocommerce_update_product', array( $this, 'validate_product_update_and_sync' ) );
+
+		// A scheduled sale changes the price Square should charge without a product edit.
+		// Priority 20: WooCommerce applies the new price on these hooks at priority 10.
+		add_action( 'wc_product_start_scheduled_sale', array( $this, 'maybe_stage_product_for_sync_after_scheduled_sale' ), 20 );
+		add_action( 'wc_product_end_scheduled_sale', array( $this, 'maybe_stage_product_for_sync_after_scheduled_sale' ), 20 );
+		add_action( 'wc_after_products_starting_sales', array( $this, 'maybe_stage_products_for_sync_after_scheduled_sales' ), 20 );
+		add_action( 'wc_after_products_ending_sales', array( $this, 'maybe_stage_products_for_sync_after_scheduled_sales' ), 20 );
 		add_action( 'trashed_post', array( $this, 'maybe_stage_products_for_deletion' ) );
 		add_action( 'shutdown', array( $this, 'maybe_sync_staged_products' ) );
 		add_action( 'shutdown', array( $this, 'maybe_delete_staged_products' ) );
@@ -484,6 +491,53 @@ class Products {
 		// the triggering action for this method can be called multiple times in a single request - keep track
 		// of product IDs that have been scheduled for sync here to avoid multiple syncs on the same request
 		$this->products_to_sync[] = $product->get_id();
+	}
+
+
+	/**
+	 * Stages a product for sync with Square when WooCommerce starts or ends its scheduled sale.
+	 *
+	 * A variation is synced through its parent product, and saving a variation does not fire
+	 * `woocommerce_update_product`, so the parent is staged here.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int $product_id the product or variation ID
+	 */
+	public function maybe_stage_product_for_sync_after_scheduled_sale( $product_id ) {
+
+		if ( ! is_numeric( $product_id ) || ! wc_square()->get_settings_handler()->is_system_of_record_woocommerce() ) {
+			return;
+		}
+
+		$product = wc_get_product( (int) $product_id );
+
+		if ( $product && $product->is_type( 'variation' ) ) {
+			$product = wc_get_product( $product->get_parent_id() );
+		}
+
+		if ( $product ) {
+			$this->maybe_stage_product_for_sync( $product );
+		}
+	}
+
+
+	/**
+	 * Stages the products whose scheduled sale WooCommerce started or ended in its daily run.
+	 *
+	 * @internal
+	 *
+	 * @since x.x.x
+	 *
+	 * @param int[] $product_ids product or variation IDs
+	 */
+	public function maybe_stage_products_for_sync_after_scheduled_sales( $product_ids ) {
+
+		foreach ( (array) $product_ids as $product_id ) {
+			$this->maybe_stage_product_for_sync_after_scheduled_sale( $product_id );
+		}
 	}
 
 

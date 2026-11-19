@@ -256,6 +256,33 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 
 	/**
+	 * Gets the price WooCommerce charges for a product right now, to send to Square.
+	 *
+	 * A stored sale price only counts while the sale is active. WooCommerce keeps the sale price
+	 * on the product after a scheduled sale has ended (since WooCommerce 10.5.0), and stores it
+	 * ahead of a sale that is scheduled to start later. Sending the stored sale price in those
+	 * cases makes Square charge less than the store does.
+	 *
+	 * @since x.x.x
+	 *
+	 * @param \WC_Product $product WooCommerce product
+	 * @return string|int price to send to Square, 0 when the product has no price
+	 */
+	public static function get_active_price( \WC_Product $product ) {
+
+		$regular_price = (string) $product->get_regular_price();
+		$sale_price    = (string) $product->get_sale_price();
+
+		// With no regular price to fall back to, a stored sale price is the only price there is.
+		if ( '' !== $sale_price && ( '' === $regular_price || $product->is_on_sale() ) ) {
+			return $sale_price;
+		}
+
+		return '' !== $regular_price ? $regular_price : 0;
+	}
+
+
+	/**
 	 * Updates a Square catalog item variation with a WooCommerce product's data.
 	 *
 	 * @since 2.0.0
@@ -290,11 +317,7 @@ class Woo_SOR extends \WooCommerce\Square\Handlers\Product {
 
 		$variation_data = $catalog_object->getItemVariationData();
 
-		if ( $product->get_regular_price() || $product->get_sale_price() ) {
-			$variation_data->setPriceMoney( self::price_to_money( $product->get_sale_price() ?: $product->get_regular_price() ) );
-		} else {
-			$variation_data->setPriceMoney( self::price_to_money( 0 ) );
-		}
+		$variation_data->setPriceMoney( self::price_to_money( self::get_active_price( $product ) ) );
 
 		$variation_data->setPricingType( 'FIXED_PRICING' );
 
