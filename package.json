@@ -37,14 +37,14 @@
     "@woocommerce/e2e-utils-playwright": "^0.4.0",
     "@woocommerce/eslint-plugin": "^2.3.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.2",
-    "@wordpress/env": "^10.26.0",
+    "@wordpress/env": "12.2.0",
     "@wordpress/scripts": "^24.6.0",
     "copy-webpack-plugin": "^13.0.0",
     "dotenv": "^17.2.0",
     "node-wp-i18n": "^1.2.8"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=22.13.0",
     "npm": ">=10"
   },
   "config": {
@@ -70,6 +70,9 @@
     },
     "form-data": "^4.0.4",
     "@babel/runtime": "^7.26.10",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "^5.2.1",
+    "@wp-playground/storage": {
+      "isomorphic-git": "~1.38.10"
+    }
   }
 }
