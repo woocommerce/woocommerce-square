@@ -65,18 +65,12 @@
     "dompurify": "^3.2.4",
     "tar-fs": "^2.1.2",
     "@wordpress/scripts": {
-      "cross-spawn@<7.0.6": "^7.0.6",
-      "axios@<0.34.0": "^0.34.0",
-      "adm-zip": "^0.6.1"
+      "cross-spawn@<7.0.6": "^7.0.6"
     },
     "form-data": "^4.0.4",
     "@babel/runtime": "^7.26.10",
-    "webpack-dev-server": "^5.2.1",
     "@wp-playground/storage": {
       "isomorphic-git": "~1.38.10"
-    },
-    "markdownlint-cli": {
-      "minimatch": "^3.1.3"
     },
     "serialize-javascript": "^7.0.3"
   }
