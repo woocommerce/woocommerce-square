@@ -42,8 +42,7 @@ jobs:
           assets
 
         exclude-files: |
-          .eslintignore
-          .eslintrc.js
+          eslint.config.mjs
           .gitignore
           .nvmrc
           .gitattributes

@@ -9,7 +9,16 @@ module.exports = {
 			( plugin ) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
 		),
-		new WooDependencyExtractionWebpackPlugin(),
+		new WooDependencyExtractionWebpackPlugin( {
+			// Babel compiles JSX with the automatic runtime. Load it from the
+			// react-jsx-runtime script WordPress ships instead of bundling it.
+			requestToExternal: ( request ) =>
+				request === 'react/jsx-runtime' ? 'ReactJSXRuntime' : undefined,
+			requestToHandle: ( request ) =>
+				request === 'react/jsx-runtime'
+					? 'react-jsx-runtime'
+					: undefined,
+		} ),
 		new CopyWebpackPlugin( {
 			patterns: [ { from: './src/images', to: 'images' } ],
 		} ),
