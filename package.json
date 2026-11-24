@@ -35,7 +35,7 @@
     "@playwright/test": "^1.61.1",
     "@woocommerce/dependency-extraction-webpack-plugin": "^3.0.1",
     "@woocommerce/e2e-utils-playwright": "^0.4.0",
-    "@woocommerce/eslint-plugin": "^2.3.0",
+    "@woocommerce/eslint-plugin": "^4.1.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "@wordpress/env": "12.2.0",
     "@wordpress/scripts": "^37.2.0",
