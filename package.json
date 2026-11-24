@@ -38,7 +38,7 @@
     "@woocommerce/eslint-plugin": "^2.3.0",
     "@woocommerce/woocommerce-rest-api": "^1.0.2",
     "@wordpress/env": "12.2.0",
-    "@wordpress/scripts": "^24.6.0",
+    "@wordpress/scripts": "^37.2.0",
     "copy-webpack-plugin": "^13.0.0",
     "dotenv": "^17.2.0",
     "node-wp-i18n": "^1.2.8"
@@ -53,7 +53,7 @@
   "dependencies": {
     "@codeamp/block-components": "^0.0.1-beta.13",
     "@woocommerce/tracks": "^1.4.0",
-    "@wordpress/data": "^7.6.0",
+    "@wordpress/data": "^10.27.0",
     "@wordpress/i18n": "^5.26.0",
     "@wordpress/icons": "^10.26.0",
     "html-react-parser": "^5.2.5",
